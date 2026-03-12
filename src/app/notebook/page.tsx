@@ -1,4 +1,4 @@
-import { getJournalEntries, getEntryHighlights, getEntryAnnotations } from "@/lib/data";
+import { getJournalEntries, getEntryAnnotations } from "@/lib/data";
 import { DEV_USER_ID } from "@/lib/constants";
 import { JournalEntryView } from "@/components/notebook/journal-entry";
 import { NotebookActionBar } from "@/components/notebook/action-bar";
@@ -25,7 +25,6 @@ async function NotebookPageInner({
     ? entries.find((e) => e.id === selectedEntryId) ?? entries[0]
     : entries[0];
 
-  const highlights = activeEntry ? getEntryHighlights(activeEntry.id) : [];
   const annotations = activeEntry ? getEntryAnnotations(activeEntry.id) : [];
 
   return (
@@ -38,7 +37,6 @@ async function NotebookPageInner({
         {activeEntry ? (
           <JournalEntryView
             entry={activeEntry}
-            highlights={highlights}
             annotations={annotations}
           />
         ) : (
@@ -48,7 +46,7 @@ async function NotebookPageInner({
         )}
       </div>
 
-      <NotebookActionBar entry={activeEntry} highlights={highlights} />
+      <NotebookActionBar entry={activeEntry} />
     </div>
   );
 }

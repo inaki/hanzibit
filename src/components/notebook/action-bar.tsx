@@ -29,15 +29,18 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import type { JournalEntry, EntryHighlight } from "@/lib/data";
+import type { JournalEntry } from "@/lib/data";
 import { toggleBookmarkAction, createJournalEntry, updateJournalEntry } from "@/lib/actions";
+import { parseInput, extractHanziTokens } from "@/lib/parse-tokens";
 
 interface NotebookActionBarProps {
   entry?: JournalEntry;
-  highlights?: EntryHighlight[];
 }
 
-export function NotebookActionBar({ entry, highlights = [] }: NotebookActionBarProps) {
+export function NotebookActionBar({ entry }: NotebookActionBarProps) {
+  const highlights = entry
+    ? extractHanziTokens(parseInput(entry.content_zh))
+    : [];
   const [editOpen, setEditOpen] = useState(false);
   const [newEntryOpen, setNewEntryOpen] = useState(false);
   const [pronunciationOpen, setPronunciationOpen] = useState(false);
@@ -82,7 +85,8 @@ export function NotebookActionBar({ entry, highlights = [] }: NotebookActionBarP
     [data-testid="journal-entry-title"] span { font-size: 16px; font-weight: 400; color: #999; }
     [data-testid="journal-entry-content"] { font-size: 20px; line-height: 2; }
     [data-testid="journal-entry-content"] p { margin-bottom: 20px; }
-    [data-testid="journal-entry-content"] .font-bold { font-weight: 700; color: ${orange || "#e8601c"}; }
+    [data-testid^="journal-entry-vocab-"] > span:first-child { font-weight: 700; color: ${orange || "#e8601c"}; border-bottom: none !important; }
+    [data-testid^="journal-entry-vocab-"] > span:last-child:not(:first-child) { display: none; }
     [data-testid="journal-entry-annotations"] { margin-top: 40px; padding: 20px; border-left: 4px solid ${orange || "#e8601c"}; background: ${orangeLight || "#fef3ed"}; border-radius: 12px; }
     [data-testid="journal-entry-annotations-title"] { font-size: 13px; font-weight: 600; color: ${orange || "#e8601c"}; margin-bottom: 12px; }
     [data-testid="journal-entry-annotations-title"] span { display: none; }
@@ -227,6 +231,53 @@ export function NotebookActionBar({ entry, highlights = [] }: NotebookActionBarP
 
 // --- Edit Entry Dialog ---
 
+function MarkupHelp() {
+  return (
+    <div data-testid="markup-help" className="space-y-2">
+      <div className="rounded-lg bg-[var(--cn-orange-light)] border border-[var(--cn-orange)]/20 px-3 py-2 text-xs text-gray-700">
+        <p className="font-semibold text-[var(--cn-orange)]">Vocabulary markup</p>
+        <p className="mt-1">
+          Wrap words in <code className="rounded bg-white px-1 py-0.5 font-mono text-[var(--cn-orange)]">[汉字|pīnyīn|english]</code> to highlight them.
+        </p>
+        <p className="mt-1 text-gray-500">
+          Example: <code className="font-mono">我去[餐厅|can1 ting1|restaurant]吃饭</code>
+        </p>
+      </div>
+      <div className="rounded-lg bg-amber-50 border border-amber-200 px-3 py-2 text-xs text-gray-700">
+        <p className="font-semibold text-amber-700">Tone shortcut</p>
+        <p className="mt-1 font-mono text-gray-500">
+          a1→ā &nbsp; a2→á &nbsp; a3→ǎ &nbsp; a4→à &nbsp; v=ü
+        </p>
+        <p className="mt-0.5 text-gray-500">
+          e.g. <code className="font-mono">ni3 hao3</code> → nǐ hǎo
+        </p>
+      </div>
+    </div>
+  );
+}
+
+function ContentPreview({ content }: { content: string }) {
+  const tokens = parseInput(content);
+  if (tokens.length === 0) return null;
+
+  return (
+    <div data-testid="content-preview" className="rounded-lg border border-dashed border-gray-300 bg-gray-50 p-4">
+      <p className="mb-2 text-xs font-medium text-gray-400">Preview</p>
+      <div className="text-base leading-[2] text-gray-800">
+        {tokens.map((t, i) => {
+          if (t.type === "break") return <br key={i} />;
+          if (t.type === "text") return <span key={i}>{t.text}</span>;
+          return (
+            <span key={i} className="font-bold text-[var(--cn-orange)]" title={`${t.pinyin} — ${t.english}`}>
+              {t.hanzi}
+            </span>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 function EditEntryDialog({
   entry,
   open,
@@ -237,6 +288,8 @@ function EditEntryDialog({
   onOpenChange: (v: boolean) => void;
 }) {
   const [isPending, startTransition] = useTransition();
+  const [preview, setPreview] = useState(false);
+  const [content, setContent] = useState(entry.content_zh);
 
   function handleSubmit(formData: FormData) {
     startTransition(async () => {
@@ -297,18 +350,35 @@ function EditEntryDialog({
               </div>
             </div>
             <div>
-              <label data-testid="edit-entry-content-label" className="mb-1 block text-sm font-medium text-gray-700">
-                Content (Chinese)
-              </label>
+              <div className="mb-1 flex items-center justify-between">
+                <label data-testid="edit-entry-content-label" className="block text-sm font-medium text-gray-700">
+                  Content
+                </label>
+                <button
+                  type="button"
+                  data-testid="edit-entry-preview-toggle"
+                  onClick={() => setPreview((p) => !p)}
+                  className={`rounded-md px-2 py-0.5 text-xs font-medium transition-colors ${
+                    preview
+                      ? "bg-[var(--cn-orange)] text-white"
+                      : "bg-gray-100 text-gray-500 hover:bg-gray-200"
+                  }`}
+                >
+                  {preview ? "Hide Preview" : "Preview"}
+                </button>
+              </div>
               <textarea
                 data-testid="edit-entry-content"
                 name="content_zh"
-                defaultValue={entry.content_zh}
+                value={content}
+                onChange={(e) => setContent(e.target.value)}
                 required
                 rows={6}
-                className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-900 outline-none focus:border-[var(--cn-orange)] focus:ring-1 focus:ring-[var(--cn-orange)]"
+                className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 font-mono text-sm text-gray-900 outline-none focus:border-[var(--cn-orange)] focus:ring-1 focus:ring-[var(--cn-orange)]"
               />
+              {preview && <ContentPreview content={content} />}
             </div>
+            <MarkupHelp />
           </div>
           <DialogFooter>
             <DialogClose render={<Button variant="outline" />}>Cancel</DialogClose>
@@ -337,10 +407,14 @@ function NewEntryDialog({
   onOpenChange: (v: boolean) => void;
 }) {
   const [isPending, startTransition] = useTransition();
+  const [preview, setPreview] = useState(false);
+  const [content, setContent] = useState("");
 
   function handleSubmit(formData: FormData) {
     startTransition(async () => {
       await createJournalEntry(formData);
+      setContent("");
+      setPreview(false);
       onOpenChange(false);
     });
   }
@@ -351,7 +425,7 @@ function NewEntryDialog({
         <DialogHeader>
           <DialogTitle>New Journal Entry</DialogTitle>
           <DialogDescription>
-            Write a new journal entry in Chinese.
+            Write a new journal entry in Mandarin.
           </DialogDescription>
         </DialogHeader>
         <form action={handleSubmit}>
@@ -385,22 +459,40 @@ function NewEntryDialog({
               </div>
               <div className="w-24">
                 <label className="mb-1 block text-sm font-medium text-gray-700">HSK</label>
-                <Input data-testid="new-entry-hsk-level" name="hsk_level" type="number" min={1} max={6} defaultValue={2} />
+                <Input data-testid="new-entry-hsk-level" name="hsk_level" type="number" min={1} max={6} defaultValue={1} />
               </div>
             </div>
             <div>
-              <label className="mb-1 block text-sm font-medium text-gray-700">
-                Content (Chinese)
-              </label>
+              <div className="mb-1 flex items-center justify-between">
+                <label className="block text-sm font-medium text-gray-700">
+                  Content
+                </label>
+                <button
+                  type="button"
+                  data-testid="new-entry-preview-toggle"
+                  onClick={() => setPreview((p) => !p)}
+                  className={`rounded-md px-2 py-0.5 text-xs font-medium transition-colors ${
+                    preview
+                      ? "bg-[var(--cn-orange)] text-white"
+                      : "bg-gray-100 text-gray-500 hover:bg-gray-200"
+                  }`}
+                >
+                  {preview ? "Hide Preview" : "Preview"}
+                </button>
+              </div>
               <textarea
                 data-testid="new-entry-content"
                 name="content_zh"
-                placeholder="Write your journal entry in Chinese..."
+                value={content}
+                onChange={(e) => setContent(e.target.value)}
+                placeholder={`我去[餐厅|can1 ting1|restaurant]吃饭。\n[服务员|fu2 wu4 yuan2|waiter]很热情。`}
                 required
                 rows={6}
-                className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-900 outline-none focus:border-[var(--cn-orange)] focus:ring-1 focus:ring-[var(--cn-orange)]"
+                className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 font-mono text-sm text-gray-900 outline-none focus:border-[var(--cn-orange)] focus:ring-1 focus:ring-[var(--cn-orange)]"
               />
+              {preview && content && <ContentPreview content={content} />}
             </div>
+            <MarkupHelp />
           </div>
           <DialogFooter>
             <DialogClose render={<Button variant="outline" />}>Cancel</DialogClose>
@@ -421,12 +513,18 @@ function NewEntryDialog({
 
 // --- Pronunciation Dialog ---
 
+interface HanziItem {
+  hanzi: string;
+  pinyin: string;
+  english: string;
+}
+
 function PronunciationDialog({
   highlights,
   open,
   onOpenChange,
 }: {
-  highlights: EntryHighlight[];
+  highlights: HanziItem[];
   open: boolean;
   onOpenChange: (v: boolean) => void;
 }) {
@@ -450,23 +548,23 @@ function PronunciationDialog({
           ) : (
             highlights.map((h) => (
               <div
-                key={h.id}
-                data-testid={`pronunciation-item-${h.character_zh}`}
+                key={h.hanzi}
+                data-testid={`pronunciation-item-${h.hanzi}`}
                 className="flex items-center justify-between rounded-lg border px-4 py-3"
               >
                 <div className="flex items-center gap-4">
                   <span className="text-2xl font-bold text-[var(--cn-orange)]">
-                    {h.character_zh}
+                    {h.hanzi}
                   </span>
                   <div>
                     <p className="text-sm font-medium text-gray-900">{h.pinyin}</p>
-                    <p className="text-xs text-gray-500">{h.meaning}</p>
+                    <p className="text-xs text-gray-500">{h.english}</p>
                   </div>
                 </div>
                 <button
-                  data-testid={`pronunciation-speak-${h.character_zh}`}
+                  data-testid={`pronunciation-speak-${h.hanzi}`}
                   onClick={() => {
-                    const utterance = new SpeechSynthesisUtterance(h.character_zh);
+                    const utterance = new SpeechSynthesisUtterance(h.hanzi);
                     utterance.lang = "zh-CN";
                     utterance.rate = 0.8;
                     speechSynthesis.speak(utterance);
@@ -492,7 +590,7 @@ function FlashcardModeDialog({
   open,
   onOpenChange,
 }: {
-  highlights: EntryHighlight[];
+  highlights: HanziItem[];
   open: boolean;
   onOpenChange: (v: boolean) => void;
 }) {
@@ -581,7 +679,7 @@ function FlashcardModeDialog({
             >
               {!flipped ? (
                 <div data-testid="flashcard-mode-front" className="text-center">
-                  <p className="text-5xl font-bold text-gray-900">{card.character_zh}</p>
+                  <p className="text-5xl font-bold text-gray-900">{card.hanzi}</p>
                   <p className="mt-3 flex items-center justify-center gap-1 text-xs text-gray-400">
                     <Eye className="h-3.5 w-3.5" />
                     Tap to reveal
@@ -590,7 +688,7 @@ function FlashcardModeDialog({
               ) : (
                 <div data-testid="flashcard-mode-back" className="text-center">
                   <p className="text-lg font-medium text-gray-900">{card.pinyin}</p>
-                  <p className="mt-1 text-sm text-gray-600">{card.meaning}</p>
+                  <p className="mt-1 text-sm text-gray-600">{card.english}</p>
                 </div>
               )}
             </button>

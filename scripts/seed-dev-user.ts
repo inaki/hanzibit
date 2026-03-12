@@ -49,10 +49,6 @@ function seedData() {
       unit TEXT, hsk_level INTEGER DEFAULT 1, content_zh TEXT NOT NULL, bookmarked INTEGER DEFAULT 0,
       created_at TEXT DEFAULT (datetime('now')), updated_at TEXT DEFAULT (datetime('now'))
     );
-    CREATE TABLE IF NOT EXISTS entry_highlights (
-      id TEXT PRIMARY KEY, entry_id TEXT NOT NULL REFERENCES journal_entries(id) ON DELETE CASCADE,
-      character_zh TEXT NOT NULL, pinyin TEXT, meaning TEXT
-    );
     CREATE TABLE IF NOT EXISTS entry_annotations (
       id TEXT PRIMARY KEY, entry_id TEXT NOT NULL REFERENCES journal_entries(id) ON DELETE CASCADE,
       type TEXT NOT NULL CHECK(type IN ('grammar_tip', 'mnemonic')), title TEXT NOT NULL, content TEXT NOT NULL
@@ -96,7 +92,6 @@ function seedData() {
   console.log("Seeding demo data...");
 
   const insertEntry = db.prepare("INSERT INTO journal_entries (id, user_id, title_zh, title_en, unit, hsk_level, content_zh, bookmarked, created_at) VALUES (?,?,?,?,?,?,?,?,?)");
-  const insertHighlight = db.prepare("INSERT INTO entry_highlights (id, entry_id, character_zh, pinyin, meaning) VALUES (?,?,?,?,?)");
   const insertAnnotation = db.prepare("INSERT INTO entry_annotations (id, entry_id, type, title, content) VALUES (?,?,?,?,?)");
   const insertVocab = db.prepare("INSERT INTO vocabulary (id, user_id, character_zh, pinyin, meaning, hsk_level, category, mastery, created_at, last_reviewed) VALUES (?,?,?,?,?,?,?,?,?,?)");
   const insertGrammar = db.prepare("INSERT INTO grammar_points (id, user_id, title, pattern, explanation, examples, hsk_level) VALUES (?,?,?,?,?,?,?)");
@@ -105,17 +100,11 @@ function seedData() {
   const insertReview = db.prepare("INSERT INTO review_history (id, user_id, item_type, item_id, item_label, score, reviewed_at) VALUES (?,?,?,?,?,?,?)");
 
   const seed = db.transaction(() => {
-    // --- Journal Entries ---
+    // --- Journal Entries (content uses [hanzi|pinyin|english] inline markup) ---
     const e1 = "entry-001";
     insertEntry.run(e1, DEV_USER_ID, "我的一天", "My Day", "Unit 4: Daily Life", 2,
-      "今天 我 早上 七点 起床。 我很 累，但是我也 很 高兴。\n\n八点的时候，我吃 早餐。 我喜欢喝 咖啡。 九点我开始 学习。 我想练习 写字。",
+      "今天我早上七点起床。我很[累|lei4|tired]，但是我也很[高兴|gao1 xing4|happy]。\n\n八点的时候，我吃[早餐|zao3 can1|breakfast]。我喜欢喝[咖啡|ka1 fei1|coffee]。九点我开始[学习|xue2 xi2|to study]。我想练习[写字|xie3 zi4|to write characters]。",
       1, "2023-10-24T08:00:00");
-    insertHighlight.run(randomUUID(), e1, "累", "lèi", "tired");
-    insertHighlight.run(randomUUID(), e1, "高兴", "gāoxìng", "happy");
-    insertHighlight.run(randomUUID(), e1, "早餐", "zǎocān", "breakfast");
-    insertHighlight.run(randomUUID(), e1, "咖啡", "kāfēi", "coffee");
-    insertHighlight.run(randomUUID(), e1, "学习", "xuéxí", "to study");
-    insertHighlight.run(randomUUID(), e1, "写字", "xiězì", "to write characters");
     insertAnnotation.run(randomUUID(), e1, "grammar_tip", "Grammar Tip",
       'The particle "也" (yě) always comes after the subject and before the adjective/verb.');
     insertAnnotation.run(randomUUID(), e1, "mnemonic", "Mnemonic",
@@ -123,16 +112,8 @@ function seedData() {
 
     const e2 = "entry-002";
     insertEntry.run(e2, DEV_USER_ID, "在餐厅", "At the Restaurant", "Unit 5: Food & Drink", 2,
-      "昨天晚上我和朋友去 餐厅 吃饭。 我们点了很多 菜。 服务员 很热情。\n\n我吃了 鱼 和 米饭。 我的朋友喝了 啤酒。 菜很 好吃，我们都很 满意。",
+      "昨天晚上我和朋友去[餐厅|can1 ting1|restaurant]吃饭。[服务员|fu2 wu4 yuan2|waiter]很热情。我吃了[鱼|yu2|fish]和[米饭|mi3 fan4|rice]。我的朋友喝了[啤酒|pi2 jiu3|beer]。\n\n[菜|cai4|dish / food]很[好吃|hao3 chi1|delicious]，我们都很[满意|man3 yi4|satisfied]。",
       0, "2023-10-22T19:30:00");
-    insertHighlight.run(randomUUID(), e2, "餐厅", "cāntīng", "restaurant");
-    insertHighlight.run(randomUUID(), e2, "菜", "cài", "dish / food");
-    insertHighlight.run(randomUUID(), e2, "服务员", "fúwùyuán", "waiter");
-    insertHighlight.run(randomUUID(), e2, "鱼", "yú", "fish");
-    insertHighlight.run(randomUUID(), e2, "米饭", "mǐfàn", "rice");
-    insertHighlight.run(randomUUID(), e2, "啤酒", "píjiǔ", "beer");
-    insertHighlight.run(randomUUID(), e2, "好吃", "hǎochī", "delicious");
-    insertHighlight.run(randomUUID(), e2, "满意", "mǎnyì", "satisfied");
     insertAnnotation.run(randomUUID(), e2, "grammar_tip", "Grammar Tip",
       '"了" after a verb indicates completed action. "我吃了鱼" = I ate fish (completed).');
     insertAnnotation.run(randomUUID(), e2, "mnemonic", "Mnemonic",
@@ -140,29 +121,15 @@ function seedData() {
 
     const e3 = "entry-003";
     insertEntry.run(e3, DEV_USER_ID, "我的家人", "My Family", "Unit 3: Family", 1,
-      "我的 家 有四口人。 爸爸、妈妈、姐姐 和我。\n\n爸爸 是 老师。 妈妈 是 医生。 姐姐 是 学生。 我们住在 北京。",
+      "我的[家|jia1|home / family]有四口人。[爸爸|ba4 ba|father]、[妈妈|ma1 ma|mother]、[姐姐|jie3 jie|older sister]和我。\n\n[爸爸|ba4 ba|father]是[老师|lao3 shi1|teacher]。[妈妈|ma1 ma|mother]是[医生|yi1 sheng1|doctor]。[姐姐|jie3 jie|older sister]是[学生|xue2 sheng1|student]。我们住在北京。",
       0, "2023-10-20T10:00:00");
-    insertHighlight.run(randomUUID(), e3, "家", "jiā", "home / family");
-    insertHighlight.run(randomUUID(), e3, "爸爸", "bàba", "father");
-    insertHighlight.run(randomUUID(), e3, "妈妈", "māma", "mother");
-    insertHighlight.run(randomUUID(), e3, "姐姐", "jiějie", "older sister");
-    insertHighlight.run(randomUUID(), e3, "老师", "lǎoshī", "teacher");
-    insertHighlight.run(randomUUID(), e3, "医生", "yīshēng", "doctor");
-    insertHighlight.run(randomUUID(), e3, "学生", "xuéshēng", "student");
     insertAnnotation.run(randomUUID(), e3, "grammar_tip", "Grammar Tip",
       '"有" (yǒu) means "to have". For counting family members: 我的家有四口人 = My family has 4 people. "口" is the measure word for family members.');
 
     const e4 = "entry-004";
     insertEntry.run(e4, DEV_USER_ID, "去商店买东西", "Shopping", "Unit 6: Shopping", 2,
-      "今天下午我去 商店 买 东西。 我想买一件新的 衣服 和一双 鞋子。\n\n那件衣服太 贵 了，我没买。 但是鞋子很 便宜，我买了。 我花了一百块 钱。",
+      "今天下午我去[商店|shang1 dian4|shop / store]买[东西|dong1 xi|things / stuff]。我想买一件新的[衣服|yi1 fu|clothes]和一双[鞋子|xie2 zi|shoes]。\n\n那件衣服太[贵|gui4|expensive]了，我没买。但是鞋子很[便宜|pian2 yi|cheap]，我买了。我花了一百块[钱|qian2|money]。",
       0, "2023-10-18T14:00:00");
-    insertHighlight.run(randomUUID(), e4, "商店", "shāngdiàn", "shop / store");
-    insertHighlight.run(randomUUID(), e4, "东西", "dōngxi", "things / stuff");
-    insertHighlight.run(randomUUID(), e4, "衣服", "yīfu", "clothes");
-    insertHighlight.run(randomUUID(), e4, "鞋子", "xiézi", "shoes");
-    insertHighlight.run(randomUUID(), e4, "贵", "guì", "expensive");
-    insertHighlight.run(randomUUID(), e4, "便宜", "piányi", "cheap");
-    insertHighlight.run(randomUUID(), e4, "钱", "qián", "money");
     insertAnnotation.run(randomUUID(), e4, "grammar_tip", "Grammar Tip",
       '"太...了" is a pattern meaning "too...". 太贵了 = too expensive. It expresses excess.');
     insertAnnotation.run(randomUUID(), e4, "mnemonic", "Mnemonic",
@@ -170,14 +137,8 @@ function seedData() {
 
     const e5 = "entry-005";
     insertEntry.run(e5, DEV_USER_ID, "天气怎么样", "How's the Weather", "Unit 7: Weather", 2,
-      "今天的 天气 很好。 外面很 暖和，没有 风。 天空很 蓝。\n\n但是明天会 下雨。 我需要带 雨伞。 我不喜欢下雨天，因为很 冷。",
+      "今天的[天气|tian1 qi4|weather]很好。外面很[暖和|nuan3 huo|warm]，没有[风|feng1|wind]。天空很蓝。\n\n但是明天会[下雨|xia4 yu3|to rain]。我需要带[雨伞|yu3 san3|umbrella]。我不喜欢下雨天，因为很[冷|leng3|cold]。",
       0, "2023-10-15T09:00:00");
-    insertHighlight.run(randomUUID(), e5, "天气", "tiānqì", "weather");
-    insertHighlight.run(randomUUID(), e5, "暖和", "nuǎnhuo", "warm");
-    insertHighlight.run(randomUUID(), e5, "风", "fēng", "wind");
-    insertHighlight.run(randomUUID(), e5, "下雨", "xiàyǔ", "to rain");
-    insertHighlight.run(randomUUID(), e5, "雨伞", "yǔsǎn", "umbrella");
-    insertHighlight.run(randomUUID(), e5, "冷", "lěng", "cold");
     insertAnnotation.run(randomUUID(), e5, "grammar_tip", "Grammar Tip",
       '"会" (huì) before a verb indicates future likelihood: 明天会下雨 = It will rain tomorrow.');
 
@@ -308,7 +269,7 @@ function seedData() {
 
   seed();
   console.log("Demo data seeded successfully!");
-  console.log(`  5 journal entries with highlights & annotations`);
+  console.log(`  5 journal entries with inline vocabulary markup & annotations`);
   console.log(`  25 vocabulary items across HSK 1-2`);
   console.log(`  8 grammar points`);
   console.log(`  12 flashcards`);

@@ -15,14 +15,6 @@ export interface JournalEntry {
   updated_at: string;
 }
 
-export interface EntryHighlight {
-  id: string;
-  entry_id: string;
-  character_zh: string;
-  pinyin: string | null;
-  meaning: string | null;
-}
-
 export interface EntryAnnotation {
   id: string;
   entry_id: string;
@@ -102,13 +94,6 @@ export function getJournalEntry(id: string): JournalEntry | undefined {
   return db.prepare("SELECT * FROM journal_entries WHERE id = ?").get(id) as
     | JournalEntry
     | undefined;
-}
-
-export function getEntryHighlights(entryId: string): EntryHighlight[] {
-  const db = getDb();
-  return db
-    .prepare("SELECT * FROM entry_highlights WHERE entry_id = ?")
-    .all(entryId) as EntryHighlight[];
 }
 
 export function getEntryAnnotations(entryId: string): EntryAnnotation[] {

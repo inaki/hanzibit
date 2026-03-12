@@ -1,48 +1,85 @@
 "use client";
 
-import type { JournalEntry, EntryHighlight, EntryAnnotation } from "@/lib/data";
+import { useRef, useState } from "react";
+import type { JournalEntry, EntryAnnotation } from "@/lib/data";
+import { parseInput, type Token } from "@/lib/parse-tokens";
 
 interface JournalEntryViewProps {
   entry: JournalEntry;
-  highlights: EntryHighlight[];
   annotations: EntryAnnotation[];
 }
 
-function highlightText(text: string, highlights: EntryHighlight[]) {
-  if (highlights.length === 0) return text;
+function HanziToken({ hanzi, pinyin, english }: { hanzi: string; pinyin: string; english: string }) {
+  const [show, setShow] = useState(false);
+  const ref = useRef<HTMLSpanElement>(null);
+  const [pos, setPos] = useState<"left" | "center" | "right">("center");
 
-  const chars = highlights.map((h) => h.character_zh);
-  // Sort by length descending so longer matches take priority
-  chars.sort((a, b) => b.length - a.length);
-
-  const pattern = new RegExp(`(${chars.map(escapeRegex).join("|")})`, "g");
-  const parts = text.split(pattern);
-
-  return parts.map((part, i) => {
-    const match = highlights.find((h) => h.character_zh === part);
-    if (match) {
-      return (
-        <span
-          key={i}
-          data-testid={`journal-entry-vocab-${match.character_zh}`}
-          className="font-bold text-[var(--cn-orange)]"
-          title={`${match.pinyin} — ${match.meaning}`}
-        >
-          {part}
-        </span>
-      );
+  const handleEnter = () => {
+    if (ref.current) {
+      const rect = ref.current.getBoundingClientRect();
+      if (rect.left < 120) setPos("left");
+      else if (window.innerWidth - rect.right < 120) setPos("right");
+      else setPos("center");
     }
-    return part;
-  });
+    setShow(true);
+  };
+
+  return (
+    <span
+      ref={ref}
+      data-testid={`journal-entry-vocab-${hanzi}`}
+      className="relative inline-block cursor-pointer"
+      onMouseEnter={handleEnter}
+      onMouseLeave={() => setShow(false)}
+      onClick={() => setShow((s) => !s)}
+    >
+      <span
+        className={`rounded px-0.5 font-bold transition-all ${
+          show
+            ? "bg-[var(--cn-orange)] text-white"
+            : "text-[var(--cn-orange)] border-b-2 border-dotted border-[var(--cn-orange)]/40"
+        }`}
+      >
+        {hanzi}
+      </span>
+      {show && (
+        <span
+          className={`absolute bottom-[calc(100%+8px)] z-50 min-w-[100px] rounded-lg bg-gray-900 px-3 py-2 text-center shadow-lg pointer-events-none ${
+            pos === "center"
+              ? "left-1/2 -translate-x-1/2"
+              : pos === "left"
+                ? "left-0"
+                : "right-0"
+          }`}
+        >
+          <span className="block text-sm font-bold text-[var(--cn-orange-light)]">{pinyin}</span>
+          <span className="block text-xs text-gray-300">{english}</span>
+          {/* Arrow */}
+          <span
+            className={`absolute top-full border-[6px] border-transparent border-t-gray-900 ${
+              pos === "center"
+                ? "left-1/2 -translate-x-1/2"
+                : pos === "left"
+                  ? "left-5"
+                  : "right-5"
+            }`}
+          />
+        </span>
+      )}
+    </span>
+  );
 }
 
-function escapeRegex(s: string) {
-  return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+function renderTokens(tokens: Token[]) {
+  return tokens.map((t, i) => {
+    if (t.type === "break") return <br key={i} />;
+    if (t.type === "text") return <span key={i}>{t.text}</span>;
+    return <HanziToken key={i} hanzi={t.hanzi} pinyin={t.pinyin} english={t.english} />;
+  });
 }
 
 export function JournalEntryView({
   entry,
-  highlights,
   annotations,
 }: JournalEntryViewProps) {
   const date = new Date(entry.created_at).toLocaleDateString("en-US", {
@@ -51,6 +88,7 @@ export function JournalEntryView({
     day: "numeric",
   });
 
+  // Split by double newlines into paragraphs, then parse each
   const paragraphs = entry.content_zh.split("\n\n");
 
   return (
@@ -81,10 +119,10 @@ export function JournalEntryView({
         <span className="text-xl font-normal text-gray-400">({entry.title_en})</span>
       </h1>
 
-      {/* Chinese Text Content */}
+      {/* Chinese Text Content — parsed from inline markup */}
       <div data-testid="journal-entry-content" className="space-y-6 text-[22px] leading-[2] text-gray-800">
         {paragraphs.map((paragraph, i) => (
-          <p key={i}>{highlightText(paragraph, highlights)}</p>
+          <p key={i}>{renderTokens(parseInput(paragraph))}</p>
         ))}
       </div>
 

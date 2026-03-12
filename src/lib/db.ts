@@ -30,14 +30,6 @@ function initSchema(db: Database.Database) {
       updated_at TEXT DEFAULT (datetime('now'))
     );
 
-    CREATE TABLE IF NOT EXISTS entry_highlights (
-      id TEXT PRIMARY KEY,
-      entry_id TEXT NOT NULL REFERENCES journal_entries(id) ON DELETE CASCADE,
-      character_zh TEXT NOT NULL,
-      pinyin TEXT,
-      meaning TEXT
-    );
-
     CREATE TABLE IF NOT EXISTS entry_annotations (
       id TEXT PRIMARY KEY,
       entry_id TEXT NOT NULL REFERENCES journal_entries(id) ON DELETE CASCADE,
