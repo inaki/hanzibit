@@ -94,5 +94,24 @@ function initSchema(db: Database.Database) {
       score INTEGER CHECK(score BETWEEN 1 AND 5),
       reviewed_at TEXT DEFAULT (datetime('now'))
     );
+
+    CREATE TABLE IF NOT EXISTS cedict_entries (
+      simplified TEXT NOT NULL,
+      traditional TEXT NOT NULL,
+      pinyin TEXT NOT NULL,
+      pinyin_display TEXT NOT NULL,
+      english TEXT NOT NULL,
+      char_count INTEGER NOT NULL
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_cedict_simplified ON cedict_entries(simplified);
+
+    CREATE TABLE IF NOT EXISTS gloss_cache (
+      entry_id TEXT NOT NULL,
+      content_hash TEXT NOT NULL,
+      gloss_json TEXT NOT NULL,
+      created_at TEXT DEFAULT (datetime('now')),
+      PRIMARY KEY (entry_id)
+    );
   `);
 }

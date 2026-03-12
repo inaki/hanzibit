@@ -37,6 +37,10 @@ yarn-error.log*
 *.db
 *.db-journal
 
+# cedict dictionary files
+cedict.txt
+cedict.txt.gz
+
 # vercel
 .vercel
 

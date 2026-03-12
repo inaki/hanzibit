@@ -3,6 +3,8 @@
 import { useRef, useState } from "react";
 import type { JournalEntry, EntryAnnotation } from "@/lib/data";
 import { parseInput, type Token } from "@/lib/parse-tokens";
+import { useGloss } from "./gloss-context";
+import { InterlinearGlossView } from "./interlinear-gloss-view";
 
 interface JournalEntryViewProps {
   entry: JournalEntry;
@@ -91,6 +93,9 @@ export function JournalEntryView({
   // Split by double newlines into paragraphs, then parse each
   const paragraphs = entry.content_zh.split("\n\n");
 
+  const gloss = useGloss();
+  const showGloss = gloss.state.active && gloss.state.data && !gloss.state.loading;
+
   return (
     <div data-testid="journal-entry" className="mx-auto max-w-2xl rounded-xl bg-white p-8 shadow-sm md:p-10">
       {/* Entry Header */}
@@ -119,12 +124,19 @@ export function JournalEntryView({
         <span className="text-xl font-normal text-gray-400">({entry.title_en})</span>
       </h1>
 
-      {/* Chinese Text Content — parsed from inline markup */}
-      <div data-testid="journal-entry-content" className="space-y-6 text-[22px] leading-[2] text-gray-800">
-        {paragraphs.map((paragraph, i) => (
-          <p key={i}>{renderTokens(parseInput(paragraph))}</p>
-        ))}
-      </div>
+      {/* Chinese Text Content — normal or interlinear gloss */}
+      {showGloss ? (
+        <InterlinearGlossView paragraphs={gloss.state.data!} />
+      ) : (
+        <div data-testid="journal-entry-content" className="space-y-6 text-[22px] leading-[2] text-gray-800">
+          {gloss.state.loading && gloss.state.active && (
+            <p className="text-sm text-gray-400 animate-pulse">Loading interlinear gloss...</p>
+          )}
+          {paragraphs.map((paragraph, i) => (
+            <p key={i}>{renderTokens(parseInput(paragraph))}</p>
+          ))}
+        </div>
+      )}
 
       {/* Self-Notes & Annotations */}
       {annotations.length > 0 && (

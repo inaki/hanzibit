@@ -12,6 +12,7 @@ import {
   Volume2,
   Eye,
   RotateCcw,
+  Languages,
 } from "lucide-react";
 import {
   Tooltip,
@@ -32,6 +33,7 @@ import { Input } from "@/components/ui/input";
 import type { JournalEntry } from "@/lib/data";
 import { toggleBookmarkAction, createJournalEntry, updateJournalEntry } from "@/lib/actions";
 import { parseInput, extractHanziTokens } from "@/lib/parse-tokens";
+import { useGloss } from "./gloss-context";
 
 interface NotebookActionBarProps {
   entry?: JournalEntry;
@@ -47,6 +49,7 @@ export function NotebookActionBar({ entry }: NotebookActionBarProps) {
   const [flashcardOpen, setFlashcardOpen] = useState(false);
   const [bookmarked, setBookmarked] = useState(entry?.bookmarked === 1);
   const [isPending, startTransition] = useTransition();
+  const gloss = useGloss();
 
   function handleBookmark() {
     if (!entry) return;
@@ -145,6 +148,27 @@ export function NotebookActionBar({ entry }: NotebookActionBarProps) {
             <Layers className="h-[18px] w-[18px]" />
           </TooltipTrigger>
           <TooltipContent side="left">Flashcard mode</TooltipContent>
+        </Tooltip>
+
+        {/* Interlinear Gloss */}
+        <Tooltip>
+          <TooltipTrigger
+            data-testid="action-bar-gloss"
+            onMouseEnter={() => entry && gloss.activate(entry.id, entry.content_zh)}
+            onMouseLeave={() => gloss.deactivate()}
+            onClick={() => entry && gloss.toggleSticky(entry.id, entry.content_zh)}
+            disabled={!entry}
+            className={`rounded-lg p-2.5 transition-colors disabled:opacity-30 ${
+              gloss.state.sticky
+                ? "bg-[var(--cn-orange)] text-white"
+                : "text-gray-400 hover:bg-gray-100 hover:text-gray-600"
+            }`}
+          >
+            <Languages className="h-[18px] w-[18px]" />
+          </TooltipTrigger>
+          <TooltipContent side="left">
+            {gloss.state.sticky ? "Hide interlinear" : "Interlinear gloss"}
+          </TooltipContent>
         </Tooltip>
 
         <div className="flex-1" />

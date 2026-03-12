@@ -3,6 +3,7 @@ import { DEV_USER_ID } from "@/lib/constants";
 import { JournalEntryView } from "@/components/notebook/journal-entry";
 import { NotebookActionBar } from "@/components/notebook/action-bar";
 import { EntryList } from "@/components/notebook/entry-list";
+import { GlossProvider } from "@/components/notebook/gloss-context";
 
 export const dynamic = "force-dynamic";
 
@@ -28,25 +29,27 @@ async function NotebookPageInner({
   const annotations = activeEntry ? getEntryAnnotations(activeEntry.id) : [];
 
   return (
-    <div data-testid="notebook-page" className="flex h-full">
-      {/* Entry sidebar list */}
-      <EntryList entries={entries} activeEntryId={activeEntry?.id} />
+    <GlossProvider>
+      <div data-testid="notebook-page" className="flex h-full">
+        {/* Entry sidebar list */}
+        <EntryList entries={entries} activeEntryId={activeEntry?.id} />
 
-      {/* Main content */}
-      <div className="flex-1 overflow-auto p-6 md:p-10">
-        {activeEntry ? (
-          <JournalEntryView
-            entry={activeEntry}
-            annotations={annotations}
-          />
-        ) : (
-          <div data-testid="notebook-empty-state" className="flex h-full items-center justify-center text-gray-400">
-            <p>No journal entries yet. Create your first entry!</p>
-          </div>
-        )}
+        {/* Main content */}
+        <div className="flex-1 overflow-auto p-6 md:p-10">
+          {activeEntry ? (
+            <JournalEntryView
+              entry={activeEntry}
+              annotations={annotations}
+            />
+          ) : (
+            <div data-testid="notebook-empty-state" className="flex h-full items-center justify-center text-gray-400">
+              <p>No journal entries yet. Create your first entry!</p>
+            </div>
+          )}
+        </div>
+
+        <NotebookActionBar entry={activeEntry} />
       </div>
-
-      <NotebookActionBar entry={activeEntry} />
-    </div>
+    </GlossProvider>
   );
 }
