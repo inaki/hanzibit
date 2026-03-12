@@ -110,7 +110,7 @@ export function toggleBookmark(entryId: string): void {
   ).run(entryId);
 }
 
-// --- Vocabulary ---
+// --- Vocabulary (legacy) ---
 
 export function getVocabulary(userId: string): VocabularyItem[] {
   const db = getDb();
@@ -129,6 +129,51 @@ export function getVocabularyByHskLevel(
       "SELECT * FROM vocabulary WHERE user_id = ? AND hsk_level = ? ORDER BY character_zh"
     )
     .all(userId, level) as VocabularyItem[];
+}
+
+// --- HSK Words ---
+
+export interface HskWord {
+  id: number;
+  simplified: string;
+  traditional: string | null;
+  pinyin: string;
+  english: string;
+  hsk_level: number;
+}
+
+export interface HskLevelSummary {
+  hsk_level: number;
+  word_count: number;
+}
+
+export function getHskWords(level?: number): HskWord[] {
+  const db = getDb();
+  if (level) {
+    return db
+      .prepare("SELECT * FROM hsk_words WHERE hsk_level = ? ORDER BY id")
+      .all(level) as HskWord[];
+  }
+  return db
+    .prepare("SELECT * FROM hsk_words ORDER BY hsk_level, id")
+    .all() as HskWord[];
+}
+
+export function getHskLevelSummaries(): HskLevelSummary[] {
+  const db = getDb();
+  return db
+    .prepare("SELECT hsk_level, COUNT(*) as word_count FROM hsk_words GROUP BY hsk_level ORDER BY hsk_level")
+    .all() as HskLevelSummary[];
+}
+
+export function searchHskWords(query: string): HskWord[] {
+  const db = getDb();
+  const pattern = `%${query}%`;
+  return db
+    .prepare(
+      "SELECT * FROM hsk_words WHERE simplified LIKE ? OR pinyin LIKE ? OR english LIKE ? ORDER BY hsk_level, id LIMIT 50"
+    )
+    .all(pattern, pattern, pattern) as HskWord[];
 }
 
 // --- Grammar Points ---

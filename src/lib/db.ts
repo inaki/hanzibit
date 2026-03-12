@@ -95,6 +95,18 @@ function initSchema(db: Database.Database) {
       reviewed_at TEXT DEFAULT (datetime('now'))
     );
 
+    CREATE TABLE IF NOT EXISTS hsk_words (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      simplified TEXT NOT NULL,
+      traditional TEXT,
+      pinyin TEXT NOT NULL,
+      english TEXT NOT NULL,
+      hsk_level INTEGER NOT NULL
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_hsk_simplified ON hsk_words(simplified);
+    CREATE INDEX IF NOT EXISTS idx_hsk_level ON hsk_words(hsk_level);
+
     CREATE TABLE IF NOT EXISTS cedict_entries (
       simplified TEXT NOT NULL,
       traditional TEXT NOT NULL,

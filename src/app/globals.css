@@ -134,5 +134,12 @@
   }
   html {
     @apply font-sans;
+    font-size: 16px;
+  }
+  html.cn-font-large {
+    font-size: 18px;
+  }
+  html.cn-font-xl {
+    font-size: 20px;
   }
 }

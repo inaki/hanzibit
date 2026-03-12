@@ -1,76 +1,94 @@
 "use client";
 
-import { useState } from "react";
-import type { VocabularyItem } from "@/lib/data";
+import { useState, useMemo } from "react";
+import { Search } from "lucide-react";
+import type { HskWord, HskLevelSummary } from "@/lib/data";
 
-interface VocabularyListProps {
-  items: VocabularyItem[];
+interface HskVocabularyListProps {
+  words: HskWord[];
+  summaries: HskLevelSummary[];
 }
 
-const categories = ["all", "greetings", "verbs", "adjectives", "food", "places", "professions", "family", "shopping", "nature", "technology", "people", "daily life", "general"];
+export function HskVocabularyList({ words, summaries }: HskVocabularyListProps) {
+  const [activeLevel, setActiveLevel] = useState(1);
+  const [search, setSearch] = useState("");
 
-export function VocabularyList({ items }: VocabularyListProps) {
-  const [filter, setFilter] = useState("all");
-  const [hskFilter, setHskFilter] = useState<number | null>(null);
+  const filtered = useMemo(() => {
+    let result = words.filter((w) => w.hsk_level === activeLevel);
+    if (search.trim()) {
+      const q = search.trim().toLowerCase();
+      result = result.filter(
+        (w) =>
+          w.simplified.includes(q) ||
+          w.pinyin.toLowerCase().includes(q) ||
+          w.english.toLowerCase().includes(q)
+      );
+    }
+    return result;
+  }, [words, activeLevel, search]);
 
-  const filtered = items.filter((item) => {
-    if (filter !== "all" && item.category !== filter) return false;
-    if (hskFilter !== null && item.hsk_level !== hskFilter) return false;
-    return true;
-  });
-
-  const usedCategories = categories.filter(
-    (c) => c === "all" || items.some((i) => i.category === c)
-  );
+  const activeSummary = summaries.find((s) => s.hsk_level === activeLevel);
 
   return (
     <div data-testid="vocabulary-list" className="mx-auto max-w-4xl">
+      {/* Header */}
       <div className="mb-8">
-        <h1 data-testid="vocabulary-list-heading" className="text-3xl font-bold text-gray-900">Vocabulary List</h1>
-        <p data-testid="vocabulary-list-count" className="mt-1 text-sm text-gray-500">
-          {filtered.length} {filtered.length === 1 ? "word" : "words"}
-          {filter !== "all" ? ` in "${filter}"` : ""}
-          {hskFilter !== null ? ` · HSK ${hskFilter}` : ""}
+        <h1 data-testid="vocabulary-list-heading" className="text-3xl font-bold text-gray-900">
+          HSK Vocabulary
+        </h1>
+        <p className="mt-1 text-sm text-gray-500">
+          Official word lists for the HSK proficiency exam
         </p>
       </div>
 
-      {/* Filters */}
-      <div data-testid="vocabulary-filters" className="mb-6 flex flex-wrap gap-2">
-        <div className="flex flex-wrap gap-1.5">
-          {usedCategories.map((cat) => (
-            <button
-              key={cat}
-              data-testid={`vocabulary-filter-${cat}`}
-              onClick={() => setFilter(cat)}
-              className={`rounded-full px-3 py-1 text-xs font-medium transition-colors ${
-                filter === cat
-                  ? "bg-[var(--cn-orange)] text-white"
-                  : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+      {/* Level tabs */}
+      <div data-testid="vocabulary-level-tabs" className="mb-6 flex flex-wrap gap-2">
+        {summaries.map((s) => (
+          <button
+            key={s.hsk_level}
+            data-testid={`vocabulary-level-${s.hsk_level}`}
+            onClick={() => { setActiveLevel(s.hsk_level); setSearch(""); }}
+            className={`flex items-center gap-2 rounded-lg px-4 py-2.5 text-sm font-medium transition-colors ${
+              activeLevel === s.hsk_level
+                ? "bg-[var(--cn-orange)] text-white shadow-sm"
+                : "bg-white text-gray-600 border border-gray-200 hover:bg-gray-50"
+            }`}
+          >
+            HSK {s.hsk_level}
+            <span
+              className={`rounded-full px-2 py-0.5 text-xs ${
+                activeLevel === s.hsk_level
+                  ? "bg-white/20 text-white"
+                  : "bg-gray-100 text-gray-500"
               }`}
             >
-              {cat === "all" ? "All" : cat.charAt(0).toUpperCase() + cat.slice(1)}
-            </button>
-          ))}
-        </div>
-        <div className="ml-auto flex gap-1.5">
-          {[null, 1, 2].map((level) => (
-            <button
-              key={level ?? "any"}
-              data-testid={`vocabulary-hsk-filter-${level ?? "all"}`}
-              onClick={() => setHskFilter(level)}
-              className={`rounded-full px-3 py-1 text-xs font-medium transition-colors ${
-                hskFilter === level
-                  ? "bg-[var(--cn-orange)] text-white"
-                  : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-              }`}
-            >
-              {level === null ? "All HSK" : `HSK ${level}`}
-            </button>
-          ))}
-        </div>
+              {s.word_count}
+            </span>
+          </button>
+        ))}
       </div>
 
-      {/* Vocabulary Table */}
+      {/* Search */}
+      <div className="relative mb-4">
+        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+        <input
+          data-testid="vocabulary-search"
+          type="text"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder="Search by character, pinyin, or meaning..."
+          className="w-full rounded-lg border border-gray-200 bg-white py-2.5 pl-10 pr-4 text-sm outline-none focus:border-[var(--cn-orange)] focus:ring-1 focus:ring-[var(--cn-orange)]"
+        />
+      </div>
+
+      {/* Count */}
+      <p data-testid="vocabulary-list-count" className="mb-3 text-xs text-gray-400">
+        {search
+          ? `${filtered.length} result${filtered.length !== 1 ? "s" : ""}`
+          : `${activeSummary?.word_count ?? 0} words in HSK ${activeLevel}`}
+      </p>
+
+      {/* Word table */}
       <div data-testid="vocabulary-table" className="overflow-hidden rounded-xl border bg-white">
         <table className="w-full">
           <thead>
@@ -78,47 +96,32 @@ export function VocabularyList({ items }: VocabularyListProps) {
               <th className="px-5 py-3">Character</th>
               <th className="px-5 py-3">Pinyin</th>
               <th className="px-5 py-3">Meaning</th>
-              <th className="px-5 py-3">HSK</th>
-              <th className="px-5 py-3">Category</th>
-              <th className="px-5 py-3">Mastery</th>
             </tr>
           </thead>
           <tbody className="divide-y">
-            {filtered.map((item) => (
+            {filtered.map((word) => (
               <tr
-                key={item.id}
-                data-testid={`vocabulary-row-${item.character_zh}`}
+                key={word.id}
+                data-testid={`vocabulary-row-${word.simplified}`}
                 className="transition-colors hover:bg-gray-50"
               >
-                <td className="px-5 py-3 text-lg font-bold text-[var(--cn-orange)]">
-                  {item.character_zh}
-                </td>
-                <td className="px-5 py-3 text-sm text-gray-700">{item.pinyin}</td>
-                <td className="px-5 py-3 text-sm text-gray-700">{item.meaning}</td>
                 <td className="px-5 py-3">
-                  <span className="rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-600">
-                    HSK {item.hsk_level}
+                  <span className="text-lg font-bold text-[var(--cn-orange)]">
+                    {word.simplified}
                   </span>
+                  {word.traditional && word.traditional !== word.simplified && (
+                    <span className="ml-2 text-sm text-gray-400">{word.traditional}</span>
+                  )}
                 </td>
-                <td className="px-5 py-3 text-xs text-gray-500 capitalize">{item.category}</td>
-                <td className="px-5 py-3">
-                  <div className="flex items-center gap-2">
-                    <div className="h-1.5 w-16 rounded-full bg-gray-200">
-                      <div
-                        className="h-full rounded-full bg-[var(--cn-orange)]"
-                        style={{ width: `${item.mastery}%` }}
-                      />
-                    </div>
-                    <span className="text-xs text-gray-500">{item.mastery}%</span>
-                  </div>
-                </td>
+                <td className="px-5 py-3 text-sm text-gray-700">{word.pinyin}</td>
+                <td className="px-5 py-3 text-sm text-gray-600">{word.english}</td>
               </tr>
             ))}
           </tbody>
         </table>
         {filtered.length === 0 && (
           <div data-testid="vocabulary-empty" className="py-12 text-center text-sm text-gray-400">
-            No vocabulary items match your filters.
+            {search ? "No words match your search." : "No words for this level."}
           </div>
         )}
       </div>
