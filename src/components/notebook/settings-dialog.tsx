@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Settings, User, Type, GraduationCap } from "lucide-react";
+import { Settings, User, Type, GraduationCap, Lock } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -10,6 +10,7 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { useSession } from "@/lib/auth-client";
 import {
   useSettings,
   type FontSize,
@@ -40,19 +41,21 @@ const HSK_OPTIONS: { value: HskVersion; label: string; description: string; avai
 
 export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
   const { settings, update, updateProfile } = useSettings();
+  const { data: session } = useSession();
   const [name, setName] = useState(settings.profile.name);
-  const [email, setEmail] = useState(settings.profile.email);
 
-  // Sync local state when dialog opens
+  // Pre-populate name from session if settings name is empty
+  const sessionName = session?.user?.name ?? "";
+  const sessionEmail = session?.user?.email ?? "";
+
   useEffect(() => {
     if (open) {
-      setName(settings.profile.name);
-      setEmail(settings.profile.email);
+      setName(settings.profile.name || sessionName);
     }
-  }, [open, settings.profile.name, settings.profile.email]);
+  }, [open, settings.profile.name, sessionName]);
 
-  function handleProfileBlur() {
-    updateProfile({ name: name.trim(), email: email.trim() });
+  function handleNameBlur() {
+    updateProfile({ name: name.trim() });
   }
 
   return (
@@ -82,22 +85,25 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
                   data-testid="settings-profile-name"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  onBlur={handleProfileBlur}
+                  onBlur={handleNameBlur}
                   placeholder="Your name"
                 />
               </div>
               <div>
-                <label className="mb-1 block text-sm font-medium text-gray-700">
+                <label className="mb-1 flex items-center gap-1.5 text-sm font-medium text-gray-700">
                   Email
+                  <Lock className="h-3 w-3 text-gray-400" />
                 </label>
                 <Input
                   data-testid="settings-profile-email"
                   type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  onBlur={handleProfileBlur}
-                  placeholder="you@example.com"
+                  value={sessionEmail}
+                  disabled
+                  className="bg-gray-50 text-gray-500"
                 />
+                <p className="mt-1 text-xs text-gray-400">
+                  Email is linked to your account and cannot be changed here.
+                </p>
               </div>
             </div>
           </section>

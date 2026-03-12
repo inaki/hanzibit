@@ -7,7 +7,6 @@ export type HskVersion = "2.0" | "3.0";
 
 export interface UserProfile {
   name: string;
-  email: string;
 }
 
 export interface Settings {
@@ -19,7 +18,7 @@ export interface Settings {
 const DEFAULT_SETTINGS: Settings = {
   fontSize: "normal",
   hskVersion: "2.0",
-  profile: { name: "", email: "" },
+  profile: { name: "" },
 };
 
 const STORAGE_KEY = "cn-settings";

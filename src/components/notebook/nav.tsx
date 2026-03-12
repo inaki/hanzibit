@@ -8,6 +8,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
 import { SettingsDialog } from "./settings-dialog";
 import { useSettings } from "./settings-context";
+import { useSession } from "@/lib/auth-client";
 
 const navLinks = [
   { label: "Lessons", href: "/notebook/lessons" },
@@ -19,6 +20,8 @@ export function NotebookNav() {
   const pathname = usePathname();
   const [settingsOpen, setSettingsOpen] = useState(false);
   const { settings } = useSettings();
+  const { data: session } = useSession();
+  const displayName = settings.profile.name || session?.user?.name || "";
 
   function isActive(href: string) {
     if (href === "/notebook") {
@@ -83,8 +86,8 @@ export function NotebookNav() {
         </button>
         <Avatar data-testid="notebook-nav-avatar" className="h-8 w-8 cursor-pointer">
           <AvatarFallback className="bg-[var(--cn-orange)] text-xs text-white">
-            {settings.profile.name
-              ? settings.profile.name.slice(0, 2).toUpperCase()
+            {displayName
+              ? displayName.slice(0, 2).toUpperCase()
               : "CN"}
           </AvatarFallback>
         </Avatar>

@@ -11,31 +11,13 @@ import { createGunzip } from "zlib";
 import { pipeline } from "stream/promises";
 import { readFile } from "fs/promises";
 import { Readable } from "stream";
+import { convertTones } from "../src/lib/parse-tokens";
 
 const DB_PATH = path.join(process.cwd(), "sqlite.db");
 const CEDICT_URL =
   "https://www.mdbg.net/chinese/export/cedict/cedict_1_0_ts_utf-8_mdbg.txt.gz";
 const CEDICT_GZ = path.join(process.cwd(), "cedict.txt.gz");
 const CEDICT_TXT = path.join(process.cwd(), "cedict.txt");
-
-// Reuse tone conversion from parse-tokens
-const TONE_MAP: Record<string, string[]> = {
-  a: ["ā", "á", "ǎ", "à", "a"],
-  e: ["ē", "é", "ě", "è", "e"],
-  i: ["ī", "í", "ǐ", "ì", "i"],
-  o: ["ō", "ó", "ǒ", "ò", "o"],
-  u: ["ū", "ú", "ǔ", "ù", "u"],
-  v: ["ǖ", "ǘ", "ǚ", "ǜ", "ü"],
-};
-
-function convertTones(text: string): string {
-  return text.replace(/([aeiouv])([1-5])/gi, (_, vowel: string, num: string) => {
-    const map = TONE_MAP[vowel.toLowerCase()];
-    if (!map) return _;
-    const char = map[parseInt(num) - 1] || vowel;
-    return vowel === vowel.toUpperCase() ? char.toUpperCase() : char;
-  });
-}
 
 async function download() {
   if (existsSync(CEDICT_TXT)) {

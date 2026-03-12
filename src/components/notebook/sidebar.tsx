@@ -7,12 +7,14 @@ import {
   Languages,
   RotateCcw,
   PenLine,
+  Hash,
 } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 
 const sections = [
   { label: "Daily Journal", icon: PenLine, href: "/notebook" },
   { label: "Vocabulary List", icon: BookOpen, href: "/notebook/vocabulary" },
+  { label: "Numbers Guide", icon: Hash, href: "/notebook/numbers" },
   { label: "Grammar Points", icon: Languages, href: "/notebook/grammar" },
   { label: "Recent Reviews", icon: RotateCcw, href: "/notebook/reviews" },
 ];

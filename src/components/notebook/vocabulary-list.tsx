@@ -110,7 +110,7 @@ export function HskVocabularyList({ words, summaries }: HskVocabularyListProps) 
                     {word.simplified}
                   </span>
                   {word.traditional && word.traditional !== word.simplified && (
-                    <span className="ml-2 text-sm text-gray-400">{word.traditional}</span>
+                    <span className="block text-xs text-gray-400">{word.traditional}</span>
                   )}
                 </td>
                 <td className="px-5 py-3 text-sm text-gray-700">{word.pinyin}</td>

@@ -8,13 +8,46 @@ const TONE_MAP: Record<string, string[]> = {
   v: ["ǖ", "ǘ", "ǚ", "ǜ", "ü"], // v as shorthand for ü
 };
 
-/** Convert numbered pinyin to accented — e.g. "ni3 hao3" → "nǐ hǎo" */
+/**
+ * Find which vowel in a syllable receives the tone mark.
+ * Standard rules: a/e always get it; for "ou" → o; otherwise last vowel.
+ */
+function findToneVowelIndex(syllable: string): number {
+  const lower = syllable.toLowerCase();
+  // Rule 1: a or e always takes the mark
+  for (let i = 0; i < lower.length; i++) {
+    if (lower[i] === "a" || lower[i] === "e") return i;
+  }
+  // Rule 2: "ou" → tone goes on o
+  const ouIdx = lower.indexOf("ou");
+  if (ouIdx !== -1) return ouIdx;
+  // Rule 3: last vowel gets the mark
+  for (let i = lower.length - 1; i >= 0; i--) {
+    if ("iouv".includes(lower[i])) return i;
+  }
+  return -1;
+}
+
+/** Convert numbered pinyin to accented — e.g. "ni3 hao3" → "nǐ hǎo", "jing1" → "jīng" */
 export function convertTones(text: string): string {
-  return text.replace(/([aeiouv])([1-5])/gi, (_, vowel: string, num: string) => {
-    const map = TONE_MAP[vowel.toLowerCase()];
-    if (!map) return _;
-    const char = map[parseInt(num) - 1] || vowel;
-    return vowel === vowel.toUpperCase() ? char.toUpperCase() : char;
+  // Match each pinyin syllable: letters followed by a tone number
+  return text.replace(/([a-zA-ZüÜ]+)([1-5])/g, (match, syllable: string, tone: string) => {
+    const toneNum = parseInt(tone);
+    const idx = findToneVowelIndex(syllable);
+    if (idx === -1) return match;
+
+    const vowel = syllable[idx].toLowerCase();
+    const map = TONE_MAP[vowel];
+    if (!map) return match;
+
+    const accented = map[toneNum - 1] || syllable[idx];
+    const result =
+      syllable.slice(0, idx) +
+      (syllable[idx] === syllable[idx].toUpperCase() ? accented.toUpperCase() : accented) +
+      syllable.slice(idx + 1);
+
+    // Replace v with ü in the rest of the syllable too
+    return result.replace(/v/g, "ü").replace(/V/g, "Ü");
   });
 }
 
