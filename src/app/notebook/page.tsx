@@ -48,7 +48,7 @@ async function NotebookPageInner({
         )}
       </div>
 
-      <NotebookActionBar />
+      <NotebookActionBar entry={activeEntry} highlights={highlights} />
     </div>
   );
 }
