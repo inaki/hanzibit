@@ -21,10 +21,9 @@ export function getStripe(): Stripe {
 }
 
 // Keep a convenience export for direct use
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const stripe = new Proxy({} as Stripe, {
   get(_, prop) {
-    return (getStripe() as any)[prop];
+    return (getStripe() as unknown as Record<string | symbol, unknown>)[prop];
   },
 });
 

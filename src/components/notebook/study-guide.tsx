@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useTransition } from "react";
+import { useState, useEffect, useTransition, useRef } from "react";
 import Link from "next/link";
 import {
   BookOpen,
@@ -33,20 +33,16 @@ export function StudyGuide({ initialData }: StudyGuideProps) {
   const [isPending, startTransition] = useTransition();
 
   // Sync with settings HSK level on mount only
-  const [initialSynced, setInitialSynced] = useState(false);
+  const initialSynced = useRef(false);
   useEffect(() => {
-    if (!initialSynced && settings.hskLevel !== data.level) {
-      setInitialSynced(true);
-      startTransition(async () => {
-        const newData = await getStudyGuideDataAction(settings.hskLevel);
-        setData(newData);
-        setSelectedIndex(null);
-        setSearch("");
-      });
+    if (!initialSynced.current && settings.hskLevel !== data.level) {
+      initialSynced.current = true;
+      handleLevelChange(settings.hskLevel);
     } else {
-      setInitialSynced(true);
+      initialSynced.current = true;
     }
-  }, [initialSynced, settings.hskLevel, data.level]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   function handleLevelChange(level: number) {
     startTransition(async () => {

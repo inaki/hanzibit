@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState, useEffect, useCallback } from "react";
+import { useRef, useState, useEffect } from "react";
 import type { JournalEntry, EntryAnnotation } from "@/lib/data";
 import { parseInput, type Token } from "@/lib/parse-tokens";
 import { useGloss } from "./gloss-context";

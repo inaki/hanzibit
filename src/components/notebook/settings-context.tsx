@@ -71,9 +71,10 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
   const [settings, setSettings] = useState<Settings>(DEFAULT_SETTINGS);
   const [hydrated, setHydrated] = useState(false);
 
-  // Load from localStorage on mount
+  // Load from localStorage on mount (must setState here to hydrate client-only data)
   useEffect(() => {
     const loaded = loadSettings();
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setSettings(loaded);
     applyFontSize(loaded.fontSize);
     setHydrated(true);
