@@ -125,5 +125,21 @@ function initSchema(db: Database.Database) {
       created_at TEXT DEFAULT (datetime('now')),
       PRIMARY KEY (entry_id)
     );
+
+    CREATE TABLE IF NOT EXISTS subscriptions (
+      id TEXT PRIMARY KEY,
+      user_id TEXT NOT NULL UNIQUE,
+      stripe_customer_id TEXT NOT NULL,
+      stripe_subscription_id TEXT,
+      plan TEXT NOT NULL DEFAULT 'free' CHECK(plan IN ('free', 'pro')),
+      status TEXT NOT NULL DEFAULT 'active' CHECK(status IN ('active', 'trialing', 'past_due', 'canceled', 'unpaid', 'incomplete')),
+      current_period_end TEXT,
+      cancel_at_period_end INTEGER DEFAULT 0,
+      created_at TEXT DEFAULT (datetime('now')),
+      updated_at TEXT DEFAULT (datetime('now'))
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_sub_user ON subscriptions(user_id);
+    CREATE INDEX IF NOT EXISTS idx_sub_stripe_customer ON subscriptions(stripe_customer_id);
   `);
 }

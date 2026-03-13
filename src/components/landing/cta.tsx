@@ -1,8 +1,32 @@
+"use client";
+
+import { useState } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { ArrowRight } from "lucide-react";
+import { useSession } from "@/lib/auth-client";
 
 export function LandingCTA() {
+  const { data: session } = useSession();
+  const [loading, setLoading] = useState(false);
+
+  async function handleProClick() {
+    if (!session) return; // will fall through to Link
+    setLoading(true);
+    try {
+      const priceId = process.env.NEXT_PUBLIC_STRIPE_PRO_MONTHLY_PRICE_ID;
+      if (!priceId) return;
+      const res = await fetch("/api/stripe/checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ priceId }),
+      });
+      const data = await res.json();
+      if (data.url) window.location.href = data.url;
+    } finally {
+      setLoading(false);
+    }
+  }
   return (
     <section data-testid="landing-cta" id="pricing" className="border-t bg-white px-6 py-24">
       <div className="mx-auto max-w-3xl text-center">
@@ -45,15 +69,27 @@ export function LandingCTA() {
               <li>Pronunciation practice</li>
               <li>Export &amp; print</li>
             </ul>
-            <Button
-              data-testid="landing-pricing-pro-button"
-              nativeButton={false}
-              render={<Link href="/auth/signup" />}
-              className="w-full bg-[var(--cn-orange)] hover:bg-[var(--cn-orange-dark)]"
-            >
-              Start Free Trial
-              <ArrowRight className="ml-2 h-4 w-4" />
-            </Button>
+            {session ? (
+              <Button
+                data-testid="landing-pricing-pro-button"
+                onClick={handleProClick}
+                disabled={loading}
+                className="w-full bg-[var(--cn-orange)] hover:bg-[var(--cn-orange-dark)]"
+              >
+                {loading ? "Loading..." : "Upgrade to Pro"}
+                {!loading && <ArrowRight className="ml-2 h-4 w-4" />}
+              </Button>
+            ) : (
+              <Button
+                data-testid="landing-pricing-pro-button"
+                nativeButton={false}
+                render={<Link href="/auth/signup" />}
+                className="w-full bg-[var(--cn-orange)] hover:bg-[var(--cn-orange-dark)]"
+              >
+                Start Free Trial
+                <ArrowRight className="ml-2 h-4 w-4" />
+              </Button>
+            )}
           </div>
         </div>
       </div>

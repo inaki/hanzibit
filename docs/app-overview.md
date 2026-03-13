@@ -294,13 +294,87 @@ All components support the custom orange theme and dark mode.
 
 ## Development Setup
 
+### Quick Start
+
 ```bash
 pnpm install                          # Install dependencies
-npx @better-auth/cli migrate \
-  --config src/lib/auth.ts -y         # Create database tables
-pnpm dev                              # Start dev server at localhost:3000
-pnpm seed                             # Create dev user (dev@chinese-notebook.local / password123)
+pnpm dev                              # Start dev server at localhost:3000 (creates DB + app tables on first run)
+pnpm seed                             # Create dev user + demo content (requires dev server running)
+pnpm import-cedict                    # Download + import CC-CEDICT dictionary (~124k entries)
+pnpm import-hsk                       # Import official HSK 1-6 word lists (~2,300 words, requires cedict first)
 ```
+
+### Authentication & Dev Credentials
+
+Authentication is handled by [Better Auth](https://www.better-auth.com/) with a local SQLite database.
+
+**Dev account (created by `pnpm seed`):**
+
+| Field | Value |
+|---|---|
+| **Email** | `dev@chinese-notebook.local` |
+| **Password** | `password123` |
+| **User ID** | `dev-user-001` |
+| **Sign-in URL** | `http://localhost:3000/auth/signin` |
+
+The seed script signs up the dev user via the auth API and inserts demo journal entries, vocabulary, grammar points, flashcards, and lessons. The dev server must be running when you run `pnpm seed`.
+
+#### Auth Database Tables
+
+Better Auth requires these tables in SQLite (created automatically by the app schema in `src/lib/db.ts` or manually if missing):
+
+- `user` — id, name, email, emailVerified, image, createdAt, updatedAt
+- `session` — id, token, expiresAt, userId, ipAddress, userAgent
+- `account` — id, accountId, providerId, userId, password (hashed), tokens
+- `verification` — id, identifier, value, expiresAt
+
+If you see `no such table: user` errors on sign-in, the auth tables are missing. The seed script creates the dev user through the `/api/auth/sign-up/email` endpoint, which triggers Better Auth to create these tables. Alternatively, you can create them manually:
+
+```sql
+sqlite3 sqlite.db "
+CREATE TABLE IF NOT EXISTS user (
+  id TEXT PRIMARY KEY, name TEXT NOT NULL, email TEXT NOT NULL UNIQUE,
+  emailVerified INTEGER NOT NULL DEFAULT 0, image TEXT,
+  createdAt TEXT NOT NULL DEFAULT (datetime('now')),
+  updatedAt TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE TABLE IF NOT EXISTS session (
+  id TEXT PRIMARY KEY, expiresAt TEXT NOT NULL, token TEXT NOT NULL UNIQUE,
+  createdAt TEXT NOT NULL DEFAULT (datetime('now')),
+  updatedAt TEXT NOT NULL DEFAULT (datetime('now')),
+  ipAddress TEXT, userAgent TEXT,
+  userId TEXT NOT NULL REFERENCES user(id) ON DELETE CASCADE
+);
+CREATE TABLE IF NOT EXISTS account (
+  id TEXT PRIMARY KEY, accountId TEXT NOT NULL, providerId TEXT NOT NULL,
+  userId TEXT NOT NULL REFERENCES user(id) ON DELETE CASCADE,
+  accessToken TEXT, refreshToken TEXT, idToken TEXT,
+  accessTokenExpiresAt TEXT, refreshTokenExpiresAt TEXT,
+  scope TEXT, password TEXT,
+  createdAt TEXT NOT NULL DEFAULT (datetime('now')),
+  updatedAt TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE TABLE IF NOT EXISTS verification (
+  id TEXT PRIMARY KEY, identifier TEXT NOT NULL, value TEXT NOT NULL,
+  expiresAt TEXT NOT NULL,
+  createdAt TEXT NOT NULL DEFAULT (datetime('now')),
+  updatedAt TEXT NOT NULL DEFAULT (datetime('now'))
+);
+"
+```
+
+#### Auth Configuration
+
+| File | Purpose |
+|---|---|
+| `src/lib/auth.ts` | Server-side Better Auth config (SQLite, email/password, OAuth providers) |
+| `src/lib/auth-client.ts` | Client-side auth (`signIn`, `signUp`, `signOut`, `useSession`) |
+| `src/app/api/auth/[...all]/route.ts` | Catch-all API route handler for auth endpoints |
+| `src/lib/constants.ts` | Hardcoded `DEV_USER_ID = "dev-user-001"` for local development |
+
+#### Social Login (Optional)
+
+GitHub and Google OAuth are configured but optional. Without credentials the app shows warnings in the console but works fine with email/password.
 
 ### Environment Variables
 
@@ -315,3 +389,55 @@ Copy `.env.example` to `.env.local` and fill in:
 | `GITHUB_CLIENT_SECRET` | No | GitHub OAuth client secret |
 | `GOOGLE_CLIENT_ID` | No | Google OAuth client ID |
 | `GOOGLE_CLIENT_SECRET` | No | Google OAuth client secret |
+| `STRIPE_SECRET_KEY` | No* | Stripe secret key (required for payments) |
+| `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` | No* | Stripe publishable key |
+| `STRIPE_WEBHOOK_SECRET` | No* | Stripe webhook signing secret |
+| `NEXT_PUBLIC_STRIPE_PRO_MONTHLY_PRICE_ID` | No* | Stripe Price ID for Pro monthly plan |
+
+*Stripe variables are required for payment functionality but the app works without them (all users default to the Free plan).
+
+### Stripe / Payments
+
+Payments are handled by [Stripe](https://stripe.com/) with Checkout Sessions for subscriptions and the Billing Portal for self-serve management.
+
+**Setup:**
+
+1. Create a Stripe account and get your API keys from the [Stripe Dashboard](https://dashboard.stripe.com/apikeys)
+2. Create a Product (e.g., "Chinese Notebook Pro") with a recurring price of $9/month
+3. Copy the Price ID (starts with `price_`) into `NEXT_PUBLIC_STRIPE_PRO_MONTHLY_PRICE_ID`
+4. Set up a webhook endpoint pointing to `https://your-domain/api/stripe/webhooks` with these events:
+   - `checkout.session.completed`
+   - `customer.subscription.updated`
+   - `customer.subscription.deleted`
+5. Copy the webhook signing secret into `STRIPE_WEBHOOK_SECRET`
+
+**For local development with Stripe CLI:**
+
+```bash
+# Install Stripe CLI, then:
+stripe listen --forward-to localhost:3000/api/stripe/webhooks
+# Copy the webhook signing secret it prints
+```
+
+**Architecture:**
+
+| File | Purpose |
+|---|---|
+| `src/lib/stripe.ts` | Stripe client + plan definitions |
+| `src/lib/subscription.ts` | Subscription data layer (SQLite) |
+| `src/lib/subscription-action.ts` | Server action for client subscription info |
+| `src/app/api/stripe/checkout/route.ts` | Creates Stripe Checkout sessions |
+| `src/app/api/stripe/webhooks/route.ts` | Handles Stripe webhook events |
+| `src/app/api/stripe/portal/route.ts` | Creates Stripe Billing Portal sessions |
+
+**Database table:** `subscriptions` — stores user↔Stripe mapping, plan tier, status, and billing period
+
+### NPM Scripts
+
+| Script | Purpose |
+|---|---|
+| `pnpm dev` | Start Next.js dev server |
+| `pnpm build` | Production build |
+| `pnpm seed` | Create dev user + demo data (server must be running) |
+| `pnpm import-cedict` | Download and import CC-CEDICT dictionary into SQLite |
+| `pnpm import-hsk` | Import HSK 1-6 word lists (requires cedict to be imported first) |

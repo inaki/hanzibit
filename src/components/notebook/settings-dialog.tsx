@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Settings, User, Type, GraduationCap, Lock } from "lucide-react";
+import { Settings, User, Type, GraduationCap, Lock, CreditCard, Crown, ExternalLink } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -10,12 +10,14 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 import { useSession } from "@/lib/auth-client";
 import {
   useSettings,
   type FontSize,
   type HskVersion,
 } from "./settings-context";
+import { getSubscriptionInfo, type SubscriptionInfo } from "@/lib/subscription-action";
 
 interface SettingsDialogProps {
   open: boolean;
@@ -43,6 +45,8 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
   const { settings, update, updateProfile } = useSettings();
   const { data: session } = useSession();
   const [name, setName] = useState(settings.profile.name);
+  const [subInfo, setSubInfo] = useState<SubscriptionInfo | null>(null);
+  const [billingLoading, setBillingLoading] = useState(false);
 
   // Pre-populate name from session if settings name is empty
   const sessionName = session?.user?.name ?? "";
@@ -51,11 +55,47 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
   useEffect(() => {
     if (open) {
       setName(settings.profile.name || sessionName);
+      getSubscriptionInfo().then(setSubInfo);
     }
   }, [open, settings.profile.name, sessionName]);
 
   function handleNameBlur() {
     updateProfile({ name: name.trim() });
+  }
+
+  async function handleUpgrade() {
+    setBillingLoading(true);
+    try {
+      const priceId = process.env.NEXT_PUBLIC_STRIPE_PRO_MONTHLY_PRICE_ID;
+      if (!priceId) {
+        console.error("Stripe price ID not configured");
+        return;
+      }
+      const res = await fetch("/api/stripe/checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ priceId }),
+      });
+      const data = await res.json();
+      if (data.url) {
+        window.location.href = data.url;
+      }
+    } finally {
+      setBillingLoading(false);
+    }
+  }
+
+  async function handleManageBilling() {
+    setBillingLoading(true);
+    try {
+      const res = await fetch("/api/stripe/portal", { method: "POST" });
+      const data = await res.json();
+      if (data.url) {
+        window.location.href = data.url;
+      }
+    } finally {
+      setBillingLoading(false);
+    }
   }
 
   return (
@@ -104,6 +144,68 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
                 <p className="mt-1 text-xs text-gray-400">
                   Email is linked to your account and cannot be changed here.
                 </p>
+              </div>
+            </div>
+          </section>
+
+          {/* --- Subscription --- */}
+          <section data-testid="settings-subscription">
+            <h3 className="mb-3 flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-gray-500">
+              <CreditCard className="h-3.5 w-3.5" />
+              Subscription
+            </h3>
+            <div className="rounded-lg border p-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  {subInfo?.plan === "pro" ? (
+                    <Crown className="h-4 w-4 text-[var(--cn-orange)]" />
+                  ) : null}
+                  <span className="text-sm font-semibold text-gray-900">
+                    {subInfo?.plan === "pro" ? "Pro Plan" : "Free Plan"}
+                  </span>
+                  {subInfo?.plan === "pro" && (
+                    <span className="rounded-full bg-[var(--cn-orange-light)] px-2 py-0.5 text-[10px] font-medium text-[var(--cn-orange)]">
+                      Active
+                    </span>
+                  )}
+                </div>
+                <span className="text-sm font-bold text-gray-900">
+                  {subInfo?.plan === "pro" ? "$9/mo" : "$0"}
+                </span>
+              </div>
+
+              {subInfo?.cancelAtPeriodEnd && subInfo.currentPeriodEnd && (
+                <p className="mt-2 text-xs text-amber-600">
+                  Cancels on{" "}
+                  {new Date(subInfo.currentPeriodEnd).toLocaleDateString()}
+                </p>
+              )}
+
+              <div className="mt-3">
+                {subInfo?.plan === "pro" ? (
+                  <Button
+                    data-testid="settings-manage-billing"
+                    variant="outline"
+                    size="sm"
+                    onClick={handleManageBilling}
+                    disabled={billingLoading}
+                    className="w-full text-xs"
+                  >
+                    <ExternalLink className="mr-1.5 h-3 w-3" />
+                    {billingLoading ? "Opening..." : "Manage Billing"}
+                  </Button>
+                ) : (
+                  <Button
+                    data-testid="settings-upgrade-button"
+                    size="sm"
+                    onClick={handleUpgrade}
+                    disabled={billingLoading}
+                    className="w-full bg-[var(--cn-orange)] hover:bg-[var(--cn-orange-dark)] text-xs"
+                  >
+                    <Crown className="mr-1.5 h-3 w-3" />
+                    {billingLoading ? "Loading..." : "Upgrade to Pro — $9/mo"}
+                  </Button>
+                )}
               </div>
             </div>
           </section>
