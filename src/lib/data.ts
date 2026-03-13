@@ -1,4 +1,5 @@
 import { getDb } from "./db";
+import { parseInput, extractHanziTokens } from "./parse-tokens";
 
 // --- Types ---
 
@@ -58,16 +59,7 @@ export interface Flashcard {
   ease_factor: number;
   review_count: number;
   created_at: string;
-}
-
-export interface Lesson {
-  id: string;
-  title: string;
-  unit: string;
-  hsk_level: number;
-  description: string | null;
-  content: string;
-  sort_order: number;
+  source_entry_id: string | null;
 }
 
 export interface ReviewHistoryItem {
@@ -219,22 +211,6 @@ export function updateFlashcardReview(
   ).run(intervalDays, intervalDays, easeFactor, id);
 }
 
-// --- Lessons ---
-
-export function getLessons(): Lesson[] {
-  const db = getDb();
-  return db
-    .prepare("SELECT * FROM lessons ORDER BY hsk_level, sort_order")
-    .all() as Lesson[];
-}
-
-export function getLesson(id: string): Lesson | undefined {
-  const db = getDb();
-  return db.prepare("SELECT * FROM lessons WHERE id = ?").get(id) as
-    | Lesson
-    | undefined;
-}
-
 // --- Review History ---
 
 export function getReviewHistory(userId: string): ReviewHistoryItem[] {
@@ -258,6 +234,79 @@ export function addReviewRecord(
   db.prepare(
     "INSERT INTO review_history (id, user_id, item_type, item_id, item_label, score) VALUES (?, ?, ?, ?, ?, ?)"
   ).run(id, userId, itemType, itemId, itemLabel, score);
+}
+
+// --- Character of the Day ---
+
+export function getCharacterOfTheDay(level: number): HskWord | null {
+  const words = getHskWords(level);
+  if (words.length === 0) return null;
+  const dayIndex = Math.floor(Date.now() / 86_400_000);
+  const hash = (dayIndex * 2654435761) >>> 0; // Knuth multiplicative hash
+  const index = hash % words.length;
+  return words[index];
+}
+
+// --- Due Flashcard Count ---
+
+export function getDueFlashcardCount(userId: string): number {
+  const db = getDb();
+  return (
+    db
+      .prepare(
+        "SELECT COUNT(*) as count FROM flashcards WHERE user_id = ? AND next_review <= datetime('now')"
+      )
+      .get(userId) as { count: number }
+  ).count;
+}
+
+// --- Progress ---
+
+export function getUserProgress(
+  userId: string,
+  level: number
+): { encountered: number; total: number; percent: number } {
+  const db = getDb();
+
+  // Get all HSK words for the target level
+  const hskWords = getHskWords(level);
+  if (hskWords.length === 0) return { encountered: 0, total: 0, percent: 0 };
+
+  const hskSet = new Set(hskWords.map((w) => w.simplified));
+
+  // Extract unique hanzi from all journal entries
+  const entries = db
+    .prepare("SELECT content_zh FROM journal_entries WHERE user_id = ?")
+    .all(userId) as { content_zh: string }[];
+
+  const encounteredSet = new Set<string>();
+
+  for (const entry of entries) {
+    const tokens = parseInput(entry.content_zh);
+    const hanziTokens = extractHanziTokens(tokens);
+    for (const t of hanziTokens) {
+      if (hskSet.has(t.hanzi)) {
+        encounteredSet.add(t.hanzi);
+      }
+    }
+  }
+
+  // Also include flashcard fronts
+  const flashcardFronts = db
+    .prepare("SELECT DISTINCT front FROM flashcards WHERE user_id = ?")
+    .all(userId) as { front: string }[];
+
+  for (const fc of flashcardFronts) {
+    if (hskSet.has(fc.front)) {
+      encounteredSet.add(fc.front);
+    }
+  }
+
+  const encountered = encounteredSet.size;
+  const total = hskWords.length;
+  const percent = Math.round((encountered / total) * 100);
+
+  return { encountered, total, percent };
 }
 
 // --- Stats ---
@@ -287,4 +336,116 @@ export function getUserStats(userId: string) {
       .get(userId) as { avg: number }
   ).avg;
   return { entryCount, vocabCount, reviewCount, avgMastery: Math.round(avgMastery) };
+}
+
+// --- Study Guide ---
+
+export interface StudyGuideWord {
+  word: HskWord;
+  encountered: boolean;
+  journalEntries: { id: string; title_zh: string; title_en: string }[];
+  flashcard: {
+    id: string;
+    nextReview: string;
+    intervalDays: number;
+    reviewCount: number;
+  } | null;
+}
+
+export interface StudyGuideData {
+  level: number;
+  words: StudyGuideWord[];
+  grammarPoints: GrammarPoint[];
+  summary: {
+    total: number;
+    encountered: number;
+    withFlashcard: number;
+    dueForReview: number;
+  };
+}
+
+export function getStudyGuideData(userId: string, level: number): StudyGuideData {
+  const db = getDb();
+
+  const hskWords = getHskWords(level);
+  const hskSet = new Set(hskWords.map((w) => w.simplified));
+
+  // Build word → journal entries mapping
+  const entries = db
+    .prepare("SELECT id, title_zh, title_en, content_zh FROM journal_entries WHERE user_id = ?")
+    .all(userId) as { id: string; title_zh: string; title_en: string; content_zh: string }[];
+
+  const wordToEntries = new Map<string, { id: string; title_zh: string; title_en: string }[]>();
+
+  for (const entry of entries) {
+    const tokens = parseInput(entry.content_zh);
+    const hanziTokens = extractHanziTokens(tokens);
+    const seen = new Set<string>();
+    for (const t of hanziTokens) {
+      if (hskSet.has(t.hanzi) && !seen.has(t.hanzi)) {
+        seen.add(t.hanzi);
+        const list = wordToEntries.get(t.hanzi) || [];
+        list.push({ id: entry.id, title_zh: entry.title_zh, title_en: entry.title_en });
+        wordToEntries.set(t.hanzi, list);
+      }
+    }
+  }
+
+  // Build flashcard map
+  const flashcards = db
+    .prepare("SELECT id, front, next_review, interval_days, review_count FROM flashcards WHERE user_id = ?")
+    .all(userId) as { id: string; front: string; next_review: string; interval_days: number; review_count: number }[];
+
+  const flashcardMap = new Map<string, { id: string; nextReview: string; intervalDays: number; reviewCount: number }>();
+  const now = new Date().toISOString();
+  let dueForReview = 0;
+
+  for (const fc of flashcards) {
+    if (hskSet.has(fc.front)) {
+      flashcardMap.set(fc.front, {
+        id: fc.id,
+        nextReview: fc.next_review,
+        intervalDays: fc.interval_days,
+        reviewCount: fc.review_count,
+      });
+      if (fc.next_review <= now) dueForReview++;
+    }
+  }
+
+  // Grammar points for this level
+  const grammarPoints = db
+    .prepare("SELECT * FROM grammar_points WHERE user_id = ? AND hsk_level = ? ORDER BY created_at")
+    .all(userId, level) as GrammarPoint[];
+
+  // Assemble words
+  let encountered = 0;
+  let withFlashcard = 0;
+
+  const words: StudyGuideWord[] = hskWords.map((word) => {
+    const journalEntries = wordToEntries.get(word.simplified) || [];
+    const flashcard = flashcardMap.get(word.simplified) || null;
+    const isEncountered = journalEntries.length > 0 || flashcard !== null;
+
+    if (isEncountered) encountered++;
+    if (flashcard) withFlashcard++;
+
+    return {
+      word,
+      encountered: isEncountered,
+      journalEntries: journalEntries.slice(0, 5),
+      flashcard,
+    };
+  });
+
+  return {
+    level,
+    words,
+    grammarPoints,
+    summary: {
+      total: hskWords.length,
+      encountered,
+      withFlashcard,
+      dueForReview,
+    },
+  };
 }

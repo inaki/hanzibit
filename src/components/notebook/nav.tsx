@@ -11,7 +11,7 @@ import { useSettings } from "./settings-context";
 import { useSession } from "@/lib/auth-client";
 
 const navLinks = [
-  { label: "Lessons", href: "/notebook/lessons" },
+  { label: "Study Guide", href: "/notebook/lessons" },
   { label: "Flashcards", href: "/notebook/flashcards" },
   { label: "My Notebook", href: "/notebook" },
 ];

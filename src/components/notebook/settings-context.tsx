@@ -12,12 +12,14 @@ export interface UserProfile {
 export interface Settings {
   fontSize: FontSize;
   hskVersion: HskVersion;
+  hskLevel: number;
   profile: UserProfile;
 }
 
 const DEFAULT_SETTINGS: Settings = {
   fontSize: "normal",
   hskVersion: "2.0",
+  hskLevel: 1,
   profile: { name: "" },
 };
 

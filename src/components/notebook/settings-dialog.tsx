@@ -251,6 +251,38 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
             </div>
           </section>
 
+          {/* --- HSK Level --- */}
+          <section data-testid="settings-hsk-level">
+            <h3 className="mb-3 flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-gray-500">
+              <GraduationCap className="h-3.5 w-3.5" />
+              Target HSK Level
+            </h3>
+            <div className="grid grid-cols-6 gap-2">
+              {[1, 2, 3, 4, 5, 6].map((level) => {
+                const selected = settings.hskLevel === level;
+                return (
+                  <button
+                    key={level}
+                    data-testid={`settings-hsk-level-${level}`}
+                    onClick={() => update({ hskLevel: level })}
+                    className={`flex flex-col items-center gap-0.5 rounded-lg border p-3 transition-colors ${
+                      selected
+                        ? "border-[var(--cn-orange)] bg-[var(--cn-orange-light)]"
+                        : "border-gray-200 bg-white hover:border-gray-300"
+                    }`}
+                  >
+                    <span className={`text-lg font-bold ${selected ? "text-[var(--cn-orange)]" : "text-gray-700"}`}>
+                      {level}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+            <p className="mt-2 text-xs text-gray-400">
+              Progress is tracked against words at your target level.
+            </p>
+          </section>
+
           {/* --- Font Size --- */}
           <section data-testid="settings-font-size">
             <h3 className="mb-3 flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-gray-500">

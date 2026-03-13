@@ -75,16 +75,6 @@ function initSchema(db: Database.Database) {
       created_at TEXT DEFAULT (datetime('now'))
     );
 
-    CREATE TABLE IF NOT EXISTS lessons (
-      id TEXT PRIMARY KEY,
-      title TEXT NOT NULL,
-      unit TEXT NOT NULL,
-      hsk_level INTEGER DEFAULT 1,
-      description TEXT,
-      content TEXT NOT NULL DEFAULT '',
-      sort_order INTEGER DEFAULT 0
-    );
-
     CREATE TABLE IF NOT EXISTS review_history (
       id TEXT PRIMARY KEY,
       user_id TEXT NOT NULL,
@@ -142,4 +132,11 @@ function initSchema(db: Database.Database) {
     CREATE INDEX IF NOT EXISTS idx_sub_user ON subscriptions(user_id);
     CREATE INDEX IF NOT EXISTS idx_sub_stripe_customer ON subscriptions(stripe_customer_id);
   `);
+
+  // Migration: add source_entry_id to flashcards
+  try {
+    db.exec(`ALTER TABLE flashcards ADD COLUMN source_entry_id TEXT`);
+  } catch {
+    // Column already exists — ignore
+  }
 }

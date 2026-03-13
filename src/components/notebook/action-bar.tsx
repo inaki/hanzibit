@@ -31,7 +31,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import type { JournalEntry } from "@/lib/data";
-import { toggleBookmarkAction, createJournalEntry, updateJournalEntry } from "@/lib/actions";
+import { toggleBookmarkAction, createJournalEntry, updateJournalEntry, saveFlashcardsFromEntry } from "@/lib/actions";
 import { parseInput, extractHanziTokens } from "@/lib/parse-tokens";
 import { useGloss } from "./gloss-context";
 
@@ -248,6 +248,7 @@ export function NotebookActionBar({ entry }: NotebookActionBarProps) {
         highlights={highlights}
         open={flashcardOpen}
         onOpenChange={setFlashcardOpen}
+        entryId={entry?.id}
       />
     </>
   );
@@ -613,14 +614,19 @@ function FlashcardModeDialog({
   highlights,
   open,
   onOpenChange,
+  entryId,
 }: {
   highlights: HanziItem[];
   open: boolean;
   onOpenChange: (v: boolean) => void;
+  entryId?: string;
 }) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [flipped, setFlipped] = useState(false);
   const [completed, setCompleted] = useState(false);
+  const [selectedCards, setSelectedCards] = useState<Set<number>>(new Set());
+  const [saveStatus, setSaveStatus] = useState<string | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
 
   const card = highlights[currentIndex];
   const total = highlights.length;
@@ -629,6 +635,8 @@ function FlashcardModeDialog({
     setFlipped(false);
     if (currentIndex + 1 >= total) {
       setCompleted(true);
+      // Select all cards by default when completing
+      setSelectedCards(new Set(highlights.map((_, i) => i)));
     } else {
       setCurrentIndex((i) => i + 1);
     }
@@ -638,6 +646,35 @@ function FlashcardModeDialog({
     setCurrentIndex(0);
     setFlipped(false);
     setCompleted(false);
+    setSaveStatus(null);
+    setSelectedCards(new Set());
+  }
+
+  function toggleCard(index: number) {
+    setSelectedCards((prev) => {
+      const next = new Set(prev);
+      if (next.has(index)) next.delete(index);
+      else next.add(index);
+      return next;
+    });
+  }
+
+  async function handleSaveFlashcards() {
+    if (!entryId || selectedCards.size === 0) return;
+    setIsSaving(true);
+    try {
+      const cards = Array.from(selectedCards).map((i) => ({
+        front: highlights[i].hanzi,
+        back: `${highlights[i].pinyin} — ${highlights[i].english}`,
+      }));
+      const result = await saveFlashcardsFromEntry(entryId, cards);
+      const parts: string[] = [];
+      if (result.saved > 0) parts.push(`Saved ${result.saved}`);
+      if (result.duplicates > 0) parts.push(`${result.duplicates} already existed`);
+      setSaveStatus(parts.join(", "));
+    } finally {
+      setIsSaving(false);
+    }
   }
 
   // Reset state when dialog opens
@@ -646,6 +683,8 @@ function FlashcardModeDialog({
       setCurrentIndex(0);
       setFlipped(false);
       setCompleted(false);
+      setSaveStatus(null);
+      setSelectedCards(new Set());
     }
     onOpenChange(v);
   }
@@ -668,11 +707,49 @@ function FlashcardModeDialog({
             No vocabulary highlights to practice.
           </p>
         ) : completed ? (
-          <div data-testid="flashcard-mode-complete" className="py-8 text-center">
+          <div data-testid="flashcard-mode-complete" className="py-6 text-center">
             <p className="mb-2 text-lg font-semibold text-gray-900">All done!</p>
             <p className="mb-4 text-sm text-gray-500">
               You reviewed {total} {total === 1 ? "card" : "cards"} from this entry.
             </p>
+
+            {/* Save to Flashcards */}
+            {entryId && !saveStatus && (
+              <div className="mb-4 rounded-lg border bg-gray-50 p-4 text-left">
+                <p className="mb-2 text-xs font-semibold text-gray-600">Save to Flashcards</p>
+                <div className="max-h-40 space-y-1 overflow-auto">
+                  {highlights.map((h, i) => (
+                    <label
+                      key={h.hanzi}
+                      className="flex cursor-pointer items-center gap-2 rounded px-2 py-1 text-sm hover:bg-gray-100"
+                    >
+                      <input
+                        type="checkbox"
+                        checked={selectedCards.has(i)}
+                        onChange={() => toggleCard(i)}
+                        className="accent-[var(--cn-orange)]"
+                      />
+                      <span className="font-medium text-gray-900">{h.hanzi}</span>
+                      <span className="text-xs text-gray-500">{h.pinyin}</span>
+                    </label>
+                  ))}
+                </div>
+                <Button
+                  data-testid="flashcard-mode-save"
+                  onClick={handleSaveFlashcards}
+                  disabled={isSaving || selectedCards.size === 0}
+                  className="mt-3 w-full bg-[var(--cn-orange)] hover:bg-[var(--cn-orange-dark)] text-sm"
+                  size="sm"
+                >
+                  {isSaving ? "Saving..." : `Save ${selectedCards.size} to Flashcards`}
+                </Button>
+              </div>
+            )}
+
+            {saveStatus && (
+              <p className="mb-4 text-sm font-medium text-green-600">{saveStatus}</p>
+            )}
+
             <Button
               data-testid="flashcard-mode-restart"
               onClick={restart}

@@ -4,6 +4,17 @@ import { getDb } from "./db";
 import { revalidatePath } from "next/cache";
 import { randomUUID } from "crypto";
 import { DEV_USER_ID } from "./constants";
+import {
+  getCharacterOfTheDay,
+  getDueFlashcardCount,
+  getUserProgress,
+  getStudyGuideData,
+  updateFlashcardReview,
+  addReviewRecord,
+  type HskWord,
+  type StudyGuideData,
+} from "./data";
+import { sm2 } from "./sm2";
 
 export async function toggleBookmarkAction(entryId: string) {
   const db = getDb();
@@ -62,5 +73,125 @@ export async function updateJournalEntry(formData: FormData) {
   ).run(titleZh, titleEn, contentZh, unit, hskLevel, id);
 
   revalidatePath("/notebook");
+  return { id };
+}
+
+// --- Character of the Day ---
+
+export async function getCharacterOfTheDayAction(
+  level: number
+): Promise<HskWord | null> {
+  return getCharacterOfTheDay(level);
+}
+
+// --- Save Flashcards from Entry ---
+
+export async function saveFlashcardsFromEntry(
+  entryId: string,
+  cards: { front: string; back: string }[]
+): Promise<{ saved: number; duplicates: number }> {
+  const db = getDb();
+  let saved = 0;
+  let duplicates = 0;
+
+  for (const card of cards) {
+    const existing = db
+      .prepare("SELECT id FROM flashcards WHERE user_id = ? AND front = ?")
+      .get(DEV_USER_ID, card.front);
+
+    if (existing) {
+      duplicates++;
+      continue;
+    }
+
+    const id = randomUUID();
+    db.prepare(
+      `INSERT INTO flashcards (id, user_id, front, back, deck, source_entry_id)
+       VALUES (?, ?, ?, ?, 'journal', ?)`
+    ).run(id, DEV_USER_ID, card.front, card.back, entryId);
+    saved++;
+  }
+
+  revalidatePath("/notebook/flashcards");
+  return { saved, duplicates };
+}
+
+// --- Review Flashcard with SM-2 ---
+
+export async function reviewFlashcard(
+  cardId: string,
+  quality: number
+): Promise<{ interval: number; easeFactor: number }> {
+  const db = getDb();
+  const card = db
+    .prepare("SELECT * FROM flashcards WHERE id = ?")
+    .get(cardId) as {
+    id: string;
+    front: string;
+    interval_days: number;
+    ease_factor: number;
+    review_count: number;
+  } | undefined;
+
+  if (!card) throw new Error("Card not found");
+
+  const { interval, easeFactor } = sm2(
+    quality,
+    card.interval_days,
+    card.ease_factor,
+    card.review_count
+  );
+
+  updateFlashcardReview(card.id, interval, easeFactor);
+  addReviewRecord(DEV_USER_ID, "flashcard", card.id, card.front, quality);
+
+  revalidatePath("/notebook/flashcards");
+  return { interval, easeFactor };
+}
+
+// --- Due Count ---
+
+export async function getDueCountAction(): Promise<number> {
+  return getDueFlashcardCount(DEV_USER_ID);
+}
+
+// --- Progress ---
+
+export async function getProgressAction(
+  level: number
+): Promise<{ encountered: number; total: number; percent: number }> {
+  return getUserProgress(DEV_USER_ID, level);
+}
+
+// --- Study Guide ---
+
+export async function getStudyGuideDataAction(
+  level: number
+): Promise<StudyGuideData> {
+  return getStudyGuideData(DEV_USER_ID, level);
+}
+
+// --- Create Flashcard for Word ---
+
+export async function createFlashcardForWord(
+  simplified: string,
+  pinyin: string,
+  english: string
+): Promise<{ id: string } | { duplicate: true }> {
+  const db = getDb();
+
+  const existing = db
+    .prepare("SELECT id FROM flashcards WHERE user_id = ? AND front = ?")
+    .get(DEV_USER_ID, simplified);
+
+  if (existing) return { duplicate: true };
+
+  const id = randomUUID();
+  db.prepare(
+    `INSERT INTO flashcards (id, user_id, front, back, deck)
+     VALUES (?, ?, ?, ?, 'study-guide')`
+  ).run(id, DEV_USER_ID, simplified, `${pinyin} — ${english}`);
+
+  revalidatePath("/notebook/flashcards");
   return { id };
 }

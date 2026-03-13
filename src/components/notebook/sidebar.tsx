@@ -2,14 +2,23 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useState, useEffect } from "react";
 import {
   BookOpen,
   Languages,
   RotateCcw,
   PenLine,
   Hash,
+  Layers,
 } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
+import { useSettings } from "./settings-context";
+import {
+  getCharacterOfTheDayAction,
+  getDueCountAction,
+  getProgressAction,
+} from "@/lib/actions";
+import type { HskWord } from "@/lib/data";
 
 const sections = [
   { label: "Daily Journal", icon: PenLine, href: "/notebook" },
@@ -17,10 +26,22 @@ const sections = [
   { label: "Numbers Guide", icon: Hash, href: "/notebook/numbers" },
   { label: "Grammar Points", icon: Languages, href: "/notebook/grammar" },
   { label: "Recent Reviews", icon: RotateCcw, href: "/notebook/reviews" },
+  { label: "Flashcards", icon: Layers, href: "/notebook/flashcards" },
 ];
 
 export function NotebookSidebar() {
   const pathname = usePathname();
+  const { settings } = useSettings();
+
+  const [charOfDay, setCharOfDay] = useState<HskWord | null>(null);
+  const [dueCount, setDueCount] = useState(0);
+  const [progress, setProgress] = useState({ encountered: 0, total: 0, percent: 0 });
+
+  useEffect(() => {
+    getCharacterOfTheDayAction(settings.hskLevel).then(setCharOfDay);
+    getDueCountAction().then(setDueCount);
+    getProgressAction(settings.hskLevel).then(setProgress);
+  }, [settings.hskLevel]);
 
   function isActive(href: string) {
     if (href === "/notebook") {
@@ -37,14 +58,21 @@ export function NotebookSidebar() {
           Current Progress
         </p>
         <div className="flex items-center justify-between">
-          <span data-testid="notebook-sidebar-hsk-level" className="text-sm font-medium text-gray-900">HSK 2 Level</span>
-          <span data-testid="notebook-sidebar-hsk-percentage" className="text-sm font-bold text-[var(--cn-orange)]">65%</span>
+          <span data-testid="notebook-sidebar-hsk-level" className="text-sm font-medium text-gray-900">
+            HSK {settings.hskLevel} Level
+          </span>
+          <span data-testid="notebook-sidebar-hsk-percentage" className="text-sm font-bold text-[var(--cn-orange)]">
+            {progress.percent}%
+          </span>
         </div>
         <Progress
           data-testid="notebook-sidebar-progress-bar"
-          value={65}
-          className="mt-2 h-2 [&>div]:bg-[var(--cn-orange)]"
+          value={progress.percent}
+          className="mt-2 h-2 [&_[data-slot=progress-indicator]]:bg-[var(--cn-orange)]"
         />
+        <p className="mt-1 text-[10px] text-gray-400">
+          {progress.encountered}/{progress.total} words encountered
+        </p>
       </div>
 
       {/* Sections */}
@@ -68,6 +96,11 @@ export function NotebookSidebar() {
               >
                 <section.icon className="h-4 w-4" />
                 {section.label}
+                {section.label === "Flashcards" && dueCount > 0 && (
+                  <span className="ml-auto rounded-full bg-red-500 px-1.5 py-0.5 text-[10px] font-bold leading-none text-white">
+                    {dueCount}
+                  </span>
+                )}
               </Link>
             );
           })}
@@ -80,12 +113,16 @@ export function NotebookSidebar() {
         <div className="flex items-center gap-3">
           <div className="flex h-14 w-14 items-center justify-center rounded-lg bg-white shadow-sm">
             <span data-testid="notebook-sidebar-character" className="text-3xl font-bold text-[var(--cn-orange)]">
-              学
+              {charOfDay?.simplified ?? "..."}
             </span>
           </div>
           <div>
-            <p data-testid="notebook-sidebar-character-pinyin" className="font-medium text-gray-900">xué</p>
-            <p data-testid="notebook-sidebar-character-meaning" className="text-xs text-gray-500">To study / learn</p>
+            <p data-testid="notebook-sidebar-character-pinyin" className="font-medium text-gray-900">
+              {charOfDay?.pinyin ?? ""}
+            </p>
+            <p data-testid="notebook-sidebar-character-meaning" className="text-xs text-gray-500">
+              {charOfDay?.english ?? ""}
+            </p>
           </div>
         </div>
       </div>
