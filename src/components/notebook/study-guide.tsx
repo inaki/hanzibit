@@ -27,7 +27,7 @@ interface StudyGuideProps {
 export function StudyGuide({ initialData }: StudyGuideProps) {
   const { settings } = useSettings();
   const [data, setData] = useState(initialData);
-  const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
+  const [selectedIndex, setSelectedIndex] = useState<number>(0);
   const [filter, setFilter] = useState<Filter>("all");
   const [search, setSearch] = useState("");
   const [isPending, startTransition] = useTransition();
@@ -48,7 +48,7 @@ export function StudyGuide({ initialData }: StudyGuideProps) {
     startTransition(async () => {
       const newData = await getStudyGuideDataAction(level);
       setData(newData);
-      setSelectedIndex(null);
+      setSelectedIndex(0);
       setSearch("");
     });
   }
@@ -69,7 +69,9 @@ export function StudyGuide({ initialData }: StudyGuideProps) {
     return true;
   });
 
-  const selected = selectedIndex !== null ? data.words[selectedIndex] : null;
+  const selected = filteredWords.length > 0
+    ? data.words[selectedIndex] ?? filteredWords[0]
+    : null;
 
   return (
     <div data-testid="study-guide" className="mx-auto max-w-5xl">
@@ -162,7 +164,7 @@ export function StudyGuide({ initialData }: StudyGuideProps) {
               <button
                 key={f.key}
                 data-testid={`study-guide-filter-${f.key}`}
-                onClick={() => { setFilter(f.key); setSelectedIndex(null); }}
+                onClick={() => { setFilter(f.key); setSelectedIndex(0); }}
                 className={`rounded-full px-2.5 py-1 text-[11px] font-medium transition-colors ${
                   filter === f.key
                     ? "bg-gray-900 text-white"

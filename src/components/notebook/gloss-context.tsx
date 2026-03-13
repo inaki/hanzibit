@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useState, useCallback, useTransition, type ReactNode } from "react";
+import { createContext, useContext, useState, useCallback, useRef, useEffect, useTransition, type ReactNode } from "react";
 import { glossEntryAction } from "@/lib/gloss-action";
 import type { GlossParagraph } from "@/lib/gloss";
 
@@ -30,11 +30,19 @@ export function GlossProvider({ children }: { children: ReactNode }) {
     entryId: null,
   });
   const [isPending, startTransition] = useTransition();
+  const cacheRef = useRef<{ entryId: string | null; data: GlossParagraph[] | null }>({ entryId: null, data: null });
+  const stickyRef = useRef(false);
+
+  // Keep refs in sync with state
+  useEffect(() => {
+    cacheRef.current = { entryId: state.entryId, data: state.data };
+    stickyRef.current = state.sticky;
+  });
 
   const fetchGloss = useCallback(
     (entryId: string, contentZh: string) => {
       // Don't refetch if we already have data for this entry
-      if (state.data && state.entryId === entryId) {
+      if (cacheRef.current.data && cacheRef.current.entryId === entryId) {
         setState((s) => ({ ...s, active: true }));
         return;
       }
@@ -45,33 +53,30 @@ export function GlossProvider({ children }: { children: ReactNode }) {
         setState((s) => ({ ...s, loading: false, data }));
       });
     },
-    [state.data, state.entryId]
+    [] // stable — uses ref for cache check
   );
 
   const activate = useCallback(
     (entryId: string, contentZh: string) => {
-      if (state.sticky) return; // Don't override sticky mode on hover
+      if (stickyRef.current) return; // Don't override sticky mode on hover
       fetchGloss(entryId, contentZh);
     },
-    [state.sticky, fetchGloss]
+    [fetchGloss]
   );
 
   const deactivate = useCallback(() => {
-    if (state.sticky) return; // Don't deactivate in sticky mode
+    if (stickyRef.current) return; // Don't deactivate in sticky mode
     setState((s) => ({ ...s, active: false }));
-  }, [state.sticky]);
+  }, []);
 
   const toggleSticky = useCallback(
     (entryId: string, contentZh: string) => {
       setState((s) => {
         if (s.sticky) {
-          // Turn off sticky and deactivate
           return { ...s, sticky: false, active: false };
         }
-        // Turn on sticky
         return { ...s, sticky: true, active: true };
       });
-      // Ensure data is loaded
       fetchGloss(entryId, contentZh);
     },
     [fetchGloss]

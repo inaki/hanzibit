@@ -53,9 +53,12 @@ export function NotebookActionBar({ entry }: NotebookActionBarProps) {
 
   function handleBookmark() {
     if (!entry) return;
+    const prev = bookmarked;
+    setBookmarked(!prev); // Optimistic update
     startTransition(async () => {
       const result = await toggleBookmarkAction(entry.id);
       if (result) setBookmarked(result.bookmarked);
+      else setBookmarked(prev); // Revert on failure
     });
   }
 

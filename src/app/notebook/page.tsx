@@ -1,9 +1,10 @@
 import { getJournalEntries, getEntryAnnotations } from "@/lib/data";
-import { DEV_USER_ID } from "@/lib/constants";
+import { getAuthUserId } from "@/lib/auth-utils";
 import { JournalEntryView } from "@/components/notebook/journal-entry";
 import { NotebookActionBar } from "@/components/notebook/action-bar";
 import { EntryList } from "@/components/notebook/entry-list";
 import { GlossProvider } from "@/components/notebook/gloss-context";
+import { MobileJournalPage } from "@/components/notebook/mobile-journal-page";
 
 export const dynamic = "force-dynamic";
 
@@ -21,7 +22,8 @@ async function NotebookPageInner({
   searchParamsPromise: Promise<{ entry?: string }>;
 }) {
   const { entry: selectedEntryId } = await searchParamsPromise;
-  const entries = getJournalEntries(DEV_USER_ID);
+  const userId = await getAuthUserId();
+  const entries = getJournalEntries(userId);
   const activeEntry = selectedEntryId
     ? entries.find((e) => e.id === selectedEntryId) ?? entries[0]
     : entries[0];
@@ -31,11 +33,11 @@ async function NotebookPageInner({
   return (
     <GlossProvider>
       <div data-testid="notebook-page" className="flex h-full">
-        {/* Entry sidebar list */}
+        {/* Desktop entry sidebar list */}
         <EntryList entries={entries} activeEntryId={activeEntry?.id} />
 
         {/* Main content */}
-        <div className="flex-1 overflow-auto p-6 md:p-10">
+        <div className="flex-1 overflow-auto p-4 pb-20 md:p-10 lg:pb-10">
           {activeEntry ? (
             <JournalEntryView
               entry={activeEntry}
@@ -48,7 +50,11 @@ async function NotebookPageInner({
           )}
         </div>
 
+        {/* Desktop action bar */}
         <NotebookActionBar entry={activeEntry} />
+
+        {/* Mobile action bar + entry list sheet */}
+        <MobileJournalPage entry={activeEntry} entries={entries} />
       </div>
     </GlossProvider>
   );

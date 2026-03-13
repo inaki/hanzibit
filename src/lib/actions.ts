@@ -3,7 +3,7 @@
 import { getDb } from "./db";
 import { revalidatePath } from "next/cache";
 import { randomUUID } from "crypto";
-import { DEV_USER_ID } from "./constants";
+import { getAuthUserId } from "./auth-utils";
 import {
   getCharacterOfTheDay,
   getDueFlashcardCount,
@@ -11,6 +11,7 @@ import {
   getStudyGuideData,
   updateFlashcardReview,
   addReviewRecord,
+  searchHskWords,
   type HskWord,
   type StudyGuideData,
 } from "./data";
@@ -33,6 +34,7 @@ export async function toggleBookmarkAction(entryId: string) {
 }
 
 export async function createJournalEntry(formData: FormData) {
+  const userId = await getAuthUserId();
   const db = getDb();
   const id = randomUUID();
   const titleZh = formData.get("title_zh") as string;
@@ -48,7 +50,7 @@ export async function createJournalEntry(formData: FormData) {
   db.prepare(
     `INSERT INTO journal_entries (id, user_id, title_zh, title_en, unit, hsk_level, content_zh)
      VALUES (?, ?, ?, ?, ?, ?, ?)`
-  ).run(id, DEV_USER_ID, titleZh, titleEn, unit, hskLevel, contentZh);
+  ).run(id, userId, titleZh, titleEn, unit, hskLevel, contentZh);
 
   revalidatePath("/notebook");
   return { id };
@@ -90,6 +92,7 @@ export async function saveFlashcardsFromEntry(
   entryId: string,
   cards: { front: string; back: string }[]
 ): Promise<{ saved: number; duplicates: number }> {
+  const userId = await getAuthUserId();
   const db = getDb();
   let saved = 0;
   let duplicates = 0;
@@ -97,7 +100,7 @@ export async function saveFlashcardsFromEntry(
   for (const card of cards) {
     const existing = db
       .prepare("SELECT id FROM flashcards WHERE user_id = ? AND front = ?")
-      .get(DEV_USER_ID, card.front);
+      .get(userId, card.front);
 
     if (existing) {
       duplicates++;
@@ -108,7 +111,7 @@ export async function saveFlashcardsFromEntry(
     db.prepare(
       `INSERT INTO flashcards (id, user_id, front, back, deck, source_entry_id)
        VALUES (?, ?, ?, ?, 'journal', ?)`
-    ).run(id, DEV_USER_ID, card.front, card.back, entryId);
+    ).run(id, userId, card.front, card.back, entryId);
     saved++;
   }
 
@@ -122,6 +125,7 @@ export async function reviewFlashcard(
   cardId: string,
   quality: number
 ): Promise<{ interval: number; easeFactor: number }> {
+  const userId = await getAuthUserId();
   const db = getDb();
   const card = db
     .prepare("SELECT * FROM flashcards WHERE id = ?")
@@ -143,7 +147,7 @@ export async function reviewFlashcard(
   );
 
   updateFlashcardReview(card.id, interval, easeFactor);
-  addReviewRecord(DEV_USER_ID, "flashcard", card.id, card.front, quality);
+  addReviewRecord(userId, "flashcard", card.id, card.front, quality);
 
   revalidatePath("/notebook/flashcards");
   return { interval, easeFactor };
@@ -152,7 +156,8 @@ export async function reviewFlashcard(
 // --- Due Count ---
 
 export async function getDueCountAction(): Promise<number> {
-  return getDueFlashcardCount(DEV_USER_ID);
+  const userId = await getAuthUserId();
+  return getDueFlashcardCount(userId);
 }
 
 // --- Progress ---
@@ -160,7 +165,8 @@ export async function getDueCountAction(): Promise<number> {
 export async function getProgressAction(
   level: number
 ): Promise<{ encountered: number; total: number; percent: number }> {
-  return getUserProgress(DEV_USER_ID, level);
+  const userId = await getAuthUserId();
+  return getUserProgress(userId, level);
 }
 
 // --- Study Guide ---
@@ -168,7 +174,17 @@ export async function getProgressAction(
 export async function getStudyGuideDataAction(
   level: number
 ): Promise<StudyGuideData> {
-  return getStudyGuideData(DEV_USER_ID, level);
+  const userId = await getAuthUserId();
+  return getStudyGuideData(userId, level);
+}
+
+// --- Search HSK Words ---
+
+export async function searchHskWordsAction(
+  query: string
+): Promise<HskWord[]> {
+  if (!query || query.trim().length === 0) return [];
+  return searchHskWords(query.trim());
 }
 
 // --- Create Flashcard for Word ---
@@ -178,11 +194,12 @@ export async function createFlashcardForWord(
   pinyin: string,
   english: string
 ): Promise<{ id: string } | { duplicate: true }> {
+  const userId = await getAuthUserId();
   const db = getDb();
 
   const existing = db
     .prepare("SELECT id FROM flashcards WHERE user_id = ? AND front = ?")
-    .get(DEV_USER_ID, simplified);
+    .get(userId, simplified);
 
   if (existing) return { duplicate: true };
 
@@ -190,7 +207,7 @@ export async function createFlashcardForWord(
   db.prepare(
     `INSERT INTO flashcards (id, user_id, front, back, deck)
      VALUES (?, ?, ?, ?, 'study-guide')`
-  ).run(id, DEV_USER_ID, simplified, `${pinyin} — ${english}`);
+  ).run(id, userId, simplified, `${pinyin} — ${english}`);
 
   revalidatePath("/notebook/flashcards");
   return { id };

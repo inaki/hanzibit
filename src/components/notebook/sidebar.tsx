@@ -10,6 +10,7 @@ import {
   PenLine,
   Hash,
   Layers,
+  GraduationCap,
 } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { useSettings } from "./settings-context";
@@ -22,11 +23,12 @@ import type { HskWord } from "@/lib/data";
 
 const sections = [
   { label: "Daily Journal", icon: PenLine, href: "/notebook" },
+  { label: "Study Guide", icon: GraduationCap, href: "/notebook/lessons" },
+  { label: "Flashcards", icon: Layers, href: "/notebook/flashcards" },
   { label: "Vocabulary List", icon: BookOpen, href: "/notebook/vocabulary" },
   { label: "Numbers Guide", icon: Hash, href: "/notebook/numbers" },
   { label: "Grammar Points", icon: Languages, href: "/notebook/grammar" },
   { label: "Recent Reviews", icon: RotateCcw, href: "/notebook/reviews" },
-  { label: "Flashcards", icon: Layers, href: "/notebook/flashcards" },
 ];
 
 export function NotebookSidebar() {
@@ -44,9 +46,7 @@ export function NotebookSidebar() {
   }, [settings.hskLevel]);
 
   function isActive(href: string) {
-    if (href === "/notebook") {
-      return pathname === "/notebook";
-    }
+    if (href === "/notebook") return pathname === "/notebook";
     return pathname.startsWith(href);
   }
 
