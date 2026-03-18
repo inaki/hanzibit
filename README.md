@@ -1,3 +1,8 @@
+<h1 align="center">
+  HanziBit<br />
+  <sub>Your Mandarin Learning Companion, from HSK 1 and Beyond</sub>
+</h1>
+
 <p align="center">
   <img src="https://img.shields.io/badge/Next.js-16-black?logo=next.js" alt="Next.js 16" />
   <img src="https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=white" alt="React 19" />
@@ -5,11 +10,6 @@
   <img src="https://img.shields.io/badge/SQLite-3-003B57?logo=sqlite&logoColor=white" alt="SQLite" />
   <img src="https://img.shields.io/badge/TypeScript-5-3178C6?logo=typescript&logoColor=white" alt="TypeScript 5" />
 </p>
-
-<h1 align="center">
-  HanziBit<br />
-  <sub>Your Mandarin Learning Companion, from HSK 1 and Beyond</sub>
-</h1>
 
 <p align="center">
   A notebook-style web app for learning Mandarin Chinese, structured around the<br />
