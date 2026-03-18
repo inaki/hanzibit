@@ -77,7 +77,7 @@ export function NotebookActionBar({ entry }: NotebookActionBarProps) {
 <html lang="zh">
 <head>
   <meta charset="utf-8" />
-  <title>Print — Chinese Notebook</title>
+  <title>Print — HanziBit</title>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     body { font-family: "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "SimHei", system-ui, -apple-system, sans-serif; color: #111; padding: 40px; }

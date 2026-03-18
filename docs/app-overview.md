@@ -1,443 +1,285 @@
-# Chinese Notebook — App Overview & Feature Documentation
+# HanziBit: What This App Is About
 
-## What is Chinese Notebook?
+## Summary
 
-Chinese Notebook is a notebook-style web application designed for structured Chinese (Mandarin) language learning. It combines the feel of a personal journal with the structure of a language course, giving learners a single place to write, review, annotate, and track their progress through the HSK (Hanyu Shuiping Kaoshi) proficiency levels.
+HanziBit is a Mandarin learning web app built around one central idea: learners should not only memorize vocabulary, they should use it in their own writing.
 
-The core idea is simple: **learning a language works best when it's personal, organized, and consistent.** Chinese Notebook provides the scaffolding — HSK-aligned content, vocabulary tracking, spaced-repetition flashcards, grammar references — while letting the learner own the process through daily journal writing and self-annotation.
+The app combines a personal journal, an HSK-based study guide, vocabulary lookup, grammar notes, flashcards, and lightweight progress tracking into a single notebook-style interface. Instead of treating Chinese as a sequence of isolated drills, it treats learning as a loop:
 
----
+1. Write something in Chinese.
+2. Mark or inspect the words inside that writing.
+3. Turn useful words into flashcards.
+4. Review them with spaced repetition.
+5. Track how much of the current HSK level you have actually encountered.
 
-## Why Chinese Notebook Is Effective for Learning Chinese
+## Who It Is For
 
-### 1. Active Writing Over Passive Reading
+The app is aimed at Mandarin learners, especially beginners and lower-intermediate learners working through HSK material. The current implementation is especially well suited for:
 
-Most language apps focus on consuming content — reading, listening, choosing from multiple-choice answers. Chinese Notebook flips this by making **writing the primary activity**. Learners compose journal entries in Chinese, which forces recall, reinforces character recognition, and builds sentence construction skills. Writing is one of the most effective ways to move vocabulary from short-term to long-term memory.
+- Self-learners who want to keep a Chinese journal.
+- Students following HSK vocabulary and grammar level by level.
+- Learners who want pinyin and English support without leaving the text they are reading.
+- People who prefer building study material from their own sentences instead of consuming only pre-made decks.
 
-### 2. HSK-Aligned Progression
+## Core Product Idea
 
-Content is organized around the official HSK levels (1–6), the standardized Chinese proficiency test recognized worldwide. Each journal entry and lesson ties to a specific HSK level, so learners always know exactly where they are and what they need to learn next. The progress tracker gives a concrete, visual sense of advancement.
+The main experience is the notebook page at `/notebook`.
 
-### 3. Contextual Vocabulary Learning
+Users create journal entries with:
 
-Rather than drilling isolated word lists, vocabulary appears **in context** within journal entries. Key words are highlighted in the text where they're actually used, making it easier to understand meaning, usage patterns, and grammatical context. This mirrors how native speakers encounter new words — through real usage, not flashcard decks alone.
+- A Chinese title
+- An English title
+- A Chinese body
+- An optional unit label
+- An HSK level
 
-### 4. Self-Annotation and Personal Notes
+Inside the journal text, users can annotate vocabulary inline with a custom markup format:
 
-Every journal entry has a dedicated space for the learner's own grammar tips, mnemonics, and observations. Research shows that **self-generated explanations** stick far better than pre-written ones. When a learner writes "累 looks like a person working in a field with a burden above — no wonder they're tired!" they're creating a personal memory hook that no textbook can replicate.
-
-### 5. Spaced Repetition Built In
-
-The flashcard system uses spaced repetition to surface vocabulary at optimal intervals. Combined with the "Recent Reviews" section, learners revisit material right when they're about to forget it, maximizing retention with minimal effort.
-
-### 6. Consistent Daily Practice
-
-The "Character of the Day" widget and the daily journal format create a natural daily habit loop. Language learning is a long game — consistency beats intensity — and the app is designed around a sustainable daily practice of 10–20 minutes.
-
----
-
-## App Structure
-
-The app has four major areas: the **Landing Page** (marketing), **Authentication**, the **Notebook** (main app), and a **Design System** that ties it all together.
-
----
-
-## Landing Page
-
-The landing page introduces the app to new visitors and drives them toward account creation.
-
-### Navigation Bar
-
-A sticky header with the app logo (orange BookOpen icon + "Chinese Notebook" wordmark), links to page sections (Features, Preview, Pricing), and authentication buttons (Sign In, Get Started). The nav uses a frosted-glass effect (`backdrop-blur`) to stay readable over scrolling content.
-
-### Hero Section
-
-The main headline — **"Master Chinese, One Character at a Time"** — communicates the app's step-by-step philosophy. The background features faintly rendered Chinese characters (学 "study", 写 "write", 读 "read") as decorative elements that reinforce the app's identity without distracting from the content. A badge reads "Your personal Chinese learning companion" and two call-to-action buttons lead to sign-up or a demo preview.
-
-### Features Grid
-
-Six feature cards in a responsive grid, each with an icon, title, and description:
-
-| Feature | Description |
-|---|---|
-| **Daily Journal** | Write daily entries in Chinese with guided prompts. Build writing confidence one day at a time. |
-| **Vocabulary Builder** | Organize vocabulary by HSK level, theme, or custom categories. Never lose track of new words. |
-| **Smart Flashcards** | Spaced repetition flashcards that adapt to your learning pace. Focus on what you need most. |
-| **Progress Tracking** | Track your HSK level progress with detailed analytics. See how far you've come. |
-| **Grammar Points** | Structured grammar lessons with clear explanations, examples, and self-notes. |
-| **Pronunciation** | Practice pronunciation with pinyin guides and audio support for every character. |
-
-Each card has a hover effect where the icon background transitions from light orange to solid orange with a white icon, giving the page a lively, interactive feel.
-
-### Interactive Demo
-
-A fully rendered, non-functional preview of the actual notebook interface, embedded directly in the landing page. This shows visitors exactly what the app looks like before they sign up — the sidebar, progress bar, journal entry, Chinese text with highlighted vocabulary, and the self-notes section. This is one of the most effective conversion elements because it removes uncertainty about what the product is.
-
-### Pricing Section
-
-Two tiers presented side by side:
-
-**Free ($0/month)**
-- Daily journal entries
-- Basic vocabulary list
-- HSK 1 content
-- 5 flashcard reviews per day
-
-**Pro ($9/month)** — highlighted with an orange border
-- Unlimited journal entries
-- All HSK levels (1–6)
-- Unlimited flashcards
-- Grammar deep-dives
-- Pronunciation practice
-- Export & print
-
-### Footer
-
-Logo, legal links (Privacy, Terms, Contact), and copyright.
-
----
-
-## Authentication
-
-Authentication is handled by [Better Auth](https://www.better-auth.com/), an open-source auth library, with a SQLite database for local development.
-
-### Sign In Page (`/auth/signin`)
-
-- Email and password form with validation
-- Social login buttons for GitHub and Google (OAuth)
-- Error display for failed attempts
-- Loading state while authenticating
-- Link to sign-up page
-
-### Sign Up Page (`/auth/signup`)
-
-- Name, email, and password fields (password requires 8+ characters)
-- Same OAuth options as sign-in
-- Redirects to the notebook on success
-- Link to sign-in page
-
-### Auth Configuration
-
-- **Server** (`lib/auth.ts`): Better Auth with SQLite via `better-sqlite3`, email/password enabled, optional GitHub and Google OAuth
-- **Client** (`lib/auth-client.ts`): React client with `signIn`, `signUp`, `signOut`, `useSession` exports
-- **API Route** (`/api/auth/[...all]`): Catch-all handler for all auth endpoints
-
----
-
-## The Notebook (Main Application)
-
-This is the core of the app — the interface students use daily. It's structured as a three-column layout.
-
-### Top Navigation Bar
-
-| Element | Purpose |
-|---|---|
-| Logo | App branding with orange BookOpen icon |
-| Lessons link | Navigate to lesson content |
-| Flashcards link | Navigate to flashcard review mode |
-| My Notebook link | Current view (active state with orange underline) |
-| Search bar | Search for Chinese characters across entries (rounded, with search icon) |
-| Settings button | App settings |
-| User avatar | Circular avatar with user initials on orange background |
-
-### Left Sidebar
-
-The sidebar (240px wide, visible on large screens) contains three sections:
-
-#### Current Progress
-
-Displays the learner's HSK level and completion percentage. In the demo state this shows **HSK 2 Level** at **65%** with an orange progress bar. This gives learners an at-a-glance view of where they stand in the current proficiency level.
-
-#### Notebook Sections
-
-Four navigable sections, each with an icon:
-
-| Section | Icon | Purpose |
-|---|---|---|
-| **Daily Journal** | PenLine | The primary writing area where learners compose and review journal entries |
-| **Vocabulary List** | BookOpen | A collection of all vocabulary encountered, organized by level/theme |
-| **Grammar Points** | Languages | Reference section for grammar rules, patterns, and examples |
-| **Recent Reviews** | RotateCcw | Previously studied entries and flashcards due for review |
-
-The active section is highlighted with an orange background and white text. Inactive sections show gray text with a subtle hover effect.
-
-#### Character of the Day
-
-A small widget at the bottom of the sidebar that highlights a single Chinese character each day. Shows the character in large orange text, its pinyin romanization, and English meaning. For example:
-
-> **学** — xué — To study / learn
-
-This serves as a daily micro-lesson and conversation starter, encouraging learners to open the app even when they don't have time for a full journal entry.
-
-### Main Content Area — Journal Entry
-
-The central area displays journal entries on a white card with generous padding, set against a warm beige background (`#f5f3f0`) that evokes the feel of a physical notebook.
-
-#### Entry Header
-
-Each entry is contextualized with:
-- **Unit and level tag**: "UNIT 4: DAILY LIFE · Intermediate HSK 2" in orange uppercase text
-- **Date**: "October 24, 2023" in orange
-- **Entry number**: "Entry #142" in gray
-
-This metadata helps learners orient themselves within the curriculum and track their consistency.
-
-#### Entry Title
-
-The title appears in both Chinese and English: **我的一天 (My Day)**. The Chinese title is rendered in large, bold text (48px), while the English translation appears smaller and lighter alongside it.
-
-#### Chinese Text Content
-
-The body of the journal entry is Chinese text rendered at 22px with double line-height for readability. This generous spacing is intentional — Chinese characters are denser than Latin text and need more breathing room, especially for learners who are still building character recognition.
-
-**Vocabulary highlighting** is the key feature here. Important or new vocabulary words appear in **bold orange text**, making them visually distinct from the surrounding text. In the demo entry, the highlighted words are:
-
-| Character | Pinyin | Meaning |
-|---|---|---|
-| 累 | lèi | tired |
-| 高兴 | gāoxìng | happy |
-| 早餐 | zǎocān | breakfast |
-| 咖啡 | kāfēi | coffee |
-| 学习 | xuéxí | to study |
-| 写字 | xiězì | to write characters |
-
-This inline highlighting teaches vocabulary in context — learners see new words where they're actually used, not in isolation.
-
-#### Self-Notes & Annotations
-
-Below the journal text is an orange-tinted annotation section with a left border accent. This area contains user-created notes in a two-column card layout:
-
-**Grammar Tip**
-> The particle "也" (yě) always comes after the subject and before the adjective/verb.
-
-**Mnemonic**
-> "累" (lèi) looks like a person working in a field (田) with a burden above. No wonder they are tired!
-
-These are meant to be written by the learner themselves. Self-generated explanations and memory aids are significantly more effective for retention than pre-written notes.
-
-### Right Action Bar
-
-A narrow vertical toolbar (56px wide, visible on large screens) with icon buttons:
-
-| Button | Icon | Purpose |
-|---|---|---|
-| **Edit entry** | Pencil | Edit the current journal entry |
-| **Pronunciation** | Microphone | Listen to pronunciation of the entry or selected text |
-| **Flashcard mode** | Layers | Convert highlighted vocabulary into flashcards for review |
-| **New entry** | Plus (orange FAB) | Create a new journal entry — the primary action, visually prominent |
-| **Bookmark** | Bookmark (red) | Save the current entry for quick access later |
-| **Print** | Printer | Print the entry for offline study |
-
-All buttons have tooltips (appearing on the left side) for discoverability. The "New entry" button is the most prominent — a large orange circle with a shadow — because creating new entries is the most important action in the app.
-
----
-
-## Design System
-
-### Color Palette
-
-The app's visual identity is built around a warm orange that evokes energy, enthusiasm, and the traditional red-orange tones often associated with Chinese culture.
-
-| Token | Light Mode | Dark Mode | Usage |
-|---|---|---|---|
-| `--cn-orange` | `#e8601c` | `#f07030` | Primary brand color, highlights, active states |
-| `--cn-orange-light` | `#fef3ed` | `#2a1a10` | Backgrounds for orange-tinted sections |
-| `--cn-orange-dark` | `#c44d14` | `#ff8844` | Hover states on orange buttons |
-| `--background` | warm off-white | dark gray | Page background |
-| `--card` | pure white | dark gray | Card surfaces |
-| `--foreground` | near-black | off-white | Primary text |
-| `--muted-foreground` | medium gray | light gray | Secondary text |
-
-### Typography
-
-- **Primary font**: Geist Sans — a clean, modern sans-serif from Google Fonts
-- **Monospace font**: Geist Mono — for code or technical content
-- **Chinese text**: Rendered at 22px with 2x line-height for comfortable reading
-- **Headings**: Bold with tight tracking for impact
-- **UI text**: Small (12–14px) with appropriate weight hierarchy
-
-### Layout Philosophy
-
-The app uses a "notebook page" metaphor — a white card centered on a warm beige background, surrounded by tools and navigation. This creates a focused, distraction-free writing environment that feels personal rather than institutional.
-
-- **Three-column layout**: Sidebar (context/navigation) → Content (primary focus) → Action bar (tools)
-- **Responsive design**: Sidebar and action bar collapse on smaller screens, leaving the content area full-width
-- **Generous whitespace**: Especially in the journal entry area, where readability of Chinese characters is paramount
-
-### Component Library
-
-Built on [shadcn/ui](https://ui.shadcn.com/) with the `base-nova` style, using `@base-ui/react` primitives for accessibility. Components include:
-
-- Button (6 variants, 8 sizes)
-- Input, Avatar, Progress, Tooltip
-- Card, Badge, Dialog, Dropdown Menu
-- Sheet, Tabs, Separator, Scroll Area
-
-All components support the custom orange theme and dark mode.
-
----
-
-## Technical Stack
-
-| Layer | Technology |
-|---|---|
-| Framework | Next.js 16 (App Router, Turbopack) |
-| Styling | Tailwind CSS v4 |
-| Components | shadcn/ui (base-nova) with @base-ui/react |
-| Authentication | Better Auth (email/password + OAuth) |
-| Database | SQLite via better-sqlite3 |
-| Icons | Lucide React |
-| Language | TypeScript |
-| Package Manager | pnpm |
-
----
-
-## Development Setup
-
-### Quick Start
-
-```bash
-pnpm install                          # Install dependencies
-pnpm dev                              # Start dev server at localhost:3000 (creates DB + app tables on first run)
-pnpm seed                             # Create dev user + demo content (requires dev server running)
-pnpm import-cedict                    # Download + import CC-CEDICT dictionary (~124k entries)
-pnpm import-hsk                       # Import official HSK 1-6 word lists (~2,300 words, requires cedict first)
+```text
+[汉字|pin1 yin1|english meaning]
 ```
 
-### Authentication & Dev Credentials
+Example:
 
-Authentication is handled by [Better Auth](https://www.better-auth.com/) with a local SQLite database.
-
-**Dev account (created by `pnpm seed`):**
-
-| Field | Value |
-|---|---|
-| **Email** | `dev@chinese-notebook.local` |
-| **Password** | `password123` |
-| **User ID** | `dev-user-001` |
-| **Sign-in URL** | `http://localhost:3000/auth/signin` |
-
-The seed script signs up the dev user via the auth API and inserts demo journal entries, vocabulary, grammar points, flashcards, and lessons. The dev server must be running when you run `pnpm seed`.
-
-#### Auth Database Tables
-
-Better Auth requires these tables in SQLite (created automatically by the app schema in `src/lib/db.ts` or manually if missing):
-
-- `user` — id, name, email, emailVerified, image, createdAt, updatedAt
-- `session` — id, token, expiresAt, userId, ipAddress, userAgent
-- `account` — id, accountId, providerId, userId, password (hashed), tokens
-- `verification` — id, identifier, value, expiresAt
-
-If you see `no such table: user` errors on sign-in, the auth tables are missing. The seed script creates the dev user through the `/api/auth/sign-up/email` endpoint, which triggers Better Auth to create these tables. Alternatively, you can create them manually:
-
-```sql
-sqlite3 sqlite.db "
-CREATE TABLE IF NOT EXISTS user (
-  id TEXT PRIMARY KEY, name TEXT NOT NULL, email TEXT NOT NULL UNIQUE,
-  emailVerified INTEGER NOT NULL DEFAULT 0, image TEXT,
-  createdAt TEXT NOT NULL DEFAULT (datetime('now')),
-  updatedAt TEXT NOT NULL DEFAULT (datetime('now'))
-);
-CREATE TABLE IF NOT EXISTS session (
-  id TEXT PRIMARY KEY, expiresAt TEXT NOT NULL, token TEXT NOT NULL UNIQUE,
-  createdAt TEXT NOT NULL DEFAULT (datetime('now')),
-  updatedAt TEXT NOT NULL DEFAULT (datetime('now')),
-  ipAddress TEXT, userAgent TEXT,
-  userId TEXT NOT NULL REFERENCES user(id) ON DELETE CASCADE
-);
-CREATE TABLE IF NOT EXISTS account (
-  id TEXT PRIMARY KEY, accountId TEXT NOT NULL, providerId TEXT NOT NULL,
-  userId TEXT NOT NULL REFERENCES user(id) ON DELETE CASCADE,
-  accessToken TEXT, refreshToken TEXT, idToken TEXT,
-  accessTokenExpiresAt TEXT, refreshTokenExpiresAt TEXT,
-  scope TEXT, password TEXT,
-  createdAt TEXT NOT NULL DEFAULT (datetime('now')),
-  updatedAt TEXT NOT NULL DEFAULT (datetime('now'))
-);
-CREATE TABLE IF NOT EXISTS verification (
-  id TEXT PRIMARY KEY, identifier TEXT NOT NULL, value TEXT NOT NULL,
-  expiresAt TEXT NOT NULL,
-  createdAt TEXT NOT NULL DEFAULT (datetime('now')),
-  updatedAt TEXT NOT NULL DEFAULT (datetime('now'))
-);
-"
+```text
+我去[餐厅|can1 ting1|restaurant]吃饭
 ```
 
-#### Auth Configuration
+That markup powers several parts of the app:
 
-| File | Purpose |
-|---|---|
-| `src/lib/auth.ts` | Server-side Better Auth config (SQLite, email/password, OAuth providers) |
-| `src/lib/auth-client.ts` | Client-side auth (`signIn`, `signUp`, `signOut`, `useSession`) |
-| `src/app/api/auth/[...all]/route.ts` | Catch-all API route handler for auth endpoints |
-| `src/lib/constants.ts` | Hardcoded `DEV_USER_ID = "dev-user-001"` for local development |
+- Orange inline vocabulary highlighting in entries
+- Hover/click pinyin and meaning popovers
+- Pronunciation lists for the current entry
+- Flashcard creation from words found in the entry
 
-#### Social Login (Optional)
+This makes the journal the source of truth for study, instead of a separate exercise disconnected from real usage.
 
-GitHub and Google OAuth are configured but optional. Without credentials the app shows warnings in the console but works fine with email/password.
+## Main Areas Of The App
 
-### Environment Variables
+### 1. Landing Page
 
-Copy `.env.example` to `.env.local` and fill in:
+The home page is a marketing/entry page for the product. It explains the concept, shows feature cards, includes a product demo section, and presents Free/Pro pricing.
 
-| Variable | Required | Purpose |
-|---|---|---|
-| `BETTER_AUTH_SECRET` | Yes | Session encryption secret |
-| `BETTER_AUTH_URL` | Yes | App URL (http://localhost:3000) |
-| `NEXT_PUBLIC_APP_URL` | Yes | Public app URL for client-side auth |
-| `GITHUB_CLIENT_ID` | No | GitHub OAuth client ID |
-| `GITHUB_CLIENT_SECRET` | No | GitHub OAuth client secret |
-| `GOOGLE_CLIENT_ID` | No | Google OAuth client ID |
-| `GOOGLE_CLIENT_SECRET` | No | Google OAuth client secret |
-| `STRIPE_SECRET_KEY` | No* | Stripe secret key (required for payments) |
-| `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` | No* | Stripe publishable key |
-| `STRIPE_WEBHOOK_SECRET` | No* | Stripe webhook signing secret |
-| `NEXT_PUBLIC_STRIPE_PRO_MONTHLY_PRICE_ID` | No* | Stripe Price ID for Pro monthly plan |
+This page is mainly for discovery and conversion. It is not part of the learning workflow itself.
 
-*Stripe variables are required for payment functionality but the app works without them (all users default to the Free plan).
+### 2. Authentication
 
-### Stripe / Payments
+The app uses Better Auth with:
 
-Payments are handled by [Stripe](https://stripe.com/) with Checkout Sessions for subscriptions and the Billing Portal for self-serve management.
+- Email/password sign-in
+- GitHub OAuth
+- Google OAuth
 
-**Setup:**
+In development, server-side data access falls back to a seeded dev user when there is no session. That makes local development easier and lets the notebook load even without a real signed-in session.
 
-1. Create a Stripe account and get your API keys from the [Stripe Dashboard](https://dashboard.stripe.com/apikeys)
-2. Create a Product (e.g., "Chinese Notebook Pro") with a recurring price of $9/month
-3. Copy the Price ID (starts with `price_`) into `NEXT_PUBLIC_STRIPE_PRO_MONTHLY_PRICE_ID`
-4. Set up a webhook endpoint pointing to `https://your-domain/api/stripe/webhooks` with these events:
-   - `checkout.session.completed`
-   - `customer.subscription.updated`
-   - `customer.subscription.deleted`
-5. Copy the webhook signing secret into `STRIPE_WEBHOOK_SECRET`
+### 3. Notebook
 
-**For local development with Stripe CLI:**
+This is the actual product. The notebook layout includes:
 
-```bash
-# Install Stripe CLI, then:
-stripe listen --forward-to localhost:3000/api/stripe/webhooks
-# Copy the webhook signing secret it prints
-```
+- A top navigation bar
+- A left sidebar with progress and section links
+- A main content area
+- A right action bar on desktop
+- Mobile-specific navigation and action dialogs
 
-**Architecture:**
+The notebook sections are:
 
-| File | Purpose |
-|---|---|
-| `src/lib/stripe.ts` | Stripe client + plan definitions |
-| `src/lib/subscription.ts` | Subscription data layer (SQLite) |
-| `src/lib/subscription-action.ts` | Server action for client subscription info |
-| `src/app/api/stripe/checkout/route.ts` | Creates Stripe Checkout sessions |
-| `src/app/api/stripe/webhooks/route.ts` | Handles Stripe webhook events |
-| `src/app/api/stripe/portal/route.ts` | Creates Stripe Billing Portal sessions |
+- `Daily Journal`
+- `Study Guide`
+- `Flashcards`
+- `Vocabulary List`
+- `Numbers Guide`
+- `Grammar Points`
+- `Recent Reviews`
 
-**Database table:** `subscriptions` — stores user↔Stripe mapping, plan tier, status, and billing period
+## What Users Can Do Today
 
-### NPM Scripts
+### Journal Writing
 
-| Script | Purpose |
-|---|---|
-| `pnpm dev` | Start Next.js dev server |
-| `pnpm build` | Production build |
-| `pnpm seed` | Create dev user + demo data (server must be running) |
-| `pnpm import-cedict` | Download and import CC-CEDICT dictionary into SQLite |
-| `pnpm import-hsk` | Import HSK 1-6 word lists (requires cedict to be imported first) |
+Users can create and edit journal entries from the action bar. Each entry supports:
+
+- Chinese and English titles
+- HSK level tagging
+- Unit labeling
+- Rich inline vocabulary markup
+- Bookmarking
+- Printing
+
+The journal view is the center of the app and is the most complete workflow currently implemented.
+
+### Inline Vocabulary Support
+
+Vocabulary inside entries is not auto-detected by default in the normal journal view. It is explicitly marked by the user with inline notation. This is important because it means the app is built around curated learning moments chosen by the learner.
+
+When rendered, marked words show:
+
+- Hanzi
+- Pinyin
+- English gloss
+
+### Interlinear Glossing
+
+The app also has an interlinear gloss mode. When activated, the entry is transformed into a word-by-word stacked view showing:
+
+- Hanzi
+- Pinyin
+- English meaning
+
+This glossing uses two sources:
+
+- User-authored inline markup
+- Dictionary-backed segmentation from imported CEDICT data
+
+That makes the feature useful both for explicitly annotated words and for raw Chinese text that the learner did not manually tag.
+
+### Pronunciation Help
+
+For words marked in an entry, the app can open a pronunciation dialog and speak the hanzi using the browser's built-in speech synthesis.
+
+This is lightweight pronunciation support, not a custom audio pipeline.
+
+### Flashcards And Review
+
+Users can create flashcards from journal-entry vocabulary or from the study guide. Flashcards are reviewed with an SM-2 spaced repetition algorithm and store:
+
+- Next review date
+- Review interval
+- Ease factor
+- Review count
+
+The flashcards page supports:
+
+- Practice mode
+- Browse-all mode
+- Filtering due cards
+- Scoring cards as `Again`, `Hard`, `Good`, or `Easy`
+
+Each review writes to a review history log.
+
+### Study Guide
+
+The route named `/notebook/lessons` is currently a study guide rather than a traditional lesson reader.
+
+It lets users:
+
+- Switch between HSK levels 1 through 6
+- Browse imported HSK words
+- Filter words by encountered/not encountered/flashcard status
+- Search by hanzi, pinyin, or English
+- See whether a word has appeared in journal entries
+- Create a flashcard directly from a study-guide word
+- View grammar points for the selected HSK level
+
+This is one of the app's strongest features because it connects official HSK vocabulary with the learner's own writing history.
+
+### Progress Tracking
+
+Progress is measured against imported HSK word lists.
+
+For the selected HSK level, the app estimates progress by checking whether HSK words have appeared in:
+
+- The user's journal entries
+- The fronts of the user's flashcards
+
+This produces a simple "encountered vs total" progress metric in the sidebar.
+
+### Vocabulary List
+
+The vocabulary page is currently powered by imported HSK vocabulary data, not just the user's personal saved vocabulary table.
+
+It functions as a browsable HSK word reference with level summaries.
+
+### Grammar Points
+
+The grammar page shows saved grammar points for the current user. Each point includes:
+
+- Title
+- Optional pattern
+- Explanation
+- Example data stored as JSON
+
+The grammar content is user-scoped and can be tied into the study guide by HSK level.
+
+### Numbers Guide
+
+The app includes a dedicated Chinese numbers guide. This is a self-contained teaching page for:
+
+- 1 to 10
+- Teens
+- Tens and combinations
+- Large-number logic using `万` and `亿`
+- A number-to-Chinese converter
+
+It is more like a mini interactive reference than a notebook feature, but it fits the broader study-tool goal of the app.
+
+### Review History
+
+The review page shows recent review activity across item types, currently:
+
+- Vocabulary
+- Flashcards
+- Grammar
+
+This gives the learner a lightweight study log.
+
+## How The App Thinks About Learning
+
+HanziBit is built around a practical learning model:
+
+- Writing is the primary activity.
+- Vocabulary should live inside meaningful sentences.
+- Review should be generated from what the learner has actually used.
+- HSK provides structure, but the learner's own writing provides context.
+
+In other words, the app is trying to bridge structured curriculum and personal expression.
+
+## Data Model In Plain English
+
+The main database tables support these concepts:
+
+- `journal_entries`: the user's writing
+- `entry_annotations`: notes such as grammar tips and mnemonics tied to an entry
+- `vocabulary`: a legacy personal vocabulary table with mastery fields
+- `grammar_points`: user-scoped grammar notes
+- `flashcards`: spaced-repetition cards
+- `review_history`: log of completed reviews
+- `hsk_words`: imported official study vocabulary
+- `cedict_entries`: dictionary data used for glossing and lookup
+- `gloss_cache`: cached interlinear gloss output
+- `subscriptions`: Stripe subscription state
+
+At a high level, the app mixes two data sources:
+
+- Personal learning data created by the user
+- Reference data imported from HSK and CEDICT
+
+## Business Model And Billing
+
+The codebase includes a Free/Pro pricing model and Stripe integration:
+
+- Checkout session creation
+- Billing portal access
+- Subscription persistence in SQLite
+- Free and Pro plan definitions
+
+However, most feature gating is not yet enforced inside the notebook experience itself. The billing system and pricing UI exist, but the product is still closer to a functional learning prototype than a fully locked-down SaaS app.
+
+## Current Positioning
+
+The most accurate way to describe the app today is:
+
+> A notebook-style Mandarin learning app that helps users write Chinese journal entries, annotate vocabulary in context, generate flashcards, review with spaced repetition, and track progress against HSK vocabulary.
+
+It is not just a flashcard app, not just a dictionary, and not just a lesson platform. Its distinguishing angle is that the learner's own writing sits at the center of the study workflow.
+
+## Important Implementation Notes
+
+- The journal annotation format is a core product mechanic, not an incidental implementation detail.
+- `/notebook/lessons` is currently a study guide, despite the route name.
+- Pronunciation currently relies on browser speech synthesis.
+- Some landing-page claims describe intended product packaging more than strictly enforced feature access.
+- The app already contains the foundation for a real subscription product, but the learning experience is the main mature part of the codebase.
+
+## One-Sentence Description
+
+HanziBit is a personal Mandarin study workspace where learners write journal entries in Chinese, annotate words in context, turn them into flashcards, and measure progress against the HSK curriculum.

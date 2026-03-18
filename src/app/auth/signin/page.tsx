@@ -49,7 +49,7 @@ export default function SignInPage() {
               <BookOpen className="h-6 w-6" />
             </div>
             <span className="text-xl font-bold text-gray-900">
-              Chinese Notebook
+              HanziBit
             </span>
           </Link>
         </div>

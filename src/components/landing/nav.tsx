@@ -16,7 +16,7 @@ export function LandingNav() {
             <BookOpen className="h-5 w-5" />
           </div>
           <span className="text-lg font-bold text-gray-900">
-            Chinese Notebook
+            HanziBit
           </span>
         </Link>
 

@@ -14,9 +14,9 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Chinese Notebook - Your Personal Chinese Learning Companion",
+  title: "HanziBit - Your Personal Chinese Learning Companion",
   description:
-    "A beautiful notebook-style app for learning Chinese. Track your HSK progress, write journal entries, build vocabulary, and master grammar points.",
+    "HanziBit is a beautiful notebook-style app for learning Chinese. Track your HSK progress, write journal entries, build vocabulary, and master grammar points.",
 };
 
 export default function RootLayout({

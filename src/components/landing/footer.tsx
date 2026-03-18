@@ -10,7 +10,7 @@ export function LandingFooter() {
             <div className="flex h-7 w-7 items-center justify-center rounded-md bg-[var(--cn-orange)] text-white">
               <BookOpen className="h-4 w-4" />
             </div>
-            <span className="text-sm font-bold">Chinese Notebook</span>
+            <span className="text-sm font-bold">HanziBit</span>
           </div>
 
           <nav data-testid="landing-footer-links" className="flex items-center gap-6 text-sm text-gray-500">
@@ -26,7 +26,7 @@ export function LandingFooter() {
           </nav>
 
           <p data-testid="landing-footer-copyright" className="text-sm text-gray-400">
-            &copy; 2024 Chinese Notebook. All rights reserved.
+            &copy; 2024 HanziBit. All rights reserved.
           </p>
         </div>
       </div>

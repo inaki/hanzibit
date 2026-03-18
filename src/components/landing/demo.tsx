@@ -27,7 +27,7 @@ export function LandingDemo() {
                 <div className="flex h-7 w-7 items-center justify-center rounded-md bg-[var(--cn-orange)] text-white">
                   <BookOpen className="h-4 w-4" />
                 </div>
-                <span className="text-sm font-bold">Chinese Notebook</span>
+                <span className="text-sm font-bold">HanziBit</span>
               </div>
               <nav className="hidden items-center gap-4 text-sm text-gray-500 md:flex">
                 <span className="cursor-pointer hover:text-gray-900">Lessons</span>
@@ -45,7 +45,7 @@ export function LandingDemo() {
               <Settings className="h-5 w-5 text-gray-400" />
               <Avatar className="h-8 w-8">
                 <AvatarFallback className="bg-[var(--cn-orange)] text-xs text-white">
-                  CN
+                  HB
                 </AvatarFallback>
               </Avatar>
             </div>

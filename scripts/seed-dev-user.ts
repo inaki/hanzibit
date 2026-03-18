@@ -11,7 +11,7 @@ const DB_PATH = path.join(process.cwd(), "sqlite.db");
 
 const DEV_USER = {
   name: "Dev User",
-  email: "dev@chinese-notebook.local",
+  email: "dev@hanzibit.local",
   password: "password123",
 };
 

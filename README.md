@@ -7,7 +7,7 @@
 </p>
 
 <h1 align="center">
-  Chinese Notebook<br />
+  HanziBit<br />
   <sub>Your Mandarin Learning Companion, from HSK 1 and Beyond</sub>
 </h1>
 
@@ -20,9 +20,9 @@
 
 ---
 
-## Why Chinese Notebook?
+## Why HanziBit?
 
-Learning Mandarin is hard. Most apps have you tapping multiple-choice answers or swiping through pre-made decks. **Chinese Notebook takes the opposite approach**: you *write* — in Mandarin, from day one.
+Learning Mandarin is hard. Most apps have you tapping multiple-choice answers or swiping through pre-made decks. **HanziBit takes the opposite approach**: you *write* — in Mandarin, from day one.
 
 The app follows the **HSK curriculum** (the standardized Mandarin proficiency test), starting at **HSK 1** and progressing upward. Whether you're writing your first `你好` or composing paragraphs about your weekend, everything is structured around your current level.
 
@@ -91,8 +91,8 @@ Contextual toolbar for each journal entry:
 
 ```bash
 # Clone the repo
-git clone https://github.com/your-username/chinese-notebook.git
-cd chinese-notebook
+git clone https://github.com/your-username/hanzibit.git
+cd hanzibit
 
 # Install dependencies
 pnpm install
@@ -115,7 +115,7 @@ After running `pnpm seed`, you can sign in with:
 
 | Field | Value |
 |-------|-------|
-| Email | `dev@chinese-notebook.local` |
+| Email | `dev@hanzibit.local` |
 | Password | `password123` |
 
 The seed script creates a full demo dataset: 5 journal entries with highlights and annotations, 25 vocabulary items, 8 grammar points, 12 flashcards, 8 lessons, and 15 review history records.

@@ -73,7 +73,7 @@ export function NotebookNav() {
             <BookOpen className="h-5 w-5" />
           </div>
           <span className="text-base font-bold text-gray-900">
-            Chinese Notebook
+            HanziBit
           </span>
         </Link>
 
@@ -152,7 +152,7 @@ export function NotebookNav() {
           <AvatarFallback className="bg-[var(--cn-orange)] text-xs text-white">
             {displayName
               ? displayName.slice(0, 2).toUpperCase()
-              : "CN"}
+              : "HB"}
           </AvatarFallback>
         </Avatar>
       </div>
