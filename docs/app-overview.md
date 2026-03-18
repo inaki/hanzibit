@@ -259,7 +259,7 @@ The codebase includes a Free/Pro pricing model and Stripe integration:
 
 - Checkout session creation
 - Billing portal access
-- Subscription persistence in SQLite
+- Subscription persistence in Postgres
 - Free and Pro plan definitions
 
 However, most feature gating is not yet enforced inside the notebook experience itself. The billing system and pricing UI exist, but the product is still closer to a functional learning prototype than a fully locked-down SaaS app.

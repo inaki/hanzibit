@@ -54,7 +54,7 @@ export async function POST(req: NextRequest) {
 
         const sub = await stripe.subscriptions.retrieve(subscriptionId);
 
-        upsertSubscription({
+        await upsertSubscription({
           userId,
           stripeCustomerId: customerId,
           stripeSubscriptionId: subscriptionId,
@@ -71,13 +71,13 @@ export async function POST(req: NextRequest) {
         const customerId =
           typeof sub.customer === "string" ? sub.customer : sub.customer.id;
 
-        const existing = getSubscriptionByCustomerId(customerId);
+        const existing = await getSubscriptionByCustomerId(customerId);
         if (!existing) break;
 
         const isCanceled =
           sub.status === "canceled" || sub.status === "unpaid";
 
-        upsertSubscription({
+        await upsertSubscription({
           userId: existing.user_id,
           stripeCustomerId: customerId,
           stripeSubscriptionId: sub.id,
@@ -94,10 +94,10 @@ export async function POST(req: NextRequest) {
         const customerId =
           typeof sub.customer === "string" ? sub.customer : sub.customer.id;
 
-        const existing = getSubscriptionByCustomerId(customerId);
+        const existing = await getSubscriptionByCustomerId(customerId);
         if (!existing) break;
 
-        upsertSubscription({
+        await upsertSubscription({
           userId: existing.user_id,
           stripeCustomerId: customerId,
           stripeSubscriptionId: sub.id,

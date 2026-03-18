@@ -6,7 +6,7 @@ export const dynamic = "force-dynamic";
 
 export default async function GrammarPage() {
   const userId = await getAuthUserId();
-  const grammarPoints = getGrammarPoints(userId);
+  const grammarPoints = await getGrammarPoints(userId);
 
   return (
     <div data-testid="grammar-page" className="h-full overflow-auto p-6 pb-20 md:p-10 lg:pb-10">

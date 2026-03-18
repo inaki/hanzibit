@@ -16,9 +16,9 @@ export async function getSubscriptionInfo(): Promise<SubscriptionInfo | null> {
   const session = await auth.api.getSession({ headers: await headers() });
   if (!session?.user) return null;
 
-  const sub = getSubscription(session.user.id);
+  const sub = await getSubscription(session.user.id);
   return {
-    plan: getUserPlan(session.user.id),
+    plan: await getUserPlan(session.user.id),
     status: sub?.status ?? null,
     cancelAtPeriodEnd: sub?.cancel_at_period_end === 1,
     currentPeriodEnd: sub?.current_period_end ?? null,

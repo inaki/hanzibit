@@ -1,4 +1,5 @@
-import { getDb } from "./db";
+import { randomUUID } from "crypto";
+import { execute, queryOne } from "./db";
 import type { PlanId } from "./stripe";
 
 export interface Subscription {
@@ -14,27 +15,27 @@ export interface Subscription {
   updated_at: string;
 }
 
-export function getSubscription(userId: string): Subscription | null {
-  const db = getDb();
+export async function getSubscription(userId: string): Promise<Subscription | null> {
   return (
-    (db
-      .prepare("SELECT * FROM subscriptions WHERE user_id = ?")
-      .get(userId) as Subscription | undefined) ?? null
+    (await queryOne<Subscription>(
+      "SELECT * FROM subscriptions WHERE user_id = $1",
+      [userId]
+    )) ?? null
   );
 }
 
-export function getSubscriptionByCustomerId(
+export async function getSubscriptionByCustomerId(
   stripeCustomerId: string
-): Subscription | null {
-  const db = getDb();
+): Promise<Subscription | null> {
   return (
-    (db
-      .prepare("SELECT * FROM subscriptions WHERE stripe_customer_id = ?")
-      .get(stripeCustomerId) as Subscription | undefined) ?? null
+    (await queryOne<Subscription>(
+      "SELECT * FROM subscriptions WHERE stripe_customer_id = $1",
+      [stripeCustomerId]
+    )) ?? null
   );
 }
 
-export function upsertSubscription(data: {
+export async function upsertSubscription(data: {
   userId: string;
   stripeCustomerId: string;
   stripeSubscriptionId?: string | null;
@@ -42,54 +43,46 @@ export function upsertSubscription(data: {
   status?: string;
   currentPeriodEnd?: string | null;
   cancelAtPeriodEnd?: boolean;
-}): void {
-  const db = getDb();
-  const existing = getSubscription(data.userId);
-
-  if (existing) {
-    db.prepare(
-      `UPDATE subscriptions SET
-        stripe_customer_id = ?,
-        stripe_subscription_id = COALESCE(?, stripe_subscription_id),
-        plan = COALESCE(?, plan),
-        status = COALESCE(?, status),
-        current_period_end = COALESCE(?, current_period_end),
-        cancel_at_period_end = COALESCE(?, cancel_at_period_end),
-        updated_at = datetime('now')
-      WHERE user_id = ?`
-    ).run(
-      data.stripeCustomerId,
-      data.stripeSubscriptionId ?? null,
-      data.plan ?? null,
-      data.status ?? null,
-      data.currentPeriodEnd ?? null,
-      data.cancelAtPeriodEnd !== undefined
-        ? data.cancelAtPeriodEnd
-          ? 1
-          : 0
-        : null,
-      data.userId
-    );
-  } else {
-    const id = crypto.randomUUID();
-    db.prepare(
-      `INSERT INTO subscriptions (id, user_id, stripe_customer_id, stripe_subscription_id, plan, status, current_period_end, cancel_at_period_end)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
-    ).run(
-      id,
+}): Promise<void> {
+  await execute(
+    `INSERT INTO subscriptions (
+       id,
+       user_id,
+       stripe_customer_id,
+       stripe_subscription_id,
+       plan,
+       status,
+       current_period_end,
+       cancel_at_period_end
+     )
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+     ON CONFLICT (user_id) DO UPDATE SET
+       stripe_customer_id = EXCLUDED.stripe_customer_id,
+       stripe_subscription_id = COALESCE(EXCLUDED.stripe_subscription_id, subscriptions.stripe_subscription_id),
+       plan = COALESCE(EXCLUDED.plan, subscriptions.plan),
+       status = COALESCE(EXCLUDED.status, subscriptions.status),
+       current_period_end = COALESCE(EXCLUDED.current_period_end, subscriptions.current_period_end),
+       cancel_at_period_end = COALESCE(EXCLUDED.cancel_at_period_end, subscriptions.cancel_at_period_end),
+       updated_at = NOW()`,
+    [
+      randomUUID(),
       data.userId,
       data.stripeCustomerId,
       data.stripeSubscriptionId ?? null,
       data.plan ?? "free",
       data.status ?? "active",
       data.currentPeriodEnd ?? null,
-      data.cancelAtPeriodEnd ? 1 : 0
-    );
-  }
+      data.cancelAtPeriodEnd !== undefined
+        ? data.cancelAtPeriodEnd
+          ? 1
+          : 0
+        : 0,
+    ]
+  );
 }
 
-export function getUserPlan(userId: string): PlanId {
-  const sub = getSubscription(userId);
+export async function getUserPlan(userId: string): Promise<PlanId> {
+  const sub = await getSubscription(userId);
   if (!sub) return "free";
   if (sub.plan === "pro" && (sub.status === "active" || sub.status === "trialing")) {
     return "pro";
@@ -97,6 +90,6 @@ export function getUserPlan(userId: string): PlanId {
   return "free";
 }
 
-export function isProUser(userId: string): boolean {
-  return getUserPlan(userId) === "pro";
+export async function isProUser(userId: string): Promise<boolean> {
+  return (await getUserPlan(userId)) === "pro";
 }

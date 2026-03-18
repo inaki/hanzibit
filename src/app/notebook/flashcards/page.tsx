@@ -6,8 +6,8 @@ export const dynamic = "force-dynamic";
 
 export default async function FlashcardsPage() {
   const userId = await getAuthUserId();
-  const flashcards = getFlashcards(userId);
-  const dueCount = getDueFlashcardCount(userId);
+  const flashcards = await getFlashcards(userId);
+  const dueCount = await getDueFlashcardCount(userId);
 
   return (
     <div data-testid="flashcards-page" className="h-full overflow-auto p-6 pb-20 md:p-10 lg:pb-10">

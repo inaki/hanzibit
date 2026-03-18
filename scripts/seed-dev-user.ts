@@ -2,12 +2,10 @@
  * Seeds a dev user + demo content for local development.
  * Run: pnpm seed
  */
-import Database from "better-sqlite3";
-import path from "path";
 import { randomUUID } from "crypto";
+import { ensureAppSchema, queryOne, withTransaction, getPool } from "../src/lib/db";
 
 const BASE_URL = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
-const DB_PATH = path.join(process.cwd(), "sqlite.db");
 
 const DEV_USER = {
   name: "Dev User",
@@ -37,110 +35,143 @@ async function seedAuthUser() {
   }
 }
 
-function seedData() {
-  const db = new Database(DB_PATH);
-  db.pragma("journal_mode = WAL");
-  db.pragma("foreign_keys = ON");
+async function seedData() {
+  await ensureAppSchema();
 
-  // Create tables (same schema as lib/db.ts)
-  db.exec(`
-    CREATE TABLE IF NOT EXISTS journal_entries (
-      id TEXT PRIMARY KEY, user_id TEXT NOT NULL, title_zh TEXT NOT NULL, title_en TEXT NOT NULL,
-      unit TEXT, hsk_level INTEGER DEFAULT 1, content_zh TEXT NOT NULL, bookmarked INTEGER DEFAULT 0,
-      created_at TEXT DEFAULT (datetime('now')), updated_at TEXT DEFAULT (datetime('now'))
-    );
-    CREATE TABLE IF NOT EXISTS entry_annotations (
-      id TEXT PRIMARY KEY, entry_id TEXT NOT NULL REFERENCES journal_entries(id) ON DELETE CASCADE,
-      type TEXT NOT NULL CHECK(type IN ('grammar_tip', 'mnemonic')), title TEXT NOT NULL, content TEXT NOT NULL
-    );
-    CREATE TABLE IF NOT EXISTS vocabulary (
-      id TEXT PRIMARY KEY, user_id TEXT NOT NULL, character_zh TEXT NOT NULL, pinyin TEXT NOT NULL,
-      meaning TEXT NOT NULL, hsk_level INTEGER DEFAULT 1, category TEXT DEFAULT 'general',
-      mastery INTEGER DEFAULT 0, created_at TEXT DEFAULT (datetime('now')), last_reviewed TEXT
-    );
-    CREATE TABLE IF NOT EXISTS grammar_points (
-      id TEXT PRIMARY KEY, user_id TEXT NOT NULL, title TEXT NOT NULL, pattern TEXT,
-      explanation TEXT NOT NULL, examples TEXT NOT NULL DEFAULT '[]', hsk_level INTEGER DEFAULT 1,
-      created_at TEXT DEFAULT (datetime('now'))
-    );
-    CREATE TABLE IF NOT EXISTS flashcards (
-      id TEXT PRIMARY KEY, user_id TEXT NOT NULL, front TEXT NOT NULL, back TEXT NOT NULL,
-      deck TEXT DEFAULT 'general', next_review TEXT DEFAULT (datetime('now')),
-      interval_days INTEGER DEFAULT 1, ease_factor REAL DEFAULT 2.5, review_count INTEGER DEFAULT 0,
-      created_at TEXT DEFAULT (datetime('now'))
-    );
-    CREATE TABLE IF NOT EXISTS lessons (
-      id TEXT PRIMARY KEY, title TEXT NOT NULL, unit TEXT NOT NULL, hsk_level INTEGER DEFAULT 1,
-      description TEXT, content TEXT NOT NULL DEFAULT '', sort_order INTEGER DEFAULT 0
-    );
-    CREATE TABLE IF NOT EXISTS review_history (
-      id TEXT PRIMARY KEY, user_id TEXT NOT NULL,
-      item_type TEXT NOT NULL CHECK(item_type IN ('vocabulary', 'flashcard', 'grammar')),
-      item_id TEXT NOT NULL, item_label TEXT NOT NULL, score INTEGER CHECK(score BETWEEN 1 AND 5),
-      reviewed_at TEXT DEFAULT (datetime('now'))
-    );
-  `);
-
-  // Check if already seeded
-  const existing = db.prepare("SELECT COUNT(*) as c FROM journal_entries WHERE user_id = ?").get(DEV_USER_ID) as { c: number };
-  if (existing.c > 0) {
+  const existing = await queryOne<{ c: number }>(
+    "SELECT COUNT(*)::int AS c FROM journal_entries WHERE user_id = $1",
+    [DEV_USER_ID]
+  );
+  if ((existing?.c ?? 0) > 0) {
     console.log("Demo data already seeded. Skipping.");
-    db.close();
     return;
   }
 
   console.log("Seeding demo data...");
 
-  const insertEntry = db.prepare("INSERT INTO journal_entries (id, user_id, title_zh, title_en, unit, hsk_level, content_zh, bookmarked, created_at) VALUES (?,?,?,?,?,?,?,?,?)");
-  const insertAnnotation = db.prepare("INSERT INTO entry_annotations (id, entry_id, type, title, content) VALUES (?,?,?,?,?)");
-  const insertVocab = db.prepare("INSERT INTO vocabulary (id, user_id, character_zh, pinyin, meaning, hsk_level, category, mastery, created_at, last_reviewed) VALUES (?,?,?,?,?,?,?,?,?,?)");
-  const insertGrammar = db.prepare("INSERT INTO grammar_points (id, user_id, title, pattern, explanation, examples, hsk_level) VALUES (?,?,?,?,?,?,?)");
-  const insertFlashcard = db.prepare("INSERT INTO flashcards (id, user_id, front, back, deck, next_review, interval_days, review_count) VALUES (?,?,?,?,?,?,?,?)");
-  const insertLesson = db.prepare("INSERT INTO lessons (id, title, unit, hsk_level, description, content, sort_order) VALUES (?,?,?,?,?,?,?)");
-  const insertReview = db.prepare("INSERT INTO review_history (id, user_id, item_type, item_id, item_label, score, reviewed_at) VALUES (?,?,?,?,?,?,?)");
-
-  const seed = db.transaction(() => {
+  await withTransaction(async (client) => {
     // --- Journal Entries (content uses [hanzi|pinyin|english] inline markup) ---
     const e1 = "entry-001";
-    insertEntry.run(e1, DEV_USER_ID, "我的一天", "My Day", "Unit 4: Daily Life", 2,
-      "今天我早上七点起床。我很[累|lei4|tired]，但是我也很[高兴|gao1 xing4|happy]。\n\n八点的时候，我吃[早餐|zao3 can1|breakfast]。我喜欢喝[咖啡|ka1 fei1|coffee]。九点我开始[学习|xue2 xi2|to study]。我想练习[写字|xie3 zi4|to write characters]。",
-      1, "2023-10-24T08:00:00");
-    insertAnnotation.run(randomUUID(), e1, "grammar_tip", "Grammar Tip",
-      'The particle "也" (yě) always comes after the subject and before the adjective/verb.');
-    insertAnnotation.run(randomUUID(), e1, "mnemonic", "Mnemonic",
-      '"累" (lèi) looks like a person working in a field (田) with a burden above. No wonder they are tired!');
+    await client.query(
+      `INSERT INTO journal_entries
+       (id, user_id, title_zh, title_en, unit, hsk_level, content_zh, bookmarked, created_at)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
+      [
+        e1,
+        DEV_USER_ID,
+        "我的一天",
+        "My Day",
+        "Unit 4: Daily Life",
+        2,
+        "今天我早上七点起床。我很[累|lei4|tired]，但是我也很[高兴|gao1 xing4|happy]。\n\n八点的时候，我吃[早餐|zao3 can1|breakfast]。我喜欢喝[咖啡|ka1 fei1|coffee]。九点我开始[学习|xue2 xi2|to study]。我想练习[写字|xie3 zi4|to write characters]。",
+        1,
+        "2023-10-24T08:00:00",
+      ]
+    );
+    await client.query(
+      "INSERT INTO entry_annotations (id, entry_id, type, title, content) VALUES ($1, $2, $3, $4, $5)",
+      [randomUUID(), e1, "grammar_tip", "Grammar Tip", 'The particle "也" (yě) always comes after the subject and before the adjective/verb.']
+    );
+    await client.query(
+      "INSERT INTO entry_annotations (id, entry_id, type, title, content) VALUES ($1, $2, $3, $4, $5)",
+      [randomUUID(), e1, "mnemonic", "Mnemonic", '"累" (lèi) looks like a person working in a field (田) with a burden above. No wonder they are tired!']
+    );
 
     const e2 = "entry-002";
-    insertEntry.run(e2, DEV_USER_ID, "在餐厅", "At the Restaurant", "Unit 5: Food & Drink", 2,
-      "昨天晚上我和朋友去[餐厅|can1 ting1|restaurant]吃饭。[服务员|fu2 wu4 yuan2|waiter]很热情。我吃了[鱼|yu2|fish]和[米饭|mi3 fan4|rice]。我的朋友喝了[啤酒|pi2 jiu3|beer]。\n\n[菜|cai4|dish / food]很[好吃|hao3 chi1|delicious]，我们都很[满意|man3 yi4|satisfied]。",
-      0, "2023-10-22T19:30:00");
-    insertAnnotation.run(randomUUID(), e2, "grammar_tip", "Grammar Tip",
-      '"了" after a verb indicates completed action. "我吃了鱼" = I ate fish (completed).');
-    insertAnnotation.run(randomUUID(), e2, "mnemonic", "Mnemonic",
-      '"鱼" (yú) — the character looks like a fish with its tail at the bottom! The four dots are the tail fin.');
+    await client.query(
+      `INSERT INTO journal_entries
+       (id, user_id, title_zh, title_en, unit, hsk_level, content_zh, bookmarked, created_at)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
+      [
+        e2,
+        DEV_USER_ID,
+        "在餐厅",
+        "At the Restaurant",
+        "Unit 5: Food & Drink",
+        2,
+        "昨天晚上我和朋友去[餐厅|can1 ting1|restaurant]吃饭。[服务员|fu2 wu4 yuan2|waiter]很热情。我吃了[鱼|yu2|fish]和[米饭|mi3 fan4|rice]。我的朋友喝了[啤酒|pi2 jiu3|beer]。\n\n[菜|cai4|dish / food]很[好吃|hao3 chi1|delicious]，我们都很[满意|man3 yi4|satisfied]。",
+        0,
+        "2023-10-22T19:30:00",
+      ]
+    );
+    await client.query(
+      "INSERT INTO entry_annotations (id, entry_id, type, title, content) VALUES ($1, $2, $3, $4, $5)",
+      [randomUUID(), e2, "grammar_tip", "Grammar Tip", '"了" after a verb indicates completed action. "我吃了鱼" = I ate fish (completed).']
+    );
+    await client.query(
+      "INSERT INTO entry_annotations (id, entry_id, type, title, content) VALUES ($1, $2, $3, $4, $5)",
+      [randomUUID(), e2, "mnemonic", "Mnemonic", '"鱼" (yú) — the character looks like a fish with its tail at the bottom! The four dots are the tail fin.']
+    );
 
     const e3 = "entry-003";
-    insertEntry.run(e3, DEV_USER_ID, "我的家人", "My Family", "Unit 3: Family", 1,
-      "我的[家|jia1|home / family]有四口人。[爸爸|ba4 ba|father]、[妈妈|ma1 ma|mother]、[姐姐|jie3 jie|older sister]和我。\n\n[爸爸|ba4 ba|father]是[老师|lao3 shi1|teacher]。[妈妈|ma1 ma|mother]是[医生|yi1 sheng1|doctor]。[姐姐|jie3 jie|older sister]是[学生|xue2 sheng1|student]。我们住在北京。",
-      0, "2023-10-20T10:00:00");
-    insertAnnotation.run(randomUUID(), e3, "grammar_tip", "Grammar Tip",
-      '"有" (yǒu) means "to have". For counting family members: 我的家有四口人 = My family has 4 people. "口" is the measure word for family members.');
+    await client.query(
+      `INSERT INTO journal_entries
+       (id, user_id, title_zh, title_en, unit, hsk_level, content_zh, bookmarked, created_at)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
+      [
+        e3,
+        DEV_USER_ID,
+        "我的家人",
+        "My Family",
+        "Unit 3: Family",
+        1,
+        "我的[家|jia1|home / family]有四口人。[爸爸|ba4 ba|father]、[妈妈|ma1 ma|mother]、[姐姐|jie3 jie|older sister]和我。\n\n[爸爸|ba4 ba|father]是[老师|lao3 shi1|teacher]。[妈妈|ma1 ma|mother]是[医生|yi1 sheng1|doctor]。[姐姐|jie3 jie|older sister]是[学生|xue2 sheng1|student]。我们住在北京。",
+        0,
+        "2023-10-20T10:00:00",
+      ]
+    );
+    await client.query(
+      "INSERT INTO entry_annotations (id, entry_id, type, title, content) VALUES ($1, $2, $3, $4, $5)",
+      [randomUUID(), e3, "grammar_tip", "Grammar Tip", '"有" (yǒu) means "to have". For counting family members: 我的家有四口人 = My family has 4 people. "口" is the measure word for family members.']
+    );
 
     const e4 = "entry-004";
-    insertEntry.run(e4, DEV_USER_ID, "去商店买东西", "Shopping", "Unit 6: Shopping", 2,
-      "今天下午我去[商店|shang1 dian4|shop / store]买[东西|dong1 xi|things / stuff]。我想买一件新的[衣服|yi1 fu|clothes]和一双[鞋子|xie2 zi|shoes]。\n\n那件衣服太[贵|gui4|expensive]了，我没买。但是鞋子很[便宜|pian2 yi|cheap]，我买了。我花了一百块[钱|qian2|money]。",
-      0, "2023-10-18T14:00:00");
-    insertAnnotation.run(randomUUID(), e4, "grammar_tip", "Grammar Tip",
-      '"太...了" is a pattern meaning "too...". 太贵了 = too expensive. It expresses excess.');
-    insertAnnotation.run(randomUUID(), e4, "mnemonic", "Mnemonic",
-      '"贵" (guì) — the top part 中 is like a price tag and 贝 (shell) at the bottom was ancient money. Expensive = lots of shells!');
+    await client.query(
+      `INSERT INTO journal_entries
+       (id, user_id, title_zh, title_en, unit, hsk_level, content_zh, bookmarked, created_at)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
+      [
+        e4,
+        DEV_USER_ID,
+        "去商店买东西",
+        "Shopping",
+        "Unit 6: Shopping",
+        2,
+        "今天下午我去[商店|shang1 dian4|shop / store]买[东西|dong1 xi|things / stuff]。我想买一件新的[衣服|yi1 fu|clothes]和一双[鞋子|xie2 zi|shoes]。\n\n那件衣服太[贵|gui4|expensive]了，我没买。但是鞋子很[便宜|pian2 yi|cheap]，我买了。我花了一百块[钱|qian2|money]。",
+        0,
+        "2023-10-18T14:00:00",
+      ]
+    );
+    await client.query(
+      "INSERT INTO entry_annotations (id, entry_id, type, title, content) VALUES ($1, $2, $3, $4, $5)",
+      [randomUUID(), e4, "grammar_tip", "Grammar Tip", '"太...了" is a pattern meaning "too...". 太贵了 = too expensive. It expresses excess.']
+    );
+    await client.query(
+      "INSERT INTO entry_annotations (id, entry_id, type, title, content) VALUES ($1, $2, $3, $4, $5)",
+      [randomUUID(), e4, "mnemonic", "Mnemonic", '"贵" (guì) — the top part 中 is like a price tag and 贝 (shell) at the bottom was ancient money. Expensive = lots of shells!']
+    );
 
     const e5 = "entry-005";
-    insertEntry.run(e5, DEV_USER_ID, "天气怎么样", "How's the Weather", "Unit 7: Weather", 2,
-      "今天的[天气|tian1 qi4|weather]很好。外面很[暖和|nuan3 huo|warm]，没有[风|feng1|wind]。天空很蓝。\n\n但是明天会[下雨|xia4 yu3|to rain]。我需要带[雨伞|yu3 san3|umbrella]。我不喜欢下雨天，因为很[冷|leng3|cold]。",
-      0, "2023-10-15T09:00:00");
-    insertAnnotation.run(randomUUID(), e5, "grammar_tip", "Grammar Tip",
-      '"会" (huì) before a verb indicates future likelihood: 明天会下雨 = It will rain tomorrow.');
+    await client.query(
+      `INSERT INTO journal_entries
+       (id, user_id, title_zh, title_en, unit, hsk_level, content_zh, bookmarked, created_at)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
+      [
+        e5,
+        DEV_USER_ID,
+        "天气怎么样",
+        "How's the Weather",
+        "Unit 7: Weather",
+        2,
+        "今天的[天气|tian1 qi4|weather]很好。外面很[暖和|nuan3 huo|warm]，没有[风|feng1|wind]。天空很蓝。\n\n但是明天会[下雨|xia4 yu3|to rain]。我需要带[雨伞|yu3 san3|umbrella]。我不喜欢下雨天，因为很[冷|leng3|cold]。",
+        0,
+        "2023-10-15T09:00:00",
+      ]
+    );
+    await client.query(
+      "INSERT INTO entry_annotations (id, entry_id, type, title, content) VALUES ($1, $2, $3, $4, $5)",
+      [randomUUID(), e5, "grammar_tip", "Grammar Tip", '"会" (huì) before a verb indicates future likelihood: 明天会下雨 = It will rain tomorrow.']
+    );
 
     // --- Vocabulary ---
     const vocabItems = [
@@ -172,7 +203,12 @@ function seedData() {
     ];
 
     for (const [ch, py, mn, lvl, cat, mastery, reviewed] of vocabItems) {
-      insertVocab.run(randomUUID(), DEV_USER_ID, ch, py, mn, lvl, cat, mastery, "2023-10-01", reviewed);
+      await client.query(
+        `INSERT INTO vocabulary
+         (id, user_id, character_zh, pinyin, meaning, hsk_level, category, mastery, created_at, last_reviewed)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`,
+        [randomUUID(), DEV_USER_ID, ch, py, mn, lvl, cat, mastery, "2023-10-01", reviewed]
+      );
     }
 
     // --- Grammar Points ---
@@ -267,7 +303,12 @@ function seedData() {
     ];
 
     for (const [title, pattern, explanation, examples, level] of grammarItems) {
-      insertGrammar.run(randomUUID(), DEV_USER_ID, title, pattern, explanation, examples, level);
+      await client.query(
+        `INSERT INTO grammar_points
+         (id, user_id, title, pattern, explanation, examples, hsk_level)
+         VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+        [randomUUID(), DEV_USER_ID, title, pattern, explanation, examples, level]
+      );
     }
 
     // --- Flashcards ---
@@ -287,7 +328,12 @@ function seedData() {
     ];
 
     for (const [front, back, deck, nextReview, interval, reviews] of flashcardItems) {
-      insertFlashcard.run(randomUUID(), DEV_USER_ID, front, back, deck, nextReview, interval, reviews);
+      await client.query(
+        `INSERT INTO flashcards
+         (id, user_id, front, back, deck, next_review, interval_days, review_count)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
+        [randomUUID(), DEV_USER_ID, front, back, deck, nextReview, interval, reviews]
+      );
     }
 
     // --- Lessons ---
@@ -311,7 +357,12 @@ function seedData() {
     ];
 
     for (const [id, title, unit, level, desc, content, order] of lessonItems) {
-      insertLesson.run(id, title, unit, level, desc, content, order);
+      await client.query(
+        `INSERT INTO lessons
+         (id, title, unit, hsk_level, description, content, sort_order)
+         VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+        [id, title, unit, level, desc, content, order]
+      );
     }
 
     // --- Review History ---
@@ -334,11 +385,14 @@ function seedData() {
     ];
 
     for (const [type, itemId, label, score, reviewedAt] of reviews) {
-      insertReview.run(randomUUID(), DEV_USER_ID, type, itemId, label, score, reviewedAt);
+      await client.query(
+        `INSERT INTO review_history
+         (id, user_id, item_type, item_id, item_label, score, reviewed_at)
+         VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+        [randomUUID(), DEV_USER_ID, type, itemId, label, score, reviewedAt]
+      );
     }
   });
-
-  seed();
   console.log("Demo data seeded successfully!");
   console.log(`  5 journal entries with inline vocabulary markup & annotations`);
   console.log(`  25 vocabulary items across HSK 1-2`);
@@ -346,7 +400,6 @@ function seedData() {
   console.log(`  12 flashcards`);
   console.log(`  8 lessons`);
   console.log(`  15 review history records`);
-  db.close();
 }
 
 async function main() {
@@ -355,11 +408,16 @@ async function main() {
   } catch {
     console.log("Could not reach auth server — seed data only.");
   }
-  seedData();
+  await seedData();
   console.log(`\nDev credentials:`);
   console.log(`  Email:    ${DEV_USER.email}`);
   console.log(`  Password: ${DEV_USER.password}`);
   console.log(`\nSign in at: ${BASE_URL}/auth/signin`);
+  await getPool().end();
 }
 
-main();
+main().catch(async (error) => {
+  console.error(error);
+  await getPool().end().catch(() => undefined);
+  process.exit(1);
+});

@@ -20,7 +20,7 @@ export async function POST(req: NextRequest) {
     }
 
     const userId = session.user.id;
-    const existing = getSubscription(userId);
+    const existing = await getSubscription(userId);
 
     // Reuse existing Stripe customer if we have one
     let customerId = existing?.stripe_customer_id;

@@ -7,7 +7,7 @@
   <img src="https://img.shields.io/badge/Next.js-16-black?logo=next.js" alt="Next.js 16" />
   <img src="https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=white" alt="React 19" />
   <img src="https://img.shields.io/badge/Tailwind_CSS-4-38BDF8?logo=tailwindcss&logoColor=white" alt="Tailwind CSS v4" />
-  <img src="https://img.shields.io/badge/SQLite-3-003B57?logo=sqlite&logoColor=white" alt="SQLite" />
+  <img src="https://img.shields.io/badge/PostgreSQL-16-336791?logo=postgresql&logoColor=white" alt="PostgreSQL" />
   <img src="https://img.shields.io/badge/TypeScript-5-3178C6?logo=typescript&logoColor=white" alt="TypeScript 5" />
 </p>
 
@@ -73,7 +73,7 @@ Contextual toolbar for each journal entry:
 | Language | TypeScript 5 |
 | Styling | [Tailwind CSS v4](https://tailwindcss.com/) with custom CSS variables |
 | Components | [shadcn/ui](https://ui.shadcn.com/) (base-nova style) + [@base-ui/react](https://base-ui.com/) primitives |
-| Database | SQLite via [better-sqlite3](https://github.com/WiseLibs/better-sqlite3) (WAL mode) |
+| Database | PostgreSQL on Neon via `pg` |
 | Auth | [Better Auth](https://better-auth.com/) (email/password + GitHub/Google OAuth) |
 | Icons | [Lucide React](https://lucide.dev/) |
 | Package Manager | pnpm |
@@ -99,6 +99,9 @@ pnpm install
 
 # Set up environment variables
 cp .env.example .env.local
+
+# Initialize Postgres schema
+pnpm db:init
 
 # Seed the database with demo data
 pnpm seed
@@ -126,6 +129,7 @@ The seed script creates a full demo dataset: 5 journal entries with highlights a
 
 | Variable | Required | Description |
 |----------|----------|-------------|
+| `DATABASE_URL` | Yes | Neon/Postgres connection string |
 | `BETTER_AUTH_SECRET` | Yes | Secret key for session encryption |
 | `BETTER_AUTH_URL` | Yes | Auth server URL (e.g. `http://localhost:3000`) |
 | `NEXT_PUBLIC_APP_URL` | Yes | Public app URL for client-side auth |
@@ -159,13 +163,14 @@ src/
     notebook/                   # Notebook UI components
     ui/                         # shadcn/ui primitives
   lib/
-    db.ts                       # SQLite connection + schema
+    db.ts                       # Postgres pool + schema bootstrap
     data.ts                     # Typed query functions
     actions.ts                  # Server Actions (mutations)
     auth.ts                     # Better Auth server config
     auth-client.ts              # Client-side auth helpers
     constants.ts                # DEV_USER_ID, etc.
 scripts/
+  init-db.ts                    # Initializes Neon/Postgres schema
   seed-dev-user.ts              # Seeds auth user + demo data
 docs/
   app-overview.md               # Detailed feature documentation
@@ -175,20 +180,23 @@ docs/
 
 ## Database
 
-Eight SQLite tables power the app:
+HanziBit now uses PostgreSQL on Neon for app data and auth. The main app tables are:
 
 | Table | Purpose |
 |-------|---------|
 | `journal_entries` | Daily journal writings with bilingual titles, HSK level, unit, bookmark flag |
-| `entry_highlights` | Vocabulary words highlighted within a specific entry (character, pinyin, meaning) |
 | `entry_annotations` | Self-notes on entries — grammar tips, mnemonics |
 | `vocabulary` | User's full vocabulary collection with mastery tracking (0-100%) |
 | `grammar_points` | Grammar rules with patterns, explanations, and JSON example arrays |
 | `flashcards` | Spaced repetition cards with interval, ease factor, and review scheduling |
 | `lessons` | HSK-aligned lesson content organized by unit |
 | `review_history` | Scored review log across all item types |
+| `hsk_words` | Imported HSK vocabulary reference data |
+| `cedict_entries` | Imported CEDICT dictionary data |
+| `gloss_cache` | Cached interlinear gloss results |
+| `subscriptions` | Stripe subscription state |
 
-SQLite runs in WAL mode with foreign keys enabled and cascade deletes on entry-related tables.
+Better Auth also uses PostgreSQL tables for `user`, `session`, `account`, and `verification`.
 
 ---
 
@@ -225,10 +233,11 @@ The layout follows a **three-column notebook metaphor**: sidebar (navigation + p
 
 | Command | Description |
 |---------|-------------|
-| `pnpm dev` | Start development server (Turbopack) |
+| `pnpm dev` | Start development server (webpack dev mode) |
 | `pnpm build` | Production build |
 | `pnpm start` | Run production server |
 | `pnpm lint` | Run ESLint |
+| `pnpm db:init` | Initialize Neon/Postgres schema |
 | `pnpm seed` | Seed database with dev user + demo data |
 
 ---

@@ -6,7 +6,7 @@ export const dynamic = "force-dynamic";
 
 export default async function ReviewsPage() {
   const userId = await getAuthUserId();
-  const reviews = getReviewHistory(userId);
+  const reviews = await getReviewHistory(userId);
 
   return (
     <div data-testid="reviews-page" className="h-full overflow-auto p-6 pb-20 md:p-10 lg:pb-10">

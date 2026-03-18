@@ -1,7 +1,7 @@
 "use server";
 
 import { createHash } from "crypto";
-import { getDb } from "./db";
+import { execute, queryOne } from "./db";
 import { glossContent, type GlossParagraph } from "./gloss";
 
 function hashContent(content: string): string {
@@ -12,15 +12,13 @@ export async function glossEntryAction(
   entryId: string,
   contentZh: string
 ): Promise<GlossParagraph[]> {
-  const db = getDb();
   const hash = hashContent(contentZh);
 
   // Check cache
-  const cached = db
-    .prepare(
-      "SELECT gloss_json FROM gloss_cache WHERE entry_id = ? AND content_hash = ?"
-    )
-    .get(entryId, hash) as { gloss_json: string } | undefined;
+  const cached = await queryOne<{ gloss_json: string }>(
+    "SELECT gloss_json FROM gloss_cache WHERE entry_id = $1 AND content_hash = $2",
+    [entryId, hash]
+  );
 
   if (cached) {
     return JSON.parse(cached.gloss_json);
@@ -30,11 +28,15 @@ export async function glossEntryAction(
   const result = glossContent(contentZh);
 
   // Store in cache (upsert)
-  db.prepare(
+  await execute(
     `INSERT INTO gloss_cache (entry_id, content_hash, gloss_json, created_at)
-     VALUES (?, ?, ?, datetime('now'))
-     ON CONFLICT(entry_id) DO UPDATE SET content_hash = ?, gloss_json = ?, created_at = datetime('now')`
-  ).run(entryId, hash, JSON.stringify(result), hash, JSON.stringify(result));
+     VALUES ($1, $2, $3, NOW())
+     ON CONFLICT(entry_id) DO UPDATE SET
+       content_hash = EXCLUDED.content_hash,
+       gloss_json = EXCLUDED.gloss_json,
+       created_at = NOW()`,
+    [entryId, hash, JSON.stringify(result)]
+  );
 
   return result;
 }

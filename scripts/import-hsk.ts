@@ -1,14 +1,12 @@
 /**
- * Import official HSK word lists into SQLite.
+ * Import official HSK word lists into Postgres.
  * Cross-references CC-CEDICT (must be imported first) for pinyin and English definitions.
  *
  * Usage: pnpm import-hsk
  */
 
-import Database from "better-sqlite3";
-import path from "path";
-
-const DB_PATH = path.join(process.cwd(), "sqlite.db");
+import type { PoolClient } from "pg";
+import { ensureAppSchema, withTransaction, getPool } from "../src/lib/db";
 
 // --- Official HSK word lists (simplified characters) ---
 // HSK 1: 150 words, HSK 2: 150 words, HSK 3: ~300 words
@@ -269,72 +267,102 @@ interface CedictRow {
   english: string;
 }
 
-function main() {
-  const db = new Database(DB_PATH);
-  db.pragma("journal_mode = WAL");
+async function insertBatch(
+  client: PoolClient,
+  rows: Array<{
+    simplified: string;
+    traditional: string | null;
+    pinyin: string;
+    english: string;
+    hsk_level: number;
+  }>
+) {
+  if (rows.length === 0) return;
 
-  // Ensure table exists
-  db.exec(`
-    CREATE TABLE IF NOT EXISTS hsk_words (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      simplified TEXT NOT NULL,
-      traditional TEXT,
-      pinyin TEXT NOT NULL,
-      english TEXT NOT NULL,
-      hsk_level INTEGER NOT NULL
-    );
-    CREATE INDEX IF NOT EXISTS idx_hsk_simplified ON hsk_words(simplified);
-    CREATE INDEX IF NOT EXISTS idx_hsk_level ON hsk_words(hsk_level);
-  `);
+  const values: unknown[] = [];
+  const placeholders = rows.map((row, rowIndex) => {
+    values.push(row.simplified, row.traditional, row.pinyin, row.english, row.hsk_level);
+    const offset = rowIndex * 5;
+    return `($${offset + 1}, $${offset + 2}, $${offset + 3}, $${offset + 4}, $${offset + 5})`;
+  });
 
-  // Clear existing
-  db.exec("DELETE FROM hsk_words");
-
-  // Prepare CEDICT lookup
-  const lookup = db.prepare(
-    "SELECT simplified, traditional, pinyin_display, english FROM cedict_entries WHERE simplified = ? LIMIT 1"
+  await client.query(
+    `INSERT INTO hsk_words (simplified, traditional, pinyin, english, hsk_level)
+     VALUES ${placeholders.join(", ")}`,
+    values
   );
+}
 
-  const insert = db.prepare(
-    "INSERT INTO hsk_words (simplified, traditional, pinyin, english, hsk_level) VALUES (?, ?, ?, ?, ?)"
+async function main() {
+  await ensureAppSchema();
+
+  const uniqueWords = Array.from(new Set(Object.values(HSK_WORDS).flat()));
+  const cedictRows = await getPool().query<CedictRow>(
+    `SELECT DISTINCT ON (simplified) simplified, traditional, pinyin_display, english
+     FROM cedict_entries
+     WHERE simplified = ANY($1::text[])
+     ORDER BY simplified, char_count DESC`,
+    [uniqueWords]
   );
+  const cedictMap = new Map(cedictRows.rows.map((row) => [row.simplified, row]));
 
   let total = 0;
   let missing = 0;
 
-  const insertAll = db.transaction(() => {
+  await withTransaction(async (client) => {
+    await client.query("DELETE FROM hsk_words");
+
+    const batch: Array<{
+      simplified: string;
+      traditional: string | null;
+      pinyin: string;
+      english: string;
+      hsk_level: number;
+    }> = [];
+
     for (const [levelStr, words] of Object.entries(HSK_WORDS)) {
-      const level = parseInt(levelStr);
+      const level = parseInt(levelStr, 10);
       for (const word of words) {
-        const row = lookup.get(word) as CedictRow | undefined;
-        if (row) {
-          insert.run(row.simplified, row.traditional, row.pinyin_display, row.english, level);
-        } else {
-          // Word not in CEDICT — insert with placeholder
-          insert.run(word, null, "?", "?", level);
-          missing++;
-        }
+        const row = cedictMap.get(word);
+        batch.push({
+          simplified: row?.simplified ?? word,
+          traditional: row?.traditional ?? null,
+          pinyin: row?.pinyin_display ?? "?",
+          english: row?.english ?? "?",
+          hsk_level: level,
+        });
+        if (!row) missing++;
         total++;
+
+        if (batch.length >= 500) {
+          await insertBatch(client, batch.splice(0, batch.length));
+        }
       }
     }
-  });
 
-  insertAll();
+    await insertBatch(client, batch);
+  });
 
   console.log(`Imported ${total} HSK words across ${Object.keys(HSK_WORDS).length} levels.`);
   if (missing > 0) {
     console.log(`  ${missing} words not found in CEDICT (inserted with placeholders).`);
   }
 
-  // Print summary
-  const summary = db
-    .prepare("SELECT hsk_level, COUNT(*) as count FROM hsk_words GROUP BY hsk_level ORDER BY hsk_level")
-    .all() as { hsk_level: number; count: number }[];
-  for (const row of summary) {
+  const summary = await getPool().query<{ hsk_level: number; count: number }>(
+    `SELECT hsk_level, COUNT(*)::int AS count
+     FROM hsk_words
+     GROUP BY hsk_level
+     ORDER BY hsk_level`
+  );
+  for (const row of summary.rows) {
     console.log(`  HSK ${row.hsk_level}: ${row.count} words`);
   }
 
-  db.close();
+  await getPool().end();
 }
 
-main();
+main().catch(async (error) => {
+  console.error(error);
+  await getPool().end().catch(() => undefined);
+  process.exit(1);
+});

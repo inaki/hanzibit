@@ -23,12 +23,14 @@ async function NotebookPageInner({
 }) {
   const { entry: selectedEntryId } = await searchParamsPromise;
   const userId = await getAuthUserId();
-  const entries = getJournalEntries(userId);
+  const entries = await getJournalEntries(userId);
   const activeEntry = selectedEntryId
     ? entries.find((e) => e.id === selectedEntryId) ?? entries[0]
     : entries[0];
 
-  const annotations = activeEntry ? getEntryAnnotations(activeEntry.id) : [];
+  const annotations = activeEntry
+    ? await getEntryAnnotations(activeEntry.id)
+    : [];
 
   return (
     <GlossProvider>

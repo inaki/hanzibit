@@ -1,19 +1,19 @@
 /**
- * Download CC-CEDICT and import into SQLite.
+ * Download CC-CEDICT and import into Postgres.
  *
  * Usage: pnpm import-cedict
  */
 
-import Database from "better-sqlite3";
 import path from "path";
 import { createReadStream, createWriteStream, existsSync } from "fs";
 import { createGunzip } from "zlib";
 import { pipeline } from "stream/promises";
 import { readFile } from "fs/promises";
 import { Readable } from "stream";
+import type { PoolClient } from "pg";
 import { convertTones } from "../src/lib/parse-tokens";
+import { ensureAppSchema, withTransaction, getPool } from "../src/lib/db";
 
-const DB_PATH = path.join(process.cwd(), "sqlite.db");
 const CEDICT_URL =
   "https://www.mdbg.net/chinese/export/cedict/cedict_1_0_ts_utf-8_mdbg.txt.gz";
 const CEDICT_GZ = path.join(process.cwd(), "cedict.txt.gz");
@@ -74,40 +74,40 @@ function parseLine(line: string): CedictEntry | null {
   };
 }
 
+async function insertBatch(client: PoolClient, entries: CedictEntry[]) {
+  if (entries.length === 0) return;
+
+  const values: unknown[] = [];
+  const placeholders = entries.map((entry, rowIndex) => {
+    values.push(
+      entry.simplified,
+      entry.traditional,
+      entry.pinyin,
+      entry.pinyin_display,
+      entry.english,
+      entry.char_count
+    );
+    const offset = rowIndex * 6;
+    return `($${offset + 1}, $${offset + 2}, $${offset + 3}, $${offset + 4}, $${offset + 5}, $${offset + 6})`;
+  });
+
+  await client.query(
+    `INSERT INTO cedict_entries (
+       simplified,
+       traditional,
+       pinyin,
+       pinyin_display,
+       english,
+       char_count
+     ) VALUES ${placeholders.join(", ")}`,
+    values
+  );
+}
+
 async function importToDb() {
   const content = await readFile(CEDICT_TXT, "utf-8");
   const lines = content.split("\n");
-
-  const db = new Database(DB_PATH);
-  db.pragma("journal_mode = WAL");
-  db.pragma("foreign_keys = ON");
-
-  // Create table if not exists
-  db.exec(`
-    CREATE TABLE IF NOT EXISTS cedict_entries (
-      simplified TEXT NOT NULL,
-      traditional TEXT NOT NULL,
-      pinyin TEXT NOT NULL,
-      pinyin_display TEXT NOT NULL,
-      english TEXT NOT NULL,
-      char_count INTEGER NOT NULL
-    );
-    CREATE INDEX IF NOT EXISTS idx_cedict_simplified ON cedict_entries(simplified);
-  `);
-
-  // Clear existing data
-  db.exec("DELETE FROM cedict_entries");
-
-  const insert = db.prepare(
-    `INSERT INTO cedict_entries (simplified, traditional, pinyin, pinyin_display, english, char_count)
-     VALUES (?, ?, ?, ?, ?, ?)`
-  );
-
-  const insertMany = db.transaction((entries: CedictEntry[]) => {
-    for (const e of entries) {
-      insert.run(e.simplified, e.traditional, e.pinyin, e.pinyin_display, e.english, e.char_count);
-    }
-  });
+  await ensureAppSchema();
 
   const entries: CedictEntry[] = [];
   for (const line of lines) {
@@ -115,11 +115,17 @@ async function importToDb() {
     if (entry) entries.push(entry);
   }
 
-  console.log(`Parsed ${entries.length} entries, inserting into SQLite...`);
-  insertMany(entries);
-  console.log(`Done! Imported ${entries.length} CC-CEDICT entries.`);
+  console.log(`Parsed ${entries.length} entries, inserting into Postgres...`);
+  await withTransaction(async (client) => {
+    await client.query("DELETE FROM cedict_entries");
 
-  db.close();
+    for (let index = 0; index < entries.length; index += 500) {
+      await insertBatch(client, entries.slice(index, index + 500));
+    }
+  });
+
+  console.log(`Done! Imported ${entries.length} CC-CEDICT entries.`);
+  await getPool().end();
 }
 
 async function main() {
@@ -129,5 +135,6 @@ async function main() {
 
 main().catch((err) => {
   console.error(err);
+  getPool().end().catch(() => undefined);
   process.exit(1);
 });

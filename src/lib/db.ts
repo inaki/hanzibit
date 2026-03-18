@@ -1,142 +1,262 @@
-import Database from "better-sqlite3";
-import path from "path";
+import { Pool, type PoolClient, type QueryResultRow, types } from "pg";
 
-const DB_PATH = path.join(process.cwd(), "sqlite.db");
+types.setTypeParser(types.builtins.INT8, (value) => Number(value));
+types.setTypeParser(types.builtins.NUMERIC, (value) => Number(value));
+types.setTypeParser(types.builtins.TIMESTAMP, (value) =>
+  new Date(`${value}Z`).toISOString()
+);
+types.setTypeParser(types.builtins.TIMESTAMPTZ, (value) =>
+  new Date(value).toISOString()
+);
 
-let _db: Database.Database | null = null;
-
-export function getDb(): Database.Database {
-  if (!_db) {
-    _db = new Database(DB_PATH);
-    _db.pragma("journal_mode = WAL");
-    _db.pragma("foreign_keys = ON");
-    initSchema(_db);
-  }
-  return _db;
+declare global {
+  var __hanzibitPool: Pool | undefined;
+  var __hanzibitSchemaInit: Promise<void> | undefined;
 }
 
-function initSchema(db: Database.Database) {
-  db.exec(`
-    CREATE TABLE IF NOT EXISTS journal_entries (
-      id TEXT PRIMARY KEY,
-      user_id TEXT NOT NULL,
-      title_zh TEXT NOT NULL,
-      title_en TEXT NOT NULL,
-      unit TEXT,
-      hsk_level INTEGER DEFAULT 1,
-      content_zh TEXT NOT NULL,
-      bookmarked INTEGER DEFAULT 0,
-      created_at TEXT DEFAULT (datetime('now')),
-      updated_at TEXT DEFAULT (datetime('now'))
-    );
+const APP_SCHEMA_SQL = `
+  CREATE TABLE IF NOT EXISTS "user" (
+    id TEXT PRIMARY KEY,
+    name TEXT NOT NULL,
+    email TEXT NOT NULL UNIQUE,
+    "emailVerified" INTEGER NOT NULL DEFAULT 0,
+    image TEXT,
+    "createdAt" TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    "updatedAt" TIMESTAMPTZ NOT NULL DEFAULT NOW()
+  );
 
-    CREATE TABLE IF NOT EXISTS entry_annotations (
-      id TEXT PRIMARY KEY,
-      entry_id TEXT NOT NULL REFERENCES journal_entries(id) ON DELETE CASCADE,
-      type TEXT NOT NULL CHECK(type IN ('grammar_tip', 'mnemonic')),
-      title TEXT NOT NULL,
-      content TEXT NOT NULL
-    );
+  CREATE TABLE IF NOT EXISTS session (
+    id TEXT PRIMARY KEY,
+    "expiresAt" TIMESTAMPTZ NOT NULL,
+    token TEXT NOT NULL UNIQUE,
+    "createdAt" TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    "updatedAt" TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    "ipAddress" TEXT,
+    "userAgent" TEXT,
+    "userId" TEXT NOT NULL REFERENCES "user"(id) ON DELETE CASCADE
+  );
 
-    CREATE TABLE IF NOT EXISTS vocabulary (
-      id TEXT PRIMARY KEY,
-      user_id TEXT NOT NULL,
-      character_zh TEXT NOT NULL,
-      pinyin TEXT NOT NULL,
-      meaning TEXT NOT NULL,
-      hsk_level INTEGER DEFAULT 1,
-      category TEXT DEFAULT 'general',
-      mastery INTEGER DEFAULT 0,
-      created_at TEXT DEFAULT (datetime('now')),
-      last_reviewed TEXT
-    );
+  CREATE TABLE IF NOT EXISTS account (
+    id TEXT PRIMARY KEY,
+    "accountId" TEXT NOT NULL,
+    "providerId" TEXT NOT NULL,
+    "userId" TEXT NOT NULL REFERENCES "user"(id) ON DELETE CASCADE,
+    "accessToken" TEXT,
+    "refreshToken" TEXT,
+    "idToken" TEXT,
+    "accessTokenExpiresAt" TIMESTAMPTZ,
+    "refreshTokenExpiresAt" TIMESTAMPTZ,
+    scope TEXT,
+    password TEXT,
+    "createdAt" TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    "updatedAt" TIMESTAMPTZ NOT NULL DEFAULT NOW()
+  );
 
-    CREATE TABLE IF NOT EXISTS grammar_points (
-      id TEXT PRIMARY KEY,
-      user_id TEXT NOT NULL,
-      title TEXT NOT NULL,
-      pattern TEXT,
-      explanation TEXT NOT NULL,
-      examples TEXT NOT NULL DEFAULT '[]',
-      hsk_level INTEGER DEFAULT 1,
-      created_at TEXT DEFAULT (datetime('now'))
-    );
+  CREATE TABLE IF NOT EXISTS verification (
+    id TEXT PRIMARY KEY,
+    identifier TEXT NOT NULL,
+    value TEXT NOT NULL,
+    "expiresAt" TIMESTAMPTZ NOT NULL,
+    "createdAt" TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    "updatedAt" TIMESTAMPTZ NOT NULL DEFAULT NOW()
+  );
 
-    CREATE TABLE IF NOT EXISTS flashcards (
-      id TEXT PRIMARY KEY,
-      user_id TEXT NOT NULL,
-      front TEXT NOT NULL,
-      back TEXT NOT NULL,
-      deck TEXT DEFAULT 'general',
-      next_review TEXT DEFAULT (datetime('now')),
-      interval_days INTEGER DEFAULT 1,
-      ease_factor REAL DEFAULT 2.5,
-      review_count INTEGER DEFAULT 0,
-      created_at TEXT DEFAULT (datetime('now'))
-    );
+  CREATE TABLE IF NOT EXISTS journal_entries (
+    id TEXT PRIMARY KEY,
+    user_id TEXT NOT NULL,
+    title_zh TEXT NOT NULL,
+    title_en TEXT NOT NULL,
+    unit TEXT,
+    hsk_level INTEGER DEFAULT 1,
+    content_zh TEXT NOT NULL,
+    bookmarked INTEGER DEFAULT 0,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW()
+  );
 
-    CREATE TABLE IF NOT EXISTS review_history (
-      id TEXT PRIMARY KEY,
-      user_id TEXT NOT NULL,
-      item_type TEXT NOT NULL CHECK(item_type IN ('vocabulary', 'flashcard', 'grammar')),
-      item_id TEXT NOT NULL,
-      item_label TEXT NOT NULL,
-      score INTEGER CHECK(score BETWEEN 1 AND 5),
-      reviewed_at TEXT DEFAULT (datetime('now'))
-    );
+  CREATE TABLE IF NOT EXISTS entry_annotations (
+    id TEXT PRIMARY KEY,
+    entry_id TEXT NOT NULL REFERENCES journal_entries(id) ON DELETE CASCADE,
+    type TEXT NOT NULL CHECK(type IN ('grammar_tip', 'mnemonic')),
+    title TEXT NOT NULL,
+    content TEXT NOT NULL
+  );
 
-    CREATE TABLE IF NOT EXISTS hsk_words (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      simplified TEXT NOT NULL,
-      traditional TEXT,
-      pinyin TEXT NOT NULL,
-      english TEXT NOT NULL,
-      hsk_level INTEGER NOT NULL
-    );
+  CREATE TABLE IF NOT EXISTS vocabulary (
+    id TEXT PRIMARY KEY,
+    user_id TEXT NOT NULL,
+    character_zh TEXT NOT NULL,
+    pinyin TEXT NOT NULL,
+    meaning TEXT NOT NULL,
+    hsk_level INTEGER DEFAULT 1,
+    category TEXT DEFAULT 'general',
+    mastery INTEGER DEFAULT 0,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    last_reviewed TIMESTAMPTZ
+  );
 
-    CREATE INDEX IF NOT EXISTS idx_hsk_simplified ON hsk_words(simplified);
-    CREATE INDEX IF NOT EXISTS idx_hsk_level ON hsk_words(hsk_level);
+  CREATE TABLE IF NOT EXISTS grammar_points (
+    id TEXT PRIMARY KEY,
+    user_id TEXT NOT NULL,
+    title TEXT NOT NULL,
+    pattern TEXT,
+    explanation TEXT NOT NULL,
+    examples TEXT NOT NULL DEFAULT '[]',
+    hsk_level INTEGER DEFAULT 1,
+    created_at TIMESTAMPTZ DEFAULT NOW()
+  );
 
-    CREATE TABLE IF NOT EXISTS cedict_entries (
-      simplified TEXT NOT NULL,
-      traditional TEXT NOT NULL,
-      pinyin TEXT NOT NULL,
-      pinyin_display TEXT NOT NULL,
-      english TEXT NOT NULL,
-      char_count INTEGER NOT NULL
-    );
+  CREATE TABLE IF NOT EXISTS flashcards (
+    id TEXT PRIMARY KEY,
+    user_id TEXT NOT NULL,
+    front TEXT NOT NULL,
+    back TEXT NOT NULL,
+    deck TEXT DEFAULT 'general',
+    next_review TIMESTAMPTZ DEFAULT NOW(),
+    interval_days INTEGER DEFAULT 1,
+    ease_factor DOUBLE PRECISION DEFAULT 2.5,
+    review_count INTEGER DEFAULT 0,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    source_entry_id TEXT
+  );
 
-    CREATE INDEX IF NOT EXISTS idx_cedict_simplified ON cedict_entries(simplified);
+  CREATE TABLE IF NOT EXISTS lessons (
+    id TEXT PRIMARY KEY,
+    title TEXT NOT NULL,
+    unit TEXT NOT NULL,
+    hsk_level INTEGER DEFAULT 1,
+    description TEXT,
+    content TEXT NOT NULL DEFAULT '',
+    sort_order INTEGER DEFAULT 0
+  );
 
-    CREATE TABLE IF NOT EXISTS gloss_cache (
-      entry_id TEXT NOT NULL,
-      content_hash TEXT NOT NULL,
-      gloss_json TEXT NOT NULL,
-      created_at TEXT DEFAULT (datetime('now')),
-      PRIMARY KEY (entry_id)
-    );
+  CREATE TABLE IF NOT EXISTS review_history (
+    id TEXT PRIMARY KEY,
+    user_id TEXT NOT NULL,
+    item_type TEXT NOT NULL CHECK(item_type IN ('vocabulary', 'flashcard', 'grammar')),
+    item_id TEXT NOT NULL,
+    item_label TEXT NOT NULL,
+    score INTEGER CHECK(score BETWEEN 1 AND 5),
+    reviewed_at TIMESTAMPTZ DEFAULT NOW()
+  );
 
-    CREATE TABLE IF NOT EXISTS subscriptions (
-      id TEXT PRIMARY KEY,
-      user_id TEXT NOT NULL UNIQUE,
-      stripe_customer_id TEXT NOT NULL,
-      stripe_subscription_id TEXT,
-      plan TEXT NOT NULL DEFAULT 'free' CHECK(plan IN ('free', 'pro')),
-      status TEXT NOT NULL DEFAULT 'active' CHECK(status IN ('active', 'trialing', 'past_due', 'canceled', 'unpaid', 'incomplete')),
-      current_period_end TEXT,
-      cancel_at_period_end INTEGER DEFAULT 0,
-      created_at TEXT DEFAULT (datetime('now')),
-      updated_at TEXT DEFAULT (datetime('now'))
-    );
+  CREATE TABLE IF NOT EXISTS hsk_words (
+    id INTEGER GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,
+    simplified TEXT NOT NULL,
+    traditional TEXT,
+    pinyin TEXT NOT NULL,
+    english TEXT NOT NULL,
+    hsk_level INTEGER NOT NULL
+  );
 
-    CREATE INDEX IF NOT EXISTS idx_sub_user ON subscriptions(user_id);
-    CREATE INDEX IF NOT EXISTS idx_sub_stripe_customer ON subscriptions(stripe_customer_id);
-  `);
+  CREATE INDEX IF NOT EXISTS idx_hsk_simplified ON hsk_words(simplified);
+  CREATE INDEX IF NOT EXISTS idx_hsk_level ON hsk_words(hsk_level);
 
-  // Migration: add source_entry_id to flashcards
+  CREATE TABLE IF NOT EXISTS cedict_entries (
+    simplified TEXT NOT NULL,
+    traditional TEXT NOT NULL,
+    pinyin TEXT NOT NULL,
+    pinyin_display TEXT NOT NULL,
+    english TEXT NOT NULL,
+    char_count INTEGER NOT NULL
+  );
+
+  CREATE INDEX IF NOT EXISTS idx_cedict_simplified ON cedict_entries(simplified);
+
+  CREATE TABLE IF NOT EXISTS gloss_cache (
+    entry_id TEXT PRIMARY KEY,
+    content_hash TEXT NOT NULL,
+    gloss_json TEXT NOT NULL,
+    created_at TIMESTAMPTZ DEFAULT NOW()
+  );
+
+  CREATE TABLE IF NOT EXISTS subscriptions (
+    id TEXT PRIMARY KEY,
+    user_id TEXT NOT NULL UNIQUE,
+    stripe_customer_id TEXT NOT NULL,
+    stripe_subscription_id TEXT,
+    plan TEXT NOT NULL DEFAULT 'free' CHECK(plan IN ('free', 'pro')),
+    status TEXT NOT NULL DEFAULT 'active' CHECK(status IN ('active', 'trialing', 'past_due', 'canceled', 'unpaid', 'incomplete')),
+    current_period_end TIMESTAMPTZ,
+    cancel_at_period_end INTEGER DEFAULT 0,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW()
+  );
+
+  CREATE INDEX IF NOT EXISTS idx_sub_user ON subscriptions(user_id);
+  CREATE INDEX IF NOT EXISTS idx_sub_stripe_customer ON subscriptions(stripe_customer_id);
+`;
+
+function getDatabaseUrl(): string {
+  const connectionString = process.env.DATABASE_URL;
+  if (!connectionString) {
+    throw new Error("DATABASE_URL is not set. Point it at your Neon Postgres database.");
+  }
+  return connectionString;
+}
+
+export function getPool(): Pool {
+  if (!global.__hanzibitPool) {
+    global.__hanzibitPool = new Pool({
+      connectionString: getDatabaseUrl(),
+      ssl: getDatabaseUrl().includes("localhost")
+        ? false
+        : { rejectUnauthorized: false },
+    });
+  }
+  return global.__hanzibitPool;
+}
+
+async function initializeSchema(): Promise<void> {
+  const pool = getPool();
+  await pool.query(APP_SCHEMA_SQL);
+}
+
+export async function ensureAppSchema(): Promise<void> {
+  if (!global.__hanzibitSchemaInit) {
+    global.__hanzibitSchemaInit = initializeSchema();
+  }
+  await global.__hanzibitSchemaInit;
+}
+
+export async function query<T extends QueryResultRow>(
+  text: string,
+  params: unknown[] = []
+): Promise<T[]> {
+  await ensureAppSchema();
+  const result = await getPool().query<T>(text, params);
+  return result.rows;
+}
+
+export async function queryOne<T extends QueryResultRow>(
+  text: string,
+  params: unknown[] = []
+): Promise<T | undefined> {
+  const rows = await query<T>(text, params);
+  return rows[0];
+}
+
+export async function execute(text: string, params: unknown[] = []): Promise<void> {
+  await ensureAppSchema();
+  await getPool().query(text, params);
+}
+
+export async function withTransaction<T>(
+  fn: (client: PoolClient) => Promise<T>
+): Promise<T> {
+  await ensureAppSchema();
+  const client = await getPool().connect();
   try {
-    db.exec(`ALTER TABLE flashcards ADD COLUMN source_entry_id TEXT`);
-  } catch {
-    // Column already exists — ignore
+    await client.query("BEGIN");
+    const result = await fn(client);
+    await client.query("COMMIT");
+    return result;
+  } catch (error) {
+    await client.query("ROLLBACK");
+    throw error;
+  } finally {
+    client.release();
   }
 }
+
+export { APP_SCHEMA_SQL };

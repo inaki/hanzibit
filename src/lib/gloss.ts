@@ -1,4 +1,4 @@
-import { getDb } from "./db";
+import { query } from "./db";
 import { parseInput } from "./parse-tokens";
 
 export interface GlossToken {
@@ -30,7 +30,7 @@ interface DictEntry {
  * Batch-load all possible substrings from CEDICT for a given text.
  * Returns a Map<simplified, DictEntry> (first match wins for duplicates).
  */
-function loadDictSubstrings(text: string): Map<string, DictEntry> {
+async function loadDictSubstrings(text: string): Promise<Map<string, DictEntry>> {
   const substrings = new Set<string>();
   for (let i = 0; i < text.length; i++) {
     for (let len = 1; len <= MAX_WORD_LEN && i + len <= text.length; len++) {
@@ -44,16 +44,13 @@ function loadDictSubstrings(text: string): Map<string, DictEntry> {
 
   if (substrings.size === 0) return new Map();
 
-  const db = getDb();
-  const placeholders = Array.from(substrings).map(() => "?").join(",");
-  const rows = db
-    .prepare(
-      `SELECT simplified, pinyin_display, english FROM cedict_entries
-       WHERE simplified IN (${placeholders})
-       GROUP BY simplified
-       ORDER BY char_count DESC`
-    )
-    .all(...substrings) as DictEntry[];
+  const rows = await query<DictEntry>(
+    `SELECT DISTINCT ON (simplified) simplified, pinyin_display, english
+     FROM cedict_entries
+     WHERE simplified = ANY($1::text[])
+     ORDER BY simplified, char_count DESC`,
+    [Array.from(substrings)]
+  );
 
   const map = new Map<string, DictEntry>();
   for (const row of rows) {
@@ -132,7 +129,7 @@ function segmentText(text: string, dict: Map<string, DictEntry>): GlossSegment[]
  * Gloss an entire entry content string.
  * Two-pass: parseInput for user annotations, then CEDICT segmentation for raw text.
  */
-export function glossContent(content: string): GlossParagraph[] {
+export async function glossContent(content: string): Promise<GlossParagraph[]> {
   const paragraphs = content.split("\n\n");
   const result: GlossParagraph[] = [];
 
@@ -147,7 +144,7 @@ export function glossContent(content: string): GlossParagraph[] {
   });
 
   // Single batch lookup
-  const dict = loadDictSubstrings(allRawText.join(""));
+  const dict = await loadDictSubstrings(allRawText.join(""));
 
   for (const tokens of parsedParagraphs) {
     const segments: GlossSegment[] = [];
