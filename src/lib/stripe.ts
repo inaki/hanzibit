@@ -40,7 +40,9 @@ export const PLANS = {
   },
   pro: {
     name: "Pro",
-    priceMonthly: 9,
+    priceMonthly: 2.99,
+    priceYearly: 18,
+    priceYearlyMonthlyEquivalent: 1.5,
     features: [
       "Unlimited journal entries",
       "All HSK levels (1-6)",
@@ -51,5 +53,9 @@ export const PLANS = {
     ],
   },
 } as const;
+
+export function formatUsd(amount: number): string {
+  return amount.toFixed(2);
+}
 
 export type PlanId = keyof typeof PLANS;

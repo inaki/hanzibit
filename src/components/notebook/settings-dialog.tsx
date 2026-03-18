@@ -18,11 +18,14 @@ import {
   type HskVersion,
 } from "./settings-context";
 import { getSubscriptionInfo, type SubscriptionInfo } from "@/lib/subscription-action";
+import { PLANS, formatUsd } from "@/lib/stripe";
 
 interface SettingsDialogProps {
   open: boolean;
   onOpenChange: (v: boolean) => void;
 }
+
+type BillingCycle = "monthly" | "yearly";
 
 const FONT_OPTIONS: { value: FontSize; label: string; preview: string }[] = [
   { value: "normal", label: "Normal", preview: "Aa" },
@@ -47,6 +50,7 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
   const [name, setName] = useState(settings.profile.name);
   const [subInfo, setSubInfo] = useState<SubscriptionInfo | null>(null);
   const [billingLoading, setBillingLoading] = useState(false);
+  const [billingCycle, setBillingCycle] = useState<BillingCycle>("yearly");
 
   // Pre-populate name from session if settings name is empty
   const sessionName = session?.user?.name ?? "";
@@ -63,10 +67,13 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
     updateProfile({ name: name.trim() });
   }
 
-  async function handleUpgrade() {
+  async function handleUpgrade(cycle: BillingCycle) {
     setBillingLoading(true);
     try {
-      const priceId = process.env.NEXT_PUBLIC_STRIPE_PRO_MONTHLY_PRICE_ID;
+      const priceId =
+        cycle === "yearly"
+          ? process.env.NEXT_PUBLIC_STRIPE_PRO_YEARLY_PRICE_ID
+          : process.env.NEXT_PUBLIC_STRIPE_PRO_MONTHLY_PRICE_ID;
       if (!priceId) {
         console.error("Stripe price ID not configured");
         return;
@@ -170,7 +177,9 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
                   )}
                 </div>
                 <span className="text-sm font-bold text-gray-900">
-                  {subInfo?.plan === "pro" ? "$9/mo" : "$0"}
+                  {subInfo?.plan === "pro"
+                    ? `From $${formatUsd(PLANS.pro.priceYearlyMonthlyEquivalent)}/mo`
+                    : "$0"}
                 </span>
               </div>
 
@@ -195,16 +204,51 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
                     {billingLoading ? "Opening..." : "Manage Billing"}
                   </Button>
                 ) : (
-                  <Button
-                    data-testid="settings-upgrade-button"
-                    size="sm"
-                    onClick={handleUpgrade}
-                    disabled={billingLoading}
-                    className="w-full bg-[var(--cn-orange)] hover:bg-[var(--cn-orange-dark)] text-xs"
-                  >
-                    <Crown className="mr-1.5 h-3 w-3" />
-                    {billingLoading ? "Loading..." : "Upgrade to Pro — $9/mo"}
-                  </Button>
+                  <>
+                    <div className="mb-3 inline-flex rounded-full border bg-gray-50 p-1">
+                      <button
+                        type="button"
+                        onClick={() => setBillingCycle("monthly")}
+                        className={`rounded-full px-3 py-1 text-xs transition-colors ${
+                          billingCycle === "monthly"
+                            ? "bg-white font-medium text-gray-900 shadow-sm"
+                            : "text-gray-500"
+                        }`}
+                      >
+                        Monthly
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setBillingCycle("yearly")}
+                        className={`rounded-full px-3 py-1 text-xs transition-colors ${
+                          billingCycle === "yearly"
+                            ? "bg-white font-medium text-gray-900 shadow-sm"
+                            : "text-gray-500"
+                        }`}
+                      >
+                        Yearly
+                      </button>
+                    </div>
+                    <p className="mb-3 text-xs text-gray-500">
+                      {billingCycle === "monthly"
+                        ? `$${formatUsd(PLANS.pro.priceMonthly)}/month billed monthly.`
+                        : `$${formatUsd(PLANS.pro.priceYearlyMonthlyEquivalent)}/month billed yearly at $${formatUsd(PLANS.pro.priceYearly)}/year.`}
+                    </p>
+                    <Button
+                      data-testid="settings-upgrade-button"
+                      size="sm"
+                      onClick={() => handleUpgrade(billingCycle)}
+                      disabled={billingLoading}
+                      className="w-full bg-[var(--cn-orange)] hover:bg-[var(--cn-orange-dark)] text-xs"
+                    >
+                      <Crown className="mr-1.5 h-3 w-3" />
+                      {billingLoading
+                        ? "Loading..."
+                        : billingCycle === "monthly"
+                          ? `Upgrade to Pro — $${formatUsd(PLANS.pro.priceMonthly)}/mo`
+                          : `Upgrade to Pro — $${formatUsd(PLANS.pro.priceYearlyMonthlyEquivalent)}/mo yearly`}
+                    </Button>
+                  </>
                 )}
               </div>
             </div>

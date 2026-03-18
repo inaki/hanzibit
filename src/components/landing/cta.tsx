@@ -5,16 +5,23 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { ArrowRight } from "lucide-react";
 import { useSession } from "@/lib/auth-client";
+import { PLANS, formatUsd } from "@/lib/stripe";
+
+type BillingCycle = "monthly" | "yearly";
 
 export function LandingCTA() {
   const { data: session } = useSession();
   const [loading, setLoading] = useState(false);
+  const [billingCycle, setBillingCycle] = useState<BillingCycle>("yearly");
 
-  async function handleProClick() {
+  async function handleProClick(cycle: BillingCycle) {
     if (!session) return; // will fall through to Link
     setLoading(true);
     try {
-      const priceId = process.env.NEXT_PUBLIC_STRIPE_PRO_MONTHLY_PRICE_ID;
+      const priceId =
+        cycle === "yearly"
+          ? process.env.NEXT_PUBLIC_STRIPE_PRO_YEARLY_PRICE_ID
+          : process.env.NEXT_PUBLIC_STRIPE_PRO_MONTHLY_PRICE_ID;
       if (!priceId) return;
       const res = await fetch("/api/stripe/checkout", {
         method: "POST",
@@ -39,6 +46,31 @@ export function LandingCTA() {
           notebook-style approach. Start free and upgrade when you&apos;re ready.
         </p>
 
+        <div className="mb-8 inline-flex rounded-full border bg-gray-50 p-1">
+          <button
+            type="button"
+            onClick={() => setBillingCycle("monthly")}
+            className={`rounded-full px-4 py-1.5 text-sm transition-colors ${
+              billingCycle === "monthly"
+                ? "bg-white font-medium text-gray-900 shadow-sm"
+                : "text-gray-500"
+            }`}
+          >
+            Monthly
+          </button>
+          <button
+            type="button"
+            onClick={() => setBillingCycle("yearly")}
+            className={`rounded-full px-4 py-1.5 text-sm transition-colors ${
+              billingCycle === "yearly"
+                ? "bg-white font-medium text-gray-900 shadow-sm"
+                : "text-gray-500"
+            }`}
+          >
+            Yearly
+          </button>
+        </div>
+
         <div data-testid="landing-pricing-cards" className="mx-auto grid max-w-2xl gap-6 sm:grid-cols-2">
           <div data-testid="landing-pricing-free" className="rounded-xl border p-6 text-left">
             <h3 className="mb-1 text-lg font-semibold">Free</h3>
@@ -59,7 +91,22 @@ export function LandingCTA() {
           <div data-testid="landing-pricing-pro" className="rounded-xl border-2 border-[var(--cn-orange)] p-6 text-left">
             <h3 className="mb-1 text-lg font-semibold">Pro</h3>
             <p data-testid="landing-pricing-pro-price" className="mb-4 text-3xl font-bold">
-              $9<span className="text-base font-normal text-gray-500">/month</span>
+              {billingCycle === "monthly" ? (
+                <>
+                  ${formatUsd(PLANS.pro.priceMonthly)}
+                  <span className="text-base font-normal text-gray-500">/month</span>
+                </>
+              ) : (
+                <>
+                  ${formatUsd(PLANS.pro.priceYearlyMonthlyEquivalent)}
+                  <span className="text-base font-normal text-gray-500">/month</span>
+                </>
+              )}
+            </p>
+            <p className="mb-4 text-sm text-gray-500">
+              {billingCycle === "monthly"
+                ? "Flexible monthly billing."
+                : `$${formatUsd(PLANS.pro.priceYearly)}/year billed annually.`}
             </p>
             <ul data-testid="landing-pricing-pro-features" className="mb-6 space-y-2 text-sm text-gray-600">
               <li>Unlimited journal entries</li>
@@ -72,11 +119,15 @@ export function LandingCTA() {
             {session ? (
               <Button
                 data-testid="landing-pricing-pro-button"
-                onClick={handleProClick}
+                onClick={() => handleProClick(billingCycle)}
                 disabled={loading}
                 className="w-full bg-[var(--cn-orange)] hover:bg-[var(--cn-orange-dark)]"
               >
-                {loading ? "Loading..." : "Upgrade to Pro"}
+                {loading
+                  ? "Loading..."
+                  : billingCycle === "monthly"
+                    ? "Upgrade to Pro Monthly"
+                    : "Upgrade to Pro Yearly"}
                 {!loading && <ArrowRight className="ml-2 h-4 w-4" />}
               </Button>
             ) : (
@@ -86,7 +137,7 @@ export function LandingCTA() {
                 render={<Link href="/auth/signup" />}
                 className="w-full bg-[var(--cn-orange)] hover:bg-[var(--cn-orange-dark)]"
               >
-                Start Free Trial
+                {billingCycle === "monthly" ? "Start Monthly Plan" : "Start Yearly Plan"}
                 <ArrowRight className="ml-2 h-4 w-4" />
               </Button>
             )}
