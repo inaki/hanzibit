@@ -256,10 +256,7 @@ function MobilePronunciationDialog({
                 </div>
                 <button
                   onClick={() => {
-                    const u = new SpeechSynthesisUtterance(h.hanzi);
-                    u.lang = "zh-CN";
-                    u.rate = 0.8;
-                    speechSynthesis.speak(u);
+                    new Audio(`/api/tts?text=${encodeURIComponent(h.hanzi)}`).play();
                   }}
                   className="rounded-full bg-[var(--cn-orange-light)] p-2 text-[var(--cn-orange)] transition-colors hover:bg-[var(--cn-orange)] hover:text-white"
                 >

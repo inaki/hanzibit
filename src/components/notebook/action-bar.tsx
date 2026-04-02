@@ -34,12 +34,14 @@ import type { JournalEntry } from "@/lib/data";
 import { toggleBookmarkAction, createJournalEntry, updateJournalEntry, saveFlashcardsFromEntry } from "@/lib/actions";
 import { parseInput, extractHanziTokens } from "@/lib/parse-tokens";
 import { useGloss } from "./gloss-context";
+import { UpgradePrompt } from "@/components/upgrade-prompt";
 
 interface NotebookActionBarProps {
   entry?: JournalEntry;
+  isPro?: boolean;
 }
 
-export function NotebookActionBar({ entry }: NotebookActionBarProps) {
+export function NotebookActionBar({ entry, isPro = false }: NotebookActionBarProps) {
   const highlights = entry
     ? extractHanziTokens(parseInput(entry.content_zh))
     : [];
@@ -47,6 +49,7 @@ export function NotebookActionBar({ entry }: NotebookActionBarProps) {
   const [newEntryOpen, setNewEntryOpen] = useState(false);
   const [pronunciationOpen, setPronunciationOpen] = useState(false);
   const [flashcardOpen, setFlashcardOpen] = useState(false);
+  const [printUpgradeOpen, setPrintUpgradeOpen] = useState(false);
   const [bookmarked, setBookmarked] = useState(entry?.bookmarked === 1);
   const [isPending, startTransition] = useTransition();
   const gloss = useGloss();
@@ -63,6 +66,10 @@ export function NotebookActionBar({ entry }: NotebookActionBarProps) {
   }
 
   function handlePrint() {
+    if (!isPro) {
+      setPrintUpgradeOpen(true);
+      return;
+    }
     const el = document.querySelector('[data-testid="journal-entry"]');
     if (!el) return;
 
@@ -226,6 +233,17 @@ export function NotebookActionBar({ entry }: NotebookActionBarProps) {
       </div>
 
       {/* --- Dialogs --- */}
+
+      {/* Print upgrade dialog */}
+      <Dialog open={printUpgradeOpen} onOpenChange={setPrintUpgradeOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Pro Feature</DialogTitle>
+            <DialogDescription>Print and export are available on the Pro plan.</DialogDescription>
+          </DialogHeader>
+          <UpgradePrompt reason="Upgrade to Pro to print and export your journal entries." />
+        </DialogContent>
+      </Dialog>
 
       {/* Edit Entry Dialog */}
       {entry && (
@@ -592,10 +610,7 @@ function PronunciationDialog({
                 <button
                   data-testid={`pronunciation-speak-${h.hanzi}`}
                   onClick={() => {
-                    const utterance = new SpeechSynthesisUtterance(h.hanzi);
-                    utterance.lang = "zh-CN";
-                    utterance.rate = 0.8;
-                    speechSynthesis.speak(utterance);
+                    new Audio(`/api/tts?text=${encodeURIComponent(h.hanzi)}`).play();
                   }}
                   className="rounded-full bg-[var(--cn-orange-light)] p-2 text-[var(--cn-orange)] transition-colors hover:bg-[var(--cn-orange)] hover:text-white"
                 >

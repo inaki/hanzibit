@@ -93,12 +93,14 @@ export interface StudyGuideWord {
     id: string;
     nextReview: string;
     intervalDays: number;
+    easeFactor: number;
     reviewCount: number;
   } | null;
 }
 
 export interface StudyGuideData {
   level: number;
+  locked: boolean;
   words: StudyGuideWord[];
   grammarPoints: GrammarPoint[];
   summary: {
@@ -206,7 +208,7 @@ export async function getDueFlashcards(userId: string): Promise<Flashcard[]> {
   return query<Flashcard>(
     `SELECT * FROM flashcards
      WHERE user_id = $1 AND next_review <= NOW()
-     ORDER BY next_review ASC`,
+     ORDER BY ease_factor ASC, next_review ASC`,
     [userId]
   );
 }
@@ -345,6 +347,52 @@ export async function getUserStats(userId: string): Promise<{
   };
 }
 
+export async function getUserStreak(userId: string): Promise<number> {
+  const rows = await query<{ active_date: string }>(
+    `SELECT DISTINCT DATE(reviewed_at)::text AS active_date
+     FROM review_history
+     WHERE user_id = $1
+     UNION
+     SELECT DISTINCT DATE(created_at)::text AS active_date
+     FROM journal_entries
+     WHERE user_id = $1`,
+    [userId]
+  );
+
+  if (rows.length === 0) return 0;
+
+  const dates = new Set(rows.map((r) => r.active_date));
+  let streak = 0;
+
+  for (let i = 0; i <= 365; i++) {
+    const d = new Date();
+    d.setDate(d.getDate() - i);
+    const key = d.toISOString().slice(0, 10);
+
+    if (dates.has(key)) {
+      streak++;
+    } else if (i === 0) {
+      continue; // today not active yet — check yesterday before breaking
+    } else {
+      break;
+    }
+  }
+
+  return streak;
+}
+
+export async function getWeakFlashcards(userId: string, limit = 5): Promise<Flashcard[]> {
+  return query<Flashcard>(
+    `SELECT * FROM flashcards
+     WHERE user_id = $1
+       AND ease_factor < 2.0
+       AND review_count > 1
+     ORDER BY ease_factor ASC
+     LIMIT $2`,
+    [userId, limit]
+  );
+}
+
 export async function getStudyGuideData(
   userId: string,
   level: number
@@ -362,9 +410,10 @@ export async function getStudyGuideData(
       front: string;
       next_review: string;
       interval_days: number;
+      ease_factor: number;
       review_count: number;
     }>(
-      `SELECT id, front, next_review, interval_days, review_count
+      `SELECT id, front, next_review, interval_days, ease_factor, review_count
        FROM flashcards
        WHERE user_id = $1`,
       [userId]
@@ -409,6 +458,7 @@ export async function getStudyGuideData(
       id: flashcard.id,
       nextReview: flashcard.next_review,
       intervalDays: flashcard.interval_days,
+      easeFactor: flashcard.ease_factor,
       reviewCount: flashcard.review_count,
     });
 
@@ -438,6 +488,7 @@ export async function getStudyGuideData(
 
   return {
     level,
+    locked: false,
     words,
     grammarPoints,
     summary: {

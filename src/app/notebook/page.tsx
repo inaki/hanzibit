@@ -1,5 +1,6 @@
 import { getJournalEntries, getEntryAnnotations } from "@/lib/data";
 import { getAuthUserId } from "@/lib/auth-utils";
+import { isProUser } from "@/lib/subscription";
 import { JournalEntryView } from "@/components/notebook/journal-entry";
 import { NotebookActionBar } from "@/components/notebook/action-bar";
 import { EntryList } from "@/components/notebook/entry-list";
@@ -23,7 +24,10 @@ async function NotebookPageInner({
 }) {
   const { entry: selectedEntryId } = await searchParamsPromise;
   const userId = await getAuthUserId();
-  const entries = await getJournalEntries(userId);
+  const [entries, isPro] = await Promise.all([
+    getJournalEntries(userId),
+    isProUser(userId),
+  ]);
   const activeEntry = selectedEntryId
     ? entries.find((e) => e.id === selectedEntryId) ?? entries[0]
     : entries[0];
@@ -53,7 +57,7 @@ async function NotebookPageInner({
         </div>
 
         {/* Desktop action bar */}
-        <NotebookActionBar entry={activeEntry} />
+        <NotebookActionBar entry={activeEntry} isPro={isPro} />
 
         {/* Mobile action bar + entry list sheet */}
         <MobileJournalPage entry={activeEntry} entries={entries} />

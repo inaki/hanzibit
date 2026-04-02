@@ -9,12 +9,17 @@ import {
   getDueFlashcardCount,
   getUserProgress,
   getStudyGuideData,
+  getUserStreak,
+  getUserStats,
+  getWeakFlashcards,
   updateFlashcardReview,
   addReviewRecord,
   searchHskWords,
+  type Flashcard,
   type HskWord,
   type StudyGuideData,
 } from "./data";
+import { canReviewFlashcard, canAccessHskLevel } from "./gates";
 import { sm2 } from "./sm2";
 
 export async function toggleBookmarkAction(entryId: string) {
@@ -125,8 +130,13 @@ export async function saveFlashcardsFromEntry(
 export async function reviewFlashcard(
   cardId: string,
   quality: number
-): Promise<{ interval: number; easeFactor: number }> {
+): Promise<{ interval: number; easeFactor: number } | { error: "DAILY_LIMIT_REACHED" }> {
   const userId = await getAuthUserId();
+
+  if (!(await canReviewFlashcard(userId))) {
+    return { error: "DAILY_LIMIT_REACHED" };
+  }
+
   const card = await queryOne<{
     id: string;
     front: string;
@@ -167,7 +177,31 @@ export async function getStudyGuideDataAction(
   level: number
 ): Promise<StudyGuideData> {
   const userId = await getAuthUserId();
+  if (!(await canAccessHskLevel(userId, level))) {
+    return {
+      level,
+      locked: true,
+      words: [],
+      grammarPoints: [],
+      summary: { total: 0, encountered: 0, withFlashcard: 0, dueForReview: 0 },
+    };
+  }
   return getStudyGuideData(userId, level);
+}
+
+export async function getStreakAction(): Promise<number> {
+  const userId = await getAuthUserId();
+  return getUserStreak(userId);
+}
+
+export async function getWeakFlashcardsAction(limit = 3): Promise<Flashcard[]> {
+  const userId = await getAuthUserId();
+  return getWeakFlashcards(userId, limit);
+}
+
+export async function getUserStatsAction() {
+  const userId = await getAuthUserId();
+  return getUserStats(userId);
 }
 
 export async function searchHskWordsAction(

@@ -2,8 +2,9 @@
 
 import { useState, useTransition } from "react";
 import type { Flashcard } from "@/lib/data";
-import { RotateCcw, ChevronLeft, ChevronRight, Eye } from "lucide-react";
+import { RotateCcw, ChevronLeft, ChevronRight, Eye, Volume2 } from "lucide-react";
 import { reviewFlashcard } from "@/lib/actions";
+import { UpgradePrompt } from "@/components/upgrade-prompt";
 
 interface FlashcardPracticeProps {
   cards: Flashcard[];
@@ -25,6 +26,7 @@ export function FlashcardPractice({ cards, dueCount = 0 }: FlashcardPracticeProp
   const [mode, setMode] = useState<"practice" | "browse">("practice");
   const [filter, setFilter] = useState<FilterTab>("all");
   const [reviewFeedback, setReviewFeedback] = useState<string | null>(null);
+  const [limitReached, setLimitReached] = useState(false);
   const [isPending, startTransition] = useTransition();
 
   const now = new Date().toISOString();
@@ -51,6 +53,10 @@ export function FlashcardPractice({ cards, dueCount = 0 }: FlashcardPracticeProp
     if (!currentCard) return;
     startTransition(async () => {
       const result = await reviewFlashcard(currentCard.id, quality);
+      if ("error" in result) {
+        setLimitReached(true);
+        return;
+      }
       if (result.interval === 1) {
         setReviewFeedback("Review again tomorrow");
       } else {
@@ -170,6 +176,26 @@ export function FlashcardPractice({ cards, dueCount = 0 }: FlashcardPracticeProp
               )}
             </button>
 
+            {/* Speak button — shown on front face only */}
+            {!flipped && (
+              <div className="mb-4 flex justify-center">
+                <button
+                  onClick={() => new Audio(`/api/tts?text=${encodeURIComponent(currentCard.front)}`).play()}
+                  className="flex items-center gap-1.5 rounded-full border bg-white px-3 py-1.5 text-xs text-gray-500 transition-colors hover:bg-gray-50"
+                >
+                  <Volume2 className="h-3.5 w-3.5" />
+                  Pronounce
+                </button>
+              </div>
+            )}
+
+            {/* Daily limit reached */}
+            {limitReached && (
+              <div className="mb-4">
+                <UpgradePrompt reason="You've used your 5 free daily reviews. Upgrade to Pro for unlimited flashcard reviews." />
+              </div>
+            )}
+
             {/* Review feedback */}
             {reviewFeedback && (
               <p data-testid="flashcard-review-feedback" className="mb-4 text-center text-sm font-medium text-green-600">
@@ -178,7 +204,7 @@ export function FlashcardPractice({ cards, dueCount = 0 }: FlashcardPracticeProp
             )}
 
             {/* SM-2 scoring buttons (shown after flip) */}
-            {flipped && !reviewFeedback && (
+            {flipped && !reviewFeedback && !limitReached && (
               <div data-testid="flashcard-scoring" className="mb-6 flex justify-center gap-2">
                 {QUALITY_BUTTONS.map((btn) => (
                   <button

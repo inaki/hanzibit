@@ -11,17 +11,14 @@ import {
   Hash,
   Layers,
   GraduationCap,
+  LayoutDashboard,
 } from "lucide-react";
-import { Progress } from "@/components/ui/progress";
 import { useSettings } from "./settings-context";
-import {
-  getCharacterOfTheDayAction,
-  getDueCountAction,
-  getProgressAction,
-} from "@/lib/actions";
+import { getCharacterOfTheDayAction, getDueCountAction } from "@/lib/actions";
 import type { HskWord } from "@/lib/data";
 
 const sections = [
+  { label: "Dashboard", icon: LayoutDashboard, href: "/notebook/dashboard" },
   { label: "Daily Journal", icon: PenLine, href: "/notebook" },
   { label: "Study Guide", icon: GraduationCap, href: "/notebook/lessons" },
   { label: "Flashcards", icon: Layers, href: "/notebook/flashcards" },
@@ -37,12 +34,10 @@ export function NotebookSidebar() {
 
   const [charOfDay, setCharOfDay] = useState<HskWord | null>(null);
   const [dueCount, setDueCount] = useState(0);
-  const [progress, setProgress] = useState({ encountered: 0, total: 0, percent: 0 });
 
   useEffect(() => {
     getCharacterOfTheDayAction(settings.hskLevel).then(setCharOfDay);
     getDueCountAction().then(setDueCount);
-    getProgressAction(settings.hskLevel).then(setProgress);
   }, [settings.hskLevel]);
 
   function isActive(href: string) {
@@ -51,30 +46,7 @@ export function NotebookSidebar() {
   }
 
   return (
-    <aside data-testid="notebook-sidebar" className="hidden w-60 shrink-0 border-r bg-white p-5 lg:block">
-      {/* Progress */}
-      <div data-testid="notebook-sidebar-progress" className="mb-8">
-        <p className="mb-2 text-[10px] font-semibold tracking-widest text-gray-400 uppercase">
-          Current Progress
-        </p>
-        <div className="flex items-center justify-between">
-          <span data-testid="notebook-sidebar-hsk-level" className="text-sm font-medium text-gray-900">
-            HSK {settings.hskLevel} Level
-          </span>
-          <span data-testid="notebook-sidebar-hsk-percentage" className="text-sm font-bold text-[var(--cn-orange)]">
-            {progress.percent}%
-          </span>
-        </div>
-        <Progress
-          data-testid="notebook-sidebar-progress-bar"
-          value={progress.percent}
-          className="mt-2 h-2 [&_[data-slot=progress-indicator]]:bg-[var(--cn-orange)]"
-        />
-        <p className="mt-1 text-[10px] text-gray-400">
-          {progress.encountered}/{progress.total} words encountered
-        </p>
-      </div>
-
+    <aside data-testid="notebook-sidebar" className="hidden w-60 shrink-0 flex-col border-r bg-white p-5 lg:flex overflow-y-auto h-full">
       {/* Sections */}
       <div data-testid="notebook-sidebar-sections" className="mb-8">
         <p className="mb-3 text-[10px] font-semibold tracking-widest text-gray-400 uppercase">

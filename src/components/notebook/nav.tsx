@@ -2,13 +2,21 @@
 
 import { useState, useRef, useEffect, useTransition } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { BookOpen, Search, Settings } from "lucide-react";
+import { usePathname, useRouter } from "next/navigation";
+import { BookOpen, Search, Settings, Moon, Sun, LogOut } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuLabel,
+} from "@/components/ui/dropdown-menu";
 import { SettingsDialog } from "./settings-dialog";
 import { useSettings } from "./settings-context";
-import { useSession } from "@/lib/auth-client";
+import { useSession, signOut } from "@/lib/auth-client";
 import { searchHskWordsAction } from "@/lib/actions";
 import type { HskWord } from "@/lib/data";
 
@@ -20,15 +28,39 @@ const navLinks = [
 
 export function NotebookNav() {
   const pathname = usePathname();
+  const router = useRouter();
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<HskWord[]>([]);
   const [showResults, setShowResults] = useState(false);
   const [isPending, startTransition] = useTransition();
+  const [isDark, setIsDark] = useState(false);
   const searchRef = useRef<HTMLDivElement>(null);
   const { settings } = useSettings();
   const { data: session } = useSession();
   const displayName = settings.profile.name || session?.user?.name || "";
+  const userEmail = session?.user?.email ?? "";
+
+  useEffect(() => {
+    const stored = localStorage.getItem("theme");
+    const dark =
+      stored === "dark" ||
+      (!stored && window.matchMedia("(prefers-color-scheme: dark)").matches);
+    setIsDark(dark);
+    document.documentElement.classList.toggle("dark", dark);
+  }, []);
+
+  function toggleDarkMode() {
+    const next = !isDark;
+    setIsDark(next);
+    document.documentElement.classList.toggle("dark", next);
+    localStorage.setItem("theme", next ? "dark" : "light");
+  }
+
+  async function handleSignOut() {
+    await signOut();
+    router.push("/");
+  }
 
   useEffect(() => {
     if (searchQuery.length === 0) return;
@@ -148,13 +180,33 @@ export function NotebookNav() {
         >
           <Settings className="h-5 w-5" />
         </button>
-        <Avatar data-testid="notebook-nav-avatar" className="h-8 w-8 cursor-pointer">
-          <AvatarFallback className="bg-[var(--cn-orange)] text-xs text-white">
-            {displayName
-              ? displayName.slice(0, 2).toUpperCase()
-              : "HB"}
-          </AvatarFallback>
-        </Avatar>
+        <DropdownMenu>
+          <DropdownMenuTrigger data-testid="notebook-nav-avatar" className="rounded-full outline-none focus-visible:ring-2 focus-visible:ring-[var(--cn-orange)]">
+            <Avatar className="h-8 w-8 cursor-pointer">
+              <AvatarFallback className="bg-[var(--cn-orange)] text-xs text-white">
+                {displayName ? displayName.slice(0, 2).toUpperCase() : "HB"}
+              </AvatarFallback>
+            </Avatar>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-52">
+            <DropdownMenuLabel className="font-normal">
+              <p className="font-medium text-gray-900">{displayName || "Account"}</p>
+              {userEmail && <p className="truncate text-xs text-gray-400">{userEmail}</p>}
+            </DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onSelect={toggleDarkMode} className="cursor-pointer justify-between">
+              <span className="flex items-center gap-2">
+                {isDark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+                {isDark ? "Light mode" : "Dark mode"}
+              </span>
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onSelect={handleSignOut} variant="destructive" className="cursor-pointer">
+              <LogOut className="h-4 w-4" />
+              Sign out
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
 
       <SettingsDialog open={settingsOpen} onOpenChange={setSettingsOpen} />

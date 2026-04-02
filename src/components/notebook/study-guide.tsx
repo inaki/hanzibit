@@ -11,7 +11,9 @@ import {
   Search,
   Plus,
   Languages,
+  Lock,
 } from "lucide-react";
+import { UpgradePrompt } from "@/components/upgrade-prompt";
 import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
 import { useSettings } from "./settings-context";
@@ -102,8 +104,22 @@ export function StudyGuide({ initialData }: StudyGuideProps) {
         ))}
       </div>
 
-      {/* Summary bar */}
-      <div className="mb-6 rounded-xl border bg-white p-5">
+      {/* Locked state */}
+      {data.locked && (
+        <div className="flex flex-col items-center justify-center rounded-xl border bg-white py-16 text-center">
+          <Lock className="mb-3 h-8 w-8 text-gray-300" />
+          <h3 className="text-base font-semibold text-gray-700">
+            HSK {data.level} is for Pro members
+          </h3>
+          <p className="mb-4 mt-1 text-sm text-gray-400">
+            Upgrade to access all 6 HSK levels
+          </p>
+          <UpgradePrompt reason="Get unlimited access to all HSK levels and vocabulary with Pro." />
+        </div>
+      )}
+
+      {/* Summary bar + word list (hidden when locked) */}
+      {!data.locked && (<><div className="mb-6 rounded-xl border bg-white p-5">
         <div className="mb-3 flex items-center justify-between">
           <span className="text-sm font-medium text-gray-700">
             HSK {data.level} Progress
@@ -211,7 +227,10 @@ export function StudyGuide({ initialData }: StudyGuideProps) {
                       </div>
                       <p className="truncate text-xs text-gray-500">{item.word.english}</p>
                     </div>
-                    <div className="flex shrink-0 gap-1">
+                    <div className="flex shrink-0 items-center gap-1">
+                      {item.flashcard && item.flashcard.easeFactor < 2.0 && item.flashcard.reviewCount > 1 && (
+                        <span className="rounded bg-red-100 px-1 text-[10px] text-red-600">struggling</span>
+                      )}
                       {item.flashcard && (
                         <Layers className="h-3.5 w-3.5 text-blue-400" />
                       )}
@@ -255,6 +274,7 @@ export function StudyGuide({ initialData }: StudyGuideProps) {
           )}
         </div>
       </div>
+      </>)}
     </div>
   );
 }
