@@ -152,7 +152,7 @@ export function MobileActionBar({
                   key={action.label}
                   onClick={action.onClick}
                   disabled={action.disabled}
-                  className="flex flex-col items-center gap-1.5 rounded-xl p-3 text-gray-600 transition-colors hover:bg-gray-100 disabled:opacity-30"
+                  className="flex flex-col items-center gap-1.5 rounded-xl p-3 text-muted-foreground transition-colors hover:bg-muted disabled:opacity-30"
                 >
                   <action.icon className="h-5 w-5" />
                   <span className="text-[10px] font-medium leading-tight text-center">

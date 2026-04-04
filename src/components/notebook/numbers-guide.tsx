@@ -66,20 +66,20 @@ function FoundationSection() {
     <section data-testid="numbers-foundation">
       <div className="mb-4 flex items-center gap-3">
         <SectionNumber n={1} />
-        <h2 className="text-xl font-bold text-gray-900">The Foundation (1–10)</h2>
+        <h2 className="text-xl font-bold text-foreground">The Foundation (1–10)</h2>
       </div>
       <div className="grid grid-cols-5 gap-3 sm:grid-cols-10">
         {FOUNDATION.map((item) => (
           <div
             key={item.num}
             data-testid={`number-card-${item.num}`}
-            className="flex flex-col items-center rounded-xl border bg-white p-3 shadow-sm"
+            className="flex flex-col items-center rounded-xl border bg-card p-3 shadow-sm"
           >
             <span className="mb-1 flex h-5 w-5 items-center justify-center rounded-full bg-[var(--cn-orange-light)] text-[10px] font-semibold text-[var(--cn-orange)]">
               {item.num}
             </span>
-            <span className="text-2xl font-bold text-gray-900">{item.char}</span>
-            <span className="mt-1 text-xs text-gray-500">{item.pinyin}</span>
+            <span className="text-2xl font-bold text-foreground">{item.char}</span>
+            <span className="mt-1 text-xs text-muted-foreground">{item.pinyin}</span>
           </div>
         ))}
       </div>
@@ -92,21 +92,21 @@ function TeensSection() {
     <section data-testid="numbers-teens">
       <div className="mb-4 flex items-center gap-3">
         <SectionNumber n={2} />
-        <h2 className="text-xl font-bold text-gray-900">The Logic of Teens (11–19)</h2>
+        <h2 className="text-xl font-bold text-foreground">The Logic of Teens (11–19)</h2>
       </div>
       <div className="flex flex-col gap-4 sm:flex-row">
         <div className="flex-1 rounded-xl border-l-4 border-[var(--cn-orange)] bg-[var(--cn-orange-light)] p-5">
-          <p className="text-sm font-bold text-gray-900">Pattern: 10 + N</p>
-          <p className="mt-1 text-sm text-gray-600">
+          <p className="text-sm font-bold text-foreground">Pattern: 10 + N</p>
+          <p className="mt-1 text-sm text-muted-foreground">
             Numbers from 11 to 19 are formed by taking &lsquo;10&rsquo; (十) and adding the single digit (1-9) after it.
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-4">
           {TEEN_EXAMPLES.map((ex) => (
             <div key={ex.num} className="flex items-center gap-2">
-              <span className="text-sm text-gray-400">{ex.num}:</span>
+              <span className="text-sm text-muted-foreground/70">{ex.num}:</span>
               <span className="text-lg font-bold text-[var(--cn-orange)]">{ex.chars}</span>
-              <span className="text-xs text-gray-500">{ex.pinyin}</span>
+              <span className="text-xs text-muted-foreground">{ex.pinyin}</span>
             </div>
           ))}
         </div>
@@ -125,16 +125,16 @@ function PatternCard({
   examples: { label: string; chars: string; pinyin: string }[];
 }) {
   return (
-    <div className="flex-1 rounded-xl border bg-white p-5">
-      <p className="text-sm font-bold text-gray-900">{title}</p>
-      <p className="mt-1 text-sm text-gray-600">{description}</p>
+    <div className="flex-1 rounded-xl border bg-card p-5">
+      <p className="text-sm font-bold text-foreground">{title}</p>
+      <p className="mt-1 text-sm text-muted-foreground">{description}</p>
       <div className="mt-4 space-y-3">
         {examples.map((ex) => (
           <div key={ex.label} className="flex items-center justify-between">
-            <span className="text-sm text-gray-500">{ex.label}</span>
+            <span className="text-sm text-muted-foreground">{ex.label}</span>
             <div className="flex items-center gap-2">
               <span className="text-lg font-bold text-[var(--cn-orange)]">{ex.chars}</span>
-              <span className="text-xs text-gray-500">{ex.pinyin}</span>
+              <span className="text-xs text-muted-foreground">{ex.pinyin}</span>
             </div>
           </div>
         ))}
@@ -148,7 +148,7 @@ function MultiplesSection() {
     <section data-testid="numbers-multiples">
       <div className="mb-4 flex items-center gap-3">
         <SectionNumber n={3} />
-        <h2 className="text-xl font-bold text-gray-900">Multiples & Combinations (20–99)</h2>
+        <h2 className="text-xl font-bold text-foreground">Multiples & Combinations (20–99)</h2>
       </div>
       <div className="flex flex-col gap-4 sm:flex-row">
         <PatternCard
@@ -171,7 +171,7 @@ function LargeNumbersSection() {
     <section data-testid="numbers-large">
       <div className="mb-4 flex items-center gap-3">
         <SectionNumber n={4} />
-        <h2 className="text-xl font-bold text-gray-900">Large Scale Numbers & The Myriad System</h2>
+        <h2 className="text-xl font-bold text-foreground">Large Scale Numbers & The Myriad System</h2>
       </div>
 
       {/* Info callout */}
@@ -187,10 +187,10 @@ function LargeNumbersSection() {
       </div>
 
       {/* Table */}
-      <div className="overflow-hidden rounded-xl border bg-white">
+      <div className="overflow-hidden rounded-xl border bg-card">
         <table className="w-full">
           <thead>
-            <tr className="border-b bg-gray-50 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">
+            <tr className="border-b bg-muted/50 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">
               <th className="px-5 py-3">Number</th>
               <th className="px-5 py-3">Mandarin</th>
               <th className="px-5 py-3">Pinyin</th>
@@ -199,11 +199,11 @@ function LargeNumbersSection() {
           </thead>
           <tbody className="divide-y">
             {LARGE_NUMBERS.map((row) => (
-              <tr key={row.number} className="transition-colors hover:bg-gray-50">
-                <td className="px-5 py-3 font-mono text-sm text-gray-700">{row.number}</td>
+              <tr key={row.number} className="transition-colors hover:bg-muted/50">
+                <td className="px-5 py-3 font-mono text-sm text-foreground/80">{row.number}</td>
                 <td className="px-5 py-3 text-lg font-bold text-[var(--cn-orange)]">{row.char}</td>
-                <td className="px-5 py-3 text-sm italic text-gray-600">{row.pinyin}</td>
-                <td className="px-5 py-3 text-sm text-gray-500">{row.logic}</td>
+                <td className="px-5 py-3 text-sm italic text-muted-foreground">{row.pinyin}</td>
+                <td className="px-5 py-3 text-sm text-muted-foreground">{row.logic}</td>
               </tr>
             ))}
           </tbody>
@@ -330,18 +330,18 @@ function TryNumberDialog({
         </div>
 
         {result && (
-          <div data-testid="try-number-result" className="rounded-xl border bg-white p-6 text-center">
+          <div data-testid="try-number-result" className="rounded-xl border bg-card p-6 text-center">
             <p className="text-4xl font-bold text-[var(--cn-orange)]">
               {result.hanzi}
             </p>
-            <p className="mt-2 text-sm text-gray-600">{result.pinyin}</p>
-            <p className="mt-1 text-xs text-gray-400">{result.english}</p>
+            <p className="mt-2 text-sm text-muted-foreground">{result.pinyin}</p>
+            <p className="mt-1 text-xs text-muted-foreground/70">{result.english}</p>
           </div>
         )}
 
         {input.trim() && !result && (
-          <div className="rounded-xl border border-dashed border-gray-200 bg-gray-50 p-6 text-center">
-            <p className="text-sm text-gray-400">
+          <div className="rounded-xl border border-dashed border-border bg-muted/50 p-6 text-center">
+            <p className="text-sm text-muted-foreground/70">
               {isNaN(parsed)
                 ? "Please enter a valid number."
                 : "Number out of range. Try 0 to 999,999,999,999."}
@@ -350,8 +350,8 @@ function TryNumberDialog({
         )}
 
         {!input.trim() && (
-          <div className="rounded-xl border border-dashed border-gray-200 bg-gray-50 p-6 text-center">
-            <p className="text-sm text-gray-400">
+          <div className="rounded-xl border border-dashed border-border bg-muted/50 p-6 text-center">
+            <p className="text-sm text-muted-foreground/70">
               Type a number above to see the conversion.
             </p>
           </div>
@@ -370,10 +370,10 @@ export function NumbersGuide() {
     <div data-testid="numbers-guide" className="mx-auto max-w-3xl">
       {/* Header */}
       <div className="mb-10">
-        <h1 className="text-3xl font-bold text-gray-900">
+        <h1 className="text-3xl font-bold text-foreground">
           Mandarin Numbers: The Complete Logic Guide
         </h1>
-        <p className="mt-2 text-sm text-gray-500">
+        <p className="mt-2 text-sm text-muted-foreground">
           Master the systematic structure of Chinese numerals, from the basic foundation to large-scale myriad groupings.
         </p>
       </div>

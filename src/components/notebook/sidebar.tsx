@@ -46,10 +46,10 @@ export function NotebookSidebar() {
   }
 
   return (
-    <aside data-testid="notebook-sidebar" className="hidden w-60 shrink-0 flex-col border-r bg-white p-5 lg:flex overflow-y-auto h-full">
+    <aside data-testid="notebook-sidebar" className="hidden w-60 shrink-0 flex-col border-r bg-card p-5 lg:flex overflow-y-auto h-full">
       {/* Sections */}
       <div data-testid="notebook-sidebar-sections" className="mb-8">
-        <p className="mb-3 text-[10px] font-semibold tracking-widest text-gray-400 uppercase">
+        <p className="mb-3 text-[10px] font-semibold tracking-widest text-muted-foreground/70 uppercase">
           Notebook Sections
         </p>
         <div className="space-y-1">
@@ -63,7 +63,7 @@ export function NotebookSidebar() {
                 className={`flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition-colors ${
                   active
                     ? "bg-[var(--cn-orange)] font-medium text-white"
-                    : "text-gray-600 hover:bg-gray-100"
+                    : "text-muted-foreground hover:bg-muted"
                 }`}
               >
                 <section.icon className="h-4 w-4" />
@@ -80,19 +80,19 @@ export function NotebookSidebar() {
       </div>
 
       {/* Character of the day */}
-      <div data-testid="notebook-sidebar-character-of-day" className="rounded-xl border bg-gray-50/50 p-4">
-        <p className="mb-2 text-[10px] text-gray-400">Character of the day</p>
+      <div data-testid="notebook-sidebar-character-of-day" className="rounded-xl border bg-muted/30 p-4">
+        <p className="mb-2 text-[10px] text-muted-foreground/70">Character of the day</p>
         <div className="flex items-center gap-3">
-          <div className="flex h-14 w-14 items-center justify-center rounded-lg bg-white shadow-sm">
+          <div className="flex h-14 w-14 items-center justify-center rounded-lg bg-card shadow-sm">
             <span data-testid="notebook-sidebar-character" className="text-3xl font-bold text-[var(--cn-orange)]">
               {charOfDay?.simplified ?? "..."}
             </span>
           </div>
           <div>
-            <p data-testid="notebook-sidebar-character-pinyin" className="font-medium text-gray-900">
+            <p data-testid="notebook-sidebar-character-pinyin" className="font-medium text-foreground">
               {charOfDay?.pinyin ?? ""}
             </p>
-            <p data-testid="notebook-sidebar-character-meaning" className="text-xs text-gray-500">
+            <p data-testid="notebook-sidebar-character-meaning" className="text-xs text-muted-foreground">
               {charOfDay?.english ?? ""}
             </p>
           </div>

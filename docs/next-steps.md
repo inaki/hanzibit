@@ -4,29 +4,36 @@ A living doc. Update this whenever stopping work so the next session starts with
 
 ---
 
-## Last Session Summary
+## Last Session Summary (Session 2 — 2026-04-02)
 
-Implemented all four priorities from `implementation-guide.md`:
+Completed:
+
+1. **Dashboard page** — new `/notebook/dashboard` route with `DashboardView` client component. Shows streak, journal entries, reviews, HSK progress bar, flashcard count, character of the day, and "Needs Attention" weak cards section. Pulled streak/weak cards out of the sidebar entirely.
+2. **Sidebar refactor** — stripped to navigation + character of the day only. Added "Dashboard" as first nav item (`LayoutDashboard` icon). Removed all progress/streak state.
+3. **Avatar dropdown** — clicking the nav avatar opens a dropdown with user name/email, dark mode toggle, and sign-out. Sign-out calls `signOut()` then redirects to `/`.
+4. **Dark mode** — full implementation: CSS variables already in `globals.css`; added toggle via `.dark` class on `<html>` persisted to `localStorage`; replaced all hardcoded `bg-white`, `bg-gray-*`, `text-gray-*`, `border-gray-*` with semantic tokens (`bg-card`, `bg-muted`, `text-foreground`, `text-muted-foreground`, `border-border`) across all 15 notebook components.
+5. **Azure TTS** — `/api/tts/route.ts` using `zh-CN-XiaoxiaoNeural` with SSML at 0.85 rate, 24h cache. Requires `AZURE_TTS_KEY` + `AZURE_TTS_REGION` env vars.
+
+Previous session (Session 1):
 
 1. **Paywall** — `src/lib/gates.ts`, gated `reviewFlashcard` action (5/day free limit), gated HSK levels 2–6 in study guide, `UpgradePrompt` component
-2. **Streaks** — `getUserStreak()` in `data.ts`, streak widget in sidebar with flame icon and today-grace logic
-3. **Weak item surfacing** — `getWeakFlashcards()` in `data.ts`, "Needs attention" sidebar section, "struggling" badge in study guide word list, due flashcard queue ordered by ease_factor ASC
-4. **Audio** — `/api/api/tts/route.ts` server-side Google Cloud TTS, replaced browser `SpeechSynthesisUtterance` in `action-bar.tsx` and `mobile-journal-page.tsx`
-
-Also fixed:
-- Sidebar scrolling (`overflow-y-auto h-full` on the `aside`)
-- Dialog max height (`max-h-[90dvh] overflow-y-auto` on `DialogContent`)
+2. **Streaks** — `getUserStreak()` in `data.ts`, today-grace logic
+3. **Weak item surfacing** — `getWeakFlashcards()` in `data.ts`, "struggling" badge in study guide, due queue ordered by ease_factor ASC
+4. Sidebar scrolling fix, Dialog max-height fix
 
 ---
 
 ## Immediate Before Shipping
 
 - [ ] Add `AZURE_TTS_KEY=your_key` and `AZURE_TTS_REGION=eastus` to `.env` — TTS returns 503 without them
-- [ ] Smoke test the four new features end to end:
+- [ ] Smoke test end to end:
   - Hit review limit as free user → see upgrade prompt
-  - Switch to HSK 2 as free user → see locked state
-  - Streak appears in sidebar after journal write or flashcard review
-  - "Needs attention" appears after scoring cards "Again" multiple times
+  - Switch to HSK 2 as free user → see locked state in study guide
+  - Streak increments after journal write or flashcard review (check Dashboard)
+  - "Needs attention" section shows on Dashboard after scoring cards "Again" multiple times
+  - Dark mode toggle persists on page refresh
+  - Sign-out from avatar dropdown redirects to landing page
+  - Pronounce button in flashcards plays audio
 
 ---
 

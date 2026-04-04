@@ -81,7 +81,7 @@ export function FlashcardPractice({ cards, dueCount = 0 }: FlashcardPracticeProp
 
   if (cards.length === 0) {
     return (
-      <div data-testid="flashcards-empty" className="mx-auto max-w-2xl rounded-xl border bg-white py-16 text-center text-sm text-gray-400">
+      <div data-testid="flashcards-empty" className="mx-auto max-w-2xl rounded-xl border bg-card py-16 text-center text-sm text-muted-foreground/70">
         No flashcards yet. Add vocabulary to create flashcards!
       </div>
     );
@@ -91,18 +91,18 @@ export function FlashcardPractice({ cards, dueCount = 0 }: FlashcardPracticeProp
     <div data-testid="flashcard-practice" className="mx-auto max-w-2xl">
       <div className="mb-8 flex items-center justify-between">
         <div>
-          <h1 data-testid="flashcards-heading" className="text-3xl font-bold text-gray-900">Flashcards</h1>
-          <p data-testid="flashcards-count" className="mt-1 text-sm text-gray-500">
+          <h1 data-testid="flashcards-heading" className="text-3xl font-bold text-foreground">Flashcards</h1>
+          <p data-testid="flashcards-count" className="mt-1 text-sm text-muted-foreground">
             {total} {filter === "due" ? "due " : ""}cards
             {total > 0 && ` · Card ${currentIndex + 1} of ${total}`}
           </p>
         </div>
-        <div data-testid="flashcards-mode-toggle" className="flex rounded-lg border bg-white p-0.5">
+        <div data-testid="flashcards-mode-toggle" className="flex rounded-lg border bg-card p-0.5">
           <button
             data-testid="flashcards-mode-practice"
             onClick={() => setMode("practice")}
             className={`rounded-md px-3 py-1.5 text-xs font-medium transition-colors ${
-              mode === "practice" ? "bg-[var(--cn-orange)] text-white" : "text-gray-600"
+              mode === "practice" ? "bg-[var(--cn-orange)] text-white" : "text-muted-foreground"
             }`}
           >
             Practice
@@ -111,7 +111,7 @@ export function FlashcardPractice({ cards, dueCount = 0 }: FlashcardPracticeProp
             data-testid="flashcards-mode-browse"
             onClick={() => setMode("browse")}
             className={`rounded-md px-3 py-1.5 text-xs font-medium transition-colors ${
-              mode === "browse" ? "bg-[var(--cn-orange)] text-white" : "text-gray-600"
+              mode === "browse" ? "bg-[var(--cn-orange)] text-white" : "text-muted-foreground"
             }`}
           >
             Browse All
@@ -127,8 +127,8 @@ export function FlashcardPractice({ cards, dueCount = 0 }: FlashcardPracticeProp
             onClick={() => handleFilterChange("all")}
             className={`rounded-full px-3 py-1 text-xs font-medium transition-colors ${
               filter === "all"
-                ? "bg-gray-900 text-white"
-                : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                ? "bg-foreground text-background"
+                : "bg-muted text-muted-foreground hover:bg-muted"
             }`}
           >
             All ({cards.length})
@@ -138,8 +138,8 @@ export function FlashcardPractice({ cards, dueCount = 0 }: FlashcardPracticeProp
             onClick={() => handleFilterChange("due")}
             className={`rounded-full px-3 py-1 text-xs font-medium transition-colors ${
               filter === "due"
-                ? "bg-gray-900 text-white"
-                : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                ? "bg-foreground text-background"
+                : "bg-muted text-muted-foreground hover:bg-muted"
             }`}
           >
             Due ({dueCount})
@@ -149,7 +149,7 @@ export function FlashcardPractice({ cards, dueCount = 0 }: FlashcardPracticeProp
 
       {mode === "practice" ? (
         total === 0 ? (
-          <div className="rounded-xl border bg-white py-16 text-center text-sm text-gray-400">
+          <div className="rounded-xl border bg-card py-16 text-center text-sm text-muted-foreground/70">
             {filter === "due" ? "No cards due for review!" : "No cards to practice."}
           </div>
         ) : (
@@ -158,20 +158,20 @@ export function FlashcardPractice({ cards, dueCount = 0 }: FlashcardPracticeProp
             <button
               data-testid="flashcard-card"
               onClick={() => setFlipped(!flipped)}
-              className="mb-6 flex h-72 w-full items-center justify-center rounded-2xl border-2 bg-white shadow-sm transition-all hover:shadow-md"
+              className="mb-6 flex h-72 w-full items-center justify-center rounded-2xl border-2 bg-card shadow-sm transition-all hover:shadow-md"
             >
               {!flipped ? (
                 <div data-testid="flashcard-front" className="text-center">
-                  <p className="text-6xl font-bold text-gray-900">{currentCard.front}</p>
-                  <p className="mt-4 flex items-center gap-1 text-sm text-gray-400">
+                  <p className="text-6xl font-bold text-foreground">{currentCard.front}</p>
+                  <p className="mt-4 flex items-center gap-1 text-sm text-muted-foreground/70">
                     <Eye className="h-4 w-4" />
                     Tap to reveal
                   </p>
                 </div>
               ) : (
                 <div data-testid="flashcard-back" className="text-center">
-                  <p className="text-2xl text-gray-700">{currentCard.back}</p>
-                  <p className="mt-2 text-xs text-gray-400">Deck: {currentCard.deck}</p>
+                  <p className="text-2xl text-foreground/80">{currentCard.back}</p>
+                  <p className="mt-2 text-xs text-muted-foreground/70">Deck: {currentCard.deck}</p>
                 </div>
               )}
             </button>
@@ -181,7 +181,7 @@ export function FlashcardPractice({ cards, dueCount = 0 }: FlashcardPracticeProp
               <div className="mb-4 flex justify-center">
                 <button
                   onClick={() => new Audio(`/api/tts?text=${encodeURIComponent(currentCard.front)}`).play()}
-                  className="flex items-center gap-1.5 rounded-full border bg-white px-3 py-1.5 text-xs text-gray-500 transition-colors hover:bg-gray-50"
+                  className="flex items-center gap-1.5 rounded-full border bg-card px-3 py-1.5 text-xs text-muted-foreground transition-colors hover:bg-muted/50"
                 >
                   <Volume2 className="h-3.5 w-3.5" />
                   Pronounce
@@ -226,14 +226,14 @@ export function FlashcardPractice({ cards, dueCount = 0 }: FlashcardPracticeProp
                 data-testid="flashcard-prev"
                 onClick={prev}
                 disabled={currentIndex === 0}
-                className="rounded-lg border bg-white p-2.5 text-gray-600 transition-colors hover:bg-gray-50 disabled:opacity-30"
+                className="rounded-lg border bg-card p-2.5 text-muted-foreground transition-colors hover:bg-muted/50 disabled:opacity-30"
               >
                 <ChevronLeft className="h-5 w-5" />
               </button>
               <button
                 data-testid="flashcard-flip"
                 onClick={() => { setFlipped(!flipped); setReviewFeedback(null); }}
-                className="rounded-lg border bg-white px-4 py-2.5 text-sm font-medium text-gray-600 transition-colors hover:bg-gray-50"
+                className="rounded-lg border bg-card px-4 py-2.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted/50"
               >
                 <RotateCcw className="mr-1.5 inline h-4 w-4" />
                 Flip
@@ -242,14 +242,14 @@ export function FlashcardPractice({ cards, dueCount = 0 }: FlashcardPracticeProp
                 data-testid="flashcard-next"
                 onClick={next}
                 disabled={currentIndex === total - 1}
-                className="rounded-lg border bg-white p-2.5 text-gray-600 transition-colors hover:bg-gray-50 disabled:opacity-30"
+                className="rounded-lg border bg-card p-2.5 text-muted-foreground transition-colors hover:bg-muted/50 disabled:opacity-30"
               >
                 <ChevronRight className="h-5 w-5" />
               </button>
             </div>
 
             {/* Progress bar */}
-            <div data-testid="flashcard-progress" className="mt-6 h-1.5 rounded-full bg-gray-200">
+            <div data-testid="flashcard-progress" className="mt-6 h-1.5 rounded-full bg-muted">
               <div
                 className="h-full rounded-full bg-[var(--cn-orange)] transition-all"
                 style={{ width: `${((currentIndex + 1) / total) * 100}%` }}
@@ -264,11 +264,11 @@ export function FlashcardPractice({ cards, dueCount = 0 }: FlashcardPracticeProp
             <div
               key={card.id}
               data-testid={`flashcard-browse-${card.front}`}
-              className="rounded-xl border bg-white p-5 transition-colors hover:border-[var(--cn-orange)]/30"
+              className="rounded-xl border bg-card p-5 transition-colors hover:border-[var(--cn-orange)]/30"
             >
-              <p className="text-2xl font-bold text-gray-900">{card.front}</p>
-              <p className="mt-1 text-sm text-gray-600">{card.back}</p>
-              <div className="mt-3 flex items-center justify-between text-xs text-gray-400">
+              <p className="text-2xl font-bold text-foreground">{card.front}</p>
+              <p className="mt-1 text-sm text-muted-foreground">{card.back}</p>
+              <div className="mt-3 flex items-center justify-between text-xs text-muted-foreground/70">
                 <span>{card.deck}</span>
                 <span>{card.review_count} reviews</span>
               </div>

@@ -33,21 +33,21 @@ export function RecentReviewsList({ items }: RecentReviewsListProps) {
   return (
     <div data-testid="recent-reviews-list" className="mx-auto max-w-3xl">
       <div className="mb-8">
-        <h1 data-testid="recent-reviews-heading" className="text-3xl font-bold text-gray-900">Recent Reviews</h1>
-        <p data-testid="recent-reviews-count" className="mt-1 text-sm text-gray-500">
+        <h1 data-testid="recent-reviews-heading" className="text-3xl font-bold text-foreground">Recent Reviews</h1>
+        <p data-testid="recent-reviews-count" className="mt-1 text-sm text-muted-foreground">
           {items.length} reviews in your history
         </p>
       </div>
 
       {items.length === 0 ? (
-        <div data-testid="recent-reviews-empty" className="rounded-xl border bg-white py-16 text-center text-sm text-gray-400">
+        <div data-testid="recent-reviews-empty" className="rounded-xl border bg-card py-16 text-center text-sm text-muted-foreground/70">
           No reviews yet. Start reviewing vocabulary and flashcards!
         </div>
       ) : (
-        <div data-testid="recent-reviews-table" className="overflow-hidden rounded-xl border bg-white">
+        <div data-testid="recent-reviews-table" className="overflow-hidden rounded-xl border bg-card">
           <table className="w-full">
             <thead>
-              <tr className="border-b bg-gray-50 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">
+              <tr className="border-b bg-muted/50 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                 <th className="px-5 py-3">Type</th>
                 <th className="px-5 py-3">Item</th>
                 <th className="px-5 py-3">Score</th>
@@ -68,17 +68,17 @@ export function RecentReviewsList({ items }: RecentReviewsListProps) {
                   <tr
                     key={item.id}
                     data-testid={`review-row-${item.id}`}
-                    className="transition-colors hover:bg-gray-50"
+                    className="transition-colors hover:bg-muted/50"
                   >
                     <td className="px-5 py-3">
                       <div className="flex items-center gap-2">
                         <Icon className="h-4 w-4 text-[var(--cn-orange)]" />
-                        <span className="text-xs text-gray-600">
+                        <span className="text-xs text-muted-foreground">
                           {typeLabels[item.item_type]}
                         </span>
                       </div>
                     </td>
-                    <td className="px-5 py-3 text-sm font-medium text-gray-900">
+                    <td className="px-5 py-3 text-sm font-medium text-foreground">
                       {item.item_label}
                     </td>
                     <td className="px-5 py-3">
@@ -88,7 +88,7 @@ export function RecentReviewsList({ items }: RecentReviewsListProps) {
                         {scoreLabels[item.score]}
                       </span>
                     </td>
-                    <td className="px-5 py-3 text-xs text-gray-500">{date}</td>
+                    <td className="px-5 py-3 text-xs text-muted-foreground">{date}</td>
                   </tr>
                 );
               })}

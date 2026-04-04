@@ -13,8 +13,8 @@ export function GrammarPointsList({ items }: GrammarPointsListProps) {
   return (
     <div data-testid="grammar-points-list" className="mx-auto max-w-3xl">
       <div className="mb-8">
-        <h1 data-testid="grammar-points-heading" className="text-3xl font-bold text-gray-900">Grammar Points</h1>
-        <p data-testid="grammar-points-count" className="mt-1 text-sm text-gray-500">
+        <h1 data-testid="grammar-points-heading" className="text-3xl font-bold text-foreground">Grammar Points</h1>
+        <p data-testid="grammar-points-count" className="mt-1 text-sm text-muted-foreground">
           {items.length} grammar {items.length === 1 ? "point" : "points"} across HSK 1-2
         </p>
       </div>
@@ -33,15 +33,15 @@ export function GrammarPointsList({ items }: GrammarPointsListProps) {
             <div
               key={point.id}
               data-testid={`grammar-point-${point.id}`}
-              className="overflow-hidden rounded-xl border bg-white"
+              className="overflow-hidden rounded-xl border bg-card"
             >
               <button
                 data-testid={`grammar-point-toggle-${point.id}`}
                 onClick={() => setExpandedId(isExpanded ? null : point.id)}
-                className="flex w-full items-center justify-between px-6 py-4 text-left transition-colors hover:bg-gray-50"
+                className="flex w-full items-center justify-between px-6 py-4 text-left transition-colors hover:bg-muted/50"
               >
                 <div>
-                  <h3 className="font-semibold text-gray-900">{point.title}</h3>
+                  <h3 className="font-semibold text-foreground">{point.title}</h3>
                   {point.pattern && (
                     <p className="mt-0.5 text-sm font-mono text-[var(--cn-orange)]">
                       {point.pattern}
@@ -49,11 +49,11 @@ export function GrammarPointsList({ items }: GrammarPointsListProps) {
                   )}
                 </div>
                 <div className="flex items-center gap-3">
-                  <span className="rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-600">
+                  <span className="rounded-full bg-muted px-2 py-0.5 text-xs font-medium text-muted-foreground">
                     HSK {point.hsk_level}
                   </span>
                   <svg
-                    className={`h-4 w-4 text-gray-400 transition-transform ${isExpanded ? "rotate-180" : ""}`}
+                    className={`h-4 w-4 text-muted-foreground/70 transition-transform ${isExpanded ? "rotate-180" : ""}`}
                     fill="none"
                     viewBox="0 0 24 24"
                     stroke="currentColor"
@@ -65,20 +65,20 @@ export function GrammarPointsList({ items }: GrammarPointsListProps) {
 
               {isExpanded && (
                 <div data-testid={`grammar-point-detail-${point.id}`} className="border-t px-6 py-5">
-                  <p data-testid={`grammar-point-explanation-${point.id}`} className="mb-4 text-sm leading-relaxed text-gray-700">
+                  <p data-testid={`grammar-point-explanation-${point.id}`} className="mb-4 text-sm leading-relaxed text-foreground/80">
                     {point.explanation}
                   </p>
 
                   {examples.length > 0 && (
                     <div data-testid={`grammar-point-examples-${point.id}`}>
-                      <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-gray-400">
+                      <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground/70">
                         Examples
                       </p>
                       <div className="space-y-2">
                         {examples.map((ex, i) => (
                           <div
                             key={i}
-                            className="rounded-lg bg-[var(--cn-orange-light)] px-4 py-2.5 text-sm text-gray-800"
+                            className="rounded-lg bg-[var(--cn-orange-light)] px-4 py-2.5 text-sm text-foreground/90"
                           >
                             {ex}
                           </div>

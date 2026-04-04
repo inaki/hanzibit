@@ -14,7 +14,7 @@ function EntryListContent({ entries, activeEntryId, onSelect }: EntryListProps) 
 
   return (
     <div className="p-4">
-      <h2 data-testid="journal-entry-list-heading" className="mb-3 text-xs font-semibold tracking-widest text-gray-400 uppercase">
+      <h2 data-testid="journal-entry-list-heading" className="mb-3 text-xs font-semibold tracking-widest text-muted-foreground/70 uppercase">
         Journal Entries
       </h2>
       <div className="space-y-1">
@@ -33,18 +33,18 @@ function EntryListContent({ entries, activeEntryId, onSelect }: EntryListProps) 
               className={`block rounded-lg px-3 py-2.5 transition-colors ${
                 isActive
                   ? "bg-[var(--cn-orange-light)] border border-[var(--cn-orange)]/20"
-                  : "hover:bg-gray-50"
+                  : "hover:bg-muted/50"
               }`}
             >
-              <p className={`text-sm font-medium ${isActive ? "text-[var(--cn-orange)]" : "text-gray-900"}`}>
+              <p className={`text-sm font-medium ${isActive ? "text-[var(--cn-orange)]" : "text-foreground"}`}>
                 {entry.title_zh}
               </p>
-              <p className="text-xs text-gray-500">
+              <p className="text-xs text-muted-foreground">
                 {entry.title_en}
               </p>
               <div className="mt-1 flex items-center justify-between">
-                <span className="text-[10px] text-gray-400">{date}</span>
-                <span className="text-[10px] text-gray-400">HSK {entry.hsk_level}</span>
+                <span className="text-[10px] text-muted-foreground/70">{date}</span>
+                <span className="text-[10px] text-muted-foreground/70">HSK {entry.hsk_level}</span>
               </div>
             </Link>
           );
@@ -59,7 +59,7 @@ export function EntryList({ entries, activeEntryId }: EntryListProps) {
   if (entries.length === 0) return null;
 
   return (
-    <div data-testid="journal-entry-list" className="hidden w-64 shrink-0 overflow-auto border-r bg-white md:block">
+    <div data-testid="journal-entry-list" className="hidden w-64 shrink-0 overflow-auto border-r bg-card md:block">
       <EntryListContent entries={entries} activeEntryId={activeEntryId} />
     </div>
   );

@@ -58,50 +58,50 @@ export function DashboardView() {
   return (
     <div className="mx-auto max-w-3xl">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
-        <p className="mt-1 text-sm text-gray-500">Your learning progress at a glance</p>
+        <h1 className="text-3xl font-bold text-foreground">Dashboard</h1>
+        <p className="mt-1 text-sm text-muted-foreground">Your learning progress at a glance</p>
       </div>
 
       {/* Top stat cards */}
       <div className="mb-6 grid grid-cols-3 gap-4">
         {/* Streak */}
-        <div className="rounded-xl border bg-white p-5">
+        <div className="rounded-xl border bg-card p-5">
           <div className="mb-3 flex items-center gap-2">
             <Flame className="h-4 w-4 text-[var(--cn-orange)]" />
-            <span className="text-xs font-semibold uppercase tracking-wider text-gray-400">Streak</span>
+            <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground/70">Streak</span>
           </div>
-          <p className="text-4xl font-bold text-gray-900">{loading ? "—" : streak}</p>
-          <p className="mt-1 text-xs text-gray-500">
+          <p className="text-4xl font-bold text-foreground">{loading ? "—" : streak}</p>
+          <p className="mt-1 text-xs text-muted-foreground">
             {streak === 0 ? "Start your streak today" : streak === 1 ? "day in a row" : "days in a row"}
           </p>
         </div>
 
         {/* Journal entries */}
-        <div className="rounded-xl border bg-white p-5">
+        <div className="rounded-xl border bg-card p-5">
           <div className="mb-3 flex items-center gap-2">
             <PenLine className="h-4 w-4 text-blue-500" />
-            <span className="text-xs font-semibold uppercase tracking-wider text-gray-400">Entries</span>
+            <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground/70">Entries</span>
           </div>
-          <p className="text-4xl font-bold text-gray-900">{loading ? "—" : stats.entryCount}</p>
-          <p className="mt-1 text-xs text-gray-500">journal entries written</p>
+          <p className="text-4xl font-bold text-foreground">{loading ? "—" : stats.entryCount}</p>
+          <p className="mt-1 text-xs text-muted-foreground">journal entries written</p>
         </div>
 
         {/* Reviews */}
-        <div className="rounded-xl border bg-white p-5">
+        <div className="rounded-xl border bg-card p-5">
           <div className="mb-3 flex items-center gap-2">
             <RotateCcw className="h-4 w-4 text-green-500" />
-            <span className="text-xs font-semibold uppercase tracking-wider text-gray-400">Reviews</span>
+            <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground/70">Reviews</span>
           </div>
-          <p className="text-4xl font-bold text-gray-900">{loading ? "—" : stats.reviewCount}</p>
-          <p className="mt-1 text-xs text-gray-500">total reviews completed</p>
+          <p className="text-4xl font-bold text-foreground">{loading ? "—" : stats.reviewCount}</p>
+          <p className="mt-1 text-xs text-muted-foreground">total reviews completed</p>
         </div>
       </div>
 
       {/* HSK Progress */}
-      <div className="mb-6 rounded-xl border bg-white p-6">
+      <div className="mb-6 rounded-xl border bg-card p-6">
         <div className="mb-4 flex items-center gap-2">
           <TrendingUp className="h-4 w-4 text-[var(--cn-orange)]" />
-          <h2 className="text-sm font-semibold text-gray-700">HSK {settings.hskLevel} Progress</h2>
+          <h2 className="text-sm font-semibold text-foreground/80">HSK {settings.hskLevel} Progress</h2>
           <span className="ml-auto text-sm font-bold text-[var(--cn-orange)]">
             {loading ? "—" : `${progress.percent}%`}
           </span>
@@ -110,7 +110,7 @@ export function DashboardView() {
           value={progress.percent}
           className="mb-3 h-2.5 [&_[data-slot=progress-indicator]]:bg-[var(--cn-orange)]"
         />
-        <div className="flex items-center justify-between text-sm text-gray-500">
+        <div className="flex items-center justify-between text-sm text-muted-foreground">
           <span>{loading ? "—" : `${progress.encountered} / ${progress.total} words encountered`}</span>
           <Link href="/notebook/lessons" className="text-xs text-[var(--cn-orange)] hover:underline">
             Open study guide →
@@ -120,21 +120,21 @@ export function DashboardView() {
 
       {/* Flashcard stats + weak cards */}
       <div className="mb-6 grid grid-cols-2 gap-4">
-        <div className="rounded-xl border bg-white p-5">
+        <div className="rounded-xl border bg-card p-5">
           <div className="mb-3 flex items-center gap-2">
             <Layers className="h-4 w-4 text-blue-500" />
-            <span className="text-xs font-semibold uppercase tracking-wider text-gray-400">Flashcards</span>
+            <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground/70">Flashcards</span>
           </div>
-          <p className="text-4xl font-bold text-gray-900">{loading ? "—" : stats.vocabCount}</p>
-          <p className="mt-1 text-xs text-gray-500">cards in your deck</p>
+          <p className="text-4xl font-bold text-foreground">{loading ? "—" : stats.vocabCount}</p>
+          <p className="mt-1 text-xs text-muted-foreground">cards in your deck</p>
           <Link href="/notebook/flashcards" className="mt-3 block text-xs text-[var(--cn-orange)] hover:underline">
             Practice now →
           </Link>
         </div>
 
         {/* Character of the day */}
-        <div className="rounded-xl border bg-white p-5">
-          <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-gray-400">Character of the day</p>
+        <div className="rounded-xl border bg-card p-5">
+          <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground/70">Character of the day</p>
           <div className="flex items-center gap-4">
             <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-xl bg-[var(--cn-orange-light)]">
               <span className="text-4xl font-bold text-[var(--cn-orange)]">
@@ -142,8 +142,8 @@ export function DashboardView() {
               </span>
             </div>
             <div>
-              <p className="font-semibold text-gray-900">{charOfDay?.pinyin ?? ""}</p>
-              <p className="text-sm text-gray-500">{charOfDay?.english ?? ""}</p>
+              <p className="font-semibold text-foreground">{charOfDay?.pinyin ?? ""}</p>
+              <p className="text-sm text-muted-foreground">{charOfDay?.english ?? ""}</p>
             </div>
           </div>
         </div>
@@ -151,20 +151,20 @@ export function DashboardView() {
 
       {/* Needs attention */}
       {!loading && weakCards.length > 0 && (
-        <div className="rounded-xl border bg-white p-6">
+        <div className="rounded-xl border bg-card p-6">
           <div className="mb-4 flex items-center gap-2">
             <AlertCircle className="h-4 w-4 text-red-500" />
-            <h2 className="text-sm font-semibold text-gray-700">Needs Attention</h2>
-            <span className="ml-auto text-xs text-gray-400">Low ease factor — review these soon</span>
+            <h2 className="text-sm font-semibold text-foreground/80">Needs Attention</h2>
+            <span className="ml-auto text-xs text-muted-foreground/70">Low ease factor — review these soon</span>
           </div>
           <div className="space-y-2">
             {weakCards.map((card) => (
-              <div key={card.id} className="flex items-center justify-between rounded-lg border border-gray-100 bg-gray-50 px-4 py-3">
+              <div key={card.id} className="flex items-center justify-between rounded-lg border border-border bg-muted/50 px-4 py-3">
                 <div>
-                  <span className="text-lg font-bold text-gray-900">{card.front}</span>
-                  <span className="ml-3 text-sm text-gray-500">{card.back}</span>
+                  <span className="text-lg font-bold text-foreground">{card.front}</span>
+                  <span className="ml-3 text-sm text-muted-foreground">{card.back}</span>
                 </div>
-                <div className="flex items-center gap-3 text-xs text-gray-400">
+                <div className="flex items-center gap-3 text-xs text-muted-foreground/70">
                   <span>{card.review_count} reviews</span>
                   <span className="font-medium text-red-500">ease {card.ease_factor.toFixed(1)}</span>
                 </div>

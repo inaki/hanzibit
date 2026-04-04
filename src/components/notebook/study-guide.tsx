@@ -79,8 +79,8 @@ export function StudyGuide({ initialData }: StudyGuideProps) {
     <div data-testid="study-guide" className="mx-auto max-w-5xl">
       {/* Header */}
       <div className="mb-6">
-        <h1 className="text-3xl font-bold text-gray-900">Study Guide</h1>
-        <p className="mt-1 text-sm text-gray-500">
+        <h1 className="text-3xl font-bold text-foreground">Study Guide</h1>
+        <p className="mt-1 text-sm text-muted-foreground">
           Track your progress through HSK vocabulary
         </p>
       </div>
@@ -96,7 +96,7 @@ export function StudyGuide({ initialData }: StudyGuideProps) {
             className={`rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
               data.level === level
                 ? "bg-[var(--cn-orange)] text-white"
-                : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                : "bg-muted text-muted-foreground hover:bg-muted"
             }`}
           >
             HSK {level}
@@ -106,12 +106,12 @@ export function StudyGuide({ initialData }: StudyGuideProps) {
 
       {/* Locked state */}
       {data.locked && (
-        <div className="flex flex-col items-center justify-center rounded-xl border bg-white py-16 text-center">
-          <Lock className="mb-3 h-8 w-8 text-gray-300" />
-          <h3 className="text-base font-semibold text-gray-700">
+        <div className="flex flex-col items-center justify-center rounded-xl border bg-card py-16 text-center">
+          <Lock className="mb-3 h-8 w-8 text-muted-foreground/50" />
+          <h3 className="text-base font-semibold text-foreground/80">
             HSK {data.level} is for Pro members
           </h3>
-          <p className="mb-4 mt-1 text-sm text-gray-400">
+          <p className="mb-4 mt-1 text-sm text-muted-foreground/70">
             Upgrade to access all 6 HSK levels
           </p>
           <UpgradePrompt reason="Get unlimited access to all HSK levels and vocabulary with Pro." />
@@ -119,9 +119,9 @@ export function StudyGuide({ initialData }: StudyGuideProps) {
       )}
 
       {/* Summary bar + word list (hidden when locked) */}
-      {!data.locked && (<><div className="mb-6 rounded-xl border bg-white p-5">
+      {!data.locked && (<><div className="mb-6 rounded-xl border bg-card p-5">
         <div className="mb-3 flex items-center justify-between">
-          <span className="text-sm font-medium text-gray-700">
+          <span className="text-sm font-medium text-foreground/80">
             HSK {data.level} Progress
           </span>
           <span className="text-sm font-bold text-[var(--cn-orange)]">
@@ -136,20 +136,20 @@ export function StudyGuide({ initialData }: StudyGuideProps) {
         />
         <div className="grid grid-cols-4 gap-4 text-center">
           <div>
-            <p className="text-2xl font-bold text-gray-900">{data.summary.total}</p>
-            <p className="text-xs text-gray-500">Total words</p>
+            <p className="text-2xl font-bold text-foreground">{data.summary.total}</p>
+            <p className="text-xs text-muted-foreground">Total words</p>
           </div>
           <div>
             <p className="text-2xl font-bold text-green-600">{data.summary.encountered}</p>
-            <p className="text-xs text-gray-500">Encountered</p>
+            <p className="text-xs text-muted-foreground">Encountered</p>
           </div>
           <div>
             <p className="text-2xl font-bold text-blue-600">{data.summary.withFlashcard}</p>
-            <p className="text-xs text-gray-500">Flashcards</p>
+            <p className="text-xs text-muted-foreground">Flashcards</p>
           </div>
           <div>
             <p className="text-2xl font-bold text-amber-600">{data.summary.dueForReview}</p>
-            <p className="text-xs text-gray-500">Due for review</p>
+            <p className="text-xs text-muted-foreground">Due for review</p>
           </div>
         </div>
       </div>
@@ -159,7 +159,7 @@ export function StudyGuide({ initialData }: StudyGuideProps) {
         <div className="w-80 shrink-0">
           {/* Search */}
           <div className="relative mb-3">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground/70" />
             <Input
               data-testid="study-guide-search"
               value={search}
@@ -183,8 +183,8 @@ export function StudyGuide({ initialData }: StudyGuideProps) {
                 onClick={() => { setFilter(f.key); setSelectedIndex(0); }}
                 className={`rounded-full px-2.5 py-1 text-[11px] font-medium transition-colors ${
                   filter === f.key
-                    ? "bg-gray-900 text-white"
-                    : "bg-gray-100 text-gray-500 hover:bg-gray-200"
+                    ? "bg-foreground text-background"
+                    : "bg-muted text-muted-foreground hover:bg-muted"
                 }`}
               >
                 {f.label}
@@ -195,7 +195,7 @@ export function StudyGuide({ initialData }: StudyGuideProps) {
           {/* Word list */}
           <div data-testid="study-guide-word-list" className="max-h-[60vh] space-y-1 overflow-auto">
             {filteredWords.length === 0 ? (
-              <p className="py-8 text-center text-sm text-gray-400">
+              <p className="py-8 text-center text-sm text-muted-foreground/70">
                 No words match your filter.
               </p>
             ) : (
@@ -210,22 +210,22 @@ export function StudyGuide({ initialData }: StudyGuideProps) {
                     className={`flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left transition-colors ${
                       isSelected
                         ? "bg-[var(--cn-orange-light)] border border-[var(--cn-orange)]/20"
-                        : "bg-white border border-gray-100 hover:border-gray-200"
+                        : "bg-card border border-border hover:border-border"
                     }`}
                   >
                     {item.encountered ? (
                       <CheckCircle2 className="h-4 w-4 shrink-0 text-green-500" />
                     ) : (
-                      <Circle className="h-4 w-4 shrink-0 text-gray-300" />
+                      <Circle className="h-4 w-4 shrink-0 text-muted-foreground/50" />
                     )}
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center gap-2">
-                        <span className={`text-lg font-bold ${isSelected ? "text-[var(--cn-orange)]" : "text-gray-900"}`}>
+                        <span className={`text-lg font-bold ${isSelected ? "text-[var(--cn-orange)]" : "text-foreground"}`}>
                           {item.word.simplified}
                         </span>
-                        <span className="truncate text-xs text-gray-400">{item.word.pinyin}</span>
+                        <span className="truncate text-xs text-muted-foreground/70">{item.word.pinyin}</span>
                       </div>
-                      <p className="truncate text-xs text-gray-500">{item.word.english}</p>
+                      <p className="truncate text-xs text-muted-foreground">{item.word.english}</p>
                     </div>
                     <div className="flex shrink-0 items-center gap-1">
                       {item.flashcard && item.flashcard.easeFactor < 2.0 && item.flashcard.reviewCount > 1 && (
@@ -247,26 +247,26 @@ export function StudyGuide({ initialData }: StudyGuideProps) {
           {selected ? (
             <WordDetail item={selected} />
           ) : (
-            <div data-testid="study-guide-empty" className="flex h-64 items-center justify-center rounded-xl border bg-white text-sm text-gray-400">
+            <div data-testid="study-guide-empty" className="flex h-64 items-center justify-center rounded-xl border bg-card text-sm text-muted-foreground/70">
               Select a word to view details
             </div>
           )}
 
           {/* Grammar Points */}
           {data.grammarPoints.length > 0 && (
-            <div className="mt-6 rounded-xl border bg-white p-6">
-              <h3 className="mb-4 flex items-center gap-2 text-sm font-semibold text-gray-700">
+            <div className="mt-6 rounded-xl border bg-card p-6">
+              <h3 className="mb-4 flex items-center gap-2 text-sm font-semibold text-foreground/80">
                 <Languages className="h-4 w-4 text-[var(--cn-orange)]" />
                 Grammar Points — HSK {data.level}
               </h3>
               <div className="space-y-3">
                 {data.grammarPoints.map((gp) => (
-                  <div key={gp.id} className="rounded-lg border border-gray-100 bg-gray-50 p-4">
-                    <p className="text-sm font-semibold text-gray-900">{gp.title}</p>
+                  <div key={gp.id} className="rounded-lg border border-border bg-muted/50 p-4">
+                    <p className="text-sm font-semibold text-foreground">{gp.title}</p>
                     {gp.pattern && (
                       <p className="mt-0.5 font-mono text-xs text-[var(--cn-orange)]">{gp.pattern}</p>
                     )}
-                    <p className="mt-1 text-xs text-gray-600">{gp.explanation}</p>
+                    <p className="mt-1 text-xs text-muted-foreground">{gp.explanation}</p>
                   </div>
                 ))}
               </div>
@@ -309,15 +309,15 @@ function WordDetail({ item }: { item: StudyGuideWord }) {
   const hasFlashcard = item.flashcard !== null || created;
 
   return (
-    <div data-testid="study-guide-detail" className="rounded-xl border bg-white p-8">
+    <div data-testid="study-guide-detail" className="rounded-xl border bg-card p-8">
       {/* Character display */}
       <div className="mb-6 text-center">
         <p className="text-7xl font-bold text-[var(--cn-orange)]">{item.word.simplified}</p>
         {item.word.traditional && (
-          <p className="mt-1 text-lg text-gray-400">{item.word.traditional}</p>
+          <p className="mt-1 text-lg text-muted-foreground/70">{item.word.traditional}</p>
         )}
-        <p className="mt-3 text-xl font-medium text-gray-700">{item.word.pinyin}</p>
-        <p className="mt-1 text-gray-500">{item.word.english}</p>
+        <p className="mt-3 text-xl font-medium text-foreground/80">{item.word.pinyin}</p>
+        <p className="mt-1 text-muted-foreground">{item.word.english}</p>
       </div>
 
       {/* Status badges */}
@@ -328,7 +328,7 @@ function WordDetail({ item }: { item: StudyGuideWord }) {
             Encountered
           </span>
         ) : (
-          <span className="inline-flex items-center gap-1 rounded-full bg-gray-100 px-3 py-1 text-xs font-medium text-gray-500">
+          <span className="inline-flex items-center gap-1 rounded-full bg-muted px-3 py-1 text-xs font-medium text-muted-foreground">
             <Circle className="h-3.5 w-3.5" />
             Not yet encountered
           </span>
@@ -344,7 +344,7 @@ function WordDetail({ item }: { item: StudyGuideWord }) {
       {/* Journal entries */}
       {item.journalEntries.length > 0 && (
         <div className="mb-6">
-          <h4 className="mb-2 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-gray-400">
+          <h4 className="mb-2 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground/70">
             <BookOpen className="h-3.5 w-3.5" />
             Appeared in
           </h4>
@@ -353,11 +353,11 @@ function WordDetail({ item }: { item: StudyGuideWord }) {
               <Link
                 key={entry.id}
                 href="/notebook"
-                className="flex items-center gap-2 rounded-lg border border-gray-100 px-3 py-2 text-sm transition-colors hover:border-[var(--cn-orange)]/30 hover:bg-[var(--cn-orange-light)]"
+                className="flex items-center gap-2 rounded-lg border border-border px-3 py-2 text-sm transition-colors hover:border-[var(--cn-orange)]/30 hover:bg-[var(--cn-orange-light)]"
               >
                 <BookOpen className="h-3.5 w-3.5 text-[var(--cn-orange)]" />
-                <span className="font-medium text-gray-900">{entry.title_zh}</span>
-                <span className="text-xs text-gray-400">{entry.title_en}</span>
+                <span className="font-medium text-foreground">{entry.title_zh}</span>
+                <span className="text-xs text-muted-foreground/70">{entry.title_en}</span>
               </Link>
             ))}
           </div>

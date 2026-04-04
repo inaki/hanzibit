@@ -14,7 +14,7 @@ export default function NotebookLayout({
         <NotebookNav />
         <div className="flex flex-1 overflow-hidden">
           <NotebookSidebar />
-          <main data-testid="notebook-main-content" className="flex-1 overflow-auto bg-[#f5f3f0]">{children}</main>
+          <main data-testid="notebook-main-content" className="flex-1 overflow-auto bg-background">{children}</main>
         </div>
         <MobileNav />
       </div>

@@ -152,7 +152,7 @@ function MobileEditDialog({
               onChange={(e) => setContent(e.target.value)}
               required
               rows={6}
-              className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 font-mono text-sm text-gray-900 outline-none focus:border-[var(--cn-orange)] focus:ring-1 focus:ring-[var(--cn-orange)]"
+              className="w-full rounded-lg border border-border bg-card px-3 py-2 font-mono text-sm text-foreground outline-none focus:border-[var(--cn-orange)] focus:ring-1 focus:ring-[var(--cn-orange)]"
             />
           </div>
           <DialogFooter>
@@ -207,7 +207,7 @@ function MobileNewEntryDialog({
               placeholder={`我去[餐厅|can1 ting1|restaurant]吃饭。`}
               required
               rows={6}
-              className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 font-mono text-sm text-gray-900 outline-none focus:border-[var(--cn-orange)] focus:ring-1 focus:ring-[var(--cn-orange)]"
+              className="w-full rounded-lg border border-border bg-card px-3 py-2 font-mono text-sm text-foreground outline-none focus:border-[var(--cn-orange)] focus:ring-1 focus:ring-[var(--cn-orange)]"
             />
           </div>
           <DialogFooter>
@@ -243,15 +243,15 @@ function MobilePronunciationDialog({
         </DialogHeader>
         <div className="max-h-[60vh] space-y-2 overflow-auto py-2">
           {highlights.length === 0 ? (
-            <p className="py-4 text-center text-sm text-gray-400">No vocabulary in this entry.</p>
+            <p className="py-4 text-center text-sm text-muted-foreground/70">No vocabulary in this entry.</p>
           ) : (
             highlights.map((h) => (
               <div key={h.hanzi} className="flex items-center justify-between rounded-lg border px-4 py-3">
                 <div className="flex items-center gap-4">
                   <span className="text-2xl font-bold text-[var(--cn-orange)]">{h.hanzi}</span>
                   <div>
-                    <p className="text-sm font-medium text-gray-900">{h.pinyin}</p>
-                    <p className="text-xs text-gray-500">{h.english}</p>
+                    <p className="text-sm font-medium text-foreground">{h.pinyin}</p>
+                    <p className="text-xs text-muted-foreground">{h.english}</p>
                   </div>
                 </div>
                 <button
@@ -354,14 +354,14 @@ function MobileFlashcardDialog({
         </DialogHeader>
 
         {total === 0 ? (
-          <p className="py-8 text-center text-sm text-gray-400">No vocabulary to practice.</p>
+          <p className="py-8 text-center text-sm text-muted-foreground/70">No vocabulary to practice.</p>
         ) : completed ? (
           <div className="py-6 text-center">
             <p className="mb-2 text-lg font-semibold">All done!</p>
-            <p className="mb-4 text-sm text-gray-500">Reviewed {total} cards.</p>
+            <p className="mb-4 text-sm text-muted-foreground">Reviewed {total} cards.</p>
             {entryId && !saveStatus && (
-              <div className="mb-4 rounded-lg border bg-gray-50 p-3 text-left">
-                <p className="mb-2 text-xs font-semibold text-gray-600">Save to Flashcards</p>
+              <div className="mb-4 rounded-lg border bg-muted/50 p-3 text-left">
+                <p className="mb-2 text-xs font-semibold text-muted-foreground">Save to Flashcards</p>
                 <div className="max-h-32 space-y-1 overflow-auto">
                   {highlights.map((h, i) => (
                     <label key={h.hanzi} className="flex items-center gap-2 text-sm">
@@ -372,7 +372,7 @@ function MobileFlashcardDialog({
                         className="accent-[var(--cn-orange)]"
                       />
                       <span className="font-medium">{h.hanzi}</span>
-                      <span className="text-xs text-gray-400">{h.pinyin}</span>
+                      <span className="text-xs text-muted-foreground/70">{h.pinyin}</span>
                     </label>
                   ))}
                 </div>
@@ -393,24 +393,24 @@ function MobileFlashcardDialog({
           </div>
         ) : (
           <>
-            <div className="text-xs text-gray-400">
+            <div className="text-xs text-muted-foreground/70">
               Card {currentIndex + 1} of {total}
             </div>
             <button
               onClick={() => setFlipped(!flipped)}
-              className="flex h-40 w-full items-center justify-center rounded-xl border-2 bg-white"
+              className="flex h-40 w-full items-center justify-center rounded-xl border-2 bg-card"
             >
               {!flipped ? (
                 <div className="text-center">
-                  <p className="text-4xl font-bold text-gray-900">{card.hanzi}</p>
-                  <p className="mt-2 flex items-center justify-center gap-1 text-xs text-gray-400">
+                  <p className="text-4xl font-bold text-foreground">{card.hanzi}</p>
+                  <p className="mt-2 flex items-center justify-center gap-1 text-xs text-muted-foreground/70">
                     <Eye className="h-3.5 w-3.5" /> Tap to reveal
                   </p>
                 </div>
               ) : (
                 <div className="text-center">
-                  <p className="text-lg font-medium text-gray-900">{card.pinyin}</p>
-                  <p className="mt-1 text-sm text-gray-600">{card.english}</p>
+                  <p className="text-lg font-medium text-foreground">{card.pinyin}</p>
+                  <p className="mt-1 text-sm text-muted-foreground">{card.english}</p>
                 </div>
               )}
             </button>

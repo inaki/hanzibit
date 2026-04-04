@@ -98,13 +98,13 @@ export function NotebookNav() {
   }
 
   return (
-    <header data-testid="notebook-nav" className="flex h-14 shrink-0 items-center justify-between border-b bg-white px-6">
+    <header data-testid="notebook-nav" className="flex h-14 shrink-0 items-center justify-between border-b bg-card px-6">
       <div className="flex items-center gap-8">
         <Link href="/" data-testid="notebook-nav-logo" className="flex items-center gap-2">
           <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[var(--cn-orange)] text-white">
             <BookOpen className="h-5 w-5" />
           </div>
-          <span className="text-base font-bold text-gray-900">
+          <span className="text-base font-bold text-foreground">
             HanziBit
           </span>
         </Link>
@@ -119,8 +119,8 @@ export function NotebookNav() {
                 data-testid={`notebook-nav-${link.label.toLowerCase().replace(/\s+/g, "-")}-link`}
                 className={
                   active
-                    ? "border-b-2 border-[var(--cn-orange)] pb-0.5 font-medium text-gray-900"
-                    : "text-gray-500 hover:text-gray-900"
+                    ? "border-b-2 border-[var(--cn-orange)] pb-0.5 font-medium text-foreground"
+                    : "text-muted-foreground hover:text-foreground"
                 }
               >
                 {link.label}
@@ -132,7 +132,7 @@ export function NotebookNav() {
 
       <div className="flex items-center gap-4">
         <div ref={searchRef} data-testid="notebook-nav-search" className="relative hidden sm:block">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground/70" />
           <Input
             data-testid="notebook-nav-search-input"
             placeholder="Search characters..."
@@ -143,14 +143,14 @@ export function NotebookNav() {
               if (val.length === 0) { setSearchResults([]); setShowResults(false); }
             }}
             onFocus={() => searchResults.length > 0 && setShowResults(true)}
-            className="w-56 rounded-full border-gray-200 bg-gray-50 pl-9 text-sm"
+            className="w-56 rounded-full border-border bg-muted/50 pl-9 text-sm"
           />
           {showResults && searchQuery.length > 0 && (
-            <div className="absolute top-full right-0 z-50 mt-1 w-80 rounded-lg border bg-white shadow-lg">
+            <div className="absolute top-full right-0 z-50 mt-1 w-80 rounded-lg border bg-card shadow-lg">
               {isPending ? (
-                <p className="px-4 py-3 text-sm text-gray-400">Searching...</p>
+                <p className="px-4 py-3 text-sm text-muted-foreground/70">Searching...</p>
               ) : searchResults.length === 0 ? (
-                <p className="px-4 py-3 text-sm text-gray-400">No results</p>
+                <p className="px-4 py-3 text-sm text-muted-foreground/70">No results</p>
               ) : (
                 <div className="max-h-72 overflow-auto py-1">
                   {searchResults.slice(0, 15).map((word) => (
@@ -158,14 +158,14 @@ export function NotebookNav() {
                       key={word.id}
                       href={`/notebook/lessons?word=${word.simplified}`}
                       onClick={() => { setShowResults(false); setSearchQuery(""); }}
-                      className="flex items-center gap-3 px-4 py-2 hover:bg-gray-50"
+                      className="flex items-center gap-3 px-4 py-2 hover:bg-muted/50"
                     >
                       <span className="text-lg font-bold text-[var(--cn-orange)]">{word.simplified}</span>
                       <div className="min-w-0 flex-1">
-                        <p className="truncate text-sm text-gray-700">{word.pinyin}</p>
-                        <p className="truncate text-xs text-gray-400">{word.english}</p>
+                        <p className="truncate text-sm text-foreground/80">{word.pinyin}</p>
+                        <p className="truncate text-xs text-muted-foreground/70">{word.english}</p>
                       </div>
-                      <span className="shrink-0 rounded bg-gray-100 px-1.5 py-0.5 text-[10px] text-gray-500">HSK {word.hsk_level}</span>
+                      <span className="shrink-0 rounded bg-muted px-1.5 py-0.5 text-[10px] text-muted-foreground">HSK {word.hsk_level}</span>
                     </Link>
                   ))}
                 </div>
@@ -176,7 +176,7 @@ export function NotebookNav() {
         <button
           data-testid="notebook-nav-settings-button"
           onClick={() => setSettingsOpen(true)}
-          className="text-gray-400 hover:text-gray-600"
+          className="text-muted-foreground/70 hover:text-foreground"
         >
           <Settings className="h-5 w-5" />
         </button>
@@ -190,8 +190,8 @@ export function NotebookNav() {
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-52">
             <DropdownMenuLabel className="font-normal">
-              <p className="font-medium text-gray-900">{displayName || "Account"}</p>
-              {userEmail && <p className="truncate text-xs text-gray-400">{userEmail}</p>}
+              <p className="font-medium text-foreground">{displayName || "Account"}</p>
+              {userEmail && <p className="truncate text-xs text-muted-foreground/70">{userEmail}</p>}
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuItem onSelect={toggleDarkMode} className="cursor-pointer justify-between">

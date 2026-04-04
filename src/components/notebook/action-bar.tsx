@@ -120,14 +120,14 @@ export function NotebookActionBar({ entry, isPro = false }: NotebookActionBarPro
 
   return (
     <>
-      <div data-testid="notebook-action-bar" className="hidden w-14 flex-col items-center gap-2 border-l bg-white py-4 lg:flex">
+      <div data-testid="notebook-action-bar" className="hidden w-14 flex-col items-center gap-2 border-l bg-card py-4 lg:flex">
         {/* Edit */}
         <Tooltip>
           <TooltipTrigger
             data-testid="action-bar-edit"
             onClick={() => setEditOpen(true)}
             disabled={!entry}
-            className="rounded-lg p-2.5 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600 disabled:opacity-30"
+            className="rounded-lg p-2.5 text-muted-foreground/70 transition-colors hover:bg-muted hover:text-foreground disabled:opacity-30"
           >
             <Pencil className="h-[18px] w-[18px]" />
           </TooltipTrigger>
@@ -140,7 +140,7 @@ export function NotebookActionBar({ entry, isPro = false }: NotebookActionBarPro
             data-testid="action-bar-pronunciation"
             onClick={() => setPronunciationOpen(true)}
             disabled={highlights.length === 0}
-            className="rounded-lg p-2.5 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600 disabled:opacity-30"
+            className="rounded-lg p-2.5 text-muted-foreground/70 transition-colors hover:bg-muted hover:text-foreground disabled:opacity-30"
           >
             <Mic className="h-[18px] w-[18px]" />
           </TooltipTrigger>
@@ -153,7 +153,7 @@ export function NotebookActionBar({ entry, isPro = false }: NotebookActionBarPro
             data-testid="action-bar-flashcard"
             onClick={() => setFlashcardOpen(true)}
             disabled={highlights.length === 0}
-            className="rounded-lg p-2.5 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600 disabled:opacity-30"
+            className="rounded-lg p-2.5 text-muted-foreground/70 transition-colors hover:bg-muted hover:text-foreground disabled:opacity-30"
           >
             <Layers className="h-[18px] w-[18px]" />
           </TooltipTrigger>
@@ -171,7 +171,7 @@ export function NotebookActionBar({ entry, isPro = false }: NotebookActionBarPro
             className={`rounded-lg p-2.5 transition-colors disabled:opacity-30 ${
               gloss.state.sticky
                 ? "bg-[var(--cn-orange)] text-white"
-                : "text-gray-400 hover:bg-gray-100 hover:text-gray-600"
+                : "text-muted-foreground/70 hover:bg-muted hover:text-foreground"
             }`}
           >
             <Languages className="h-[18px] w-[18px]" />
@@ -224,7 +224,7 @@ export function NotebookActionBar({ entry, isPro = false }: NotebookActionBarPro
             data-testid="action-bar-print"
             onClick={handlePrint}
             disabled={!entry}
-            className="rounded-lg p-2.5 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600 disabled:opacity-30"
+            className="rounded-lg p-2.5 text-muted-foreground/70 transition-colors hover:bg-muted hover:text-foreground disabled:opacity-30"
           >
             <Printer className="h-[18px] w-[18px]" />
           </TooltipTrigger>
@@ -280,21 +280,21 @@ export function NotebookActionBar({ entry, isPro = false }: NotebookActionBarPro
 function MarkupHelp() {
   return (
     <div data-testid="markup-help" className="space-y-2">
-      <div className="rounded-lg bg-[var(--cn-orange-light)] border border-[var(--cn-orange)]/20 px-3 py-2 text-xs text-gray-700">
+      <div className="rounded-lg bg-[var(--cn-orange-light)] border border-[var(--cn-orange)]/20 px-3 py-2 text-xs text-foreground/80">
         <p className="font-semibold text-[var(--cn-orange)]">Vocabulary markup</p>
         <p className="mt-1">
           Wrap words in <code className="rounded bg-white px-1 py-0.5 font-mono text-[var(--cn-orange)]">[汉字|pīnyīn|english]</code> to highlight them.
         </p>
-        <p className="mt-1 text-gray-500">
+        <p className="mt-1 text-muted-foreground">
           Example: <code className="font-mono">我去[餐厅|can1 ting1|restaurant]吃饭</code>
         </p>
       </div>
-      <div className="rounded-lg bg-amber-50 border border-amber-200 px-3 py-2 text-xs text-gray-700">
+      <div className="rounded-lg bg-amber-50 border border-amber-200 px-3 py-2 text-xs text-foreground/80">
         <p className="font-semibold text-amber-700">Tone shortcut</p>
-        <p className="mt-1 font-mono text-gray-500">
+        <p className="mt-1 font-mono text-muted-foreground">
           a1→ā &nbsp; a2→á &nbsp; a3→ǎ &nbsp; a4→à &nbsp; v=ü
         </p>
-        <p className="mt-0.5 text-gray-500">
+        <p className="mt-0.5 text-muted-foreground">
           e.g. <code className="font-mono">ni3 hao3</code> → nǐ hǎo
         </p>
       </div>
@@ -307,9 +307,9 @@ function ContentPreview({ content }: { content: string }) {
   if (tokens.length === 0) return null;
 
   return (
-    <div data-testid="content-preview" className="rounded-lg border border-dashed border-gray-300 bg-gray-50 p-4">
-      <p className="mb-2 text-xs font-medium text-gray-400">Preview</p>
-      <div className="text-base leading-[2] text-gray-800">
+    <div data-testid="content-preview" className="rounded-lg border border-dashed border-border bg-muted/50 p-4">
+      <p className="mb-2 text-xs font-medium text-muted-foreground/70">Preview</p>
+      <div className="text-base leading-[2] text-foreground/90">
         {tokens.map((t, i) => {
           if (t.type === "break") return <br key={i} />;
           if (t.type === "text") return <span key={i}>{t.text}</span>;
@@ -357,7 +357,7 @@ function EditEntryDialog({
           <input type="hidden" name="id" value={entry.id} />
           <div className="space-y-4 py-2">
             <div>
-              <label data-testid="edit-entry-title-zh-label" className="mb-1 block text-sm font-medium text-gray-700">
+              <label data-testid="edit-entry-title-zh-label" className="mb-1 block text-sm font-medium text-foreground/80">
                 Chinese Title
               </label>
               <Input
@@ -368,7 +368,7 @@ function EditEntryDialog({
               />
             </div>
             <div>
-              <label data-testid="edit-entry-title-en-label" className="mb-1 block text-sm font-medium text-gray-700">
+              <label data-testid="edit-entry-title-en-label" className="mb-1 block text-sm font-medium text-foreground/80">
                 English Title
               </label>
               <Input
@@ -380,11 +380,11 @@ function EditEntryDialog({
             </div>
             <div className="flex gap-3">
               <div className="flex-1">
-                <label className="mb-1 block text-sm font-medium text-gray-700">Unit</label>
+                <label className="mb-1 block text-sm font-medium text-foreground/80">Unit</label>
                 <Input data-testid="edit-entry-unit" name="unit" defaultValue={entry.unit || ""} />
               </div>
               <div className="w-24">
-                <label className="mb-1 block text-sm font-medium text-gray-700">HSK</label>
+                <label className="mb-1 block text-sm font-medium text-foreground/80">HSK</label>
                 <Input
                   data-testid="edit-entry-hsk-level"
                   name="hsk_level"
@@ -397,7 +397,7 @@ function EditEntryDialog({
             </div>
             <div>
               <div className="mb-1 flex items-center justify-between">
-                <label data-testid="edit-entry-content-label" className="block text-sm font-medium text-gray-700">
+                <label data-testid="edit-entry-content-label" className="block text-sm font-medium text-foreground/80">
                   Content
                 </label>
                 <button
@@ -407,7 +407,7 @@ function EditEntryDialog({
                   className={`rounded-md px-2 py-0.5 text-xs font-medium transition-colors ${
                     preview
                       ? "bg-[var(--cn-orange)] text-white"
-                      : "bg-gray-100 text-gray-500 hover:bg-gray-200"
+                      : "bg-muted text-muted-foreground hover:bg-muted"
                   }`}
                 >
                   {preview ? "Hide Preview" : "Preview"}
@@ -420,7 +420,7 @@ function EditEntryDialog({
                 onChange={(e) => setContent(e.target.value)}
                 required
                 rows={6}
-                className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 font-mono text-sm text-gray-900 outline-none focus:border-[var(--cn-orange)] focus:ring-1 focus:ring-[var(--cn-orange)]"
+                className="w-full rounded-lg border border-border bg-card px-3 py-2 font-mono text-sm text-foreground outline-none focus:border-[var(--cn-orange)] focus:ring-1 focus:ring-[var(--cn-orange)]"
               />
               {preview && <ContentPreview content={content} />}
             </div>
@@ -477,7 +477,7 @@ function NewEntryDialog({
         <form action={handleSubmit}>
           <div className="space-y-4 py-2">
             <div>
-              <label className="mb-1 block text-sm font-medium text-gray-700">
+              <label className="mb-1 block text-sm font-medium text-foreground/80">
                 Chinese Title
               </label>
               <Input
@@ -488,7 +488,7 @@ function NewEntryDialog({
               />
             </div>
             <div>
-              <label className="mb-1 block text-sm font-medium text-gray-700">
+              <label className="mb-1 block text-sm font-medium text-foreground/80">
                 English Title
               </label>
               <Input
@@ -500,17 +500,17 @@ function NewEntryDialog({
             </div>
             <div className="flex gap-3">
               <div className="flex-1">
-                <label className="mb-1 block text-sm font-medium text-gray-700">Unit</label>
+                <label className="mb-1 block text-sm font-medium text-foreground/80">Unit</label>
                 <Input data-testid="new-entry-unit" name="unit" placeholder="e.g. Unit 8: Hobbies" />
               </div>
               <div className="w-24">
-                <label className="mb-1 block text-sm font-medium text-gray-700">HSK</label>
+                <label className="mb-1 block text-sm font-medium text-foreground/80">HSK</label>
                 <Input data-testid="new-entry-hsk-level" name="hsk_level" type="number" min={1} max={6} defaultValue={1} />
               </div>
             </div>
             <div>
               <div className="mb-1 flex items-center justify-between">
-                <label className="block text-sm font-medium text-gray-700">
+                <label className="block text-sm font-medium text-foreground/80">
                   Content
                 </label>
                 <button
@@ -520,7 +520,7 @@ function NewEntryDialog({
                   className={`rounded-md px-2 py-0.5 text-xs font-medium transition-colors ${
                     preview
                       ? "bg-[var(--cn-orange)] text-white"
-                      : "bg-gray-100 text-gray-500 hover:bg-gray-200"
+                      : "bg-muted text-muted-foreground hover:bg-muted"
                   }`}
                 >
                   {preview ? "Hide Preview" : "Preview"}
@@ -534,7 +534,7 @@ function NewEntryDialog({
                 placeholder={`我去[餐厅|can1 ting1|restaurant]吃饭。\n[服务员|fu2 wu4 yuan2|waiter]很热情。`}
                 required
                 rows={6}
-                className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 font-mono text-sm text-gray-900 outline-none focus:border-[var(--cn-orange)] focus:ring-1 focus:ring-[var(--cn-orange)]"
+                className="w-full rounded-lg border border-border bg-card px-3 py-2 font-mono text-sm text-foreground outline-none focus:border-[var(--cn-orange)] focus:ring-1 focus:ring-[var(--cn-orange)]"
               />
               {preview && content && <ContentPreview content={content} />}
             </div>
@@ -588,7 +588,7 @@ function PronunciationDialog({
         </DialogHeader>
         <div data-testid="pronunciation-list" className="max-h-80 space-y-2 overflow-auto py-2">
           {highlights.length === 0 ? (
-            <p data-testid="pronunciation-empty" className="py-4 text-center text-sm text-gray-400">
+            <p data-testid="pronunciation-empty" className="py-4 text-center text-sm text-muted-foreground/70">
               No vocabulary highlights in this entry.
             </p>
           ) : (
@@ -603,8 +603,8 @@ function PronunciationDialog({
                     {h.hanzi}
                   </span>
                   <div>
-                    <p className="text-sm font-medium text-gray-900">{h.pinyin}</p>
-                    <p className="text-xs text-gray-500">{h.english}</p>
+                    <p className="text-sm font-medium text-foreground">{h.pinyin}</p>
+                    <p className="text-xs text-muted-foreground">{h.english}</p>
                   </div>
                 </div>
                 <button
@@ -721,25 +721,25 @@ function FlashcardModeDialog({
         </DialogHeader>
 
         {total === 0 ? (
-          <p data-testid="flashcard-mode-empty" className="py-8 text-center text-sm text-gray-400">
+          <p data-testid="flashcard-mode-empty" className="py-8 text-center text-sm text-muted-foreground/70">
             No vocabulary highlights to practice.
           </p>
         ) : completed ? (
           <div data-testid="flashcard-mode-complete" className="py-6 text-center">
-            <p className="mb-2 text-lg font-semibold text-gray-900">All done!</p>
-            <p className="mb-4 text-sm text-gray-500">
+            <p className="mb-2 text-lg font-semibold text-foreground">All done!</p>
+            <p className="mb-4 text-sm text-muted-foreground">
               You reviewed {total} {total === 1 ? "card" : "cards"} from this entry.
             </p>
 
             {/* Save to Flashcards */}
             {entryId && !saveStatus && (
-              <div className="mb-4 rounded-lg border bg-gray-50 p-4 text-left">
-                <p className="mb-2 text-xs font-semibold text-gray-600">Save to Flashcards</p>
+              <div className="mb-4 rounded-lg border bg-muted/50 p-4 text-left">
+                <p className="mb-2 text-xs font-semibold text-muted-foreground">Save to Flashcards</p>
                 <div className="max-h-40 space-y-1 overflow-auto">
                   {highlights.map((h, i) => (
                     <label
                       key={h.hanzi}
-                      className="flex cursor-pointer items-center gap-2 rounded px-2 py-1 text-sm hover:bg-gray-100"
+                      className="flex cursor-pointer items-center gap-2 rounded px-2 py-1 text-sm hover:bg-muted"
                     >
                       <input
                         type="checkbox"
@@ -747,8 +747,8 @@ function FlashcardModeDialog({
                         onChange={() => toggleCard(i)}
                         className="accent-[var(--cn-orange)]"
                       />
-                      <span className="font-medium text-gray-900">{h.hanzi}</span>
-                      <span className="text-xs text-gray-500">{h.pinyin}</span>
+                      <span className="font-medium text-foreground">{h.hanzi}</span>
+                      <span className="text-xs text-muted-foreground">{h.pinyin}</span>
                     </label>
                   ))}
                 </div>
@@ -780,9 +780,9 @@ function FlashcardModeDialog({
         ) : (
           <>
             {/* Progress */}
-            <div data-testid="flashcard-mode-progress" className="flex items-center gap-2 text-xs text-gray-400">
+            <div data-testid="flashcard-mode-progress" className="flex items-center gap-2 text-xs text-muted-foreground/70">
               <span>Card {currentIndex + 1} of {total}</span>
-              <div className="h-1 flex-1 rounded-full bg-gray-200">
+              <div className="h-1 flex-1 rounded-full bg-muted">
                 <div
                   className="h-full rounded-full bg-[var(--cn-orange)] transition-all"
                   style={{ width: `${((currentIndex + 1) / total) * 100}%` }}
@@ -794,20 +794,20 @@ function FlashcardModeDialog({
             <button
               data-testid="flashcard-mode-card"
               onClick={() => setFlipped(!flipped)}
-              className="flex h-48 w-full items-center justify-center rounded-xl border-2 bg-white transition-all hover:shadow-md"
+              className="flex h-48 w-full items-center justify-center rounded-xl border-2 bg-card transition-all hover:shadow-md"
             >
               {!flipped ? (
                 <div data-testid="flashcard-mode-front" className="text-center">
-                  <p className="text-5xl font-bold text-gray-900">{card.hanzi}</p>
-                  <p className="mt-3 flex items-center justify-center gap-1 text-xs text-gray-400">
+                  <p className="text-5xl font-bold text-foreground">{card.hanzi}</p>
+                  <p className="mt-3 flex items-center justify-center gap-1 text-xs text-muted-foreground/70">
                     <Eye className="h-3.5 w-3.5" />
                     Tap to reveal
                   </p>
                 </div>
               ) : (
                 <div data-testid="flashcard-mode-back" className="text-center">
-                  <p className="text-lg font-medium text-gray-900">{card.pinyin}</p>
-                  <p className="mt-1 text-sm text-gray-600">{card.english}</p>
+                  <p className="text-lg font-medium text-foreground">{card.pinyin}</p>
+                  <p className="mt-1 text-sm text-muted-foreground">{card.english}</p>
                 </div>
               )}
             </button>

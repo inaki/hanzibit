@@ -34,7 +34,7 @@ export function MobileNav() {
   return (
     <nav
       data-testid="mobile-nav"
-      className="fixed inset-x-0 bottom-0 z-40 border-t bg-white pb-[env(safe-area-inset-bottom)] lg:hidden"
+      className="fixed inset-x-0 bottom-0 z-40 border-t bg-card pb-[env(safe-area-inset-bottom)] lg:hidden"
     >
       <div className="flex h-14">
         {tabs.map((tab) => {
@@ -46,7 +46,7 @@ export function MobileNav() {
               className={`flex flex-1 flex-col items-center justify-center gap-0.5 text-[10px] font-medium transition-colors ${
                 active
                   ? "text-[var(--cn-orange)]"
-                  : "text-gray-400"
+                  : "text-muted-foreground/70"
               }`}
             >
               <tab.icon className="h-5 w-5" />
