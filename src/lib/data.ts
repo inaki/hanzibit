@@ -446,7 +446,7 @@ export async function getStudyGuideData(
 
   const flashcardMap = new Map<
     string,
-    { id: string; nextReview: string; intervalDays: number; reviewCount: number }
+    { id: string; nextReview: string; intervalDays: number; easeFactor: number; reviewCount: number }
   >();
   const now = new Date().toISOString();
   let dueForReview = 0;

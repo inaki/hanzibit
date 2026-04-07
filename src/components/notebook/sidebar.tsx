@@ -83,16 +83,19 @@ export function NotebookSidebar() {
       <div data-testid="notebook-sidebar-character-of-day" className="rounded-xl border bg-muted/30 p-4">
         <p className="mb-2 text-[10px] text-muted-foreground/70">Character of the day</p>
         <div className="flex items-center gap-3">
-          <div className="flex h-14 w-14 items-center justify-center rounded-lg bg-card shadow-sm">
-            <span data-testid="notebook-sidebar-character" className="text-3xl font-bold text-[var(--cn-orange)]">
-              {charOfDay?.simplified ?? "..."}
+          <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-lg bg-card shadow-sm">
+            <span data-testid="notebook-sidebar-character" className="text-3xl font-bold leading-none text-[var(--cn-orange)]">
+              {charOfDay ? charOfDay.simplified[0] : "…"}
             </span>
           </div>
-          <div>
-            <p data-testid="notebook-sidebar-character-pinyin" className="font-medium text-foreground">
+          <div className="min-w-0">
+            <p data-testid="notebook-sidebar-character-simplified" className="font-semibold text-foreground">
+              {charOfDay?.simplified ?? ""}
+            </p>
+            <p data-testid="notebook-sidebar-character-pinyin" className="text-xs text-foreground/70">
               {charOfDay?.pinyin ?? ""}
             </p>
-            <p data-testid="notebook-sidebar-character-meaning" className="text-xs text-muted-foreground">
+            <p data-testid="notebook-sidebar-character-meaning" className="truncate text-xs text-muted-foreground">
               {charOfDay?.english ?? ""}
             </p>
           </div>

@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { BookOpen, Github } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -17,10 +17,13 @@ export default function SignInPage() {
   const [loading, setLoading] = useState(false);
 
   // Redirect to notebook if already logged in
-  if (session && !isPending) {
-    router.replace("/notebook");
-    return null;
-  }
+  useEffect(() => {
+    if (session && !isPending) {
+      router.replace("/notebook");
+    }
+  }, [session, isPending, router]);
+
+  if (session && !isPending) return null;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

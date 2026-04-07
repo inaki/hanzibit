@@ -137,12 +137,13 @@ export function DashboardView() {
           <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground/70">Character of the day</p>
           <div className="flex items-center gap-4">
             <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-xl bg-[var(--cn-orange-light)]">
-              <span className="text-4xl font-bold text-[var(--cn-orange)]">
-                {charOfDay?.simplified ?? "—"}
+              <span className="text-4xl font-bold leading-none text-[var(--cn-orange)]">
+                {charOfDay ? charOfDay.simplified[0] : "—"}
               </span>
             </div>
             <div>
-              <p className="font-semibold text-foreground">{charOfDay?.pinyin ?? ""}</p>
+              <p className="font-semibold text-foreground">{charOfDay?.simplified ?? ""}</p>
+              <p className="text-sm text-foreground/70">{charOfDay?.pinyin ?? ""}</p>
               <p className="text-sm text-muted-foreground">{charOfDay?.english ?? ""}</p>
             </div>
           </div>

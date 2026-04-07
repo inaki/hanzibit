@@ -1,4 +1,5 @@
 import { betterAuth } from "better-auth";
+import { bearer } from "better-auth/plugins";
 import { getPool } from "./db";
 
 function getTrustedOrigins() {
@@ -31,6 +32,7 @@ function getTrustedOrigins() {
 export const auth = betterAuth({
   database: getPool(),
   trustedOrigins: getTrustedOrigins(),
+  plugins: [bearer()],
   emailAndPassword: {
     enabled: true,
   },

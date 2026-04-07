@@ -13,6 +13,7 @@ import {
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuLabel,
+  DropdownMenuGroup,
 } from "@/components/ui/dropdown-menu";
 import { SettingsDialog } from "./settings-dialog";
 import { useSettings } from "./settings-context";
@@ -189,19 +190,21 @@ export function NotebookNav() {
             </Avatar>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-52">
-            <DropdownMenuLabel className="font-normal">
-              <p className="font-medium text-foreground">{displayName || "Account"}</p>
-              {userEmail && <p className="truncate text-xs text-muted-foreground/70">{userEmail}</p>}
-            </DropdownMenuLabel>
+            <DropdownMenuGroup>
+              <DropdownMenuLabel className="font-normal">
+                <p className="font-medium text-foreground">{displayName || "Account"}</p>
+                {userEmail && <p className="truncate text-xs text-muted-foreground/70">{userEmail}</p>}
+              </DropdownMenuLabel>
+            </DropdownMenuGroup>
             <DropdownMenuSeparator />
-            <DropdownMenuItem onSelect={toggleDarkMode} className="cursor-pointer justify-between">
+            <DropdownMenuItem onClick={toggleDarkMode} className="cursor-pointer justify-between">
               <span className="flex items-center gap-2">
                 {isDark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
                 {isDark ? "Light mode" : "Dark mode"}
               </span>
             </DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem onSelect={handleSignOut} variant="destructive" className="cursor-pointer">
+            <DropdownMenuItem onClick={handleSignOut} variant="destructive" className="cursor-pointer">
               <LogOut className="h-4 w-4" />
               Sign out
             </DropdownMenuItem>
