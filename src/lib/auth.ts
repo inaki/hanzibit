@@ -1,6 +1,7 @@
 import { betterAuth } from "better-auth";
 import { bearer } from "better-auth/plugins";
 import { getPool } from "./db";
+import { sendPasswordResetEmail } from "./email";
 
 function getTrustedOrigins() {
   const candidates = [
@@ -35,6 +36,13 @@ export const auth = betterAuth({
   plugins: [bearer()],
   emailAndPassword: {
     enabled: true,
+    sendResetPassword: async ({ user, url }) => {
+      void sendPasswordResetEmail({
+        email: user.email,
+        name: user.name,
+        resetUrl: url,
+      });
+    },
   },
   socialProviders: {
     github: {

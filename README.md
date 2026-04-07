@@ -137,6 +137,8 @@ The seed script creates a full demo dataset: 5 journal entries with highlights a
 | `GITHUB_CLIENT_SECRET` | No | GitHub OAuth app client secret |
 | `GOOGLE_CLIENT_ID` | No | Google OAuth client ID |
 | `GOOGLE_CLIENT_SECRET` | No | Google OAuth client secret |
+| `RESEND_API_KEY` | No | Resend API key for password reset emails |
+| `AUTH_EMAIL_FROM` | No | From address for password reset emails |
 
 ---
 

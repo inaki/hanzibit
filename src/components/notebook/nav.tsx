@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect, useTransition } from "react";
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 import { BookOpen, Search, Settings, Moon, Sun, LogOut } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
@@ -17,7 +17,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { SettingsDialog } from "./settings-dialog";
 import { useSettings } from "./settings-context";
-import { useSession, signOut } from "@/lib/auth-client";
+import { useSession } from "@/lib/auth-client";
 import { searchHskWordsAction } from "@/lib/actions";
 import type { HskWord } from "@/lib/data";
 
@@ -29,13 +29,13 @@ const navLinks = [
 
 export function NotebookNav() {
   const pathname = usePathname();
-  const router = useRouter();
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<HskWord[]>([]);
   const [showResults, setShowResults] = useState(false);
   const [isPending, startTransition] = useTransition();
   const [isDark, setIsDark] = useState(false);
+  const [signingOut, setSigningOut] = useState(false);
   const searchRef = useRef<HTMLDivElement>(null);
   const { settings } = useSettings();
   const { data: session } = useSession();
@@ -59,8 +59,30 @@ export function NotebookNav() {
   }
 
   async function handleSignOut() {
-    await signOut();
-    router.push("/");
+    if (signingOut) return;
+
+    setSigningOut(true);
+    try {
+      const response = await fetch("/api/auth/sign-out", {
+        method: "POST",
+        credentials: "include",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: "{}",
+      });
+
+      if (!response.ok) {
+        throw new Error(`Sign out failed with status ${response.status}`);
+      }
+
+      window.location.assign("/auth/signin");
+      return;
+    } catch (error) {
+      console.error("Failed to sign out", error);
+    } finally {
+      setSigningOut(false);
+    }
   }
 
   useEffect(() => {
@@ -204,9 +226,15 @@ export function NotebookNav() {
               </span>
             </DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={handleSignOut} variant="destructive" className="cursor-pointer">
+            <DropdownMenuItem
+              render={<button type="button" />}
+              nativeButton
+              onClick={handleSignOut}
+              variant="destructive"
+              className="w-full cursor-pointer"
+            >
               <LogOut className="h-4 w-4" />
-              Sign out
+              {signingOut ? "Signing out..." : "Sign out"}
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { BookOpen, Github } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { signIn, useSession } from "@/lib/auth-client";
+import { requestPasswordReset, signIn, useSession } from "@/lib/auth-client";
 
 export default function SignInPage() {
   const router = useRouter();
@@ -14,7 +14,12 @@ export default function SignInPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [resetEmail, setResetEmail] = useState("");
+  const [resetError, setResetError] = useState("");
+  const [resetMessage, setResetMessage] = useState("");
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [resetLoading, setResetLoading] = useState(false);
 
   // Redirect to notebook if already logged in
   useEffect(() => {
@@ -40,6 +45,31 @@ export default function SignInPage() {
       setError("Something went wrong. Please try again.");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleForgotPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setResetError("");
+    setResetMessage("");
+    setResetLoading(true);
+
+    try {
+      const origin = window.location.origin;
+      const result = await requestPasswordReset({
+        email: resetEmail,
+        redirectTo: `${origin}/auth/reset-password`,
+      });
+
+      if (result.error) {
+        setResetError(result.error.message || "Could not send reset email.");
+      } else {
+        setResetMessage("If that email exists, a reset link has been sent.");
+      }
+    } catch {
+      setResetError("Something went wrong. Please try again.");
+    } finally {
+      setResetLoading(false);
     }
   };
 
@@ -86,9 +116,23 @@ export default function SignInPage() {
               />
             </div>
             <div>
-              <label className="mb-1 block text-sm font-medium text-gray-700">
-                Password
-              </label>
+              <div className="mb-1 flex items-center justify-between">
+                <label className="block text-sm font-medium text-gray-700">
+                  Password
+                </label>
+                <button
+                  type="button"
+                  className="text-sm font-medium text-[var(--cn-orange)] hover:underline"
+                  onClick={() => {
+                    setShowForgotPassword((value) => !value);
+                    setResetError("");
+                    setResetMessage("");
+                    setResetEmail(email);
+                  }}
+                >
+                  Forgot password?
+                </button>
+              </div>
               <Input
                 data-testid="signin-password-input"
                 type="password"
@@ -107,6 +151,47 @@ export default function SignInPage() {
               {loading ? "Signing in..." : "Sign In"}
             </Button>
           </form>
+
+          {showForgotPassword && (
+            <div className="mt-4 rounded-lg border border-amber-200 bg-amber-50 p-4">
+              <h2 className="text-sm font-semibold text-gray-900">
+                Reset your password
+              </h2>
+              <p className="mt-1 text-sm text-gray-600">
+                Enter your email and we&apos;ll send you a reset link.
+              </p>
+
+              {resetError && (
+                <div className="mt-3 rounded-lg bg-red-50 p-3 text-sm text-red-600">
+                  {resetError}
+                </div>
+              )}
+
+              {resetMessage && (
+                <div className="mt-3 rounded-lg bg-green-50 p-3 text-sm text-green-700">
+                  {resetMessage}
+                </div>
+              )}
+
+              <form onSubmit={handleForgotPassword} className="mt-3 space-y-3">
+                <Input
+                  type="email"
+                  value={resetEmail}
+                  onChange={(e) => setResetEmail(e.target.value)}
+                  placeholder="you@example.com"
+                  required
+                />
+                <Button
+                  type="submit"
+                  disabled={resetLoading}
+                  variant="outline"
+                  className="w-full"
+                >
+                  {resetLoading ? "Sending reset link..." : "Send reset link"}
+                </Button>
+              </form>
+            </div>
+          )}
 
           <div className="relative my-6">
             <div className="absolute inset-0 flex items-center">
