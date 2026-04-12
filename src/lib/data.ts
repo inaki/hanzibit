@@ -286,6 +286,8 @@ export async function getTodayActivitySummary(userId: string): Promise<{
   reviewsCompletedToday: number;
   entriesCreatedToday: number;
   guidedResponsesToday: number;
+  reviewedWordLabelsToday: string[];
+  guidedResponseSourceRefsToday: string[];
   latestGuidedResponseToday: {
     id: string;
     title_zh: string;
@@ -294,9 +296,10 @@ export async function getTodayActivitySummary(userId: string): Promise<{
     source_ref: string | null;
     source_word_simplified: string | null;
     source_word_pinyin: string | null;
+    source_word_english: string | null;
   } | null;
 }> {
-  const [reviews, entries, guidedResponses, latestGuidedResponseToday] = await Promise.all([
+  const [reviews, entries, guidedResponses, reviewedWordLabelsToday, guidedResponseSourceRefsToday, latestGuidedResponseToday] = await Promise.all([
     queryOne<{ count: number }>(
       `SELECT COUNT(*)::int AS count
        FROM review_history
@@ -314,9 +317,26 @@ export async function getTodayActivitySummary(userId: string): Promise<{
     queryOne<{ count: number }>(
       `SELECT COUNT(*)::int AS count
        FROM journal_entries
-       WHERE user_id = $1
+      WHERE user_id = $1
          AND created_at >= CURRENT_DATE
          AND source_type = 'study_guide'`,
+      [userId]
+    ),
+    query<{ item_label: string }>(
+      `SELECT DISTINCT item_label
+       FROM review_history
+       WHERE user_id = $1
+         AND reviewed_at >= CURRENT_DATE
+         AND item_type = 'flashcard'`,
+      [userId]
+    ),
+    query<{ source_ref: string }>(
+      `SELECT DISTINCT source_ref
+       FROM journal_entries
+       WHERE user_id = $1
+         AND created_at >= CURRENT_DATE
+         AND source_type = 'study_guide'
+         AND source_ref IS NOT NULL`,
       [userId]
     ),
     queryOne<{
@@ -327,6 +347,7 @@ export async function getTodayActivitySummary(userId: string): Promise<{
       source_ref: string | null;
       source_word_simplified: string | null;
       source_word_pinyin: string | null;
+      source_word_english: string | null;
     }>(
       `SELECT
          journal_entries.id,
@@ -335,7 +356,8 @@ export async function getTodayActivitySummary(userId: string): Promise<{
          journal_entries.created_at,
          journal_entries.source_ref,
          hsk_words.simplified AS source_word_simplified,
-         hsk_words.pinyin AS source_word_pinyin
+         hsk_words.pinyin AS source_word_pinyin,
+         hsk_words.english AS source_word_english
        FROM journal_entries
        LEFT JOIN hsk_words
          ON hsk_words.id = CASE
@@ -355,6 +377,8 @@ export async function getTodayActivitySummary(userId: string): Promise<{
     reviewsCompletedToday: reviews?.count ?? 0,
     entriesCreatedToday: entries?.count ?? 0,
     guidedResponsesToday: guidedResponses?.count ?? 0,
+    reviewedWordLabelsToday: reviewedWordLabelsToday.map((row) => row.item_label),
+    guidedResponseSourceRefsToday: guidedResponseSourceRefsToday.map((row) => row.source_ref),
     latestGuidedResponseToday: latestGuidedResponseToday ?? null,
   };
 }

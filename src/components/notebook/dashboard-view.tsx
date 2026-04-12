@@ -43,13 +43,16 @@ export function DashboardView() {
   const [loadedLevel, setLoadedLevel] = useState<number | null>(null);
   const loading = loadedLevel !== settings.hskLevel;
   const latestStudyHref =
-    !loading && dailyPractice?.latestGuidedResponseToday?.sourceRef
-      ? `/notebook/lessons?level=${settings.hskLevel}&wordId=${encodeURIComponent(dailyPractice.latestGuidedResponseToday.sourceRef)}`
+    !loading && dailyPractice?.recommendedStudyWord?.id
+      ? `/notebook/lessons?level=${settings.hskLevel}&wordId=${encodeURIComponent(String(dailyPractice.recommendedStudyWord.id))}`
       : `/notebook/lessons?level=${settings.hskLevel}`;
-  const dueFlashcardsHref = "/notebook/flashcards?mode=due";
+  const dueFlashcardsHref =
+    !loading && dailyPractice?.recommendedStudyWord?.simplified
+      ? `/notebook/flashcards?mode=due&focus=${encodeURIComponent(dailyPractice.recommendedStudyWord.simplified)}&wordId=${encodeURIComponent(String(dailyPractice.recommendedStudyWord.id))}&level=${settings.hskLevel}`
+      : "/notebook/flashcards?mode=due";
   const journalDraftHref =
     !loading && dailyPractice
-      ? `/notebook?new=1&draftTitleZh=${encodeURIComponent("今日练习")}&draftTitleEn=${encodeURIComponent("Daily practice")}&draftUnit=${encodeURIComponent(`HSK ${settings.hskLevel} Daily Practice`)}&draftLevel=${settings.hskLevel}&draftContentZh=${encodeURIComponent(dailyPractice.latestGuidedResponseToday?.sourceWordSimplified ?? "")}&draftPrompt=${encodeURIComponent(dailyPractice.writingPromptBody)}&draftTargetWord=${encodeURIComponent(dailyPractice.latestGuidedResponseToday?.sourceWordSimplified ?? "")}${dailyPractice.latestGuidedResponseToday?.sourceRef ? `&draftSourceType=study_guide&draftSourceRef=${encodeURIComponent(dailyPractice.latestGuidedResponseToday.sourceRef)}` : ""}`
+      ? `/notebook?new=1&draftTitleZh=${encodeURIComponent("今日练习")}&draftTitleEn=${encodeURIComponent("Daily practice")}&draftUnit=${encodeURIComponent(`HSK ${settings.hskLevel} Daily Practice`)}&draftLevel=${settings.hskLevel}&draftContentZh=${encodeURIComponent(dailyPractice.recommendedStudyWord?.simplified ?? "")}&draftPrompt=${encodeURIComponent(dailyPractice.writingPromptBody)}&draftTargetWord=${encodeURIComponent(dailyPractice.recommendedStudyWord?.simplified ?? "")}${dailyPractice.recommendedStudyWord?.id ? `&draftSourceType=study_guide&draftSourceRef=${encodeURIComponent(String(dailyPractice.recommendedStudyWord.id))}` : ""}`
       : "/notebook";
   const missingStepActionHref = (key: "review" | "study" | "write") => {
     if (key === "review") return dueFlashcardsHref;
@@ -60,12 +63,44 @@ export function DashboardView() {
   const missingStepActionLabel = (key: "review" | "study" | "write") => {
     if (key === "review") return "Open flashcards";
     if (key === "study") {
-      return !loading && dailyPractice?.latestGuidedResponseToday?.sourceRef
+      return !loading && dailyPractice?.recommendedStudyWord?.id
         ? "Open related study item"
         : "Open study guide";
     }
     return "Open journal";
   };
+  const focusWordPriorityStepKey =
+    !loading && dailyPractice?.recommendedStudyWord && dailyPractice.focusWordProgress
+      ? !dailyPractice.focusWordProgress.reviewedToday
+        ? "review"
+        : !dailyPractice.focusWordProgress.studiedToday
+          ? "study"
+          : !dailyPractice.focusWordProgress.wroteToday
+            ? "write"
+            : null
+      : null;
+  const priorityStepKey =
+    focusWordPriorityStepKey ??
+    dailyPractice?.missingSteps[0]?.key ??
+    (dailyPractice?.stepPattern.weakestStep && dailyPractice && !dailyPractice.loopCompleted
+      ? dailyPractice.stepPattern.weakestStep
+      : null);
+  const priorityActionHref = priorityStepKey ? missingStepActionHref(priorityStepKey) : null;
+  const priorityActionLabel = priorityStepKey
+    ? focusWordPriorityStepKey && dailyPractice?.recommendedStudyWord?.simplified
+      ? priorityStepKey === "review"
+        ? `Finish reviewing ${dailyPractice.recommendedStudyWord.simplified}`
+        : priorityStepKey === "study"
+          ? `Finish studying ${dailyPractice.recommendedStudyWord.simplified}`
+          : `Finish writing with ${dailyPractice.recommendedStudyWord.simplified}`
+      : priorityStepKey === "review"
+        ? "Focus on review"
+        : priorityStepKey === "study"
+          ? `Focus on ${dailyPractice?.recommendedStudyWord?.simplified ?? "study"}`
+          : dailyPractice?.recommendedStudyWord?.simplified
+            ? `Write with ${dailyPractice.recommendedStudyWord.simplified}`
+            : "Focus on writing"
+    : null;
   const practiceStepOrder = getPracticeStepOrder(dailyPractice);
 
   useEffect(() => {
@@ -131,6 +166,33 @@ export function DashboardView() {
               </p>
               {!loading && dailyPractice && (
                 <div className="mt-1 space-y-1">
+                  {dailyPractice.recommendedStudyWord && (
+                    <div className="space-y-2">
+                      <div className="inline-flex items-center gap-2 rounded-full bg-background px-2.5 py-1 text-xs text-foreground shadow-sm">
+                        <span className="font-semibold text-[var(--cn-orange)]">
+                          {dailyPractice.recommendedStudyWord.simplified}
+                        </span>
+                        <span className="text-muted-foreground">
+                          {dailyPractice.recommendedStudyWord.pinyin}
+                        </span>
+                        {dailyPractice.recommendedStudyWord.english && (
+                          <span className="text-muted-foreground/80">
+                            {dailyPractice.recommendedStudyWord.english}
+                          </span>
+                        )}
+                      </div>
+                      {dailyPractice.focusWordProgress && (
+                        <div className="flex flex-wrap items-center gap-2 text-[11px]">
+                          <span className="font-medium text-foreground/80">
+                            Today with {dailyPractice.recommendedStudyWord.simplified}:
+                          </span>
+                          <FocusWordStepBadge done={dailyPractice.focusWordProgress.reviewedToday} label="Review" />
+                          <FocusWordStepBadge done={dailyPractice.focusWordProgress.studiedToday} label="Study" />
+                          <FocusWordStepBadge done={dailyPractice.focusWordProgress.wroteToday} label="Write" />
+                        </div>
+                      )}
+                    </div>
+                  )}
                   <p className="text-xs text-muted-foreground">
                     7-day pattern: review {dailyPractice.stepPattern.reviewCompletedDays}/7, study {dailyPractice.stepPattern.studyCompletedDays}/7, write {dailyPractice.stepPattern.writeCompletedDays}/7.
                   </p>
@@ -143,6 +205,22 @@ export function DashboardView() {
                     <p className="text-xs text-amber-700">
                       {dailyPractice.stepPatternInsight.weakestMessage}
                     </p>
+                  )}
+                  {!dailyPractice.loopCompleted && priorityActionHref && priorityActionLabel && (
+                    <Link
+                      href={priorityActionHref}
+                      className="mt-2 inline-flex items-center rounded-full border border-[var(--cn-orange)]/30 bg-[var(--cn-orange-light)] px-3 py-1 text-xs font-medium text-[var(--cn-orange)] transition-colors hover:bg-[var(--cn-orange-light)]/80 lg:hidden"
+                    >
+                      {priorityActionLabel} now →
+                    </Link>
+                  )}
+                  {!dailyPractice.loopCompleted && priorityActionHref && priorityActionLabel && (
+                    <Link
+                      href={priorityActionHref}
+                      className="hidden items-center rounded-full bg-[var(--cn-orange)] px-3 py-1 text-xs font-medium text-white transition-colors hover:bg-[var(--cn-orange-dark)] lg:inline-flex"
+                    >
+                      {priorityActionLabel} →
+                    </Link>
                   )}
                 </div>
               )}
@@ -225,6 +303,15 @@ export function DashboardView() {
                   (stepKey === "study" && !dailyPractice.studyCompleted) ||
                   (stepKey === "write" && !dailyPractice.writeCompleted))
               }
+              focusDone={
+                !loading && dailyPractice?.recommendedStudyWord
+                  ? stepKey === "review"
+                    ? dailyPractice.focusWordProgress?.reviewedToday ?? false
+                    : stepKey === "study"
+                      ? dailyPractice.focusWordProgress?.studiedToday ?? false
+                      : dailyPractice.focusWordProgress?.wroteToday ?? false
+                  : null
+              }
               stepLabel={`${index + 1}. ${stepKey === "review" ? "Review" : stepKey === "study" ? "Study" : "Write"}`}
             >
               {stepKey === "review" ? (
@@ -241,9 +328,11 @@ export function DashboardView() {
                   <p className="mt-1 text-sm text-muted-foreground">
                     {loading || !dailyPractice
                       ? "Checking due cards..."
-                      : dailyPractice.dueCount > 0
-                        ? "due flashcards waiting for you"
-                        : "no due cards right now"}
+                      : dailyPractice.focusWordProgress?.reviewedToday && dailyPractice.recommendedStudyWord
+                        ? `You already reviewed ${dailyPractice.recommendedStudyWord.simplified} today.`
+                        : dailyPractice.dueCount > 0
+                          ? "due flashcards waiting for you"
+                          : "no due cards right now"}
                   </p>
                   <Link href={dueFlashcardsHref} className="mt-3 block text-xs font-medium text-[var(--cn-orange)] hover:underline">
                     Open due reviews →
@@ -262,7 +351,9 @@ export function DashboardView() {
                     <p className="text-sm text-foreground/85">
                       {loading || !dailyPractice
                         ? "Preparing your study focus..."
-                        : dailyPractice.studyFocus}
+                        : dailyPractice.focusWordProgress?.studiedToday && dailyPractice.recommendedStudyWord
+                          ? `You already studied ${dailyPractice.recommendedStudyWord.simplified} in context today.`
+                          : dailyPractice.studyFocus}
                     </p>
                   </div>
                   <Link
@@ -290,9 +381,11 @@ export function DashboardView() {
                   </p>
                   {!loading && dailyPractice && (
                     <p className="mt-2 text-xs text-emerald-700">
-                      {dailyPractice.guidedResponsesToday > 0
-                        ? `You already completed ${dailyPractice.guidedResponsesToday} guided response${dailyPractice.guidedResponsesToday === 1 ? "" : "s"} today.`
-                        : "No guided study response yet today."}
+                      {dailyPractice.focusWordProgress?.wroteToday && dailyPractice.recommendedStudyWord
+                        ? `You already wrote with ${dailyPractice.recommendedStudyWord.simplified} today.`
+                        : dailyPractice.guidedResponsesToday > 0
+                          ? `You already completed ${dailyPractice.guidedResponsesToday} guided response${dailyPractice.guidedResponsesToday === 1 ? "" : "s"} today.`
+                          : "No guided study response yet today."}
                     </p>
                   )}
                   {!loading && dailyPractice?.latestGuidedResponseToday ? (
@@ -468,11 +561,13 @@ function PracticeCard({
   children,
   done,
   emphasized,
+  focusDone,
   stepLabel,
 }: {
   children: React.ReactNode;
   done: boolean;
   emphasized?: boolean;
+  focusDone?: boolean | null;
   stepLabel: string;
 }) {
   return (
@@ -485,19 +580,33 @@ function PracticeCard({
             : "border-border bg-muted/40"
       }`}
     >
-      <div className="mb-1 flex items-center justify-between">
+      <div className="mb-1 flex items-center justify-between gap-2">
         <span className="sr-only">{stepLabel}</span>
-        {done ? (
-          <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-2 py-0.5 text-[11px] font-medium text-emerald-700">
-            <CheckCircle2 className="h-3.5 w-3.5" />
-            Done
-          </span>
-        ) : (
-          <span className="inline-flex items-center gap-1 rounded-full bg-background/80 px-2 py-0.5 text-[11px] font-medium text-muted-foreground">
-            <Circle className="h-3.5 w-3.5" />
-            Pending
-          </span>
-        )}
+        <div className="ml-auto flex flex-wrap items-center justify-end gap-1.5">
+          {done ? (
+            <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-2 py-0.5 text-[11px] font-medium text-emerald-700">
+              <CheckCircle2 className="h-3.5 w-3.5" />
+              Done
+            </span>
+          ) : (
+            <span className="inline-flex items-center gap-1 rounded-full bg-background/80 px-2 py-0.5 text-[11px] font-medium text-muted-foreground">
+              <Circle className="h-3.5 w-3.5" />
+              Pending
+            </span>
+          )}
+          {focusDone !== null && focusDone !== undefined && (
+            <span
+              className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-medium ${
+                focusDone
+                  ? "bg-[var(--cn-orange-light)] text-[var(--cn-orange)]"
+                  : "bg-background/80 text-muted-foreground"
+              }`}
+            >
+              {focusDone ? <CheckCircle2 className="h-3.5 w-3.5" /> : <Circle className="h-3.5 w-3.5" />}
+              Focus word
+            </span>
+          )}
+        </div>
       </div>
       {children}
     </div>
@@ -508,6 +617,21 @@ function PriorityBadge() {
   return (
     <span className="mb-2 inline-flex items-center rounded-full bg-[var(--cn-orange)] px-2 py-0.5 text-[11px] font-medium text-white">
       Priority
+    </span>
+  );
+}
+
+function FocusWordStepBadge({ done, label }: { done: boolean; label: string }) {
+  return (
+    <span
+      className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 ${
+        done
+          ? "bg-emerald-100 text-emerald-700"
+          : "bg-background text-muted-foreground"
+      }`}
+    >
+      {done ? <CheckCircle2 className="h-3 w-3" /> : <Circle className="h-3 w-3" />}
+      {label}
     </span>
   );
 }

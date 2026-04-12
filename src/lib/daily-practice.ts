@@ -39,6 +39,19 @@ export interface DailyPracticePlan {
   writingPromptTitle: string;
   writingPromptBody: string;
   studyFocus: string;
+  recommendedStudyWord: {
+    id: number;
+    simplified: string;
+    pinyin: string;
+    english: string;
+  } | null;
+  focusWordProgress: {
+    reviewedToday: boolean;
+    studiedToday: boolean;
+    wroteToday: boolean;
+    completedSteps: number;
+    totalSteps: number;
+  } | null;
   latestGuidedResponseToday: {
     id: string;
     titleZh: string;
@@ -56,6 +69,8 @@ export function buildDailyPracticePlan(input: {
   reviewsCompletedToday: number;
   entriesCreatedToday: number;
   guidedResponsesToday: number;
+  reviewedWordLabelsToday: string[];
+  guidedResponseSourceRefsToday: string[];
   latestGuidedResponseToday: {
     id: string;
     title_zh: string;
@@ -64,6 +79,7 @@ export function buildDailyPracticePlan(input: {
     source_ref: string | null;
     source_word_simplified: string | null;
     source_word_pinyin: string | null;
+    source_word_english: string | null;
   } | null;
   characterOfTheDay: HskWord | null;
   weeklyCompletedLoops: number;
@@ -80,6 +96,8 @@ export function buildDailyPracticePlan(input: {
     reviewsCompletedToday,
     entriesCreatedToday,
     guidedResponsesToday,
+    reviewedWordLabelsToday,
+    guidedResponseSourceRefsToday,
     latestGuidedResponseToday,
     characterOfTheDay,
     weeklyCompletedLoops,
@@ -90,8 +108,23 @@ export function buildDailyPracticePlan(input: {
 
   const latestStudyWord = latestGuidedResponseToday?.source_word_simplified;
   const latestStudyWordPinyin = latestGuidedResponseToday?.source_word_pinyin;
-  const focusWord = characterOfTheDay?.simplified ?? "今天";
-  const focusMeaning = characterOfTheDay?.english ?? "today";
+  const recommendedStudyWord = latestGuidedResponseToday?.source_ref && latestStudyWord
+    ? {
+        id: Number.parseInt(latestGuidedResponseToday.source_ref, 10),
+        simplified: latestStudyWord,
+        pinyin: latestStudyWordPinyin ?? "",
+        english: latestGuidedResponseToday.source_word_english ?? "",
+      }
+    : characterOfTheDay
+      ? {
+          id: characterOfTheDay.id,
+          simplified: characterOfTheDay.simplified,
+          pinyin: characterOfTheDay.pinyin,
+          english: characterOfTheDay.english,
+        }
+      : null;
+  const focusWord = recommendedStudyWord?.simplified ?? characterOfTheDay?.simplified ?? "今天";
+  const focusMeaning = recommendedStudyWord?.english || characterOfTheDay?.english || "today";
   const studyFocus = latestStudyWord
     ? latestStudyWordPinyin
       ? `Return to ${latestStudyWord} (${latestStudyWordPinyin}) and review it again in context.`
@@ -111,6 +144,21 @@ export function buildDailyPracticePlan(input: {
   const reviewCompleted = dueCount === 0 || reviewsCompletedToday > 0;
   const studyCompleted = guidedResponsesToday > 0;
   const writeCompleted = guidedResponsesToday > 0 || entriesCreatedToday > 0;
+  const reviewedFocusWordToday = recommendedStudyWord
+    ? reviewedWordLabelsToday.includes(recommendedStudyWord.simplified)
+    : false;
+  const linkedFocusWordToday = recommendedStudyWord
+    ? guidedResponseSourceRefsToday.includes(String(recommendedStudyWord.id))
+    : false;
+  const focusWordProgress = recommendedStudyWord
+    ? {
+        reviewedToday: reviewedFocusWordToday,
+        studiedToday: linkedFocusWordToday,
+        wroteToday: linkedFocusWordToday,
+        completedSteps: [reviewedFocusWordToday, linkedFocusWordToday, linkedFocusWordToday].filter(Boolean).length,
+        totalSteps: 3,
+      }
+    : null;
   const completedSteps = [reviewCompleted, studyCompleted, writeCompleted].filter(Boolean).length;
   const totalSteps = 3;
   const recentCompletionDateSet = new Set(recentLoopCompletionDates);
@@ -161,9 +209,9 @@ export function buildDailyPracticePlan(input: {
   if (!studyCompleted) {
     missingSteps.push({
       key: "study",
-      label: latestStudyWord ? `Revisit ${latestStudyWord}` : "Open the study guide",
-      hint: latestStudyWord
-        ? "Return to the related study item and read it again in context."
+      label: recommendedStudyWord ? `Revisit ${recommendedStudyWord.simplified}` : "Open the study guide",
+      hint: recommendedStudyWord
+        ? `Review ${recommendedStudyWord.simplified} (${recommendedStudyWord.pinyin}${recommendedStudyWord.english ? `, ${recommendedStudyWord.english}` : ""}) in context before you write.`
         : "Read one short input block before writing.",
     });
   }
@@ -171,8 +219,10 @@ export function buildDailyPracticePlan(input: {
   if (!writeCompleted) {
     missingSteps.push({
       key: "write",
-      label: "Write a guided response",
-      hint: "Use the journal prompt to turn input into output.",
+      label: recommendedStudyWord ? `Write with ${recommendedStudyWord.simplified}` : "Write a guided response",
+      hint: recommendedStudyWord
+        ? `Use ${recommendedStudyWord.simplified}${recommendedStudyWord.english ? ` (${recommendedStudyWord.english})` : ""} in a short guided response.`
+        : "Use the journal prompt to turn input into output.",
     });
   }
 
@@ -206,6 +256,8 @@ export function buildDailyPracticePlan(input: {
     writingPromptTitle,
     writingPromptBody,
     studyFocus,
+    recommendedStudyWord,
+    focusWordProgress,
     latestGuidedResponseToday: latestGuidedResponseToday
       ? {
           id: latestGuidedResponseToday.id,

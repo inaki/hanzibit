@@ -4,22 +4,16 @@ A living doc. Update this whenever stopping work so the next session starts with
 
 ---
 
-## Last Session Summary (Session 2 — 2026-04-02)
+## Last Session Summary (Phase 1 Learner Loop Checkpoint — 2026-04-12)
 
 Completed:
 
-1. **Dashboard page** — new `/notebook/dashboard` route with `DashboardView` client component. Shows streak, journal entries, reviews, HSK progress bar, flashcard count, character of the day, and "Needs Attention" weak cards section. Pulled streak/weak cards out of the sidebar entirely.
-2. **Sidebar refactor** — stripped to navigation + character of the day only. Added "Dashboard" as first nav item (`LayoutDashboard` icon). Removed all progress/streak state.
-3. **Avatar dropdown** — clicking the nav avatar opens a dropdown with user name/email, dark mode toggle, and sign-out. Sign-out calls `signOut()` then redirects to `/`.
-4. **Dark mode** — full implementation: CSS variables already in `globals.css`; added toggle via `.dark` class on `<html>` persisted to `localStorage`; replaced all hardcoded `bg-white`, `bg-gray-*`, `text-gray-*`, `border-gray-*` with semantic tokens (`bg-card`, `bg-muted`, `text-foreground`, `text-muted-foreground`, `border-border`) across all 15 notebook components.
-5. **Azure TTS** — `/api/tts/route.ts` using `zh-CN-XiaoxiaoNeural` with SSML at 0.85 rate, 24h cache. Requires `AZURE_TTS_KEY` + `AZURE_TTS_REGION` env vars.
-
-Previous session (Session 1):
-
-1. **Paywall** — `src/lib/gates.ts`, gated `reviewFlashcard` action (5/day free limit), gated HSK levels 2–6 in study guide, `UpgradePrompt` component
-2. **Streaks** — `getUserStreak()` in `data.ts`, today-grace logic
-3. **Weak item surfacing** — `getWeakFlashcards()` in `data.ts`, "struggling" badge in study guide, due queue ordered by ease_factor ASC
-4. Sidebar scrolling fix, Dialog max-height fix
+1. **Phase 1 learner loop** — dashboard now acts as a real `Today’s Practice` surface with adaptive Review/Study/Write ordering, weekly loop history, weakest-step diagnosis, direct recovery CTAs, and exact-word progress tracking.
+2. **Guided writing flow** — Study Guide and dashboard can open prefilled guided journal drafts with source metadata, study prompts, and target-word context instead of blank composition.
+3. **Journal UX hardening** — inline annotation markup is validated before save, blocked when malformed, and reinforced server-side; guided drafts now show revision guidance and lightweight journal feedback.
+4. **Study Guide upgrade** — no longer only a word browser; now includes input passages, response prompts, guided-response history, and a conditional today-loop panel for the active focus word with direct Review/Write/Open-response actions.
+5. **Focused review continuity** — flashcards due mode can open on today’s focus word and now links back to the related study item, guided writing flow, and latest linked response.
+6. **Mobile alignment doc** — `docs/mobile-team-update-phase-1.md` now tracks the current learner-loop behavior the Flutter app should mirror.
 
 ---
 
@@ -52,11 +46,21 @@ Previous session (Session 1):
   - One-click annotate from the interlinear gloss view
 - [x] **Automated tests** — added lightweight test coverage for review gating, HSK access policy, streak logic, and `sm2`
 - [x] **Mobile API normalization** — main mobile routes now share response/validation helpers and have more consistent error handling
-- [ ] **Guided daily learning loop** — begin first `Today` flow:
+- [x] **Guided daily learning loop** — first V1 is now shipped:
   - due reviews
-  - one suggested writing task
-  - quick completion summary
-- [ ] **Study guide as input surface** — start evolving `lessons/study-guide` beyond vocabulary browsing with short graded text and handoff into journal writing
+  - one suggested study item
+  - one guided writing task
+  - completion summary, weekly history, and adaptive recovery
+- [x] **Study guide as input surface** — first V1 is now shipped:
+  - short graded text
+  - handoff into journal writing
+  - guided-response history
+  - focus-word loop visibility
+- [ ] **Phase 1 checkpoint cleanup** — remaining standalone-learner gaps:
+  - ownership/security audit on remaining core mutations
+  - weak-card/progress test coverage
+  - richer annotation helper UI
+  - deeper input-content system beyond lightweight generated blocks
 - [ ] **HSK Skool comparison follow-up** — see `app-comparison.md` for the full breakdown. Main gap remaining: audio is still on-demand TTS, not pre-generated. Consider the Phase 2 audio script from `implementation-guide.md` once the `AZURE_TTS_KEY` is confirmed working
 - [x] **Mobile handoff doc for Phase 1 learner-loop changes** — see `mobile-team-update-phase-1.md`. Keep this updated as web-side learner-loop behavior changes so the Flutter project can mirror the same workflows.
 

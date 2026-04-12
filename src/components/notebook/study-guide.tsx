@@ -23,9 +23,10 @@ import { UpgradePrompt } from "@/components/upgrade-prompt";
 import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
 import { useSettings } from "./settings-context";
-import { getStudyGuideDataAction, createFlashcardForWord } from "@/lib/actions";
+import { getStudyGuideDataAction, createFlashcardForWord, getDailyPracticeAction } from "@/lib/actions";
 import type { StudyGuideData, StudyGuideWord } from "@/lib/data";
 import { buildStudyGuideReading } from "@/lib/study-guide-content";
+import type { DailyPracticePlan } from "@/lib/daily-practice";
 
 type Filter = "all" | "encountered" | "not-yet" | "flashcard";
 
@@ -40,6 +41,7 @@ export function StudyGuide({ initialData }: StudyGuideProps) {
   const [selectedIndex, setSelectedIndex] = useState<number>(0);
   const [filter, setFilter] = useState<Filter>("all");
   const [search, setSearch] = useState("");
+  const [dailyPractice, setDailyPractice] = useState<DailyPracticePlan | null>(null);
   const [isPending, startTransition] = useTransition();
 
   // Sync with settings HSK level on mount only
@@ -75,6 +77,19 @@ export function StudyGuide({ initialData }: StudyGuideProps) {
       setSelectedIndex(idx);
     }
   }, [data.words, searchParams]);
+
+  useEffect(() => {
+    let cancelled = false;
+    getDailyPracticeAction(data.level).then((plan) => {
+      if (!cancelled) {
+        setDailyPractice(plan);
+      }
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [data.level]);
 
   function handleLevelChange(level: number) {
     startTransition(async () => {
@@ -275,7 +290,7 @@ export function StudyGuide({ initialData }: StudyGuideProps) {
         {/* Detail panel */}
         <div className="flex-1">
           {selected ? (
-            <WordDetail item={selected} level={data.level} />
+            <WordDetail item={selected} level={data.level} dailyPractice={dailyPractice} />
           ) : (
             <div data-testid="study-guide-empty" className="flex h-64 items-center justify-center rounded-xl border bg-card text-sm text-muted-foreground/70">
               Select a word to view details
@@ -311,7 +326,15 @@ export function StudyGuide({ initialData }: StudyGuideProps) {
 
 // --- Word Detail ---
 
-function WordDetail({ item, level }: { item: StudyGuideWord; level: number }) {
+function WordDetail({
+  item,
+  level,
+  dailyPractice,
+}: {
+  item: StudyGuideWord;
+  level: number;
+  dailyPractice: DailyPracticePlan | null;
+}) {
   const [creating, setCreating] = useState(false);
   const [created, setCreated] = useState(false);
   const reading = buildStudyGuideReading(item, level);
@@ -320,6 +343,12 @@ function WordDetail({ item, level }: { item: StudyGuideWord; level: number }) {
   const draftUnit = `HSK ${level} Study Guide`;
   const draftContentZh = `${item.word.simplified}`;
   const journalHref = `/notebook?new=1&draftTitleZh=${encodeURIComponent(draftTitleZh)}&draftTitleEn=${encodeURIComponent(draftTitleEn)}&draftUnit=${encodeURIComponent(draftUnit)}&draftLevel=${level}&draftContentZh=${encodeURIComponent(draftContentZh)}&draftPrompt=${encodeURIComponent(reading.responsePrompt)}&draftSourceZh=${encodeURIComponent(reading.passageZh)}&draftSourceEn=${encodeURIComponent(reading.passageEn)}&draftTargetWord=${encodeURIComponent(item.word.simplified)}&draftSourceType=study_guide&draftSourceRef=${encodeURIComponent(String(item.word.id))}`;
+  const reviewHref = `/notebook/flashcards?mode=due&focus=${encodeURIComponent(item.word.simplified)}&wordId=${encodeURIComponent(String(item.word.id))}&level=${encodeURIComponent(String(level))}`;
+  const isFocusWord = dailyPractice?.recommendedStudyWord?.id === item.word.id;
+  const latestFocusResponseHref =
+    dailyPractice?.latestGuidedResponseToday?.sourceRef === String(item.word.id)
+      ? `/notebook?entry=${dailyPractice.latestGuidedResponseToday.id}`
+      : null;
 
   // Reset created state when word changes
   useEffect(() => {
@@ -375,7 +404,59 @@ function WordDetail({ item, level }: { item: StudyGuideWord; level: number }) {
             In flashcards
           </span>
         ) : null}
+        {isFocusWord ? (
+          <span className="inline-flex items-center gap-1 rounded-full bg-[var(--cn-orange-light)] px-3 py-1 text-xs font-medium text-[var(--cn-orange)]">
+            <CheckCircle2 className="h-3.5 w-3.5" />
+            Today&apos;s focus
+          </span>
+        ) : null}
       </div>
+
+      {isFocusWord && dailyPractice?.focusWordProgress ? (
+        <div className="mb-6 rounded-lg border border-[var(--cn-orange)]/20 bg-[var(--cn-orange-light)]/60 p-4">
+          <p className="text-xs font-semibold uppercase tracking-wider text-[var(--cn-orange)]">
+            Today&apos;s Loop
+          </p>
+          <p className="mt-1 text-sm text-foreground/85">
+            This study item is the current focus word in today&apos;s learner loop.
+          </p>
+          <div className="mt-3 flex flex-wrap items-center gap-2">
+            <FocusStatusPill done={dailyPractice.focusWordProgress.reviewedToday} label="Review" />
+            <FocusStatusPill done={dailyPractice.focusWordProgress.studiedToday} label="Study" />
+            <FocusStatusPill done={dailyPractice.focusWordProgress.wroteToday} label="Write" />
+          </div>
+          {(!dailyPractice.focusWordProgress.reviewedToday || !dailyPractice.focusWordProgress.wroteToday) && (
+            <div className="mt-4 flex flex-wrap items-center gap-3">
+              {!dailyPractice.focusWordProgress.reviewedToday && (
+                <Link
+                  href={reviewHref}
+                  className="inline-flex items-center rounded-full bg-[var(--cn-orange)] px-3 py-1 text-xs font-medium text-white transition-colors hover:bg-[var(--cn-orange-dark)]"
+                >
+                  Review now →
+                </Link>
+              )}
+              {!dailyPractice.focusWordProgress.wroteToday && (
+                <Link
+                  href={journalHref}
+                  className="inline-flex items-center rounded-full border border-[var(--cn-orange)]/30 bg-white px-3 py-1 text-xs font-medium text-[var(--cn-orange)] transition-colors hover:bg-white/80"
+                >
+                  Write now →
+                </Link>
+              )}
+            </div>
+          )}
+          {dailyPractice.focusWordProgress.wroteToday && latestFocusResponseHref && (
+            <div className="mt-4">
+              <Link
+                href={latestFocusResponseHref}
+                className="inline-flex items-center text-xs font-medium text-[var(--cn-orange)] hover:underline"
+              >
+                Open latest response →
+              </Link>
+            </div>
+          )}
+        </div>
+      ) : null}
 
       {/* Journal entries */}
       {item.journalEntries.length > 0 && (
@@ -518,5 +599,20 @@ function WordDetail({ item, level }: { item: StudyGuideWord; level: number }) {
         </p>
       )}
     </div>
+  );
+}
+
+function FocusStatusPill({ done, label }: { done: boolean; label: string }) {
+  return (
+    <span
+      className={`inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-medium ${
+        done
+          ? "bg-emerald-100 text-emerald-700"
+          : "bg-background text-muted-foreground"
+      }`}
+    >
+      {done ? <CheckCircle2 className="h-3.5 w-3.5" /> : <Circle className="h-3.5 w-3.5" />}
+      {label}
+    </span>
   );
 }

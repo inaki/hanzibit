@@ -89,6 +89,10 @@ Partially started.
 
 ## Workstream B: Journal Annotation UX
 
+### Status
+
+Substantially shipped for Phase 1.
+
 ### Goal
 
 Reduce friction around the app’s most distinctive learning mechanic:
@@ -109,15 +113,29 @@ When creating or editing an entry:
 - highlight likely errors before save
 - give plain-language guidance
 
+Current status:
+- live markup validation is implemented
+- invalid markup blocks submit
+- server-side save also rejects malformed markup
+- guided draft context now renders outside the textarea instead of being dumped into raw content
+
 #### B2. Annotation helper UI
 
 - insert annotation blocks without manual typing
 - allow quick wrapping of selected text
 - optionally suggest pinyin/meaning from dictionary data
 
+Current status:
+- still open
+- the main remaining Phase 1 opportunity is helper insertion, not validation
+
 #### B3. One-click promotion from gloss to notebook annotation
 
 - let users move from interlinear gloss exploration into saved annotations or flashcards
+
+Current status:
+- partially supported through guided study-to-journal and review handoff
+- not yet implemented as a dedicated gloss-to-annotation action
 
 ### Main repo touchpoints
 
@@ -137,6 +155,10 @@ When creating or editing an entry:
 ---
 
 ## Workstream C: Guided Daily Learning Loop
+
+### Status
+
+Shipped as a strong Phase 1 foundation.
 
 ### Goal
 
@@ -164,19 +186,38 @@ Ship a first version of a **Today** or **Daily Practice** experience.
 - a single entry point for today’s work
 - simple checklist or sequence UI
 
+Current status:
+- implemented on the dashboard as `Today’s Practice`
+- includes completion counts, loop summary, weekly count, 7-day history, and missing-step guidance
+
 #### C2. Due review first
 
 - reuse existing flashcard due queue
 - show completion state clearly
 
+Current status:
+- implemented
+- Review routes directly into due mode
+- due mode can focus today’s recommended word
+- focused review panel links back to study, writing, and latest response when available
+
 #### C3. Prompted output
 
 - generate one writing task tied to HSK level, study guide topic, or recent vocabulary
+
+Current status:
+- implemented
+- dashboard opens a guided journal draft
+- writing prompts are tied to the recommended study word and its gloss when available
 
 #### C4. Completion summary
 
 - show what was done today
 - show streak/progress effect
+
+Current status:
+- implemented
+- includes loop completion, step pattern, weakest-step diagnosis, exact-word progress, and adaptive recovery CTAs
 
 ### Main repo touchpoints
 
@@ -191,9 +232,17 @@ Ship a first version of a **Today** or **Daily Practice** experience.
 - learner can open the app and start a useful session immediately
 - the product makes the daily next step obvious
 
+Current assessment:
+- functionally met for Phase 1 V1
+- remaining work is refinement, parity, and persistence polish rather than first-shipping the loop
+
 ---
 
 ## Workstream D: Comprehensible Input Surface
+
+### Status
+
+Shipped as a first Phase 1 version.
 
 ### Goal
 
@@ -215,14 +264,27 @@ Improve the study guide so it starts becoming a better input surface, even befor
 - short dialogues
 - small contextual examples
 
+Current status:
+- implemented in the Study Guide detail view as short input passages
+
 #### D2. Integrated glossing and review extraction
 
 - click text to inspect words
 - save interesting items to review
 
+Current status:
+- partially implemented
+- Study Guide links into flashcards and the learner loop cleanly
+- richer extraction from input content remains open
+
 #### D3. Input-to-output handoff
 
 - after reading, prompt the learner to retell or respond in the journal
+
+Current status:
+- implemented
+- Study Guide can open guided journal drafts
+- Study Guide also shows linked guided responses back on the same word
 
 ### Main repo touchpoints
 
@@ -236,9 +298,17 @@ Improve the study guide so it starts becoming a better input surface, even befor
 - the study guide is no longer only a vocabulary browser
 - learners can move from reading into writing without leaving the flow
 
+Current assessment:
+- met for Phase 1 V1
+- the next step is richer content depth, not basic loop wiring
+
 ---
 
 ## Workstream E: Feedback Foundations
+
+### Status
+
+Started and partly shipped.
 
 ### Goal
 
@@ -255,6 +325,11 @@ Do not build a full teacher or AI feedback system yet. Build the product foundat
 - malformed annotation detection
 - simple structural guidance
 - prompts to revise unclear or incomplete entries
+
+Current status:
+- implemented
+- guided drafts now show live revision guidance and journal feedback heuristics
+- composer checks include target-word usage and simple output expectations
 
 #### E2. Correction-ready data model direction
 

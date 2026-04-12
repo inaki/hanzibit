@@ -240,6 +240,8 @@ export async function getDailyPracticeAction(level: number): Promise<DailyPracti
       reviewsCompletedToday: activity.reviewsCompletedToday,
       entriesCreatedToday: activity.entriesCreatedToday,
       guidedResponsesToday: activity.guidedResponsesToday,
+      reviewedWordLabelsToday: activity.reviewedWordLabelsToday,
+      guidedResponseSourceRefsToday: activity.guidedResponseSourceRefsToday,
       latestGuidedResponseToday: activity.latestGuidedResponseToday,
       characterOfTheDay,
       weeklyCompletedLoops,

@@ -16,6 +16,8 @@ test("builds a first-entry prompt when the learner has not written today", () =>
     reviewsCompletedToday: 1,
     entriesCreatedToday: 0,
     guidedResponsesToday: 0,
+    reviewedWordLabelsToday: ["好"],
+    guidedResponseSourceRefsToday: [],
     latestGuidedResponseToday: null,
     weeklyCompletedLoops: 2,
     recentLoopCompletionDates: [isoDateDaysAgo(4), isoDateDaysAgo(1)],
@@ -45,6 +47,12 @@ test("builds a first-entry prompt when the learner has not written today", () =>
   assert.equal(plan.weeklyCompletedLoops, 2);
   assert.equal(plan.recentLoopHistory.length, 7);
   assert.equal(plan.recentLoopHistory.filter((day) => day.completed).length, 2);
+  assert.equal(plan.recommendedStudyWord?.simplified, "好");
+  assert.equal(plan.recommendedStudyWord?.id, 1);
+  assert.equal(plan.focusWordProgress?.reviewedToday, true);
+  assert.equal(plan.focusWordProgress?.studiedToday, false);
+  assert.equal(plan.focusWordProgress?.wroteToday, false);
+  assert.equal(plan.focusWordProgress?.completedSteps, 1);
   assert.equal(plan.stepPattern.reviewCompletedDays, 5);
   assert.equal(plan.stepPattern.strongestStep, "review");
   assert.equal(plan.stepPattern.weakestStep, "write");
@@ -55,6 +63,8 @@ test("builds a first-entry prompt when the learner has not written today", () =>
     plan.missingSteps.map((step) => step.key),
     ["study", "write"]
   );
+  assert.equal(plan.missingSteps[0]?.label, "Revisit 好");
+  assert.match(plan.missingSteps[1]?.label ?? "", /Write with 好/);
   assert.match(plan.writingPromptBody, /好/);
 });
 
@@ -65,6 +75,8 @@ test("builds a variation prompt when the learner already wrote today", () => {
     reviewsCompletedToday: 5,
     entriesCreatedToday: 1,
     guidedResponsesToday: 1,
+    reviewedWordLabelsToday: ["吃", "看"],
+    guidedResponseSourceRefsToday: ["42"],
     latestGuidedResponseToday: {
       id: "entry-1",
       title_zh: "练习：今天",
@@ -73,6 +85,7 @@ test("builds a variation prompt when the learner already wrote today", () => {
       source_ref: "42",
       source_word_simplified: "吃",
       source_word_pinyin: "chi1",
+      source_word_english: "to eat",
     },
     weeklyCompletedLoops: 6,
     recentLoopCompletionDates: [
@@ -102,6 +115,13 @@ test("builds a variation prompt when the learner already wrote today", () => {
   assert.equal(plan.weeklyCompletedLoops, 6);
   assert.equal(plan.recentLoopHistory.filter((day) => day.completed).length, 6);
   assert.equal(plan.recentLoopHistory.at(-1)?.isToday, true);
+  assert.equal(plan.recommendedStudyWord?.simplified, "吃");
+  assert.equal(plan.recommendedStudyWord?.id, 42);
+  assert.equal(plan.recommendedStudyWord?.english, "to eat");
+  assert.equal(plan.focusWordProgress?.reviewedToday, true);
+  assert.equal(plan.focusWordProgress?.studiedToday, true);
+  assert.equal(plan.focusWordProgress?.wroteToday, true);
+  assert.equal(plan.focusWordProgress?.completedSteps, 3);
   assert.equal(plan.stepPattern.strongestStep, "review");
   assert.equal(plan.stepPattern.weakestStep, "study");
   assert.equal(plan.stepPatternInsight.strongestLabel, "Review");

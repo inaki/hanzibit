@@ -1,15 +1,20 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import Link from "next/link";
+import { useEffect, useState, useTransition } from "react";
 import type { Flashcard } from "@/lib/data";
-import { RotateCcw, ChevronLeft, ChevronRight, Eye, Volume2 } from "lucide-react";
-import { reviewFlashcard } from "@/lib/actions";
+import { RotateCcw, ChevronLeft, ChevronRight, Eye, Volume2, Target, BookText } from "lucide-react";
+import { getDailyPracticeAction, reviewFlashcard } from "@/lib/actions";
 import { UpgradePrompt } from "@/components/upgrade-prompt";
+import type { DailyPracticePlan } from "@/lib/daily-practice";
 
 interface FlashcardPracticeProps {
   cards: Flashcard[];
   dueCount?: number;
   initialFilter?: FilterTab;
+  initialFocusFront?: string;
+  initialFocusWordId?: string;
+  initialFocusLevel?: string;
 }
 
 type FilterTab = "all" | "due";
@@ -25,22 +30,60 @@ export function FlashcardPractice({
   cards,
   dueCount = 0,
   initialFilter = "all",
+  initialFocusFront = "",
+  initialFocusWordId = "",
+  initialFocusLevel = "",
 }: FlashcardPracticeProps) {
-  const [currentIndex, setCurrentIndex] = useState(0);
+  const focusFront = initialFocusFront.trim();
+  const initialNow = new Date().toISOString();
+  const initialCards = initialFilter === "due"
+    ? cards.filter((c) => c.next_review <= initialNow)
+    : cards;
+  const initialFocusedIndex = focusFront
+    ? initialCards.findIndex((card) => card.front === focusFront)
+    : -1;
+  const [currentIndex, setCurrentIndex] = useState(initialFocusedIndex >= 0 ? initialFocusedIndex : 0);
   const [flipped, setFlipped] = useState(false);
   const [mode, setMode] = useState<"practice" | "browse">("practice");
   const [filter, setFilter] = useState<FilterTab>(initialFilter);
   const [reviewFeedback, setReviewFeedback] = useState<string | null>(null);
   const [limitReached, setLimitReached] = useState(false);
   const [isPending, startTransition] = useTransition();
+  const [dailyPractice, setDailyPractice] = useState<DailyPracticePlan | null>(null);
 
   const now = new Date().toISOString();
   const filteredCards = filter === "due"
     ? cards.filter((c) => c.next_review <= now)
     : cards;
-
   const currentCard = filteredCards[currentIndex];
   const total = filteredCards.length;
+  const focusStudyHref =
+    initialFocusWordId && initialFocusLevel
+      ? `/notebook/lessons?level=${encodeURIComponent(initialFocusLevel)}&wordId=${encodeURIComponent(initialFocusWordId)}`
+      : null;
+  const focusJournalHref =
+    focusFront && initialFocusLevel
+      ? `/notebook?new=1&draftTitleZh=${encodeURIComponent(`练习：${focusFront}`)}&draftTitleEn=${encodeURIComponent(`Practice: ${currentCard?.back ?? focusFront}`)}&draftUnit=${encodeURIComponent(`HSK ${initialFocusLevel} Daily Practice`)}&draftLevel=${encodeURIComponent(initialFocusLevel)}&draftContentZh=${encodeURIComponent(focusFront)}&draftPrompt=${encodeURIComponent(`Use ${focusFront} in 2-3 original sentences. Reuse it in a natural context and annotate at least one useful phrase.`)}&draftTargetWord=${encodeURIComponent(focusFront)}${initialFocusWordId ? `&draftSourceType=study_guide&draftSourceRef=${encodeURIComponent(initialFocusWordId)}` : ""}`
+      : null;
+  const focusLatestResponseHref =
+    initialFocusWordId && dailyPractice?.latestGuidedResponseToday?.sourceRef === initialFocusWordId
+      ? `/notebook?entry=${dailyPractice.latestGuidedResponseToday.id}`
+      : null;
+
+  useEffect(() => {
+    let cancelled = false;
+    if (!initialFocusLevel) return;
+
+    getDailyPracticeAction(Number.parseInt(initialFocusLevel, 10)).then((plan) => {
+      if (!cancelled) {
+        setDailyPractice(plan);
+      }
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [initialFocusLevel]);
 
   function next() {
     setFlipped(false);
@@ -79,7 +122,13 @@ export function FlashcardPractice({
   // Reset index when filter changes
   function handleFilterChange(tab: FilterTab) {
     setFilter(tab);
-    setCurrentIndex(0);
+    const nextCards = tab === "due"
+      ? cards.filter((c) => c.next_review <= now)
+      : cards;
+    const nextFocusIndex = focusFront
+      ? nextCards.findIndex((card) => card.front === focusFront)
+      : -1;
+    setCurrentIndex(nextFocusIndex >= 0 ? nextFocusIndex : 0);
     setFlipped(false);
     setReviewFeedback(null);
   }
@@ -101,6 +150,12 @@ export function FlashcardPractice({
             {total} {filter === "due" ? "due " : ""}cards
             {total > 0 && ` · Card ${currentIndex + 1} of ${total}`}
           </p>
+          {focusFront && filteredCards.some((card) => card.front === focusFront) && (
+            <p className="mt-2 inline-flex items-center gap-1 rounded-full bg-[var(--cn-orange-light)] px-2.5 py-1 text-xs font-medium text-[var(--cn-orange)]">
+              <Target className="h-3.5 w-3.5" />
+              Focus word: {focusFront}
+            </p>
+          )}
         </div>
         <div data-testid="flashcards-mode-toggle" className="flex rounded-lg border bg-card p-0.5">
           <button
@@ -159,6 +214,46 @@ export function FlashcardPractice({
           </div>
         ) : (
           <>
+            {focusFront && currentCard?.front === focusFront && (
+              <div className="mb-4 rounded-xl border border-[var(--cn-orange)]/30 bg-[var(--cn-orange-light)] px-4 py-3">
+                <p className="text-xs font-semibold uppercase tracking-wide text-[var(--cn-orange)]">
+                  Today&apos;s Focus
+                </p>
+                <p className="mt-1 text-sm text-foreground">
+                  Review this card first, then continue through the rest of your due queue.
+                </p>
+                <div className="mt-3 flex flex-wrap items-center gap-3">
+                  {focusStudyHref && (
+                    <Link
+                      href={focusStudyHref}
+                      className="inline-flex items-center gap-1 text-xs font-medium text-[var(--cn-orange)] hover:underline"
+                    >
+                      <BookText className="h-3.5 w-3.5" />
+                      Back to study item
+                    </Link>
+                  )}
+                  {focusJournalHref && (
+                    <Link
+                      href={focusJournalHref}
+                      className="inline-flex items-center gap-1 text-xs font-medium text-[var(--cn-orange)] hover:underline"
+                    >
+                      <Target className="h-3.5 w-3.5" />
+                      Write with this word
+                    </Link>
+                  )}
+                  {focusLatestResponseHref && (
+                    <Link
+                      href={focusLatestResponseHref}
+                      className="inline-flex items-center gap-1 text-xs font-medium text-[var(--cn-orange)] hover:underline"
+                    >
+                      <BookText className="h-3.5 w-3.5" />
+                      Open latest response
+                    </Link>
+                  )}
+                </div>
+              </div>
+            )}
+
             {/* Flashcard */}
             <button
               data-testid="flashcard-card"
