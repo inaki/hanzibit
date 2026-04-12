@@ -4,14 +4,20 @@ import { FlashcardPractice } from "@/components/notebook/flashcard-practice";
 
 export const dynamic = "force-dynamic";
 
-export default async function FlashcardsPage() {
+export default async function FlashcardsPage({
+  searchParams,
+}: {
+  searchParams?: Promise<{ mode?: string }>;
+}) {
+  const params = searchParams ? await searchParams : undefined;
   const userId = await getAuthUserId();
   const flashcards = await getFlashcards(userId);
   const dueCount = await getDueFlashcardCount(userId);
+  const initialFilter = params?.mode === "due" ? "due" : "all";
 
   return (
     <div data-testid="flashcards-page" className="h-full overflow-auto p-6 pb-20 md:p-10 lg:pb-10">
-      <FlashcardPractice cards={flashcards} dueCount={dueCount} />
+      <FlashcardPractice cards={flashcards} dueCount={dueCount} initialFilter={initialFilter} />
     </div>
   );
 }

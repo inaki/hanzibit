@@ -56,6 +56,12 @@ export type Token =
   | { type: "text"; text: string }
   | { type: "break" };
 
+export interface MarkupValidationIssue {
+  index: number;
+  message: string;
+  snippet: string;
+}
+
 /**
  * Parse content with inline vocabulary markup.
  * Format: [汉字|pīnyīn|english] or [汉字|pin1yin1|english] (tone numbers auto-convert)
@@ -85,6 +91,64 @@ export function parseInput(text: string): Token[] {
   }
 
   return tokens;
+}
+
+export function validateInlineMarkup(text: string): MarkupValidationIssue[] {
+  const issues: MarkupValidationIssue[] = [];
+  let cursor = 0;
+
+  while (cursor < text.length) {
+    const openIndex = text.indexOf("[", cursor);
+    const closeIndex = text.indexOf("]", cursor);
+
+    if (closeIndex !== -1 && (openIndex === -1 || closeIndex < openIndex)) {
+      issues.push({
+        index: closeIndex,
+        message: "Closing ] appears without a matching opening [.",
+        snippet: text.slice(Math.max(0, closeIndex - 12), Math.min(text.length, closeIndex + 13)),
+      });
+      cursor = closeIndex + 1;
+      continue;
+    }
+
+    if (openIndex === -1) break;
+
+    const matchingClose = text.indexOf("]", openIndex + 1);
+    if (matchingClose === -1) {
+      issues.push({
+        index: openIndex,
+        message: "Opening [ is missing a closing ].",
+        snippet: text.slice(openIndex, Math.min(text.length, openIndex + 24)),
+      });
+      break;
+    }
+
+    const body = text.slice(openIndex + 1, matchingClose);
+    const parts = body.split("|");
+
+    if (parts.length !== 3) {
+      issues.push({
+        index: openIndex,
+        message: "Annotations must use exactly three parts: [汉字|pinyin|meaning].",
+        snippet: text.slice(openIndex, matchingClose + 1),
+      });
+      cursor = matchingClose + 1;
+      continue;
+    }
+
+    const [hanzi, pinyin, english] = parts.map((part) => part.trim());
+    if (!hanzi || !pinyin || !english) {
+      issues.push({
+        index: openIndex,
+        message: "Each annotation needs hanzi, pinyin, and meaning.",
+        snippet: text.slice(openIndex, matchingClose + 1),
+      });
+    }
+
+    cursor = matchingClose + 1;
+  }
+
+  return issues;
 }
 
 function pushTextTokens(tokens: Token[], text: string) {

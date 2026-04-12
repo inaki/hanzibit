@@ -37,11 +37,13 @@ function GlossPunctuation({ char }: { char: string }) {
 }
 
 export function InterlinearGlossView({ paragraphs }: InterlinearGlossViewProps) {
+  const safeParagraphs = Array.isArray(paragraphs) ? paragraphs : [];
+
   return (
     <div data-testid="interlinear-gloss-view" className="space-y-6">
-      {paragraphs.map((segments, pi) => (
+      {safeParagraphs.map((segments, pi) => (
         <div key={pi} className="flex flex-wrap items-end">
-          {segments.map((seg, si) => {
+          {(Array.isArray(segments) ? segments : []).map((seg, si) => {
             if (seg.type === "break") return <div key={si} className="w-full" />;
             if (seg.type === "punctuation") return <GlossPunctuation key={si} char={seg.char} />;
             return <GlossWord key={si} segment={seg} />;

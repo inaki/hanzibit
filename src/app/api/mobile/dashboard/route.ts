@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest } from "next/server";
 import { getMobileUserId } from "@/lib/mobile-auth";
 import {
   getUserStreak,
@@ -7,10 +7,11 @@ import {
   getWeakFlashcards,
   getCharacterOfTheDay,
 } from "@/lib/data";
+import { mobileError, mobileOk } from "@/lib/mobile-api";
 
 export async function GET(req: NextRequest) {
   const userId = await getMobileUserId(req);
-  if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  if (!userId) return mobileError("Unauthorized", 401);
 
   const level = parseInt(req.nextUrl.searchParams.get("level") ?? "1", 10);
 
@@ -22,5 +23,5 @@ export async function GET(req: NextRequest) {
     getCharacterOfTheDay(level),
   ]);
 
-  return NextResponse.json({ streak, progress, stats, weakCards, characterOfTheDay });
+  return mobileOk({ streak, progress, stats, weakCards, characterOfTheDay });
 }

@@ -50,11 +50,15 @@ Previous session (Session 1):
 - [ ] **Journal annotation UX** — the inline markup `[汉字|pinyin|meaning]` is the app's core differentiator. Ideas to make it easier:
   - Auto-suggest CEDICT matches as the user types inside `[` brackets
   - One-click annotate from the interlinear gloss view
-- [ ] **Automated tests** — the stateful logic we just added is untested. Priority functions to cover:
-  - `canReviewFlashcard` (count boundary, pro bypass)
-  - `getUserStreak` (0 case, today-grace, reset after gap)
-  - `getWeakFlashcards` (ease threshold, review_count filter)
+- [x] **Automated tests** — added lightweight test coverage for review gating, HSK access policy, streak logic, and `sm2`
+- [x] **Mobile API normalization** — main mobile routes now share response/validation helpers and have more consistent error handling
+- [ ] **Guided daily learning loop** — begin first `Today` flow:
+  - due reviews
+  - one suggested writing task
+  - quick completion summary
+- [ ] **Study guide as input surface** — start evolving `lessons/study-guide` beyond vocabulary browsing with short graded text and handoff into journal writing
 - [ ] **HSK Skool comparison follow-up** — see `app-comparison.md` for the full breakdown. Main gap remaining: audio is still on-demand TTS, not pre-generated. Consider the Phase 2 audio script from `implementation-guide.md` once the `AZURE_TTS_KEY` is confirmed working
+- [x] **Mobile handoff doc for Phase 1 learner-loop changes** — see `mobile-team-update-phase-1.md`. Keep this updated as web-side learner-loop behavior changes so the Flutter project can mirror the same workflows.
 
 ---
 

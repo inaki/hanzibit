@@ -1,11 +1,12 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest } from "next/server";
 import { getMobileUserId } from "@/lib/mobile-auth";
 import { getVocabulary } from "@/lib/data";
+import { mobileError, mobileOk } from "@/lib/mobile-api";
 
 export async function GET(req: NextRequest) {
   const userId = await getMobileUserId(req);
-  if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  if (!userId) return mobileError("Unauthorized", 401);
 
   const vocabulary = await getVocabulary(userId);
-  return NextResponse.json(vocabulary);
+  return mobileOk(vocabulary);
 }

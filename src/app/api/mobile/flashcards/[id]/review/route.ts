@@ -1,18 +1,19 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest } from "next/server";
 import { getMobileUserId } from "@/lib/mobile-auth";
 import { updateFlashcardReview, addReviewRecord } from "@/lib/data";
 import { canReviewFlashcard } from "@/lib/gates";
 import { sm2 } from "@/lib/sm2";
 import { queryOne } from "@/lib/db";
+import { mobileError, mobileOk } from "@/lib/mobile-api";
 
 type Params = { params: Promise<{ id: string }> };
 
 export async function POST(req: NextRequest, { params }: Params) {
   const userId = await getMobileUserId(req);
-  if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  if (!userId) return mobileError("Unauthorized", 401);
 
   if (!(await canReviewFlashcard(userId))) {
-    return NextResponse.json({ error: "DAILY_LIMIT_REACHED" }, { status: 403 });
+    return mobileError("DAILY_LIMIT_REACHED", 403);
   }
 
   const { id } = await params;
@@ -20,7 +21,7 @@ export async function POST(req: NextRequest, { params }: Params) {
   const quality = parseInt(body.quality ?? "3", 10);
 
   if (quality < 1 || quality > 5) {
-    return NextResponse.json({ error: "quality must be between 1 and 5" }, { status: 400 });
+    return mobileError("quality must be between 1 and 5", 400);
   }
 
   const card = await queryOne<{
@@ -32,11 +33,8 @@ export async function POST(req: NextRequest, { params }: Params) {
     review_count: number;
   }>("SELECT * FROM flashcards WHERE id = $1", [id]);
 
-  console.log("[review] card.user_id:", card?.user_id);
-  console.log("[review] session userId:", userId);
-
   if (!card || card.user_id !== userId) {
-    return NextResponse.json({ error: "Not found" }, { status: 404 });
+    return mobileError("Not found", 404);
   }
 
   const { interval, easeFactor } = sm2(
@@ -49,5 +47,5 @@ export async function POST(req: NextRequest, { params }: Params) {
   await updateFlashcardReview(card.id, interval, easeFactor);
   await addReviewRecord(userId, "flashcard", card.id, card.front, quality);
 
-  return NextResponse.json({ interval, ease_factor: easeFactor });
+  return mobileOk({ interval, ease_factor: easeFactor });
 }

@@ -1,6 +1,7 @@
 import { randomUUID } from "crypto";
 import { query, queryOne, execute } from "./db";
 import { parseInput, extractHanziTokens } from "./parse-tokens";
+import { calculateUserStreak } from "./streak";
 
 export interface JournalEntry {
   id: string;
@@ -11,6 +12,9 @@ export interface JournalEntry {
   hsk_level: number;
   content_zh: string;
   bookmarked: number;
+  source_type: string | null;
+  source_ref: string | null;
+  source_prompt: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -89,6 +93,12 @@ export interface StudyGuideWord {
   word: HskWord;
   encountered: boolean;
   journalEntries: { id: string; title_zh: string; title_en: string }[];
+  guidedResponses: {
+    id: string;
+    title_zh: string;
+    title_en: string;
+    created_at: string;
+  }[];
   flashcard: {
     id: string;
     nextReview: string;
@@ -272,6 +282,184 @@ export async function getDueFlashcardCount(userId: string): Promise<number> {
   return row?.count ?? 0;
 }
 
+export async function getTodayActivitySummary(userId: string): Promise<{
+  reviewsCompletedToday: number;
+  entriesCreatedToday: number;
+  guidedResponsesToday: number;
+  latestGuidedResponseToday: {
+    id: string;
+    title_zh: string;
+    title_en: string;
+    created_at: string;
+    source_ref: string | null;
+    source_word_simplified: string | null;
+    source_word_pinyin: string | null;
+  } | null;
+}> {
+  const [reviews, entries, guidedResponses, latestGuidedResponseToday] = await Promise.all([
+    queryOne<{ count: number }>(
+      `SELECT COUNT(*)::int AS count
+       FROM review_history
+       WHERE user_id = $1
+         AND reviewed_at >= CURRENT_DATE`,
+      [userId]
+    ),
+    queryOne<{ count: number }>(
+      `SELECT COUNT(*)::int AS count
+       FROM journal_entries
+       WHERE user_id = $1
+         AND created_at >= CURRENT_DATE`,
+      [userId]
+    ),
+    queryOne<{ count: number }>(
+      `SELECT COUNT(*)::int AS count
+       FROM journal_entries
+       WHERE user_id = $1
+         AND created_at >= CURRENT_DATE
+         AND source_type = 'study_guide'`,
+      [userId]
+    ),
+    queryOne<{
+      id: string;
+      title_zh: string;
+      title_en: string;
+      created_at: string;
+      source_ref: string | null;
+      source_word_simplified: string | null;
+      source_word_pinyin: string | null;
+    }>(
+      `SELECT
+         journal_entries.id,
+         journal_entries.title_zh,
+         journal_entries.title_en,
+         journal_entries.created_at,
+         journal_entries.source_ref,
+         hsk_words.simplified AS source_word_simplified,
+         hsk_words.pinyin AS source_word_pinyin
+       FROM journal_entries
+       LEFT JOIN hsk_words
+         ON hsk_words.id = CASE
+           WHEN journal_entries.source_ref ~ '^[0-9]+$' THEN journal_entries.source_ref::int
+           ELSE NULL
+         END
+       WHERE journal_entries.user_id = $1
+         AND journal_entries.created_at >= CURRENT_DATE
+         AND journal_entries.source_type = 'study_guide'
+       ORDER BY created_at DESC
+       LIMIT 1`,
+      [userId]
+    ),
+  ]);
+
+  return {
+    reviewsCompletedToday: reviews?.count ?? 0,
+    entriesCreatedToday: entries?.count ?? 0,
+    guidedResponsesToday: guidedResponses?.count ?? 0,
+    latestGuidedResponseToday: latestGuidedResponseToday ?? null,
+  };
+}
+
+export async function syncDailyLoopCompletion(
+  userId: string,
+  input: {
+    completed: boolean;
+    reviewCompleted: boolean;
+    studyCompleted: boolean;
+    writeCompleted: boolean;
+  }
+): Promise<void> {
+  await execute(
+    `INSERT INTO daily_loop_completions (
+       id,
+       user_id,
+       completed_on,
+       review_completed,
+       study_completed,
+       write_completed,
+       completed_at
+     )
+     VALUES ($1, $2, CURRENT_DATE, $3, $4, $5, NOW())
+       ON CONFLICT (user_id, completed_on)
+       DO UPDATE SET
+         review_completed = EXCLUDED.review_completed,
+         study_completed = EXCLUDED.study_completed,
+         write_completed = EXCLUDED.write_completed,
+         completed_at = CASE
+           WHEN EXCLUDED.review_completed = 1
+            AND EXCLUDED.study_completed = 1
+            AND EXCLUDED.write_completed = 1
+           THEN NOW()
+           ELSE daily_loop_completions.completed_at
+         END`,
+    [
+      randomUUID(),
+      userId,
+      input.reviewCompleted ? 1 : 0,
+      input.studyCompleted ? 1 : 0,
+      input.writeCompleted ? 1 : 0,
+    ]
+  );
+}
+
+export async function getRecentDailyLoopCompletionCount(
+  userId: string,
+  days = 7
+): Promise<number> {
+  const row = await queryOne<{ count: number }>(
+    `SELECT COUNT(*)::int AS count
+     FROM daily_loop_completions
+     WHERE user_id = $1
+       AND completed_on >= CURRENT_DATE - ($2::int - 1)`,
+    [userId, days]
+  );
+
+  return row?.count ?? 0;
+}
+
+export async function getRecentDailyLoopHistory(
+  userId: string,
+  days = 7
+): Promise<{ completedOn: string }[]> {
+  return query<{ completedOn: string }>(
+    `SELECT completed_on::text AS "completedOn"
+     FROM daily_loop_completions
+     WHERE user_id = $1
+       AND completed_on >= CURRENT_DATE - ($2::int - 1)
+     ORDER BY completed_on ASC`,
+    [userId, days]
+  );
+}
+
+export async function getRecentDailyLoopStepSummary(
+  userId: string,
+  days = 7
+): Promise<{
+  reviewCompletedDays: number;
+  studyCompletedDays: number;
+  writeCompletedDays: number;
+}> {
+  const row = await queryOne<{
+    reviewCompletedDays: number;
+    studyCompletedDays: number;
+    writeCompletedDays: number;
+  }>(
+    `SELECT
+       COALESCE(SUM(review_completed), 0)::int AS "reviewCompletedDays",
+       COALESCE(SUM(study_completed), 0)::int AS "studyCompletedDays",
+       COALESCE(SUM(write_completed), 0)::int AS "writeCompletedDays"
+     FROM daily_loop_completions
+     WHERE user_id = $1
+       AND completed_on >= CURRENT_DATE - ($2::int - 1)`,
+    [userId, days]
+  );
+
+  return {
+    reviewCompletedDays: row?.reviewCompletedDays ?? 0,
+    studyCompletedDays: row?.studyCompletedDays ?? 0,
+    writeCompletedDays: row?.writeCompletedDays ?? 0,
+  };
+}
+
 export async function getUserProgress(
   userId: string,
   level: number
@@ -359,26 +547,7 @@ export async function getUserStreak(userId: string): Promise<number> {
     [userId]
   );
 
-  if (rows.length === 0) return 0;
-
-  const dates = new Set(rows.map((r) => r.active_date));
-  let streak = 0;
-
-  for (let i = 0; i <= 365; i++) {
-    const d = new Date();
-    d.setDate(d.getDate() - i);
-    const key = d.toISOString().slice(0, 10);
-
-    if (dates.has(key)) {
-      streak++;
-    } else if (i === 0) {
-      continue; // today not active yet — check yesterday before breaking
-    } else {
-      break;
-    }
-  }
-
-  return streak;
+  return calculateUserStreak(rows.map((row) => row.active_date));
 }
 
 export async function getWeakFlashcards(userId: string, limit = 5): Promise<Flashcard[]> {
@@ -397,12 +566,26 @@ export async function getStudyGuideData(
   userId: string,
   level: number
 ): Promise<StudyGuideData> {
-  const [hskWords, entries, flashcards, grammarPoints] = await Promise.all([
+  const [hskWords, entries, guidedEntries, flashcards, grammarPoints] = await Promise.all([
     getHskWords(level),
     query<{ id: string; title_zh: string; title_en: string; content_zh: string }>(
       `SELECT id, title_zh, title_en, content_zh
        FROM journal_entries
        WHERE user_id = $1`,
+      [userId]
+    ),
+    query<{
+      id: string;
+      title_zh: string;
+      title_en: string;
+      created_at: string;
+      source_ref: string | null;
+    }>(
+      `SELECT id, title_zh, title_en, created_at, source_ref
+       FROM journal_entries
+       WHERE user_id = $1
+         AND source_type = 'study_guide'
+         AND source_ref IS NOT NULL`,
       [userId]
     ),
     query<{
@@ -428,6 +611,10 @@ export async function getStudyGuideData(
 
   const hskSet = new Set(hskWords.map((word) => word.simplified));
   const wordToEntries = new Map<string, { id: string; title_zh: string; title_en: string }[]>();
+  const guidedResponseMap = new Map<
+    number,
+    { id: string; title_zh: string; title_en: string; created_at: string }[]
+  >();
 
   for (const entry of entries) {
     const tokens = parseInput(entry.content_zh);
@@ -442,6 +629,20 @@ export async function getStudyGuideData(
       list.push({ id: entry.id, title_zh: entry.title_zh, title_en: entry.title_en });
       wordToEntries.set(token.hanzi, list);
     }
+  }
+
+  for (const entry of guidedEntries) {
+    const wordId = Number.parseInt(entry.source_ref ?? "", 10);
+    if (!Number.isInteger(wordId)) continue;
+
+    const list = guidedResponseMap.get(wordId) ?? [];
+    list.push({
+      id: entry.id,
+      title_zh: entry.title_zh,
+      title_en: entry.title_en,
+      created_at: entry.created_at,
+    });
+    guidedResponseMap.set(wordId, list);
   }
 
   const flashcardMap = new Map<
@@ -482,6 +683,7 @@ export async function getStudyGuideData(
       word,
       encountered: isEncountered,
       journalEntries: journalEntries.slice(0, 5),
+      guidedResponses: (guidedResponseMap.get(word.id) ?? []).slice(0, 5),
       flashcard,
     };
   });

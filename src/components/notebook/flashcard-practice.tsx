@@ -9,6 +9,7 @@ import { UpgradePrompt } from "@/components/upgrade-prompt";
 interface FlashcardPracticeProps {
   cards: Flashcard[];
   dueCount?: number;
+  initialFilter?: FilterTab;
 }
 
 type FilterTab = "all" | "due";
@@ -20,11 +21,15 @@ const QUALITY_BUTTONS = [
   { label: "Easy", quality: 5, color: "bg-blue-500 hover:bg-blue-600" },
 ];
 
-export function FlashcardPractice({ cards, dueCount = 0 }: FlashcardPracticeProps) {
+export function FlashcardPractice({
+  cards,
+  dueCount = 0,
+  initialFilter = "all",
+}: FlashcardPracticeProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [flipped, setFlipped] = useState(false);
   const [mode, setMode] = useState<"practice" | "browse">("practice");
-  const [filter, setFilter] = useState<FilterTab>("all");
+  const [filter, setFilter] = useState<FilterTab>(initialFilter);
   const [reviewFeedback, setReviewFeedback] = useState<string | null>(null);
   const [limitReached, setLimitReached] = useState(false);
   const [isPending, startTransition] = useTransition();

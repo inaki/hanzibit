@@ -12,7 +12,10 @@ types.setTypeParser(types.builtins.TIMESTAMPTZ, (value) =>
 declare global {
   var __hanzibitPool: Pool | undefined;
   var __hanzibitSchemaInit: Promise<void> | undefined;
+  var __hanzibitSchemaVersion: number | undefined;
 }
+
+const SCHEMA_VERSION = 4;
 
 const APP_SCHEMA_SQL = `
   CREATE TABLE IF NOT EXISTS "user" (
@@ -185,6 +188,17 @@ const APP_SCHEMA_SQL = `
 
   CREATE INDEX IF NOT EXISTS idx_sub_user ON subscriptions(user_id);
   CREATE INDEX IF NOT EXISTS idx_sub_stripe_customer ON subscriptions(stripe_customer_id);
+
+  CREATE TABLE IF NOT EXISTS daily_loop_completions (
+    id TEXT PRIMARY KEY,
+    user_id TEXT NOT NULL,
+    completed_on DATE NOT NULL,
+    completed_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    UNIQUE(user_id, completed_on)
+  );
+
+  CREATE INDEX IF NOT EXISTS idx_daily_loop_user_date
+    ON daily_loop_completions(user_id, completed_on DESC);
 `;
 
 function getDatabaseUrl(): string {
@@ -207,14 +221,71 @@ export function getPool(): Pool {
   return global.__hanzibitPool;
 }
 
+async function resetPool(): Promise<void> {
+  if (global.__hanzibitPool) {
+    try {
+      await global.__hanzibitPool.end();
+    } catch {
+      // Ignore cleanup failures and recreate the pool anyway.
+    }
+  }
+
+  global.__hanzibitPool = undefined;
+  global.__hanzibitSchemaInit = undefined;
+}
+
+function isRetryableConnectionError(error: unknown): boolean {
+  if (!error || typeof error !== "object") return false;
+
+  const code = "code" in error ? String(error.code) : "";
+  const message = "message" in error ? String(error.message) : "";
+
+  return (
+    code === "ECONNRESET" ||
+    code === "57P01" ||
+    code === "57P02" ||
+    code === "57P03" ||
+    code === "53300" ||
+    message.includes("ECONNRESET") ||
+    message.includes("Connection terminated unexpectedly")
+  );
+}
+
+async function runWithReconnect<T>(fn: () => Promise<T>): Promise<T> {
+  try {
+    return await fn();
+  } catch (error) {
+    if (!isRetryableConnectionError(error)) {
+      throw error;
+    }
+
+    await resetPool();
+    await ensureAppSchema();
+    return fn();
+  }
+}
+
 async function initializeSchema(): Promise<void> {
   const pool = getPool();
   await pool.query(APP_SCHEMA_SQL);
+  await pool.query(`
+    ALTER TABLE journal_entries
+      ADD COLUMN IF NOT EXISTS source_type TEXT,
+      ADD COLUMN IF NOT EXISTS source_ref TEXT,
+      ADD COLUMN IF NOT EXISTS source_prompt TEXT
+  `);
+  await pool.query(`
+    ALTER TABLE daily_loop_completions
+      ADD COLUMN IF NOT EXISTS review_completed INTEGER NOT NULL DEFAULT 0,
+      ADD COLUMN IF NOT EXISTS study_completed INTEGER NOT NULL DEFAULT 0,
+      ADD COLUMN IF NOT EXISTS write_completed INTEGER NOT NULL DEFAULT 0
+  `);
 }
 
 export async function ensureAppSchema(): Promise<void> {
-  if (!global.__hanzibitSchemaInit) {
+  if (!global.__hanzibitSchemaInit || global.__hanzibitSchemaVersion !== SCHEMA_VERSION) {
     global.__hanzibitSchemaInit = initializeSchema();
+    global.__hanzibitSchemaVersion = SCHEMA_VERSION;
   }
   await global.__hanzibitSchemaInit;
 }
@@ -224,7 +295,7 @@ export async function query<T extends QueryResultRow>(
   params: unknown[] = []
 ): Promise<T[]> {
   await ensureAppSchema();
-  const result = await getPool().query<T>(text, params);
+  const result = await runWithReconnect(() => getPool().query<T>(text, params));
   return result.rows;
 }
 
@@ -238,7 +309,7 @@ export async function queryOne<T extends QueryResultRow>(
 
 export async function execute(text: string, params: unknown[] = []): Promise<void> {
   await ensureAppSchema();
-  await getPool().query(text, params);
+  await runWithReconnect(() => getPool().query(text, params));
 }
 
 export async function withTransaction<T>(

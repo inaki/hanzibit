@@ -143,6 +143,11 @@ export function JournalEntryView({
                 · {entry.hsk_level > 0 ? `HSK ${entry.hsk_level}` : "General"}
               </span>
             </p>
+            {entry.source_type === "study_guide" && (
+              <p className="mt-2 text-xs font-medium text-sky-700">
+                Guided response from Study Guide
+              </p>
+            )}
           </div>
           <div className="text-right text-xs">
             <p data-testid="journal-entry-date" className="font-medium text-[var(--cn-orange)]">

@@ -1,10 +1,11 @@
 import { isProUser } from "./subscription";
 import { queryOne } from "./db";
-
-const FREE_DAILY_REVIEW_LIMIT = 5;
+import { canReviewFlashcardFromCount } from "./review-policy";
+import { canAccessHskLevelFromPlan } from "./access-policy";
 
 export async function canReviewFlashcard(userId: string): Promise<boolean> {
-  if (await isProUser(userId)) return true;
+  const pro = await isProUser(userId);
+  if (pro) return true;
 
   const row = await queryOne<{ count: number }>(
     `SELECT COUNT(*)::int AS count
@@ -15,10 +16,9 @@ export async function canReviewFlashcard(userId: string): Promise<boolean> {
     [userId]
   );
 
-  return (row?.count ?? 0) < FREE_DAILY_REVIEW_LIMIT;
+  return canReviewFlashcardFromCount(row?.count ?? 0, pro);
 }
 
 export async function canAccessHskLevel(userId: string, level: number): Promise<boolean> {
-  if (level <= 1) return true;
-  return isProUser(userId);
+  return canAccessHskLevelFromPlan(level, await isProUser(userId));
 }

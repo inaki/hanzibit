@@ -25,7 +25,7 @@ export async function glossEntryAction(
   }
 
   // Compute gloss
-  const result = glossContent(contentZh);
+  const result = await glossContent(contentZh);
 
   // Store in cache (upsert)
   await execute(

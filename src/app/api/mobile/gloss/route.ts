@@ -1,17 +1,16 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest } from "next/server";
 import { getMobileUserId } from "@/lib/mobile-auth";
 import { glossContent } from "@/lib/gloss";
+import { mobileError, mobileOk, requireString } from "@/lib/mobile-api";
 
 export async function POST(req: NextRequest) {
   const userId = await getMobileUserId(req);
-  if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  if (!userId) return mobileError("Unauthorized", 401);
 
   const body = await req.json();
-  const { content } = body;
+  const content = requireString(body.content, "content");
 
-  if (!content || typeof content !== "string") {
-    return NextResponse.json({ error: "content is required" }, { status: 400 });
-  }
+  if (typeof content !== "string") return mobileError(content.error, 400);
 
   const paragraphs = await glossContent(content);
 
@@ -30,5 +29,5 @@ export async function POST(req: NextRequest) {
     })
   );
 
-  return NextResponse.json({ paragraphs: result });
+  return mobileOk({ paragraphs: result });
 }

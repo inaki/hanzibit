@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useTransition, useRef } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import {
   BookOpen,
   Layers,
@@ -12,6 +13,11 @@ import {
   Plus,
   Languages,
   Lock,
+  BookText,
+  PenSquare,
+  Sparkles,
+  CircleHelp,
+  NotebookPen,
 } from "lucide-react";
 import { UpgradePrompt } from "@/components/upgrade-prompt";
 import { Input } from "@/components/ui/input";
@@ -19,6 +25,7 @@ import { Progress } from "@/components/ui/progress";
 import { useSettings } from "./settings-context";
 import { getStudyGuideDataAction, createFlashcardForWord } from "@/lib/actions";
 import type { StudyGuideData, StudyGuideWord } from "@/lib/data";
+import { buildStudyGuideReading } from "@/lib/study-guide-content";
 
 type Filter = "all" | "encountered" | "not-yet" | "flashcard";
 
@@ -28,6 +35,7 @@ interface StudyGuideProps {
 
 export function StudyGuide({ initialData }: StudyGuideProps) {
   const { settings } = useSettings();
+  const searchParams = useSearchParams();
   const [data, setData] = useState(initialData);
   const [selectedIndex, setSelectedIndex] = useState<number>(0);
   const [filter, setFilter] = useState<Filter>("all");
@@ -45,6 +53,28 @@ export function StudyGuide({ initialData }: StudyGuideProps) {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  useEffect(() => {
+    const wordIdFromUrl = searchParams.get("wordId");
+    if (wordIdFromUrl) {
+      const parsedWordId = Number.parseInt(wordIdFromUrl, 10);
+      if (Number.isInteger(parsedWordId)) {
+        const idx = data.words.findIndex((item) => item.word.id === parsedWordId);
+        if (idx >= 0) {
+          setSelectedIndex(idx);
+          return;
+        }
+      }
+    }
+
+    const wordFromUrl = searchParams.get("word");
+    if (!wordFromUrl) return;
+
+    const idx = data.words.findIndex((item) => item.word.simplified === wordFromUrl);
+    if (idx >= 0) {
+      setSelectedIndex(idx);
+    }
+  }, [data.words, searchParams]);
 
   function handleLevelChange(level: number) {
     startTransition(async () => {
@@ -245,7 +275,7 @@ export function StudyGuide({ initialData }: StudyGuideProps) {
         {/* Detail panel */}
         <div className="flex-1">
           {selected ? (
-            <WordDetail item={selected} />
+            <WordDetail item={selected} level={data.level} />
           ) : (
             <div data-testid="study-guide-empty" className="flex h-64 items-center justify-center rounded-xl border bg-card text-sm text-muted-foreground/70">
               Select a word to view details
@@ -281,9 +311,15 @@ export function StudyGuide({ initialData }: StudyGuideProps) {
 
 // --- Word Detail ---
 
-function WordDetail({ item }: { item: StudyGuideWord }) {
+function WordDetail({ item, level }: { item: StudyGuideWord; level: number }) {
   const [creating, setCreating] = useState(false);
   const [created, setCreated] = useState(false);
+  const reading = buildStudyGuideReading(item, level);
+  const draftTitleZh = `练习：${item.word.simplified}`;
+  const draftTitleEn = `Practice: ${item.word.english}`;
+  const draftUnit = `HSK ${level} Study Guide`;
+  const draftContentZh = `${item.word.simplified}`;
+  const journalHref = `/notebook?new=1&draftTitleZh=${encodeURIComponent(draftTitleZh)}&draftTitleEn=${encodeURIComponent(draftTitleEn)}&draftUnit=${encodeURIComponent(draftUnit)}&draftLevel=${level}&draftContentZh=${encodeURIComponent(draftContentZh)}&draftPrompt=${encodeURIComponent(reading.responsePrompt)}&draftSourceZh=${encodeURIComponent(reading.passageZh)}&draftSourceEn=${encodeURIComponent(reading.passageEn)}&draftTargetWord=${encodeURIComponent(item.word.simplified)}&draftSourceType=study_guide&draftSourceRef=${encodeURIComponent(String(item.word.id))}`;
 
   // Reset created state when word changes
   useEffect(() => {
@@ -363,6 +399,76 @@ function WordDetail({ item }: { item: StudyGuideWord }) {
           </div>
         </div>
       )}
+
+      <div className="mb-6">
+        <h4 className="mb-2 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground/70">
+          <NotebookPen className="h-3.5 w-3.5" />
+          Guided Responses
+        </h4>
+        {item.guidedResponses.length === 0 ? (
+          <div className="rounded-lg border border-dashed border-border bg-muted/30 px-4 py-3 text-sm text-muted-foreground">
+            No guided response yet for this study item.
+          </div>
+        ) : (
+          <div className="space-y-2">
+            {item.guidedResponses.map((response) => (
+              <Link
+                key={response.id}
+                href={`/notebook?entry=${response.id}`}
+                className="flex items-center justify-between rounded-lg border border-sky-100 bg-sky-50 px-3 py-3 text-sm transition-colors hover:border-sky-200"
+              >
+                <div className="min-w-0">
+                  <p className="font-medium text-foreground">{response.title_zh}</p>
+                  <p className="truncate text-xs text-muted-foreground">{response.title_en}</p>
+                </div>
+                <span className="shrink-0 text-xs text-sky-700">
+                  {new Date(response.created_at).toLocaleDateString()}
+                </span>
+              </Link>
+            ))}
+          </div>
+        )}
+      </div>
+
+      <div className="mb-6 rounded-lg border border-[var(--cn-orange)]/20 bg-[var(--cn-orange-light)] p-5">
+        <h4 className="mb-2 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-[var(--cn-orange)]">
+          <BookText className="h-3.5 w-3.5" />
+          Input Practice
+        </h4>
+        <p className="text-sm font-semibold text-foreground">{reading.title}</p>
+        <p className="mt-3 text-lg leading-[1.9] text-foreground/90">{reading.passageZh}</p>
+        <p className="mt-3 text-sm text-muted-foreground">{reading.passageEn}</p>
+        <div className="mt-4 grid gap-3 md:grid-cols-2">
+          <div className="rounded-lg border border-white/70 bg-white/70 p-4">
+            <p className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground/70">
+              <Sparkles className="h-3.5 w-3.5" />
+              Notice This Phrase
+            </p>
+            <p className="mt-2 text-sm font-semibold text-foreground">{reading.focusPhraseZh}</p>
+            <p className="mt-1 text-sm text-muted-foreground">{reading.focusPhraseEn}</p>
+          </div>
+          <div className="rounded-lg border border-white/70 bg-white/70 p-4">
+            <p className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground/70">
+              <CircleHelp className="h-3.5 w-3.5" />
+              Quick Check
+            </p>
+            <p className="mt-2 text-sm text-foreground/85">{reading.comprehensionCheck}</p>
+          </div>
+        </div>
+        <div className="mt-4 rounded-lg border border-white/70 bg-white/70 p-4">
+          <p className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground/70">
+            <PenSquare className="h-3.5 w-3.5" />
+            Journal Response
+          </p>
+          <p className="mt-2 text-sm text-foreground/85">{reading.responsePrompt}</p>
+          <Link
+            href={journalHref}
+            className="mt-3 inline-flex items-center text-xs font-medium text-[var(--cn-orange)] hover:underline"
+          >
+            Respond in journal →
+          </Link>
+        </div>
+      </div>
 
       {/* Flashcard status */}
       {item.flashcard ? (

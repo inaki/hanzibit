@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
 import {
   Sheet,
   SheetContent,
@@ -21,7 +21,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Volume2, Layers, Eye, RotateCcw } from "lucide-react";
 import type { JournalEntry } from "@/lib/data";
-import { parseInput, extractHanziTokens } from "@/lib/parse-tokens";
+import { parseInput, extractHanziTokens, validateInlineMarkup } from "@/lib/parse-tokens";
 import {
   createJournalEntry,
   updateJournalEntry,
@@ -29,13 +29,33 @@ import {
 } from "@/lib/actions";
 import { MobileEntryList } from "./entry-list";
 import { MobileActionBar } from "./mobile-action-bar";
+import { GuidedDraftPanel, JournalFeedbackPanel, MarkupValidationPanel } from "./markup-assist";
 
 interface MobileJournalPageProps {
   entry?: JournalEntry;
   entries: JournalEntry[];
+  initialNewEntryOpen?: boolean;
+  newEntryDraft?: {
+    titleZh: string;
+    titleEn: string;
+    unit: string;
+    hskLevel: number;
+    contentZh: string;
+    prompt?: string;
+    sourceZh?: string;
+    sourceEn?: string;
+    targetWord?: string;
+    sourceType?: string;
+    sourceRef?: string;
+  };
 }
 
-export function MobileJournalPage({ entry, entries }: MobileJournalPageProps) {
+export function MobileJournalPage({
+  entry,
+  entries,
+  initialNewEntryOpen = false,
+  newEntryDraft,
+}: MobileJournalPageProps) {
   const highlights = entry
     ? extractHanziTokens(parseInput(entry.content_zh))
     : [];
@@ -45,6 +65,16 @@ export function MobileJournalPage({ entry, entries }: MobileJournalPageProps) {
   const [newEntryOpen, setNewEntryOpen] = useState(false);
   const [pronunciationOpen, setPronunciationOpen] = useState(false);
   const [flashcardOpen, setFlashcardOpen] = useState(false);
+
+  useEffect(() => {
+    if (!initialNewEntryOpen) return;
+    if (typeof window === "undefined") return;
+    if (!window.matchMedia("(max-width: 1023px)").matches) return;
+    const timer = window.setTimeout(() => {
+      setNewEntryOpen(true);
+    }, 0);
+    return () => window.clearTimeout(timer);
+  }, [initialNewEntryOpen]);
 
   return (
     <div className="lg:hidden">
@@ -83,7 +113,18 @@ export function MobileJournalPage({ entry, entries }: MobileJournalPageProps) {
       )}
 
       {/* New Entry Dialog */}
-      <MobileNewEntryDialog open={newEntryOpen} onOpenChange={setNewEntryOpen} />
+      <MobileNewEntryDialog
+        key={[
+          newEntryDraft?.titleZh ?? "",
+          newEntryDraft?.titleEn ?? "",
+          newEntryDraft?.unit ?? "",
+          newEntryDraft?.hskLevel ?? 1,
+          newEntryDraft?.contentZh ?? "",
+        ].join("|")}
+        open={newEntryOpen}
+        onOpenChange={setNewEntryOpen}
+        draft={newEntryDraft}
+      />
 
       {/* Pronunciation Dialog */}
       <MobilePronunciationDialog
@@ -122,10 +163,17 @@ function MobileEditDialog({
 }) {
   const [isPending, startTransition] = useTransition();
   const [content, setContent] = useState(entry.content_zh);
+  const [submitError, setSubmitError] = useState<string | null>(null);
+  const hasMarkupIssues = validateInlineMarkup(content).length > 0;
 
   function handleSubmit(formData: FormData) {
+    setSubmitError(null);
     startTransition(async () => {
-      await updateJournalEntry(formData);
+      const result = await updateJournalEntry(formData);
+      if (result?.error) {
+        setSubmitError(result.error);
+        return;
+      }
       onOpenChange(false);
     });
   }
@@ -154,10 +202,12 @@ function MobileEditDialog({
               rows={6}
               className="w-full rounded-lg border border-border bg-card px-3 py-2 font-mono text-sm text-foreground outline-none focus:border-[var(--cn-orange)] focus:ring-1 focus:ring-[var(--cn-orange)]"
             />
+            <MarkupValidationPanel content={content} />
+            {submitError && <p className="text-sm text-red-600">{submitError}</p>}
           </div>
           <DialogFooter>
             <DialogClose render={<Button variant="outline" />}>Cancel</DialogClose>
-            <Button type="submit" disabled={isPending} className="bg-[var(--cn-orange)] hover:bg-[var(--cn-orange-dark)]">
+            <Button type="submit" disabled={isPending || hasMarkupIssues} className="bg-[var(--cn-orange)] hover:bg-[var(--cn-orange-dark)]">
               {isPending ? "Saving..." : "Save"}
             </Button>
           </DialogFooter>
@@ -170,16 +220,37 @@ function MobileEditDialog({
 function MobileNewEntryDialog({
   open,
   onOpenChange,
+  draft,
 }: {
   open: boolean;
   onOpenChange: (v: boolean) => void;
+  draft?: {
+    titleZh: string;
+    titleEn: string;
+    unit: string;
+    hskLevel: number;
+    contentZh: string;
+    prompt?: string;
+    sourceZh?: string;
+    sourceEn?: string;
+    targetWord?: string;
+    sourceType?: string;
+    sourceRef?: string;
+  };
 }) {
   const [isPending, startTransition] = useTransition();
-  const [content, setContent] = useState("");
+  const [content, setContent] = useState(draft?.contentZh ?? "");
+  const [submitError, setSubmitError] = useState<string | null>(null);
+  const hasMarkupIssues = validateInlineMarkup(content).length > 0;
 
   function handleSubmit(formData: FormData) {
+    setSubmitError(null);
     startTransition(async () => {
-      await createJournalEntry(formData);
+      const result = await createJournalEntry(formData);
+      if (result?.error) {
+        setSubmitError(result.error);
+        return;
+      }
       setContent("");
       onOpenChange(false);
     });
@@ -193,12 +264,22 @@ function MobileNewEntryDialog({
           <DialogDescription>Write a new journal entry.</DialogDescription>
         </DialogHeader>
         <form action={handleSubmit}>
+          <input type="hidden" name="source_type" value={draft?.sourceType ?? ""} />
+          <input type="hidden" name="source_ref" value={draft?.sourceRef ?? ""} />
+          <input type="hidden" name="source_prompt" value={draft?.prompt ?? ""} />
           <div className="space-y-3 py-2">
-            <Input name="title_zh" placeholder="Chinese Title (e.g. 我的周末)" required />
-            <Input name="title_en" placeholder="English Title (e.g. My Weekend)" required />
+            <GuidedDraftPanel
+              prompt={draft?.prompt}
+              sourceZh={draft?.sourceZh}
+              sourceEn={draft?.sourceEn}
+              targetWord={draft?.targetWord}
+              content={content}
+            />
+            <Input name="title_zh" placeholder="Chinese Title (e.g. 我的周末)" defaultValue={draft?.titleZh ?? ""} required />
+            <Input name="title_en" placeholder="English Title (e.g. My Weekend)" defaultValue={draft?.titleEn ?? ""} required />
             <div className="flex gap-2">
-              <Input name="unit" placeholder="Unit" className="flex-1" />
-              <Input name="hsk_level" type="number" min={1} max={6} defaultValue={1} className="w-20" />
+              <Input name="unit" placeholder="Unit" defaultValue={draft?.unit ?? ""} className="flex-1" />
+              <Input name="hsk_level" type="number" min={1} max={6} defaultValue={draft?.hskLevel ?? 1} className="w-20" />
             </div>
             <textarea
               name="content_zh"
@@ -209,10 +290,18 @@ function MobileNewEntryDialog({
               rows={6}
               className="w-full rounded-lg border border-border bg-card px-3 py-2 font-mono text-sm text-foreground outline-none focus:border-[var(--cn-orange)] focus:ring-1 focus:ring-[var(--cn-orange)]"
             />
+            {!!draft?.prompt && (
+              <p className="text-xs text-muted-foreground">
+                Read the prompt above, then write your own answer here.
+              </p>
+            )}
+            <MarkupValidationPanel content={content} />
+            <JournalFeedbackPanel content={content} targetWord={draft?.targetWord} />
+            {submitError && <p className="text-sm text-red-600">{submitError}</p>}
           </div>
           <DialogFooter>
             <DialogClose render={<Button variant="outline" />}>Cancel</DialogClose>
-            <Button type="submit" disabled={isPending} className="bg-[var(--cn-orange)] hover:bg-[var(--cn-orange-dark)]">
+            <Button type="submit" disabled={isPending || hasMarkupIssues} className="bg-[var(--cn-orange)] hover:bg-[var(--cn-orange-dark)]">
               {isPending ? "Creating..." : "Create"}
             </Button>
           </DialogFooter>

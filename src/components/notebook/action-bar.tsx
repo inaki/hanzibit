@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
 import {
   Pencil,
   Mic,
@@ -13,6 +13,7 @@ import {
   Eye,
   RotateCcw,
   Languages,
+  Trash2,
 } from "lucide-react";
 import {
   Tooltip,
@@ -31,17 +32,38 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import type { JournalEntry } from "@/lib/data";
-import { toggleBookmarkAction, createJournalEntry, updateJournalEntry, saveFlashcardsFromEntry } from "@/lib/actions";
-import { parseInput, extractHanziTokens } from "@/lib/parse-tokens";
+import { toggleBookmarkAction, createJournalEntry, updateJournalEntry, saveFlashcardsFromEntry, deleteJournalEntry } from "@/lib/actions";
+import { parseInput, extractHanziTokens, validateInlineMarkup } from "@/lib/parse-tokens";
 import { useGloss } from "./gloss-context";
 import { UpgradePrompt } from "@/components/upgrade-prompt";
+import { ContentPreview, GuidedDraftPanel, JournalFeedbackPanel, MarkupValidationPanel } from "./markup-assist";
+import { useRouter } from "next/navigation";
 
 interface NotebookActionBarProps {
   entry?: JournalEntry;
   isPro?: boolean;
+  initialNewEntryOpen?: boolean;
+  newEntryDraft?: {
+    titleZh: string;
+    titleEn: string;
+    unit: string;
+    hskLevel: number;
+    contentZh: string;
+    prompt?: string;
+    sourceZh?: string;
+    sourceEn?: string;
+    targetWord?: string;
+    sourceType?: string;
+    sourceRef?: string;
+  };
 }
 
-export function NotebookActionBar({ entry, isPro = false }: NotebookActionBarProps) {
+export function NotebookActionBar({
+  entry,
+  isPro = false,
+  initialNewEntryOpen = false,
+  newEntryDraft,
+}: NotebookActionBarProps) {
   const highlights = entry
     ? extractHanziTokens(parseInput(entry.content_zh))
     : [];
@@ -53,6 +75,16 @@ export function NotebookActionBar({ entry, isPro = false }: NotebookActionBarPro
   const [bookmarked, setBookmarked] = useState(entry?.bookmarked === 1);
   const [isPending, startTransition] = useTransition();
   const gloss = useGloss();
+
+  useEffect(() => {
+    if (!initialNewEntryOpen) return;
+    if (typeof window === "undefined") return;
+    if (!window.matchMedia("(min-width: 1024px)").matches) return;
+    const timer = window.setTimeout(() => {
+      setNewEntryOpen(true);
+    }, 0);
+    return () => window.clearTimeout(timer);
+  }, [initialNewEntryOpen]);
 
   function handleBookmark() {
     if (!entry) return;
@@ -255,7 +287,18 @@ export function NotebookActionBar({ entry, isPro = false }: NotebookActionBarPro
       )}
 
       {/* New Entry Dialog */}
-      <NewEntryDialog open={newEntryOpen} onOpenChange={setNewEntryOpen} />
+      <NewEntryDialog
+        key={[
+          newEntryDraft?.titleZh ?? "",
+          newEntryDraft?.titleEn ?? "",
+          newEntryDraft?.unit ?? "",
+          newEntryDraft?.hskLevel ?? 1,
+          newEntryDraft?.contentZh ?? "",
+        ].join("|")}
+        open={newEntryOpen}
+        onOpenChange={setNewEntryOpen}
+        draft={newEntryDraft}
+      />
 
       {/* Pronunciation Dialog */}
       <PronunciationDialog
@@ -302,28 +345,6 @@ function MarkupHelp() {
   );
 }
 
-function ContentPreview({ content }: { content: string }) {
-  const tokens = parseInput(content);
-  if (tokens.length === 0) return null;
-
-  return (
-    <div data-testid="content-preview" className="rounded-lg border border-dashed border-border bg-muted/50 p-4">
-      <p className="mb-2 text-xs font-medium text-muted-foreground/70">Preview</p>
-      <div className="text-base leading-[2] text-foreground/90">
-        {tokens.map((t, i) => {
-          if (t.type === "break") return <br key={i} />;
-          if (t.type === "text") return <span key={i}>{t.text}</span>;
-          return (
-            <span key={i} className="font-bold text-[var(--cn-orange)]" title={`${t.pinyin} — ${t.english}`}>
-              {t.hanzi}
-            </span>
-          );
-        })}
-      </div>
-    </div>
-  );
-}
-
 function EditEntryDialog({
   entry,
   open,
@@ -334,13 +355,39 @@ function EditEntryDialog({
   onOpenChange: (v: boolean) => void;
 }) {
   const [isPending, startTransition] = useTransition();
+  const [isDeleting, startDeleteTransition] = useTransition();
   const [preview, setPreview] = useState(false);
   const [content, setContent] = useState(entry.content_zh);
+  const [submitError, setSubmitError] = useState<string | null>(null);
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const hasMarkupIssues = validateInlineMarkup(content).length > 0;
+  const router = useRouter();
 
   function handleSubmit(formData: FormData) {
+    setSubmitError(null);
     startTransition(async () => {
-      await updateJournalEntry(formData);
+      const result = await updateJournalEntry(formData);
+      if (result?.error) {
+        setSubmitError(result.error);
+        return;
+      }
       onOpenChange(false);
+    });
+  }
+
+  function handleDelete() {
+    startDeleteTransition(async () => {
+      const result = await deleteJournalEntry(entry.id);
+      if ("error" in result) {
+        setSubmitError(result.error);
+        setConfirmDelete(false);
+        return;
+      }
+
+      setConfirmDelete(false);
+      onOpenChange(false);
+      router.push("/notebook");
+      router.refresh();
     });
   }
 
@@ -422,20 +469,47 @@ function EditEntryDialog({
                 rows={6}
                 className="w-full rounded-lg border border-border bg-card px-3 py-2 font-mono text-sm text-foreground outline-none focus:border-[var(--cn-orange)] focus:ring-1 focus:ring-[var(--cn-orange)]"
               />
+              <div className="mt-3 space-y-3">
+                <MarkupValidationPanel content={content} />
+                <JournalFeedbackPanel content={content} />
+                {submitError && (
+                  <p className="text-sm text-red-600">{submitError}</p>
+                )}
+              </div>
               {preview && <ContentPreview content={content} />}
             </div>
             <MarkupHelp />
           </div>
           <DialogFooter>
-            <DialogClose render={<Button variant="outline" />}>Cancel</DialogClose>
             <Button
-              data-testid="edit-entry-submit"
-              type="submit"
-              disabled={isPending}
-              className="bg-[var(--cn-orange)] hover:bg-[var(--cn-orange-dark)]"
+              type="button"
+              variant="ghost"
+              className="mr-auto text-red-600 hover:bg-red-50 hover:text-red-700"
+              onClick={() => setConfirmDelete((value) => !value)}
             >
-              {isPending ? "Saving..." : "Save Changes"}
+              <Trash2 className="h-4 w-4" />
             </Button>
+            <DialogClose render={<Button variant="outline" />}>Cancel</DialogClose>
+            {confirmDelete ? (
+              <Button
+                data-testid="edit-entry-delete-confirm"
+                type="button"
+                variant="destructive"
+                disabled={isDeleting}
+                onClick={handleDelete}
+              >
+                {isDeleting ? "Deleting..." : "Delete Entry"}
+              </Button>
+            ) : (
+              <Button
+                data-testid="edit-entry-submit"
+                type="submit"
+                disabled={isPending || hasMarkupIssues}
+                className="bg-[var(--cn-orange)] hover:bg-[var(--cn-orange-dark)]"
+              >
+                {isPending ? "Saving..." : "Save Changes"}
+              </Button>
+            )}
           </DialogFooter>
         </form>
       </DialogContent>
@@ -448,17 +522,38 @@ function EditEntryDialog({
 function NewEntryDialog({
   open,
   onOpenChange,
+  draft,
 }: {
   open: boolean;
   onOpenChange: (v: boolean) => void;
+  draft?: {
+    titleZh: string;
+    titleEn: string;
+    unit: string;
+    hskLevel: number;
+    contentZh: string;
+    prompt?: string;
+    sourceZh?: string;
+    sourceEn?: string;
+    targetWord?: string;
+    sourceType?: string;
+    sourceRef?: string;
+  };
 }) {
   const [isPending, startTransition] = useTransition();
   const [preview, setPreview] = useState(false);
-  const [content, setContent] = useState("");
+  const [content, setContent] = useState(draft?.contentZh ?? "");
+  const [submitError, setSubmitError] = useState<string | null>(null);
+  const hasMarkupIssues = validateInlineMarkup(content).length > 0;
 
   function handleSubmit(formData: FormData) {
+    setSubmitError(null);
     startTransition(async () => {
-      await createJournalEntry(formData);
+      const result = await createJournalEntry(formData);
+      if (result?.error) {
+        setSubmitError(result.error);
+        return;
+      }
       setContent("");
       setPreview(false);
       onOpenChange(false);
@@ -475,7 +570,17 @@ function NewEntryDialog({
           </DialogDescription>
         </DialogHeader>
         <form action={handleSubmit}>
+          <input type="hidden" name="source_type" value={draft?.sourceType ?? ""} />
+          <input type="hidden" name="source_ref" value={draft?.sourceRef ?? ""} />
+          <input type="hidden" name="source_prompt" value={draft?.prompt ?? ""} />
           <div className="space-y-4 py-2">
+            <GuidedDraftPanel
+              prompt={draft?.prompt}
+              sourceZh={draft?.sourceZh}
+              sourceEn={draft?.sourceEn}
+              targetWord={draft?.targetWord}
+              content={content}
+            />
             <div>
               <label className="mb-1 block text-sm font-medium text-foreground/80">
                 Chinese Title
@@ -484,6 +589,7 @@ function NewEntryDialog({
                 data-testid="new-entry-title-zh"
                 name="title_zh"
                 placeholder="e.g. 我的周末"
+                defaultValue={draft?.titleZh ?? ""}
                 required
               />
             </div>
@@ -495,17 +601,18 @@ function NewEntryDialog({
                 data-testid="new-entry-title-en"
                 name="title_en"
                 placeholder="e.g. My Weekend"
+                defaultValue={draft?.titleEn ?? ""}
                 required
               />
             </div>
             <div className="flex gap-3">
               <div className="flex-1">
                 <label className="mb-1 block text-sm font-medium text-foreground/80">Unit</label>
-                <Input data-testid="new-entry-unit" name="unit" placeholder="e.g. Unit 8: Hobbies" />
+                <Input data-testid="new-entry-unit" name="unit" placeholder="e.g. Unit 8: Hobbies" defaultValue={draft?.unit ?? ""} />
               </div>
               <div className="w-24">
                 <label className="mb-1 block text-sm font-medium text-foreground/80">HSK</label>
-                <Input data-testid="new-entry-hsk-level" name="hsk_level" type="number" min={1} max={6} defaultValue={1} />
+                <Input data-testid="new-entry-hsk-level" name="hsk_level" type="number" min={1} max={6} defaultValue={draft?.hskLevel ?? 1} />
               </div>
             </div>
             <div>
@@ -536,6 +643,17 @@ function NewEntryDialog({
                 rows={6}
                 className="w-full rounded-lg border border-border bg-card px-3 py-2 font-mono text-sm text-foreground outline-none focus:border-[var(--cn-orange)] focus:ring-1 focus:ring-[var(--cn-orange)]"
               />
+              {!!draft?.prompt && (
+                <p className="mt-2 text-xs text-muted-foreground">
+                  Use the prompt above, then write your own response below.
+                </p>
+              )}
+              <div className="mt-3 space-y-3">
+                <MarkupValidationPanel content={content} />
+                {submitError && (
+                  <p className="text-sm text-red-600">{submitError}</p>
+                )}
+              </div>
               {preview && content && <ContentPreview content={content} />}
             </div>
             <MarkupHelp />
@@ -545,7 +663,7 @@ function NewEntryDialog({
             <Button
               data-testid="new-entry-submit"
               type="submit"
-              disabled={isPending}
+              disabled={isPending || hasMarkupIssues}
               className="bg-[var(--cn-orange)] hover:bg-[var(--cn-orange-dark)]"
             >
               {isPending ? "Creating..." : "Create Entry"}

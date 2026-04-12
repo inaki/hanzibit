@@ -7,6 +7,10 @@ import { getAuthUserId } from "./auth-utils";
 import {
   getCharacterOfTheDay,
   getDueFlashcardCount,
+  getTodayActivitySummary,
+  getRecentDailyLoopCompletionCount,
+  getRecentDailyLoopHistory,
+  getRecentDailyLoopStepSummary,
   getUserProgress,
   getStudyGuideData,
   getUserStreak,
@@ -14,6 +18,7 @@ import {
   getWeakFlashcards,
   updateFlashcardReview,
   addReviewRecord,
+  syncDailyLoopCompletion,
   searchHskWords,
   type Flashcard,
   type HskWord,
@@ -21,6 +26,8 @@ import {
 } from "./data";
 import { canReviewFlashcard, canAccessHskLevel } from "./gates";
 import { sm2 } from "./sm2";
+import { validateInlineMarkup } from "./parse-tokens";
+import { buildDailyPracticePlan, type DailyPracticePlan } from "./daily-practice";
 
 export async function toggleBookmarkAction(entryId: string) {
   const entry = await queryOne<{ bookmarked: number }>(
@@ -47,15 +54,34 @@ export async function createJournalEntry(formData: FormData) {
   const contentZh = formData.get("content_zh") as string;
   const unit = (formData.get("unit") as string) || null;
   const hskLevel = parseInt((formData.get("hsk_level") as string) || "1", 10);
+  const sourceType = (formData.get("source_type") as string) || null;
+  const sourceRef = (formData.get("source_ref") as string) || null;
+  const sourcePrompt = (formData.get("source_prompt") as string) || null;
 
   if (!titleZh || !titleEn || !contentZh) {
     return { error: "Title and content are required." };
   }
 
+  const markupIssues = validateInlineMarkup(contentZh);
+  if (markupIssues.length > 0) {
+    return { error: markupIssues[0].message };
+  }
+
   await execute(
-    `INSERT INTO journal_entries (id, user_id, title_zh, title_en, unit, hsk_level, content_zh)
-     VALUES ($1, $2, $3, $4, $5, $6, $7)`,
-    [id, userId, titleZh, titleEn, unit, hskLevel, contentZh]
+    `INSERT INTO journal_entries (
+       id,
+       user_id,
+       title_zh,
+       title_en,
+       unit,
+       hsk_level,
+       content_zh,
+       source_type,
+       source_ref,
+       source_prompt
+     )
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`,
+    [id, userId, titleZh, titleEn, unit, hskLevel, contentZh, sourceType, sourceRef, sourcePrompt]
   );
 
   revalidatePath("/notebook");
@@ -74,6 +100,11 @@ export async function updateJournalEntry(formData: FormData) {
     return { error: "All fields are required." };
   }
 
+  const markupIssues = validateInlineMarkup(contentZh);
+  if (markupIssues.length > 0) {
+    return { error: markupIssues[0].message };
+  }
+
   await execute(
     `UPDATE journal_entries
      SET title_zh = $1,
@@ -88,6 +119,27 @@ export async function updateJournalEntry(formData: FormData) {
 
   revalidatePath("/notebook");
   return { id };
+}
+
+export async function deleteJournalEntry(entryId: string): Promise<{ success: true } | { error: string }> {
+  if (!entryId) {
+    return { error: "Entry ID is required." };
+  }
+
+  const userId = await getAuthUserId();
+  const existing = await queryOne<{ id: string; user_id: string }>(
+    "SELECT id, user_id FROM journal_entries WHERE id = $1",
+    [entryId]
+  );
+
+  if (!existing || existing.user_id !== userId) {
+    return { error: "Entry not found." };
+  }
+
+  await execute("DELETE FROM journal_entries WHERE id = $1", [entryId]);
+  revalidatePath("/notebook");
+  revalidatePath("/notebook/dashboard");
+  return { success: true };
 }
 
 export async function getCharacterOfTheDayAction(
@@ -164,6 +216,56 @@ export async function reviewFlashcard(
 export async function getDueCountAction(): Promise<number> {
   const userId = await getAuthUserId();
   return getDueFlashcardCount(userId);
+}
+
+export async function getDailyPracticeAction(level: number): Promise<DailyPracticePlan> {
+  const userId = await getAuthUserId();
+  const [dueCount, activity, characterOfTheDay] = await Promise.all([
+    getDueFlashcardCount(userId),
+    getTodayActivitySummary(userId),
+    getCharacterOfTheDay(level),
+  ]);
+  const buildPlan = (
+    weeklyCompletedLoops: number,
+    recentLoopCompletionDates: string[],
+    recentStepSummary = {
+      reviewCompletedDays: 0,
+      studyCompletedDays: 0,
+      writeCompletedDays: 0,
+    }
+  ) =>
+    buildDailyPracticePlan({
+      level,
+      dueCount,
+      reviewsCompletedToday: activity.reviewsCompletedToday,
+      entriesCreatedToday: activity.entriesCreatedToday,
+      guidedResponsesToday: activity.guidedResponsesToday,
+      latestGuidedResponseToday: activity.latestGuidedResponseToday,
+      characterOfTheDay,
+      weeklyCompletedLoops,
+      recentLoopCompletionDates,
+      recentStepSummary,
+    });
+
+  const plan = buildPlan(0, []);
+
+  await syncDailyLoopCompletion(userId, {
+    completed: plan.loopCompleted,
+    reviewCompleted: plan.reviewCompleted,
+    studyCompleted: plan.studyCompleted,
+    writeCompleted: plan.writeCompleted,
+  });
+  const [weeklyCompletedLoops, recentLoopHistory, recentStepSummary] = await Promise.all([
+    getRecentDailyLoopCompletionCount(userId, 7),
+    getRecentDailyLoopHistory(userId, 7),
+    getRecentDailyLoopStepSummary(userId, 7),
+  ]);
+
+  return buildPlan(
+    weeklyCompletedLoops,
+    recentLoopHistory.map((item) => item.completedOn),
+    recentStepSummary
+  );
 }
 
 export async function getProgressAction(

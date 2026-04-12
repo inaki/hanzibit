@@ -9,10 +9,38 @@ import { MobileJournalPage } from "@/components/notebook/mobile-journal-page";
 
 export const dynamic = "force-dynamic";
 
+interface JournalDraftPrefill {
+  titleZh: string;
+  titleEn: string;
+  unit: string;
+  hskLevel: number;
+  contentZh: string;
+  prompt?: string;
+  sourceZh?: string;
+  sourceEn?: string;
+  targetWord?: string;
+  sourceType?: string;
+  sourceRef?: string;
+}
+
 export default function NotebookPage({
   searchParams,
 }: {
-  searchParams: Promise<{ entry?: string }>;
+  searchParams: Promise<{
+    entry?: string;
+    new?: string;
+    draftTitleZh?: string;
+    draftTitleEn?: string;
+    draftUnit?: string;
+    draftLevel?: string;
+    draftContentZh?: string;
+    draftPrompt?: string;
+    draftSourceZh?: string;
+    draftSourceEn?: string;
+    draftTargetWord?: string;
+    draftSourceType?: string;
+    draftSourceRef?: string;
+  }>;
 }) {
   return <NotebookPageInner searchParamsPromise={searchParams} />;
 }
@@ -20,9 +48,37 @@ export default function NotebookPage({
 async function NotebookPageInner({
   searchParamsPromise,
 }: {
-  searchParamsPromise: Promise<{ entry?: string }>;
+  searchParamsPromise: Promise<{
+    entry?: string;
+    new?: string;
+    draftTitleZh?: string;
+    draftTitleEn?: string;
+    draftUnit?: string;
+    draftLevel?: string;
+    draftContentZh?: string;
+    draftPrompt?: string;
+    draftSourceZh?: string;
+    draftSourceEn?: string;
+    draftTargetWord?: string;
+    draftSourceType?: string;
+    draftSourceRef?: string;
+  }>;
 }) {
-  const { entry: selectedEntryId } = await searchParamsPromise;
+  const {
+    entry: selectedEntryId,
+    new: shouldOpenNewEntry,
+    draftTitleZh,
+    draftTitleEn,
+    draftUnit,
+    draftLevel,
+    draftContentZh,
+    draftPrompt,
+    draftSourceZh,
+    draftSourceEn,
+    draftTargetWord,
+    draftSourceType,
+    draftSourceRef,
+  } = await searchParamsPromise;
   const userId = await getAuthUserId();
   const [entries, isPro] = await Promise.all([
     getJournalEntries(userId),
@@ -35,6 +91,20 @@ async function NotebookPageInner({
   const annotations = activeEntry
     ? await getEntryAnnotations(activeEntry.id)
     : [];
+
+  const draft: JournalDraftPrefill = {
+    titleZh: draftTitleZh ?? "",
+    titleEn: draftTitleEn ?? "",
+    unit: draftUnit ?? "",
+    hskLevel: Number.parseInt(draftLevel ?? "1", 10) || 1,
+    contentZh: draftContentZh ?? "",
+    prompt: draftPrompt ?? "",
+    sourceZh: draftSourceZh ?? "",
+    sourceEn: draftSourceEn ?? "",
+    targetWord: draftTargetWord ?? "",
+    sourceType: draftSourceType ?? "",
+    sourceRef: draftSourceRef ?? "",
+  };
 
   return (
     <GlossProvider>
@@ -57,10 +127,20 @@ async function NotebookPageInner({
         </div>
 
         {/* Desktop action bar */}
-        <NotebookActionBar entry={activeEntry} isPro={isPro} />
+        <NotebookActionBar
+          entry={activeEntry}
+          isPro={isPro}
+          initialNewEntryOpen={shouldOpenNewEntry === "1"}
+          newEntryDraft={draft}
+        />
 
         {/* Mobile action bar + entry list sheet */}
-        <MobileJournalPage entry={activeEntry} entries={entries} />
+        <MobileJournalPage
+          entry={activeEntry}
+          entries={entries}
+          initialNewEntryOpen={shouldOpenNewEntry === "1"}
+          newEntryDraft={draft}
+        />
       </div>
     </GlossProvider>
   );
