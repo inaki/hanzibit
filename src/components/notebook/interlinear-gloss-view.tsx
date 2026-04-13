@@ -28,13 +28,13 @@ function GlossWord({
         className={`text-[22px] font-bold leading-tight ${
           token.userAnnotated
             ? "text-[var(--cn-orange)]"
-            : "text-gray-900"
+            : "text-foreground"
         }`}
       >
         {token.hanzi}
       </span>
-      <span className="text-xs leading-tight text-gray-500">{token.pinyin}</span>
-      <span className="text-[10px] leading-tight text-gray-400">{token.english}</span>
+      <span className="text-xs leading-tight text-muted-foreground">{token.pinyin}</span>
+      <span className="text-[10px] leading-tight text-muted-foreground/80">{token.english}</span>
       {journalHref && (
         <Link
           href={journalHref}
@@ -50,7 +50,7 @@ function GlossWord({
 function GlossPunctuation({ char }: { char: string }) {
   return (
     <span className="inline-flex items-end mx-0.5 self-start">
-      <span className="text-[22px] leading-tight text-gray-800">{char}</span>
+      <span className="text-[22px] leading-tight text-foreground/90">{char}</span>
     </span>
   );
 }
@@ -82,7 +82,7 @@ export function InterlinearGlossView({
                 <Link
                   key={`${pi}-${phrase.hanzi}`}
                   href={buildPhraseJournalHref(phrase)}
-                  className="inline-flex items-center rounded-full border border-[var(--cn-orange)]/20 bg-white/80 px-3 py-1 text-[11px] font-medium text-[var(--cn-orange)] transition-colors hover:bg-white"
+                  className="inline-flex items-center rounded-full border border-[var(--cn-orange)]/20 bg-[var(--cn-orange)]/10 px-3 py-1 text-[11px] font-medium text-[var(--cn-orange)] transition-colors hover:bg-[var(--cn-orange)]/15"
                   title={phrase.english}
                 >
                   {phrase.hanzi}

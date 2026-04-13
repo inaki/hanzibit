@@ -4,7 +4,7 @@ A living doc. Update this whenever stopping work so the next session starts with
 
 ---
 
-## Last Session Summary (Phase 1 Learner Loop Checkpoint — 2026-04-12)
+## Last Session Summary (Phase 1 Web Closeout Checkpoint — 2026-04-13)
 
 Completed:
 
@@ -16,20 +16,22 @@ Completed:
 6. **Annotation helper UX** — journal composers now include a lightweight annotation builder, can seed from live text selection, can replace selected text in-place, and can receive draft-level annotation candidates from reading surfaces.
 7. **Input-to-output promotion** — Study Guide and notebook gloss flows can now launch guided writing from exact words and short phrases, not only generic word-detail actions.
 8. **Mobile alignment docs** — `docs/mobile-team-update-phase-1.md` now tracks the running behavior changes, and `docs/mobile-team-phase-1-handoff.md` + `docs/phase-1-readiness.md` define the stable Phase 1 implementation target.
+9. **Backend parity for mobile** — mobile journal create now persists guided source metadata, mobile dashboard now includes `characterOfTheDay.id`, and dedicated mobile endpoints now exist for `today`, Study Guide detail presentation, and focused review continuity.
+10. **Phase 1 web polish / QA** — dark mode and dialog behavior were cleaned up across the core learner loop, including Study Guide, dashboard, flashcards, gloss flow, and journal dialogs.
 
 ---
 
-## Immediate Before Shipping
+## Immediate Follow-Up
 
-- [ ] Add `AZURE_TTS_KEY=your_key` and `AZURE_TTS_REGION=eastus` to `.env` — TTS returns 503 without them
-- [ ] Smoke test end to end:
+- [ ] Add `AZURE_TTS_KEY=your_key` and `AZURE_TTS_REGION=eastus` to `.env` if TTS work resumes — TTS returns 503 without them
+- [ ] Run one final manual smoke test pass:
   - Hit review limit as free user → see upgrade prompt
   - Switch to HSK 2 as free user → see locked state in study guide
-  - Streak increments after journal write or flashcard review (check Dashboard)
-  - "Needs attention" section shows on Dashboard after scoring cards "Again" multiple times
-  - Dark mode toggle persists on page refresh
-  - Sign-out from avatar dropdown redirects to landing page
+  - Streak increments after journal write or flashcard review
+  - "Needs attention" shows on Dashboard after repeated low scores
+  - Dark mode toggle persists on refresh
   - Pronounce button in flashcards plays audio
+  - Journal dialogs scroll normally in desktop and mobile layouts
 
 ---
 
@@ -38,6 +40,7 @@ Completed:
 - [x] **Billing portal link** — already wired in `settings-dialog.tsx` via `handleManageBilling` (lines 95–106). Shows "Manage Billing" button for Pro users.
 - [x] **Flashcard speaker button** — added "Pronounce" button on card front face in `flashcard-practice.tsx`
 - [x] **Gate grammar and export** — grammar page gates non-Pro with `UpgradePrompt`; print button in `action-bar.tsx` shows upgrade dialog for free users (`isPro` passed from notebook page server component)
+- [x] **Phase 1 web closeout pass** — core learner-loop QA and dark-mode cleanup are now in place across dashboard, Study Guide, flashcards, gloss flow, and journal dialogs
 
 ---
 
@@ -64,6 +67,7 @@ Completed:
   - deeper input-content system beyond the current reading + transcript-first listening blocks
   - real audio-backed input beyond transcript-first listening
   - final route-level validation polish where useful
+- [ ] **Broader secondary-surface cleanup** — settings dialog and non-core notebook utilities still have some light-theme-biased styles; these are now secondary, not Phase 1 blockers
 - [ ] **HSK Skool comparison follow-up** — see `app-comparison.md` for the full breakdown. Main gap remaining: audio is still on-demand TTS, not pre-generated. Consider the Phase 2 audio script from `implementation-guide.md` once the `AZURE_TTS_KEY` is confirmed working
 - [x] **Mobile handoff docs for Phase 1 learner-loop changes** — see `mobile-team-update-phase-1.md`, `mobile-team-phase-1-handoff.md`, and `phase-1-readiness.md`.
 
@@ -75,3 +79,13 @@ Completed:
 - Native mobile / offline support
 - Smarter spaced repetition (SM-2 is good but fixed; could adapt intervals based on historical fail rate per word)
 - Social proof / activity feed for the landing page
+
+---
+
+## Status Call
+
+As of April 13, 2026:
+
+- **Web Phase 1**: stable enough to treat as the baseline
+- **Mobile Phase 1**: continue parity work against current docs and endpoints
+- **Remaining work**: polish, parity, content depth, and selective QA

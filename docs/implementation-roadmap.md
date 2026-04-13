@@ -43,6 +43,12 @@ Phase 1 should produce:
 - a clearer daily practice loop
 - better support for input, output, retrieval, and feedback
 
+Current assessment:
+
+- the **web Phase 1 baseline is now effectively in place**
+- the remaining work is mostly mobile parity, content depth, and non-core polish
+- new work should be judged against whether it improves the learner loop without destabilizing the existing baseline
+
 ---
 
 ## Phase 1 Workstreams
@@ -55,7 +61,7 @@ Make the learner core reliable enough to support mobile usage and later classroo
 
 ### Status
 
-Partially started.
+Substantially complete for Phase 1 web.
 
 ### Already done
 
@@ -88,6 +94,11 @@ Recently completed:
 - main learner logic has lightweight automated coverage
 - mobile routes have consistent validation and error shapes
 - no obvious ownership or auth gaps remain in core learner mutations
+
+Current assessment:
+
+- functionally met for web Phase 1
+- remaining work is parity verification and selective route polish, not foundational hardening
 
 ---
 
@@ -161,6 +172,11 @@ Current status:
 - users can detect bad markup before saving
 - annotation is faster than raw manual typing
 - annotation creation feels like part of the study loop, not formatting work
+
+Current assessment:
+
+- functionally met for Phase 1 web
+- remaining work is deeper dictionary assistance and smarter content-derived suggestions
 
 ---
 
@@ -258,6 +274,22 @@ Shipped as a first Phase 1 version.
 ### Goal
 
 Strengthen the weak point in the current product: level-appropriate input.
+
+Current assessment:
+
+- the first useful Study Guide input surface is now shipped
+- remaining work is about richer content quality and audio depth, not first-pass structure
+
+---
+
+## Phase 1 Closeout Decision
+
+The implementation priority should now be:
+
+1. maintain the current web learner-loop baseline
+2. support Flutter parity against the current contracts and behaviors
+3. deepen content/input quality without destabilizing the loop
+4. defer broader Phase 2 work until parity and product confidence are high enough
 
 ### Why it matters
 

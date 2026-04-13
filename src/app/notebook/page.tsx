@@ -135,7 +135,7 @@ async function NotebookPageInner({
               annotations={annotations}
             />
           ) : (
-            <div data-testid="notebook-empty-state" className="flex h-full items-center justify-center text-gray-400">
+            <div data-testid="notebook-empty-state" className="flex h-full items-center justify-center text-muted-foreground">
               <p>No journal entries yet. Create your first entry!</p>
             </div>
           )}

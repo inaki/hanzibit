@@ -216,14 +216,14 @@ function MobileEditDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[90vh] overflow-auto sm:max-w-lg">
+      <DialogContent className="flex max-h-[90vh] flex-col overflow-hidden sm:max-w-lg">
         <DialogHeader>
           <DialogTitle>Edit Entry</DialogTitle>
           <DialogDescription>Update this journal entry.</DialogDescription>
         </DialogHeader>
-        <form action={handleSubmit}>
+        <form action={handleSubmit} className="flex min-h-0 flex-1 flex-col">
           <input type="hidden" name="id" value={entry.id} />
-          <div className="space-y-3 py-2">
+          <div className="themed-scrollbar min-h-0 flex-1 space-y-3 overflow-y-auto py-2 pr-3">
             <Input name="title_zh" defaultValue={entry.title_zh} placeholder="Chinese Title" required />
             <Input name="title_en" defaultValue={entry.title_en} placeholder="English Title" required />
             <div className="flex gap-2">
@@ -249,7 +249,11 @@ function MobileEditDialog({
               currentHskLevel={entry.hsk_level}
             />
             <MarkupValidationPanel content={content} />
-            {submitError && <p className="text-sm text-red-600">{submitError}</p>}
+            {submitError && (
+              <p className="rounded-lg border border-rose-500/20 bg-rose-500/10 px-3 py-2 text-sm text-rose-300">
+                {submitError}
+              </p>
+            )}
           </div>
           <DialogFooter>
             <DialogClose render={<Button variant="outline" />}>Cancel</DialogClose>
@@ -340,16 +344,16 @@ function MobileNewEntryDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[90vh] overflow-auto sm:max-w-lg">
+      <DialogContent className="flex max-h-[90vh] flex-col overflow-hidden sm:max-w-lg">
         <DialogHeader>
           <DialogTitle>New Entry</DialogTitle>
           <DialogDescription>Write a new journal entry.</DialogDescription>
         </DialogHeader>
-        <form action={handleSubmit}>
+        <form action={handleSubmit} className="flex min-h-0 flex-1 flex-col">
           <input type="hidden" name="source_type" value={draft?.sourceType ?? ""} />
           <input type="hidden" name="source_ref" value={draft?.sourceRef ?? ""} />
           <input type="hidden" name="source_prompt" value={draft?.prompt ?? ""} />
-          <div className="space-y-3 py-2">
+          <div className="themed-scrollbar min-h-0 flex-1 space-y-3 overflow-y-auto py-2 pr-3">
             <GuidedDraftPanel
               prompt={draft?.prompt}
               sourceZh={draft?.sourceZh}
@@ -398,7 +402,11 @@ function MobileNewEntryDialog({
             />
             <MarkupValidationPanel content={content} />
             <JournalFeedbackPanel content={content} targetWord={draft?.targetWord} />
-            {submitError && <p className="text-sm text-red-600">{submitError}</p>}
+            {submitError && (
+              <p className="rounded-lg border border-rose-500/20 bg-rose-500/10 px-3 py-2 text-sm text-rose-300">
+                {submitError}
+              </p>
+            )}
           </div>
           <DialogFooter>
             <DialogClose render={<Button variant="outline" />}>Cancel</DialogClose>
@@ -448,7 +456,7 @@ function MobilePronunciationDialog({
                   onClick={() => {
                     new Audio(`/api/tts?text=${encodeURIComponent(h.hanzi)}`).play();
                   }}
-                  className="rounded-full bg-[var(--cn-orange-light)] p-2 text-[var(--cn-orange)] transition-colors hover:bg-[var(--cn-orange)] hover:text-white"
+                  className="rounded-full border border-[var(--cn-orange)]/30 bg-[var(--cn-orange)]/12 p-2 text-[var(--cn-orange)] transition-colors hover:bg-[var(--cn-orange)] hover:text-white"
                 >
                   <Volume2 className="h-4 w-4" />
                 </button>
@@ -576,7 +584,11 @@ function MobileFlashcardDialog({
                 </Button>
               </div>
             )}
-            {saveStatus && <p className="mb-4 text-sm font-medium text-green-600">{saveStatus}</p>}
+            {saveStatus && (
+              <p className="mb-4 rounded-lg border border-emerald-500/20 bg-emerald-500/10 px-3 py-2 text-sm font-medium text-emerald-400">
+                {saveStatus}
+              </p>
+            )}
             <Button onClick={restart} variant="outline" size="sm">
               <RotateCcw className="mr-1.5 h-4 w-4" /> Again
             </Button>

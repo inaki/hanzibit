@@ -172,6 +172,7 @@ If the learner experience is weak, teacher workflows will also be weak. Teachers
 Current status:
 - the Phase 1 learner loop is now stable enough to support parallel mobile implementation
 - remaining Phase 1 work is mostly refinement, content depth, and parity polish rather than defining the loop itself
+- the web implementation should now be treated as the Phase 1 baseline while mobile catches up
 
 ---
 

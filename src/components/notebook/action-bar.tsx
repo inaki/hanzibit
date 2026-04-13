@@ -429,16 +429,16 @@ function EditEntryDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent data-testid="edit-entry-dialog" className="sm:max-w-lg">
+      <DialogContent data-testid="edit-entry-dialog" className="flex max-h-[90vh] flex-col overflow-hidden sm:max-w-lg">
         <DialogHeader>
           <DialogTitle>Edit Entry</DialogTitle>
           <DialogDescription>
             Update this journal entry.
           </DialogDescription>
         </DialogHeader>
-        <form action={handleSubmit}>
+        <form action={handleSubmit} className="flex min-h-0 flex-1 flex-col">
           <input type="hidden" name="id" value={entry.id} />
-          <div className="space-y-4 py-2">
+          <div className="themed-scrollbar min-h-0 flex-1 space-y-4 overflow-y-auto py-2 pr-3">
             <div>
               <label data-testid="edit-entry-title-zh-label" className="mb-1 block text-sm font-medium text-foreground/80">
                 Chinese Title
@@ -519,7 +519,7 @@ function EditEntryDialog({
                 <MarkupValidationPanel content={content} />
                 <JournalFeedbackPanel content={content} />
                 {submitError && (
-                  <p className="text-sm text-red-600">{submitError}</p>
+                  <p className="rounded-lg border border-rose-500/20 bg-rose-500/10 px-3 py-2 text-sm text-rose-300">{submitError}</p>
                 )}
               </div>
               {preview && <ContentPreview content={content} />}
@@ -530,7 +530,7 @@ function EditEntryDialog({
             <Button
               type="button"
               variant="ghost"
-              className="mr-auto text-red-600 hover:bg-red-50 hover:text-red-700"
+              className="mr-auto text-rose-400 hover:bg-rose-500/10 hover:text-rose-300"
               onClick={() => setConfirmDelete((value) => !value)}
             >
               <Trash2 className="h-4 w-4" />
@@ -644,18 +644,18 @@ function NewEntryDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent data-testid="new-entry-dialog" className="sm:max-w-lg">
+      <DialogContent data-testid="new-entry-dialog" className="flex max-h-[90vh] flex-col overflow-hidden sm:max-w-lg">
         <DialogHeader>
           <DialogTitle>New Journal Entry</DialogTitle>
           <DialogDescription>
             Write a new journal entry in Mandarin.
           </DialogDescription>
         </DialogHeader>
-        <form action={handleSubmit}>
+        <form action={handleSubmit} className="flex min-h-0 flex-1 flex-col">
           <input type="hidden" name="source_type" value={draft?.sourceType ?? ""} />
           <input type="hidden" name="source_ref" value={draft?.sourceRef ?? ""} />
           <input type="hidden" name="source_prompt" value={draft?.prompt ?? ""} />
-          <div className="space-y-4 py-2">
+          <div className="themed-scrollbar min-h-0 flex-1 space-y-4 overflow-y-auto py-2 pr-3">
             <GuidedDraftPanel
               prompt={draft?.prompt}
               sourceZh={draft?.sourceZh}
@@ -752,7 +752,7 @@ function NewEntryDialog({
                 />
                 <MarkupValidationPanel content={content} />
                 {submitError && (
-                  <p className="text-sm text-red-600">{submitError}</p>
+                  <p className="rounded-lg border border-rose-500/20 bg-rose-500/10 px-3 py-2 text-sm text-rose-300">{submitError}</p>
                 )}
               </div>
               {preview && content && <ContentPreview content={content} />}
@@ -831,7 +831,7 @@ function PronunciationDialog({
                   onClick={() => {
                     new Audio(`/api/tts?text=${encodeURIComponent(h.hanzi)}`).play();
                   }}
-                  className="rounded-full bg-[var(--cn-orange-light)] p-2 text-[var(--cn-orange)] transition-colors hover:bg-[var(--cn-orange)] hover:text-white"
+                  className="rounded-full border border-[var(--cn-orange)]/30 bg-[var(--cn-orange)]/12 p-2 text-[var(--cn-orange)] transition-colors hover:bg-[var(--cn-orange)] hover:text-white"
                 >
                   <Volume2 className="h-4 w-4" />
                 </button>
@@ -984,7 +984,7 @@ function FlashcardModeDialog({
             )}
 
             {saveStatus && (
-              <p className="mb-4 text-sm font-medium text-green-600">{saveStatus}</p>
+              <p className="mb-4 rounded-lg border border-emerald-500/20 bg-emerald-500/10 px-3 py-2 text-sm font-medium text-emerald-400">{saveStatus}</p>
             )}
 
             <Button
