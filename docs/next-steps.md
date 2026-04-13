@@ -15,7 +15,7 @@ Completed:
 5. **Focused review continuity** — flashcards due mode can open on today’s focus word and now links back to the related study item, guided writing flow, and latest linked response.
 6. **Annotation helper UX** — journal composers now include a lightweight annotation builder, can seed from live text selection, can replace selected text in-place, and can receive draft-level annotation candidates from reading surfaces.
 7. **Input-to-output promotion** — Study Guide and notebook gloss flows can now launch guided writing from exact words and short phrases, not only generic word-detail actions.
-7. **Mobile alignment doc** — `docs/mobile-team-update-phase-1.md` now tracks the current learner-loop behavior the Flutter app should mirror.
+8. **Mobile alignment docs** — `docs/mobile-team-update-phase-1.md` now tracks the running behavior changes, and `docs/mobile-team-phase-1-handoff.md` + `docs/phase-1-readiness.md` define the stable Phase 1 implementation target.
 
 ---
 
@@ -61,11 +61,11 @@ Completed:
   - focus-word loop visibility
 - [ ] **Phase 1 checkpoint cleanup** — remaining standalone-learner gaps:
   - deeper dictionary-backed annotation assistance beyond the current helper
-  - deeper input-content system beyond lightweight generated blocks
-  - listening/audio-backed input
+  - deeper input-content system beyond the current reading + transcript-first listening blocks
+  - real audio-backed input beyond transcript-first listening
   - final route-level validation polish where useful
 - [ ] **HSK Skool comparison follow-up** — see `app-comparison.md` for the full breakdown. Main gap remaining: audio is still on-demand TTS, not pre-generated. Consider the Phase 2 audio script from `implementation-guide.md` once the `AZURE_TTS_KEY` is confirmed working
-- [x] **Mobile handoff doc for Phase 1 learner-loop changes** — see `mobile-team-update-phase-1.md`. Keep this updated as web-side learner-loop behavior changes so the Flutter project can mirror the same workflows.
+- [x] **Mobile handoff docs for Phase 1 learner-loop changes** — see `mobile-team-update-phase-1.md`, `mobile-team-phase-1-handoff.md`, and `phase-1-readiness.md`.
 
 ---
 

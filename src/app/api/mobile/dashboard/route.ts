@@ -7,13 +7,14 @@ import {
   getWeakFlashcards,
   getCharacterOfTheDay,
 } from "@/lib/data";
-import { mobileError, mobileOk } from "@/lib/mobile-api";
+import { mobileError, mobileOk, parseLevel } from "@/lib/mobile-api";
 
 export async function GET(req: NextRequest) {
   const userId = await getMobileUserId(req);
   if (!userId) return mobileError("Unauthorized", 401);
 
-  const level = parseInt(req.nextUrl.searchParams.get("level") ?? "1", 10);
+  const level = parseLevel(req.nextUrl.searchParams.get("level") ?? "1");
+  if (typeof level !== "number") return mobileError(level.error, 400);
 
   const [streak, progress, stats, weakCards, characterOfTheDay] = await Promise.all([
     getUserStreak(userId),
@@ -23,5 +24,20 @@ export async function GET(req: NextRequest) {
     getCharacterOfTheDay(level),
   ]);
 
-  return mobileOk({ streak, progress, stats, weakCards, characterOfTheDay });
+  return mobileOk({
+    streak,
+    progress,
+    stats,
+    weakCards,
+    characterOfTheDay: characterOfTheDay
+      ? {
+          id: characterOfTheDay.id,
+          simplified: characterOfTheDay.simplified,
+          traditional: characterOfTheDay.traditional,
+          pinyin: characterOfTheDay.pinyin,
+          english: characterOfTheDay.english,
+          hsk_level: characterOfTheDay.hsk_level,
+        }
+      : null,
+  });
 }

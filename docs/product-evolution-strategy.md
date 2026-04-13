@@ -169,6 +169,10 @@ If the learner experience is weak, teacher workflows will also be weak. Teachers
 - the product loop is reliable enough to support classroom use later
 - the learner experience is moving beyond reference + review toward a repeatable daily practice system
 
+Current status:
+- the Phase 1 learner loop is now stable enough to support parallel mobile implementation
+- remaining Phase 1 work is mostly refinement, content depth, and parity polish rather than defining the loop itself
+
 ---
 
 ## Phase 2: Add Classroom Mode For Teachers And Students

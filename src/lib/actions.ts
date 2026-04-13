@@ -5,14 +5,9 @@ import { randomUUID } from "crypto";
 import { execute, queryOne } from "./db";
 import { getAuthUserId } from "./auth-utils";
 import {
+  getCharacterOfTheDay,
   getOwnedFlashcard,
   getOwnedJournalEntry,
-  getCharacterOfTheDay,
-  getDueFlashcardCount,
-  getTodayActivitySummary,
-  getRecentDailyLoopCompletionCount,
-  getRecentDailyLoopHistory,
-  getRecentDailyLoopStepSummary,
   getUserProgress,
   getStudyGuideData,
   getUserStreak,
@@ -20,7 +15,6 @@ import {
   getWeakFlashcards,
   updateFlashcardReview,
   addReviewRecord,
-  syncDailyLoopCompletion,
   searchHskWords,
   type Flashcard,
   type HskWord,
@@ -29,7 +23,8 @@ import {
 import { canReviewFlashcard, canAccessHskLevel } from "./gates";
 import { sm2 } from "./sm2";
 import { validateInlineMarkup } from "./parse-tokens";
-import { buildDailyPracticePlan, type DailyPracticePlan } from "./daily-practice";
+import type { DailyPracticePlan } from "./daily-practice";
+import { getDailyPracticePlanForUser } from "./daily-practice-service";
 
 export async function toggleBookmarkAction(entryId: string) {
   const userId = await getAuthUserId();
@@ -220,54 +215,7 @@ export async function getDueCountAction(): Promise<number> {
 
 export async function getDailyPracticeAction(level: number): Promise<DailyPracticePlan> {
   const userId = await getAuthUserId();
-  const [dueCount, activity, characterOfTheDay] = await Promise.all([
-    getDueFlashcardCount(userId),
-    getTodayActivitySummary(userId),
-    getCharacterOfTheDay(level),
-  ]);
-  const buildPlan = (
-    weeklyCompletedLoops: number,
-    recentLoopCompletionDates: string[],
-    recentStepSummary = {
-      reviewCompletedDays: 0,
-      studyCompletedDays: 0,
-      writeCompletedDays: 0,
-    }
-  ) =>
-    buildDailyPracticePlan({
-      level,
-      dueCount,
-      reviewsCompletedToday: activity.reviewsCompletedToday,
-      entriesCreatedToday: activity.entriesCreatedToday,
-      guidedResponsesToday: activity.guidedResponsesToday,
-      reviewedWordLabelsToday: activity.reviewedWordLabelsToday,
-      guidedResponseSourceRefsToday: activity.guidedResponseSourceRefsToday,
-      latestGuidedResponseToday: activity.latestGuidedResponseToday,
-      characterOfTheDay,
-      weeklyCompletedLoops,
-      recentLoopCompletionDates,
-      recentStepSummary,
-    });
-
-  const plan = buildPlan(0, []);
-
-  await syncDailyLoopCompletion(userId, {
-    completed: plan.loopCompleted,
-    reviewCompleted: plan.reviewCompleted,
-    studyCompleted: plan.studyCompleted,
-    writeCompleted: plan.writeCompleted,
-  });
-  const [weeklyCompletedLoops, recentLoopHistory, recentStepSummary] = await Promise.all([
-    getRecentDailyLoopCompletionCount(userId, 7),
-    getRecentDailyLoopHistory(userId, 7),
-    getRecentDailyLoopStepSummary(userId, 7),
-  ]);
-
-  return buildPlan(
-    weeklyCompletedLoops,
-    recentLoopHistory.map((item) => item.completedOn),
-    recentStepSummary
-  );
+  return getDailyPracticePlanForUser(userId, level);
 }
 
 export async function getProgressAction(

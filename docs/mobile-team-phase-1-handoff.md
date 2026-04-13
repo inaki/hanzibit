@@ -3,6 +3,7 @@
 This is the stable handoff doc for the Flutter team. It compresses the current web behavior into the product and implementation expectations mobile should mirror first.
 
 Use this together with `docs/mobile-team-update-phase-1.md`.
+For readiness status, also see `docs/phase-1-readiness.md`.
 
 ---
 
@@ -81,6 +82,9 @@ Expected behavior per word:
 Important:
 - Study Guide is now an input surface, not only a vocabulary browser
 - each phrase chip or CTA should be able to open guided writing directly
+- mobile now has a dedicated detail endpoint available:
+  - `GET /api/mobile/lessons/:wordId?level=<n>`
+  - this returns the selected word, focus context, review target, and precomputed presentation blocks/draft payloads
 
 ### 4. Focused Review
 
@@ -91,6 +95,11 @@ Expected behavior:
   - Study
   - Write
   - latest linked response
+
+Important:
+- mobile now has a dedicated continuity endpoint available:
+  - `GET /api/mobile/flashcards/focus?level=<n>`
+  - this returns the current focus word, focus progress, study target, latest guided response, and guided write draft payload
 
 ### 5. Gloss / Reading Continuity
 
@@ -127,6 +136,19 @@ Reading and dashboard surfaces should be able to send:
 3. Study Guide detail parity
 4. Focused review parity
 5. Gloss-to-writing parity
+
+---
+
+## What Can Wait
+
+These should not block Phase 1 mobile delivery:
+
+- richer audio playback
+- smarter phrase extraction
+- dictionary-backed annotation autocomplete
+- deeper teacher/classroom features
+
+Phase 1 mobile should target the stable learner loop first.
 
 ---
 
