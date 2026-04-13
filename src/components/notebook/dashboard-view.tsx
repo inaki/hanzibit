@@ -15,6 +15,7 @@ import {
 } from "@/lib/actions";
 import type { Flashcard, HskWord } from "@/lib/data";
 import type { DailyPracticePlan } from "@/lib/daily-practice";
+import { buildInlineAnnotation } from "@/lib/parse-tokens";
 
 type PracticeStepKey = "review" | "study" | "write";
 
@@ -52,7 +53,15 @@ export function DashboardView() {
       : "/notebook/flashcards?mode=due";
   const journalDraftHref =
     !loading && dailyPractice
-      ? `/notebook?new=1&draftTitleZh=${encodeURIComponent("今日练习")}&draftTitleEn=${encodeURIComponent("Daily practice")}&draftUnit=${encodeURIComponent(`HSK ${settings.hskLevel} Daily Practice`)}&draftLevel=${settings.hskLevel}&draftContentZh=${encodeURIComponent(dailyPractice.recommendedStudyWord?.simplified ?? "")}&draftPrompt=${encodeURIComponent(dailyPractice.writingPromptBody)}&draftTargetWord=${encodeURIComponent(dailyPractice.recommendedStudyWord?.simplified ?? "")}${dailyPractice.recommendedStudyWord?.id ? `&draftSourceType=study_guide&draftSourceRef=${encodeURIComponent(String(dailyPractice.recommendedStudyWord.id))}` : ""}`
+      ? `/notebook?new=1&draftTitleZh=${encodeURIComponent("今日练习")}&draftTitleEn=${encodeURIComponent("Daily practice")}&draftUnit=${encodeURIComponent(`HSK ${settings.hskLevel} Daily Practice`)}&draftLevel=${settings.hskLevel}&draftContentZh=${encodeURIComponent(
+        dailyPractice.recommendedStudyWord?.simplified && dailyPractice.recommendedStudyWord?.pinyin && dailyPractice.recommendedStudyWord?.english
+          ? buildInlineAnnotation(
+              dailyPractice.recommendedStudyWord.simplified,
+              dailyPractice.recommendedStudyWord.pinyin,
+              dailyPractice.recommendedStudyWord.english
+            )
+          : dailyPractice.recommendedStudyWord?.simplified ?? ""
+      )}&draftPrompt=${encodeURIComponent(dailyPractice.writingPromptBody)}&draftTargetWord=${encodeURIComponent(dailyPractice.recommendedStudyWord?.simplified ?? "")}&draftTargetPinyin=${encodeURIComponent(dailyPractice.recommendedStudyWord?.pinyin ?? "")}&draftTargetEnglish=${encodeURIComponent(dailyPractice.recommendedStudyWord?.english ?? "")}${dailyPractice.recommendedStudyWord?.id ? `&draftSourceType=study_guide&draftSourceRef=${encodeURIComponent(String(dailyPractice.recommendedStudyWord.id))}` : ""}`
       : "/notebook";
   const missingStepActionHref = (key: "review" | "study" | "write") => {
     if (key === "review") return dueFlashcardsHref;

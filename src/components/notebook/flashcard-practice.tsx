@@ -63,7 +63,7 @@ export function FlashcardPractice({
       : null;
   const focusJournalHref =
     focusFront && initialFocusLevel
-      ? `/notebook?new=1&draftTitleZh=${encodeURIComponent(`练习：${focusFront}`)}&draftTitleEn=${encodeURIComponent(`Practice: ${currentCard?.back ?? focusFront}`)}&draftUnit=${encodeURIComponent(`HSK ${initialFocusLevel} Daily Practice`)}&draftLevel=${encodeURIComponent(initialFocusLevel)}&draftContentZh=${encodeURIComponent(focusFront)}&draftPrompt=${encodeURIComponent(`Use ${focusFront} in 2-3 original sentences. Reuse it in a natural context and annotate at least one useful phrase.`)}&draftTargetWord=${encodeURIComponent(focusFront)}${initialFocusWordId ? `&draftSourceType=study_guide&draftSourceRef=${encodeURIComponent(initialFocusWordId)}` : ""}`
+      ? `/notebook?new=1&draftTitleZh=${encodeURIComponent(`练习：${focusFront}`)}&draftTitleEn=${encodeURIComponent(`Practice: ${currentCard?.back ?? focusFront}`)}&draftUnit=${encodeURIComponent(`HSK ${initialFocusLevel} Daily Practice`)}&draftLevel=${encodeURIComponent(initialFocusLevel)}&draftContentZh=${encodeURIComponent(focusFront)}&draftPrompt=${encodeURIComponent(`Use ${focusFront} in 2-3 original sentences. Reuse it in a natural context and annotate at least one useful phrase.`)}&draftTargetWord=${encodeURIComponent(focusFront)}&draftTargetEnglish=${encodeURIComponent(currentCard?.back ?? "")}${initialFocusWordId ? `&draftSourceType=study_guide&draftSourceRef=${encodeURIComponent(initialFocusWordId)}` : ""}`
       : null;
   const focusLatestResponseHref =
     initialFocusWordId && dailyPractice?.latestGuidedResponseToday?.sourceRef === initialFocusWordId

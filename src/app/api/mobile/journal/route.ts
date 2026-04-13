@@ -3,10 +3,12 @@ import { randomUUID } from "crypto";
 import { getMobileUserId } from "@/lib/mobile-auth";
 import { getJournalEntries } from "@/lib/data";
 import { execute } from "@/lib/db";
+import { validateInlineMarkup } from "@/lib/parse-tokens";
 import {
   mobileError,
   mobileOk,
   parseLevel,
+  requireObject,
   requireString,
 } from "@/lib/mobile-api";
 
@@ -22,7 +24,8 @@ export async function POST(req: NextRequest) {
   const userId = await getMobileUserId(req);
   if (!userId) return mobileError("Unauthorized", 401);
 
-  const body = await req.json();
+  const body = requireObject(await req.json());
+  if ("error" in body) return mobileError(body.error, 400);
   const titleZh = requireString(body.title_zh, "title_zh");
   const titleEn = requireString(body.title_en, "title_en");
   const contentZh = requireString(body.content_zh, "content_zh");
@@ -31,6 +34,8 @@ export async function POST(req: NextRequest) {
   if (typeof titleEn !== "string") return mobileError(titleEn.error, 400);
   if (typeof contentZh !== "string") return mobileError(contentZh.error, 400);
   if (typeof level !== "number") return mobileError(level.error, 400);
+  const markupIssues = validateInlineMarkup(contentZh);
+  if (markupIssues.length > 0) return mobileError(markupIssues[0].message, 400);
 
   const id = randomUUID();
 

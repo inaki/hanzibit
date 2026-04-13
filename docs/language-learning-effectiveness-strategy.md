@@ -126,6 +126,14 @@ This suggests HanziBit should emphasize:
 
 The app should make it easy for learners to move directly from reading/listening into annotation and review creation.
 
+Current Phase 1 progress:
+
+- Study Guide reading blocks now launch guided writing from exact words and short phrases
+- interlinear gloss view now launches guided writing from glossed words and short phrase chips
+- the journal composer can accept draft-level annotation candidates and live text selections
+
+This means HanziBit has already started building the “input to noticing to output” bridge that this strategy depends on.
+
 ---
 
 ## 3. Retrieval And Spaced Review

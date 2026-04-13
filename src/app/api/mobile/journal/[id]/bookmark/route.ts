@@ -1,6 +1,6 @@
 import { NextRequest } from "next/server";
 import { getMobileUserId } from "@/lib/mobile-auth";
-import { getJournalEntry } from "@/lib/data";
+import { getOwnedJournalEntry } from "@/lib/data";
 import { execute } from "@/lib/db";
 import { mobileError, mobileOk } from "@/lib/mobile-api";
 
@@ -11,8 +11,8 @@ export async function POST(req: NextRequest, { params }: Params) {
   if (!userId) return mobileError("Unauthorized", 401);
 
   const { id } = await params;
-  const entry = await getJournalEntry(id);
-  if (!entry || entry.user_id !== userId) {
+  const entry = await getOwnedJournalEntry(userId, id);
+  if (!entry) {
     return mobileError("Not found", 404);
   }
 

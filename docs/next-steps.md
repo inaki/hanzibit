@@ -13,7 +13,9 @@ Completed:
 3. **Journal UX hardening** — inline annotation markup is validated before save, blocked when malformed, and reinforced server-side; guided drafts now show revision guidance and lightweight journal feedback.
 4. **Study Guide upgrade** — no longer only a word browser; now includes input passages, response prompts, guided-response history, and a conditional today-loop panel for the active focus word with direct Review/Write/Open-response actions.
 5. **Focused review continuity** — flashcards due mode can open on today’s focus word and now links back to the related study item, guided writing flow, and latest linked response.
-6. **Mobile alignment doc** — `docs/mobile-team-update-phase-1.md` now tracks the current learner-loop behavior the Flutter app should mirror.
+6. **Annotation helper UX** — journal composers now include a lightweight annotation builder, can seed from live text selection, can replace selected text in-place, and can receive draft-level annotation candidates from reading surfaces.
+7. **Input-to-output promotion** — Study Guide and notebook gloss flows can now launch guided writing from exact words and short phrases, not only generic word-detail actions.
+7. **Mobile alignment doc** — `docs/mobile-team-update-phase-1.md` now tracks the current learner-loop behavior the Flutter app should mirror.
 
 ---
 
@@ -41,9 +43,10 @@ Completed:
 
 ## Medium-Term
 
-- [ ] **Journal annotation UX** — the inline markup `[汉字|pinyin|meaning]` is the app's core differentiator. Ideas to make it easier:
+- [ ] **Journal annotation UX refinement** — the inline markup `[汉字|pinyin|meaning]` is the app's core differentiator. The first helper layer is now shipped. Next useful refinements:
   - Auto-suggest CEDICT matches as the user types inside `[` brackets
-  - One-click annotate from the interlinear gloss view
+  - Add a dedicated “save as annotation” path from interlinear gloss, not only guided journal launch
+  - Improve phrase extraction and phrase-level annotation suggestions from reading surfaces
 - [x] **Automated tests** — added lightweight test coverage for review gating, HSK access policy, streak logic, and `sm2`
 - [x] **Mobile API normalization** — main mobile routes now share response/validation helpers and have more consistent error handling
 - [x] **Guided daily learning loop** — first V1 is now shipped:
@@ -57,10 +60,10 @@ Completed:
   - guided-response history
   - focus-word loop visibility
 - [ ] **Phase 1 checkpoint cleanup** — remaining standalone-learner gaps:
-  - ownership/security audit on remaining core mutations
-  - weak-card/progress test coverage
-  - richer annotation helper UI
+  - deeper dictionary-backed annotation assistance beyond the current helper
   - deeper input-content system beyond lightweight generated blocks
+  - listening/audio-backed input
+  - final route-level validation polish where useful
 - [ ] **HSK Skool comparison follow-up** — see `app-comparison.md` for the full breakdown. Main gap remaining: audio is still on-demand TTS, not pre-generated. Consider the Phase 2 audio script from `implementation-guide.md` once the `AZURE_TTS_KEY` is confirmed working
 - [x] **Mobile handoff doc for Phase 1 learner-loop changes** — see `mobile-team-update-phase-1.md`. Keep this updated as web-side learner-loop behavior changes so the Flutter project can mirror the same workflows.
 

@@ -1,8 +1,10 @@
 "use client";
 
+import { useState } from "react";
 import { parseInput, validateInlineMarkup } from "@/lib/parse-tokens";
 import { evaluateGuidedDraft } from "@/lib/composer-guidance";
 import { evaluateJournalFeedback } from "@/lib/journal-feedback";
+import { buildInlineAnnotation } from "@/lib/parse-tokens";
 
 export function ContentPreview({ content }: { content: string }) {
   const tokens = parseInput(content);
@@ -134,6 +136,130 @@ export function JournalFeedbackPanel({
           ))}
         </div>
       )}
+    </div>
+  );
+}
+
+export function AnnotationBuilder({
+  onInsert,
+  suggestedAnnotation,
+  selectedText,
+  onUseSelection,
+}: {
+  onInsert: (annotation: string) => void;
+  suggestedAnnotation?: {
+    hanzi: string;
+    pinyin: string;
+    english: string;
+  };
+  selectedText?: string;
+  onUseSelection?: () => void;
+}) {
+  const [hanzi, setHanzi] = useState("");
+  const [pinyin, setPinyin] = useState("");
+  const [english, setEnglish] = useState("");
+  const trimmedSelection = selectedText?.trim() ?? "";
+
+  const canInsert = hanzi.trim() && pinyin.trim() && english.trim();
+
+  function handleInsert() {
+    if (!canInsert) return;
+    onInsert(buildInlineAnnotation(hanzi, pinyin, english));
+    setHanzi("");
+    setPinyin("");
+    setEnglish("");
+  }
+
+  function handleInsertSuggested() {
+    if (!suggestedAnnotation) return;
+    onInsert(
+      buildInlineAnnotation(
+        suggestedAnnotation.hanzi,
+        suggestedAnnotation.pinyin,
+        suggestedAnnotation.english
+      )
+    );
+  }
+
+  function handleUseSelection() {
+    if (!trimmedSelection) return;
+    setHanzi(trimmedSelection);
+    if (suggestedAnnotation && trimmedSelection === suggestedAnnotation.hanzi) {
+      setPinyin(suggestedAnnotation.pinyin);
+      setEnglish(suggestedAnnotation.english);
+    }
+    onUseSelection?.();
+  }
+
+  return (
+    <div className="rounded-lg border border-orange-200 bg-orange-50 px-4 py-4">
+      <p className="text-xs font-semibold uppercase tracking-wider text-[var(--cn-orange)]">
+        Quick Annotation
+      </p>
+      <p className="mt-1 text-xs text-muted-foreground">
+        Build one annotation block without typing the markup manually.
+      </p>
+      {trimmedSelection && (
+        <div className="mt-3 flex items-center justify-between gap-3 rounded-lg border border-orange-200/80 bg-white/70 px-3 py-2">
+          <div className="min-w-0">
+            <p className="text-[11px] font-semibold uppercase tracking-wider text-[var(--cn-orange)]">
+              Current selection
+            </p>
+            <p className="truncate text-sm text-foreground">{trimmedSelection}</p>
+          </div>
+          <button
+            type="button"
+            onClick={handleUseSelection}
+            className="shrink-0 rounded-full border border-[var(--cn-orange)]/30 bg-white px-3 py-1 text-xs font-medium text-[var(--cn-orange)] transition-colors hover:bg-white/80"
+          >
+            Use selection
+          </button>
+        </div>
+      )}
+      <div className="mt-3 grid gap-2 md:grid-cols-3">
+        <input
+          value={hanzi}
+          onChange={(e) => setHanzi(e.target.value)}
+          placeholder="汉字"
+          className="rounded-lg border border-border bg-white px-3 py-2 text-sm text-foreground outline-none focus:border-[var(--cn-orange)]"
+        />
+        <input
+          value={pinyin}
+          onChange={(e) => setPinyin(e.target.value)}
+          placeholder="pin1 yin1"
+          className="rounded-lg border border-border bg-white px-3 py-2 text-sm text-foreground outline-none focus:border-[var(--cn-orange)]"
+        />
+        <input
+          value={english}
+          onChange={(e) => setEnglish(e.target.value)}
+          placeholder="meaning"
+          className="rounded-lg border border-border bg-white px-3 py-2 text-sm text-foreground outline-none focus:border-[var(--cn-orange)]"
+        />
+      </div>
+      <div className="mt-3 flex items-center justify-between gap-3">
+        <p className="truncate font-mono text-xs text-muted-foreground">
+          {canInsert ? buildInlineAnnotation(hanzi, pinyin, english) : "[汉字|pinyin|meaning]"}
+        </p>
+        <div className="flex items-center gap-2">
+          {suggestedAnnotation && (
+            <button
+              type="button"
+              onClick={handleInsertSuggested}
+              className="rounded-full border border-[var(--cn-orange)]/30 bg-white px-3 py-1 text-xs font-medium text-[var(--cn-orange)] transition-colors hover:bg-white/80"
+            >
+              Insert target word
+            </button>
+          )}
+          <button
+            type="button"
+            onClick={handleInsert}
+            disabled={!canInsert}
+            className="rounded-full bg-[var(--cn-orange)] px-3 py-1 text-xs font-medium text-white transition-colors hover:bg-[var(--cn-orange-dark)] disabled:opacity-50"
+          >
+            Insert
+          </button>
+        </div>
+      </div>
     </div>
   );
 }

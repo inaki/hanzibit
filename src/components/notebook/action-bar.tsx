@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useTransition } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
 import {
   Pencil,
   Mic,
@@ -33,10 +33,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import type { JournalEntry } from "@/lib/data";
 import { toggleBookmarkAction, createJournalEntry, updateJournalEntry, saveFlashcardsFromEntry, deleteJournalEntry } from "@/lib/actions";
-import { parseInput, extractHanziTokens, validateInlineMarkup } from "@/lib/parse-tokens";
+import { parseInput, extractHanziTokens, replaceTextRange, validateInlineMarkup } from "@/lib/parse-tokens";
 import { useGloss } from "./gloss-context";
 import { UpgradePrompt } from "@/components/upgrade-prompt";
-import { ContentPreview, GuidedDraftPanel, JournalFeedbackPanel, MarkupValidationPanel } from "./markup-assist";
+import { AnnotationBuilder, ContentPreview, GuidedDraftPanel, JournalFeedbackPanel, MarkupValidationPanel } from "./markup-assist";
 import { useRouter } from "next/navigation";
 
 interface NotebookActionBarProps {
@@ -49,10 +49,13 @@ interface NotebookActionBarProps {
     unit: string;
     hskLevel: number;
     contentZh: string;
+    selectedText?: string;
     prompt?: string;
     sourceZh?: string;
     sourceEn?: string;
     targetWord?: string;
+    targetPinyin?: string;
+    targetEnglish?: string;
     sourceType?: string;
     sourceRef?: string;
   };
@@ -360,8 +363,41 @@ function EditEntryDialog({
   const [content, setContent] = useState(entry.content_zh);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [selectedText, setSelectedText] = useState("");
+  const textareaRef = useRef<HTMLTextAreaElement | null>(null);
   const hasMarkupIssues = validateInlineMarkup(content).length > 0;
+
+  function handleInsertAnnotation(annotation: string) {
+    const textarea = textareaRef.current;
+    const start = textarea?.selectionStart ?? 0;
+    const end = textarea?.selectionEnd ?? 0;
+    const hasSelection = end > start;
+    setContent((current) => {
+      if (hasSelection) {
+        return replaceTextRange(current, start, end, annotation);
+      }
+      if (!current.trim()) return annotation;
+      const needsBreak = /[\n\s]$/.test(current);
+      return `${current}${needsBreak ? "" : " "}${annotation}`;
+    });
+    setSelectedText("");
+    if (hasSelection && textarea) {
+      window.requestAnimationFrame(() => {
+        textarea.focus();
+        const nextPos = start + annotation.length;
+        textarea.setSelectionRange(nextPos, nextPos);
+      });
+    }
+  }
   const router = useRouter();
+
+  function captureSelection() {
+    const selection = textareaRef.current?.value.slice(
+      textareaRef.current.selectionStart ?? 0,
+      textareaRef.current.selectionEnd ?? 0
+    ) ?? "";
+    setSelectedText(selection);
+  }
 
   function handleSubmit(formData: FormData) {
     setSubmitError(null);
@@ -463,13 +499,22 @@ function EditEntryDialog({
               <textarea
                 data-testid="edit-entry-content"
                 name="content_zh"
+                ref={textareaRef}
                 value={content}
                 onChange={(e) => setContent(e.target.value)}
+                onSelect={captureSelection}
+                onKeyUp={captureSelection}
+                onMouseUp={captureSelection}
                 required
                 rows={6}
                 className="w-full rounded-lg border border-border bg-card px-3 py-2 font-mono text-sm text-foreground outline-none focus:border-[var(--cn-orange)] focus:ring-1 focus:ring-[var(--cn-orange)]"
               />
               <div className="mt-3 space-y-3">
+                <AnnotationBuilder
+                  onInsert={handleInsertAnnotation}
+                  selectedText={selectedText}
+                  onUseSelection={captureSelection}
+                />
                 <MarkupValidationPanel content={content} />
                 <JournalFeedbackPanel content={content} />
                 {submitError && (
@@ -532,10 +577,13 @@ function NewEntryDialog({
     unit: string;
     hskLevel: number;
     contentZh: string;
+    selectedText?: string;
     prompt?: string;
     sourceZh?: string;
     sourceEn?: string;
     targetWord?: string;
+    targetPinyin?: string;
+    targetEnglish?: string;
     sourceType?: string;
     sourceRef?: string;
   };
@@ -544,7 +592,40 @@ function NewEntryDialog({
   const [preview, setPreview] = useState(false);
   const [content, setContent] = useState(draft?.contentZh ?? "");
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const [selectedText, setSelectedText] = useState("");
+  const textareaRef = useRef<HTMLTextAreaElement | null>(null);
   const hasMarkupIssues = validateInlineMarkup(content).length > 0;
+
+  function handleInsertAnnotation(annotation: string) {
+    const textarea = textareaRef.current;
+    const start = textarea?.selectionStart ?? 0;
+    const end = textarea?.selectionEnd ?? 0;
+    const hasSelection = end > start;
+    setContent((current) => {
+      if (hasSelection) {
+        return replaceTextRange(current, start, end, annotation);
+      }
+      if (!current.trim()) return annotation;
+      const needsBreak = /[\n\s]$/.test(current);
+      return `${current}${needsBreak ? "" : " "}${annotation}`;
+    });
+    setSelectedText("");
+    if (hasSelection && textarea) {
+      window.requestAnimationFrame(() => {
+        textarea.focus();
+        const nextPos = start + annotation.length;
+        textarea.setSelectionRange(nextPos, nextPos);
+      });
+    }
+  }
+
+  function captureSelection() {
+    const selection = textareaRef.current?.value.slice(
+      textareaRef.current.selectionStart ?? 0,
+      textareaRef.current.selectionEnd ?? 0
+    ) ?? "";
+    setSelectedText(selection);
+  }
 
   function handleSubmit(formData: FormData) {
     setSubmitError(null);
@@ -636,8 +717,12 @@ function NewEntryDialog({
               <textarea
                 data-testid="new-entry-content"
                 name="content_zh"
+                ref={textareaRef}
                 value={content}
                 onChange={(e) => setContent(e.target.value)}
+                onSelect={captureSelection}
+                onKeyUp={captureSelection}
+                onMouseUp={captureSelection}
                 placeholder={`我去[餐厅|can1 ting1|restaurant]吃饭。\n[服务员|fu2 wu4 yuan2|waiter]很热情。`}
                 required
                 rows={6}
@@ -649,6 +734,20 @@ function NewEntryDialog({
                 </p>
               )}
               <div className="mt-3 space-y-3">
+                <AnnotationBuilder
+                  onInsert={handleInsertAnnotation}
+                  selectedText={selectedText || draft?.selectedText}
+                  onUseSelection={captureSelection}
+                  suggestedAnnotation={
+                    draft?.targetWord && draft?.targetPinyin && draft?.targetEnglish
+                      ? {
+                          hanzi: draft.targetWord,
+                          pinyin: draft.targetPinyin,
+                          english: draft.targetEnglish,
+                        }
+                      : undefined
+                  }
+                />
                 <MarkupValidationPanel content={content} />
                 {submitError && (
                   <p className="text-sm text-red-600">{submitError}</p>

@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { validateInlineMarkup } from "../src/lib/parse-tokens";
+import { buildInlineAnnotation, replaceTextRange, validateInlineMarkup } from "../src/lib/parse-tokens";
 
 test("accepts valid inline markup", () => {
   assert.deepEqual(
@@ -35,5 +35,26 @@ test("rejects empty annotation parts", () => {
   assert.equal(
     issues[0]?.message,
     "Each annotation needs hanzi, pinyin, and meaning."
+  );
+});
+
+test("builds inline annotation markup from trimmed parts", () => {
+  assert.equal(
+    buildInlineAnnotation(" 爱 ", " ai4 ", " love "),
+    "[爱|ai4|love]"
+  );
+});
+
+test("replaces the selected range in-place", () => {
+  assert.equal(
+    replaceTextRange("我喜欢爱你。", 3, 4, "[爱|ai4|love]"),
+    "我喜欢[爱|ai4|love]你。"
+  );
+});
+
+test("clamps replacement ranges safely", () => {
+  assert.equal(
+    replaceTextRange("你好", -5, 99, "[你好|ni3 hao3|hello]"),
+    "[你好|ni3 hao3|hello]"
   );
 });

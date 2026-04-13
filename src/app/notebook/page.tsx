@@ -15,10 +15,13 @@ interface JournalDraftPrefill {
   unit: string;
   hskLevel: number;
   contentZh: string;
+  selectedText?: string;
   prompt?: string;
   sourceZh?: string;
   sourceEn?: string;
   targetWord?: string;
+  targetPinyin?: string;
+  targetEnglish?: string;
   sourceType?: string;
   sourceRef?: string;
 }
@@ -34,10 +37,13 @@ export default function NotebookPage({
     draftUnit?: string;
     draftLevel?: string;
     draftContentZh?: string;
+    draftSelectedText?: string;
     draftPrompt?: string;
     draftSourceZh?: string;
     draftSourceEn?: string;
     draftTargetWord?: string;
+    draftTargetPinyin?: string;
+    draftTargetEnglish?: string;
     draftSourceType?: string;
     draftSourceRef?: string;
   }>;
@@ -56,10 +62,13 @@ async function NotebookPageInner({
     draftUnit?: string;
     draftLevel?: string;
     draftContentZh?: string;
+    draftSelectedText?: string;
     draftPrompt?: string;
     draftSourceZh?: string;
     draftSourceEn?: string;
     draftTargetWord?: string;
+    draftTargetPinyin?: string;
+    draftTargetEnglish?: string;
     draftSourceType?: string;
     draftSourceRef?: string;
   }>;
@@ -72,10 +81,13 @@ async function NotebookPageInner({
     draftUnit,
     draftLevel,
     draftContentZh,
+    draftSelectedText,
     draftPrompt,
     draftSourceZh,
     draftSourceEn,
     draftTargetWord,
+    draftTargetPinyin,
+    draftTargetEnglish,
     draftSourceType,
     draftSourceRef,
   } = await searchParamsPromise;
@@ -98,10 +110,13 @@ async function NotebookPageInner({
     unit: draftUnit ?? "",
     hskLevel: Number.parseInt(draftLevel ?? "1", 10) || 1,
     contentZh: draftContentZh ?? "",
+    selectedText: draftSelectedText ?? "",
     prompt: draftPrompt ?? "",
     sourceZh: draftSourceZh ?? "",
     sourceEn: draftSourceEn ?? "",
     targetWord: draftTargetWord ?? "",
+    targetPinyin: draftTargetPinyin ?? "",
+    targetEnglish: draftTargetEnglish ?? "",
     sourceType: draftSourceType ?? "",
     sourceRef: draftSourceRef ?? "",
   };

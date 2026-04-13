@@ -60,6 +60,8 @@ Draft payload currently includes:
 - `draftSourceZh`
 - `draftSourceEn`
 - `draftTargetWord`
+- `draftTargetPinyin`
+- `draftTargetEnglish`
 - `draftSourceType`
 - `draftSourceRef`
 
@@ -72,6 +74,174 @@ Mobile implication:
 - Flutter should support a guided journal compose mode, not only a blank create-entry screen
 - guided prompt/source context should render as structured UI, not pasted text
 - draft metadata should travel through navigation cleanly
+- when target-word pinyin/meaning exist, mobile can offer a one-tap target-word annotation insert in the composer
+
+---
+
+### 22. Guided drafts now carry enough context for one-tap target-word annotation
+
+The journal annotation helper is no longer only generic/manual.
+
+Current web behavior:
+- guided draft links now carry:
+  - target word
+  - target pinyin when available
+  - target English meaning when available
+- the journal composer can use that context to offer:
+  - `Insert target word`
+- this inserts a ready-made `[汉字|pinyin|meaning]` block into the draft
+- some guided-entry flows can now prefill `draftContentZh` with an annotation-ready block when the full word context is known
+
+Mobile implication:
+- Flutter guided journal drafts should preserve the richer target-word payload
+- when `draftTargetWord`, `draftTargetPinyin`, and `draftTargetEnglish` are present, mobile should offer a quick insert for that exact annotation
+- this is especially useful for:
+  - Study Guide → Journal
+  - Dashboard → guided writing
+- when mobile already has all three parts, it can also prefill the initial content with the formatted annotation instead of only raw Hanzi
+
+---
+
+### 23. The Study Guide input block can now promote the focus phrase directly into writing
+
+The input surface itself now has a phrase-to-output action.
+
+Current web behavior:
+- inside `Notice This Phrase`, the Study Guide now shows:
+  - `Use this phrase in journal`
+- that action opens the journal with:
+  - the target word already annotation-ready
+  - the focus phrase already present in the draft
+  - a prompt that explicitly asks the learner to reuse the phrase in their own response
+
+Mobile implication:
+- Flutter Study Guide detail screens should support a direct phrase-to-journal handoff from the input block
+- mobile should preserve both:
+  - target-word annotation context
+  - focus-phrase reuse context
+- this makes the input surface more than reference content; it becomes a direct output launcher
+
+---
+
+### 24. The notebook gloss view can now promote a glossed word into a guided draft
+
+The first in-notebook gloss-to-journal path now exists.
+
+Current web behavior:
+- in the interlinear gloss view, glossed words can show:
+  - `Use in journal`
+- that action opens a new guided journal draft while keeping the current notebook entry selected
+- the draft starts with the clicked gloss token already annotation-ready
+- the prompt asks the learner to reuse that word in original sentences based on what they just read
+
+Mobile implication:
+- when Flutter implements an interlinear or glossed reading surface, glossed words should be able to launch guided writing directly
+- mobile should preserve reading continuity while opening a new output action for the selected gloss token
+- this is the first concrete gloss-to-output bridge and should inform later mobile gloss UX
+
+---
+
+### 25. The journal annotation helper can now seed itself from the current text selection
+
+The composer-side annotation flow is no longer only manual.
+
+Current web behavior:
+- in both desktop and mobile journal editors, the annotation helper can detect the current textarea selection
+- when text is selected, the helper shows:
+  - `Current selection`
+  - `Use selection`
+- using that action copies the selected span into the annotation builder’s Hanzi field
+- if the selected span matches the guided target word, the helper also autofills:
+  - pinyin
+  - English meaning
+
+Mobile implication:
+- Flutter journal editors should support selection-aware annotation creation, not only manual typing
+- the mobile composer should be able to lift the current selection into the annotation helper
+- when the selection matches the guided target word payload, mobile should autofill the rest of the annotation too
+- this reduces friction for turning exact spans into saved inline vocabulary
+
+---
+
+### 26. Reading surfaces can now send a draft-level annotation candidate into the journal
+
+The journal no longer needs a live textarea selection to start a focused annotation flow.
+
+Current web behavior:
+- reading-originated journal links can now send:
+  - `draftSelectedText`
+- the journal composer uses that as the initial annotation candidate in the helper
+- this is currently used by:
+  - Study Guide `Use this phrase in journal`
+  - gloss-to-journal links from the notebook reader
+- once inside the composer, the learner can still replace that candidate with a new live selection
+
+Mobile implication:
+- Flutter should support a draft-level annotation candidate field in guided journal routes
+- when `draftSelectedText` exists, mobile should show it in the annotation helper even before the user selects text in the editor
+- this lets reading surfaces pass an exact phrase or token into output without forcing immediate manual re-selection
+
+---
+
+### 27. The Study Guide passage now exposes multiple phrase-level writing launches
+
+The reading surface is no longer limited to a single predefined phrase CTA.
+
+Current web behavior:
+- the Study Guide input block now shows a `Try These Phrases` row
+- each phrase chip launches the journal with:
+  - `draftSelectedText`
+  - the phrase already present in draft content
+  - the same study-item source metadata
+- this sits alongside the original `Use this phrase in journal` CTA
+
+Mobile implication:
+- Flutter Study Guide detail should support multiple phrase-level actions from the reading block
+- these should behave like lightweight phrase chips, not only one large CTA
+- each chip should open a guided writing flow with the selected phrase preserved as annotation context
+
+---
+
+### 28. The notebook gloss view now exposes short phrase chips, not only single-word launches
+
+The gloss-to-output bridge is now richer inside the notebook reader.
+
+Current web behavior:
+- each gloss paragraph can now show a `Try a phrase` row
+- the row contains short phrase chips derived from adjacent gloss tokens
+- each chip opens the journal with:
+  - the exact phrase in `draftContentZh`
+  - the same phrase in `draftSelectedText`
+  - a phrase-specific writing prompt
+- single-token `Use in journal` links still exist alongside this
+
+Mobile implication:
+- when Flutter implements glossed reading, it should support both:
+  - single-token launch actions
+  - short phrase chips derived from nearby reading context
+- phrase chips should preserve exact phrase text into the guided journal route, not only a generic target word
+
+---
+
+### 29. The Study Guide now includes a transcript-style listening block
+
+The input surface now includes one more structured input mode besides reading.
+
+Current web behavior:
+- each Study Guide detail now includes a `Listening Echo` block
+- the block contains:
+  - a short transcript-style Chinese line
+  - English gloss
+  - a response prompt
+- the CTA opens guided writing with:
+  - the listening line in `draftContentZh`
+  - the same line in `draftSelectedText`
+  - the listening prompt as the writing task
+
+Mobile implication:
+- Flutter Study Guide detail should support a listening/transcript block even before real audio playback exists
+- mobile can treat this as transcript-first listening practice in Phase 1
+- the response CTA should preserve the full listening line as annotation context, not only the target word
 
 ---
 
@@ -510,6 +680,9 @@ The mobile app should now aim to match these behaviors:
 - Study Guide loop panel can trigger direct Review/Write recovery actions
 - Study Guide loop panel can reopen the latest linked response
 - focused review can reopen the latest linked response too
+- guided drafts can support one-tap target-word annotation insertion
+- Study Guide input blocks can launch phrase-specific guided writing
+- glossed reading tokens can launch guided writing directly
 - action buttons jump directly into the relevant task
 
 ---
@@ -561,6 +734,9 @@ If the Flutter app is using older assumptions where a journal entry is only free
 19. Add direct Review/Write actions inside the Study Guide loop panel
 20. Add an `Open latest response` action to the Study Guide loop panel when writing is already complete
 21. Add an `Open latest response` action to the focused review panel when linked output exists
+22. Support richer guided-draft target-word payload and one-tap target-word annotation insert
+23. Add `Use this phrase in journal` from the Study Guide input block
+24. Add `Use in journal` from glossed reading tokens
 
 ---
 

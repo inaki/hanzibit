@@ -121,6 +121,53 @@ export interface StudyGuideData {
   };
 }
 
+export function calculateEncounteredProgress(
+  hskWords: Pick<HskWord, "simplified">[],
+  entryContents: string[],
+  flashcardFronts: string[]
+): { encountered: number; total: number; percent: number } {
+  if (hskWords.length === 0) {
+    return { encountered: 0, total: 0, percent: 0 };
+  }
+
+  const hskSet = new Set(hskWords.map((word) => word.simplified));
+  const encounteredSet = new Set<string>();
+
+  for (const contentZh of entryContents) {
+    const tokens = parseInput(contentZh);
+    const hanziTokens = extractHanziTokens(tokens);
+    for (const token of hanziTokens) {
+      if (hskSet.has(token.hanzi)) {
+        encounteredSet.add(token.hanzi);
+      }
+    }
+  }
+
+  for (const front of flashcardFronts) {
+    if (hskSet.has(front)) {
+      encounteredSet.add(front);
+    }
+  }
+
+  const encountered = encounteredSet.size;
+  const total = hskWords.length;
+  const percent = Math.round((encountered / total) * 100);
+
+  return { encountered, total, percent };
+}
+
+export function selectWeakFlashcards(cards: Flashcard[], limit = 5): Flashcard[] {
+  return [...cards]
+    .filter((card) => card.ease_factor < 2.0 && card.review_count > 1)
+    .sort((a, b) => {
+      if (a.ease_factor !== b.ease_factor) {
+        return a.ease_factor - b.ease_factor;
+      }
+      return a.next_review.localeCompare(b.next_review);
+    })
+    .slice(0, limit);
+}
+
 export async function getJournalEntries(userId: string): Promise<JournalEntry[]> {
   return query<JournalEntry>(
     "SELECT * FROM journal_entries WHERE user_id = $1 ORDER BY created_at DESC",
@@ -130,6 +177,16 @@ export async function getJournalEntries(userId: string): Promise<JournalEntry[]>
 
 export async function getJournalEntry(id: string): Promise<JournalEntry | undefined> {
   return queryOne<JournalEntry>("SELECT * FROM journal_entries WHERE id = $1", [id]);
+}
+
+export async function getOwnedJournalEntry(
+  userId: string,
+  id: string
+): Promise<JournalEntry | undefined> {
+  return queryOne<JournalEntry>(
+    "SELECT * FROM journal_entries WHERE id = $1 AND user_id = $2",
+    [id, userId]
+  );
 }
 
 export async function getEntryAnnotations(entryId: string): Promise<EntryAnnotation[]> {
@@ -211,6 +268,16 @@ export async function getFlashcards(userId: string): Promise<Flashcard[]> {
   return query<Flashcard>(
     "SELECT * FROM flashcards WHERE user_id = $1 ORDER BY next_review ASC",
     [userId]
+  );
+}
+
+export async function getOwnedFlashcard(
+  userId: string,
+  id: string
+): Promise<Flashcard | undefined> {
+  return queryOne<Flashcard>(
+    "SELECT * FROM flashcards WHERE id = $1 AND user_id = $2",
+    [id, userId]
   );
 }
 
@@ -489,9 +556,6 @@ export async function getUserProgress(
   level: number
 ): Promise<{ encountered: number; total: number; percent: number }> {
   const hskWords = await getHskWords(level);
-  if (hskWords.length === 0) return { encountered: 0, total: 0, percent: 0 };
-
-  const hskSet = new Set(hskWords.map((word) => word.simplified));
   const entries = await query<{ content_zh: string }>(
     "SELECT content_zh FROM journal_entries WHERE user_id = $1",
     [userId]
@@ -501,29 +565,11 @@ export async function getUserProgress(
     [userId]
   );
 
-  const encounteredSet = new Set<string>();
-
-  for (const entry of entries) {
-    const tokens = parseInput(entry.content_zh);
-    const hanziTokens = extractHanziTokens(tokens);
-    for (const token of hanziTokens) {
-      if (hskSet.has(token.hanzi)) {
-        encounteredSet.add(token.hanzi);
-      }
-    }
-  }
-
-  for (const flashcard of flashcardFronts) {
-    if (hskSet.has(flashcard.front)) {
-      encounteredSet.add(flashcard.front);
-    }
-  }
-
-  const encountered = encounteredSet.size;
-  const total = hskWords.length;
-  const percent = Math.round((encountered / total) * 100);
-
-  return { encountered, total, percent };
+  return calculateEncounteredProgress(
+    hskWords,
+    entries.map((entry) => entry.content_zh),
+    flashcardFronts.map((flashcard) => flashcard.front)
+  );
 }
 
 export async function getUserStats(userId: string): Promise<{
@@ -575,15 +621,13 @@ export async function getUserStreak(userId: string): Promise<number> {
 }
 
 export async function getWeakFlashcards(userId: string, limit = 5): Promise<Flashcard[]> {
-  return query<Flashcard>(
+  const cards = await query<Flashcard>(
     `SELECT * FROM flashcards
-     WHERE user_id = $1
-       AND ease_factor < 2.0
-       AND review_count > 1
-     ORDER BY ease_factor ASC
-     LIMIT $2`,
-    [userId, limit]
+     WHERE user_id = $1`,
+    [userId]
   );
+
+  return selectWeakFlashcards(cards, limit);
 }
 
 export async function getStudyGuideData(

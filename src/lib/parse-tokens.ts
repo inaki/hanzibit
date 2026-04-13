@@ -151,6 +151,21 @@ export function validateInlineMarkup(text: string): MarkupValidationIssue[] {
   return issues;
 }
 
+export function buildInlineAnnotation(hanzi: string, pinyin: string, english: string): string {
+  return `[${hanzi.trim()}|${pinyin.trim()}|${english.trim()}]`;
+}
+
+export function replaceTextRange(
+  content: string,
+  start: number,
+  end: number,
+  replacement: string
+): string {
+  const safeStart = Math.max(0, Math.min(start, content.length));
+  const safeEnd = Math.max(safeStart, Math.min(end, content.length));
+  return `${content.slice(0, safeStart)}${replacement}${content.slice(safeEnd)}`;
+}
+
 function pushTextTokens(tokens: Token[], text: string) {
   const lines = text.split("\n");
   lines.forEach((line, i) => {

@@ -65,11 +65,15 @@ Partially started.
 
 ### Remaining work
 
-- add tests for weak-card and progress logic
 - add route-level validation coverage where useful
-- audit mutation ownership checks
-- close obvious auth and mobile-contract gaps
+- close any remaining auth and mobile-contract gaps
 - update docs that still describe outdated mobile assumptions
+
+Recently completed:
+- weak-card ranking logic now has direct test coverage
+- encountered-progress calculation now has direct test coverage
+- core web/mobile mutation ownership checks were tightened and centralized
+- shared mobile request validators now cover object, array, and review-quality parsing
 
 ### Main repo touchpoints
 
@@ -126,16 +130,22 @@ Current status:
 - optionally suggest pinyin/meaning from dictionary data
 
 Current status:
-- still open
-- the main remaining Phase 1 opportunity is helper insertion, not validation
+- substantially implemented for Phase 1
+- composers now include a lightweight annotation builder
+- guided drafts can carry enough context for one-tap target-word annotation insertion
+- composers can seed the helper from live text selection
+- inserting an annotation can now replace the selected span in-place
+- guided drafts can carry `draftSelectedText` so reading surfaces can pre-seed annotation candidates
+- Study Guide and gloss surfaces now have first-pass content-to-journal promotion actions for words and short phrases
+- the main remaining opportunity is deeper dictionary-backed annotation assistance and richer phrase extraction, not the first pass of selection-aware annotation itself
 
 #### B3. One-click promotion from gloss to notebook annotation
 
 - let users move from interlinear gloss exploration into saved annotations or flashcards
 
 Current status:
-- partially supported through guided study-to-journal and review handoff
-- not yet implemented as a dedicated gloss-to-annotation action
+- substantially supported through guided study-to-journal, phrase-to-journal, review handoff, gloss-token-to-journal handoff, and gloss-phrase-to-journal handoff
+- not yet implemented as a dedicated saved-annotation action inside the notebook reader
 
 ### Main repo touchpoints
 
@@ -209,6 +219,7 @@ Current status:
 - implemented
 - dashboard opens a guided journal draft
 - writing prompts are tied to the recommended study word and its gloss when available
+- reading-originated drafts can now preserve exact phrase context through `draftSelectedText`
 
 #### C4. Completion summary
 
@@ -251,6 +262,20 @@ Strengthen the weak point in the current product: level-appropriate input.
 ### Why it matters
 
 Right now HanziBit is stronger at output and review than at input. That limits how effective the app can become.
+
+### Current shipped baseline
+
+- Study Guide now includes level-shaped mini readings, quick checks, and response prompts
+- Study Guide reading blocks can launch guided writing from the target word, the focus phrase, and additional phrase chips
+- interlinear gloss view can now launch guided writing from single gloss tokens and short phrase chips derived from the glossed paragraph
+- input surfaces can send exact phrase context into the composer through `draftSelectedText`
+
+### Remaining work
+
+- deepen the content system beyond lightweight generated input blocks
+- add richer listening/audio-backed input
+- improve phrase extraction quality and context sensitivity
+- consider sentence/grammar mining directly into review
 
 ### Phase 1 target
 

@@ -27,6 +27,7 @@ import { getStudyGuideDataAction, createFlashcardForWord, getDailyPracticeAction
 import type { StudyGuideData, StudyGuideWord } from "@/lib/data";
 import { buildStudyGuideReading } from "@/lib/study-guide-content";
 import type { DailyPracticePlan } from "@/lib/daily-practice";
+import { buildInlineAnnotation } from "@/lib/parse-tokens";
 
 type Filter = "all" | "encountered" | "not-yet" | "flashcard";
 
@@ -341,8 +342,14 @@ function WordDetail({
   const draftTitleZh = `练习：${item.word.simplified}`;
   const draftTitleEn = `Practice: ${item.word.english}`;
   const draftUnit = `HSK ${level} Study Guide`;
-  const draftContentZh = `${item.word.simplified}`;
-  const journalHref = `/notebook?new=1&draftTitleZh=${encodeURIComponent(draftTitleZh)}&draftTitleEn=${encodeURIComponent(draftTitleEn)}&draftUnit=${encodeURIComponent(draftUnit)}&draftLevel=${level}&draftContentZh=${encodeURIComponent(draftContentZh)}&draftPrompt=${encodeURIComponent(reading.responsePrompt)}&draftSourceZh=${encodeURIComponent(reading.passageZh)}&draftSourceEn=${encodeURIComponent(reading.passageEn)}&draftTargetWord=${encodeURIComponent(item.word.simplified)}&draftSourceType=study_guide&draftSourceRef=${encodeURIComponent(String(item.word.id))}`;
+  const draftContentZh = buildInlineAnnotation(item.word.simplified, item.word.pinyin, item.word.english);
+  const journalHref = `/notebook?new=1&draftTitleZh=${encodeURIComponent(draftTitleZh)}&draftTitleEn=${encodeURIComponent(draftTitleEn)}&draftUnit=${encodeURIComponent(draftUnit)}&draftLevel=${level}&draftContentZh=${encodeURIComponent(draftContentZh)}&draftPrompt=${encodeURIComponent(reading.responsePrompt)}&draftSourceZh=${encodeURIComponent(reading.passageZh)}&draftSourceEn=${encodeURIComponent(reading.passageEn)}&draftTargetWord=${encodeURIComponent(item.word.simplified)}&draftTargetPinyin=${encodeURIComponent(item.word.pinyin)}&draftTargetEnglish=${encodeURIComponent(item.word.english)}&draftSourceType=study_guide&draftSourceRef=${encodeURIComponent(String(item.word.id))}`;
+  const phraseJournalHref = `/notebook?new=1&draftTitleZh=${encodeURIComponent(draftTitleZh)}&draftTitleEn=${encodeURIComponent(draftTitleEn)}&draftUnit=${encodeURIComponent(draftUnit)}&draftLevel=${level}&draftContentZh=${encodeURIComponent(`${draftContentZh} ${reading.focusPhraseZh}`)}&draftSelectedText=${encodeURIComponent(reading.focusPhraseZh)}&draftPrompt=${encodeURIComponent(`Use the phrase "${reading.focusPhraseZh}" in your own response and keep ${item.word.simplified} annotated.`)}&draftSourceZh=${encodeURIComponent(reading.passageZh)}&draftSourceEn=${encodeURIComponent(reading.passageEn)}&draftTargetWord=${encodeURIComponent(item.word.simplified)}&draftTargetPinyin=${encodeURIComponent(item.word.pinyin)}&draftTargetEnglish=${encodeURIComponent(item.word.english)}&draftSourceType=study_guide&draftSourceRef=${encodeURIComponent(String(item.word.id))}`;
+  const listeningJournalHref = `/notebook?new=1&draftTitleZh=${encodeURIComponent(draftTitleZh)}&draftTitleEn=${encodeURIComponent(draftTitleEn)}&draftUnit=${encodeURIComponent(`${draftUnit} Listening`)}&draftLevel=${level}&draftContentZh=${encodeURIComponent(`${draftContentZh} ${reading.listeningZh}`)}&draftSelectedText=${encodeURIComponent(reading.listeningZh)}&draftPrompt=${encodeURIComponent(reading.listeningPrompt)}&draftSourceZh=${encodeURIComponent(reading.listeningZh)}&draftSourceEn=${encodeURIComponent(reading.listeningEn)}&draftTargetWord=${encodeURIComponent(item.word.simplified)}&draftTargetPinyin=${encodeURIComponent(item.word.pinyin)}&draftTargetEnglish=${encodeURIComponent(item.word.english)}&draftSourceType=study_guide&draftSourceRef=${encodeURIComponent(String(item.word.id))}`;
+  const phraseCandidateHrefs = reading.phraseCandidates.map((candidate) => ({
+    ...candidate,
+    href: `/notebook?new=1&draftTitleZh=${encodeURIComponent(draftTitleZh)}&draftTitleEn=${encodeURIComponent(draftTitleEn)}&draftUnit=${encodeURIComponent(draftUnit)}&draftLevel=${level}&draftContentZh=${encodeURIComponent(`${draftContentZh} ${candidate.zh}`)}&draftSelectedText=${encodeURIComponent(candidate.zh)}&draftPrompt=${encodeURIComponent(`Use the phrase "${candidate.zh}" in your own response and keep ${item.word.simplified} annotated.`)}&draftSourceZh=${encodeURIComponent(reading.passageZh)}&draftSourceEn=${encodeURIComponent(reading.passageEn)}&draftTargetWord=${encodeURIComponent(item.word.simplified)}&draftTargetPinyin=${encodeURIComponent(item.word.pinyin)}&draftTargetEnglish=${encodeURIComponent(item.word.english)}&draftSourceType=study_guide&draftSourceRef=${encodeURIComponent(String(item.word.id))}`,
+  }));
   const reviewHref = `/notebook/flashcards?mode=due&focus=${encodeURIComponent(item.word.simplified)}&wordId=${encodeURIComponent(String(item.word.id))}&level=${encodeURIComponent(String(level))}`;
   const isFocusWord = dailyPractice?.recommendedStudyWord?.id === item.word.id;
   const latestFocusResponseHref =
@@ -519,6 +526,23 @@ function WordDetail({
         <p className="text-sm font-semibold text-foreground">{reading.title}</p>
         <p className="mt-3 text-lg leading-[1.9] text-foreground/90">{reading.passageZh}</p>
         <p className="mt-3 text-sm text-muted-foreground">{reading.passageEn}</p>
+        <div className="mt-4">
+          <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground/70">
+            Try These Phrases
+          </p>
+          <div className="mt-2 flex flex-wrap gap-2">
+            {phraseCandidateHrefs.map((candidate) => (
+              <Link
+                key={candidate.zh}
+                href={candidate.href}
+                className="inline-flex items-center rounded-full border border-[var(--cn-orange)]/20 bg-white/80 px-3 py-1.5 text-xs font-medium text-[var(--cn-orange)] transition-colors hover:bg-white"
+                title={candidate.en}
+              >
+                {candidate.zh}
+              </Link>
+            ))}
+          </div>
+        </div>
         <div className="mt-4 grid gap-3 md:grid-cols-2">
           <div className="rounded-lg border border-white/70 bg-white/70 p-4">
             <p className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground/70">
@@ -527,6 +551,12 @@ function WordDetail({
             </p>
             <p className="mt-2 text-sm font-semibold text-foreground">{reading.focusPhraseZh}</p>
             <p className="mt-1 text-sm text-muted-foreground">{reading.focusPhraseEn}</p>
+            <Link
+              href={phraseJournalHref}
+              className="mt-3 inline-flex items-center text-xs font-medium text-[var(--cn-orange)] hover:underline"
+            >
+              Use this phrase in journal →
+            </Link>
           </div>
           <div className="rounded-lg border border-white/70 bg-white/70 p-4">
             <p className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground/70">
@@ -535,6 +565,21 @@ function WordDetail({
             </p>
             <p className="mt-2 text-sm text-foreground/85">{reading.comprehensionCheck}</p>
           </div>
+        </div>
+        <div className="mt-4 rounded-lg border border-white/70 bg-white/70 p-4">
+          <p className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground/70">
+            <Languages className="h-3.5 w-3.5" />
+            Listening Echo
+          </p>
+          <p className="mt-2 text-sm font-semibold text-foreground">{reading.listeningZh}</p>
+          <p className="mt-1 text-sm text-muted-foreground">{reading.listeningEn}</p>
+          <p className="mt-2 text-sm text-foreground/85">{reading.listeningPrompt}</p>
+          <Link
+            href={listeningJournalHref}
+            className="mt-3 inline-flex items-center text-xs font-medium text-[var(--cn-orange)] hover:underline"
+          >
+            Respond to listening →
+          </Link>
         </div>
         <div className="mt-4 rounded-lg border border-white/70 bg-white/70 p-4">
           <p className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground/70">

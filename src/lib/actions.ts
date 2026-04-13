@@ -5,6 +5,8 @@ import { randomUUID } from "crypto";
 import { execute, queryOne } from "./db";
 import { getAuthUserId } from "./auth-utils";
 import {
+  getOwnedFlashcard,
+  getOwnedJournalEntry,
   getCharacterOfTheDay,
   getDueFlashcardCount,
   getTodayActivitySummary,
@@ -30,10 +32,8 @@ import { validateInlineMarkup } from "./parse-tokens";
 import { buildDailyPracticePlan, type DailyPracticePlan } from "./daily-practice";
 
 export async function toggleBookmarkAction(entryId: string) {
-  const entry = await queryOne<{ bookmarked: number }>(
-    "SELECT bookmarked FROM journal_entries WHERE id = $1",
-    [entryId]
-  );
+  const userId = await getAuthUserId();
+  const entry = await getOwnedJournalEntry(userId, entryId);
   if (!entry) return;
 
   const newValue = entry.bookmarked ? 0 : 1;
@@ -89,6 +89,7 @@ export async function createJournalEntry(formData: FormData) {
 }
 
 export async function updateJournalEntry(formData: FormData) {
+  const userId = await getAuthUserId();
   const id = formData.get("id") as string;
   const titleZh = formData.get("title_zh") as string;
   const titleEn = formData.get("title_en") as string;
@@ -103,6 +104,11 @@ export async function updateJournalEntry(formData: FormData) {
   const markupIssues = validateInlineMarkup(contentZh);
   if (markupIssues.length > 0) {
     return { error: markupIssues[0].message };
+  }
+
+  const existing = await getOwnedJournalEntry(userId, id);
+  if (!existing) {
+    return { error: "Entry not found." };
   }
 
   await execute(
@@ -127,12 +133,8 @@ export async function deleteJournalEntry(entryId: string): Promise<{ success: tr
   }
 
   const userId = await getAuthUserId();
-  const existing = await queryOne<{ id: string; user_id: string }>(
-    "SELECT id, user_id FROM journal_entries WHERE id = $1",
-    [entryId]
-  );
-
-  if (!existing || existing.user_id !== userId) {
+  const existing = await getOwnedJournalEntry(userId, entryId);
+  if (!existing) {
     return { error: "Entry not found." };
   }
 
@@ -153,6 +155,11 @@ export async function saveFlashcardsFromEntry(
   cards: { front: string; back: string }[]
 ): Promise<{ saved: number; duplicates: number }> {
   const userId = await getAuthUserId();
+  const sourceEntry = await getOwnedJournalEntry(userId, entryId);
+  if (!sourceEntry) {
+    throw new Error("Entry not found");
+  }
+
   let saved = 0;
   let duplicates = 0;
 
@@ -189,14 +196,7 @@ export async function reviewFlashcard(
     return { error: "DAILY_LIMIT_REACHED" };
   }
 
-  const card = await queryOne<{
-    id: string;
-    front: string;
-    interval_days: number;
-    ease_factor: number;
-    review_count: number;
-  }>("SELECT * FROM flashcards WHERE id = $1", [cardId]);
-
+  const card = await getOwnedFlashcard(userId, cardId);
   if (!card) throw new Error("Card not found");
 
   const { interval, easeFactor } = sm2(

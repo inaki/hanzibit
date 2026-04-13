@@ -2,7 +2,7 @@
 
 import { useRef, useState, useEffect } from "react";
 import type { JournalEntry, EntryAnnotation } from "@/lib/data";
-import { parseInput, type Token } from "@/lib/parse-tokens";
+import { buildInlineAnnotation, parseInput, type Token } from "@/lib/parse-tokens";
 import { useGloss } from "./gloss-context";
 import { InterlinearGlossView } from "./interlinear-gloss-view";
 
@@ -95,6 +95,10 @@ export function JournalEntryView({
 
   const gloss = useGloss();
   const showGloss = gloss.state.active && gloss.state.data && !gloss.state.loading;
+  const buildGlossJournalHref = (token: { hanzi: string; pinyin: string; english: string }) =>
+    `/notebook?entry=${encodeURIComponent(entry.id)}&new=1&draftTitleZh=${encodeURIComponent(`练习：${token.hanzi}`)}&draftTitleEn=${encodeURIComponent(`Practice: ${token.english}`)}&draftUnit=${encodeURIComponent(entry.unit || "Notebook Gloss")}&draftLevel=${encodeURIComponent(String(entry.hsk_level || 1))}&draftContentZh=${encodeURIComponent(buildInlineAnnotation(token.hanzi, token.pinyin, token.english))}&draftSelectedText=${encodeURIComponent(token.hanzi)}&draftPrompt=${encodeURIComponent(`Use ${token.hanzi} in 2-3 original sentences based on what you just read.`)}&draftTargetWord=${encodeURIComponent(token.hanzi)}&draftTargetPinyin=${encodeURIComponent(token.pinyin)}&draftTargetEnglish=${encodeURIComponent(token.english)}`;
+  const buildGlossPhraseJournalHref = (phrase: { hanzi: string; english: string }) =>
+    `/notebook?entry=${encodeURIComponent(entry.id)}&new=1&draftTitleZh=${encodeURIComponent(`练习：${phrase.hanzi}`)}&draftTitleEn=${encodeURIComponent(`Practice: ${phrase.english}`)}&draftUnit=${encodeURIComponent(entry.unit || "Notebook Gloss")}&draftLevel=${encodeURIComponent(String(entry.hsk_level || 1))}&draftContentZh=${encodeURIComponent(phrase.hanzi)}&draftSelectedText=${encodeURIComponent(phrase.hanzi)}&draftPrompt=${encodeURIComponent(`Reuse the phrase "${phrase.hanzi}" in 2-3 original sentences based on what you just read.`)}`;
 
   // --- Smooth height animation for the entire card ---
   const outerRef = useRef<HTMLDivElement>(null);
@@ -131,7 +135,7 @@ export function JournalEntryView({
     <div
       ref={outerRef}
       data-testid="journal-entry"
-      className="mx-auto max-w-2xl overflow-hidden rounded-xl bg-white shadow-sm transition-[height] duration-400 ease-in-out"
+      className="mx-auto max-w-2xl overflow-hidden rounded-xl border bg-card shadow-sm transition-[height] duration-400 ease-in-out"
     >
       <div ref={innerRef} className="p-8 md:p-10">
         {/* Entry Header */}
@@ -139,12 +143,12 @@ export function JournalEntryView({
           <div>
             <p data-testid="journal-entry-unit" className="text-xs font-semibold tracking-wider text-[var(--cn-orange)] uppercase">
               {entry.unit || "Journal Entry"}{" "}
-              <span className="font-normal text-gray-400">
+              <span className="font-normal text-muted-foreground">
                 · {entry.hsk_level > 0 ? `HSK ${entry.hsk_level}` : "General"}
               </span>
             </p>
             {entry.source_type === "study_guide" && (
-              <p className="mt-2 text-xs font-medium text-sky-700">
+              <p className="mt-2 text-xs font-medium text-sky-600 dark:text-sky-400">
                 Guided response from Study Guide
               </p>
             )}
@@ -153,16 +157,16 @@ export function JournalEntryView({
             <p data-testid="journal-entry-date" className="font-medium text-[var(--cn-orange)]">
               {date}
             </p>
-            <p data-testid="journal-entry-id" className="text-gray-400">
+            <p data-testid="journal-entry-id" className="text-muted-foreground">
               {entry.id}
             </p>
           </div>
         </div>
 
         {/* Title */}
-        <h1 data-testid="journal-entry-title" className="mb-10 text-4xl font-bold text-gray-900">
+        <h1 data-testid="journal-entry-title" className="mb-10 text-4xl font-bold text-foreground">
           {entry.title_zh}{" "}
-          <span className="text-xl font-normal text-gray-400">({entry.title_en})</span>
+          <span className="text-xl font-normal text-muted-foreground">({entry.title_en})</span>
         </h1>
 
         {/* Chinese Text Content — crossfade between normal and interlinear gloss */}
@@ -170,7 +174,7 @@ export function JournalEntryView({
           {/* Normal view */}
           <div
             data-testid="journal-entry-content"
-            className={`space-y-6 text-[22px] leading-[2] text-gray-800 transition-opacity duration-300 ease-in-out ${
+            className={`space-y-6 text-[22px] leading-[2] text-foreground/90 transition-opacity duration-300 ease-in-out ${
               showGloss ? "pointer-events-none absolute inset-0 opacity-0" : "opacity-100"
             }`}
           >
@@ -186,10 +190,14 @@ export function JournalEntryView({
             }`}
           >
             {gloss.state.loading && gloss.state.active && (
-              <p className="text-sm text-gray-400 animate-pulse">Loading interlinear gloss...</p>
+              <p className="animate-pulse text-sm text-muted-foreground">Loading interlinear gloss...</p>
             )}
             {gloss.state.data && (
-              <InterlinearGlossView paragraphs={gloss.state.data} />
+              <InterlinearGlossView
+                paragraphs={gloss.state.data}
+                buildJournalHref={buildGlossJournalHref}
+                buildPhraseJournalHref={buildGlossPhraseJournalHref}
+              />
             )}
           </div>
         </div>
@@ -208,12 +216,12 @@ export function JournalEntryView({
                 <div
                   key={annotation.id}
                   data-testid={`journal-entry-annotation-${annotation.type}`}
-                  className="rounded-lg border border-[var(--cn-orange)]/20 bg-white p-5"
+                  className="rounded-lg border border-[var(--cn-orange)]/20 bg-card p-5"
                 >
-                  <p className="mb-2 text-sm font-semibold text-gray-900">
+                  <p className="mb-2 text-sm font-semibold text-foreground">
                     {annotation.title}
                   </p>
-                  <p className="text-sm leading-relaxed text-gray-600">
+                  <p className="text-sm leading-relaxed text-muted-foreground">
                     {annotation.content}
                   </p>
                 </div>

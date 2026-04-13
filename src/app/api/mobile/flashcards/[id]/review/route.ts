@@ -1,10 +1,9 @@
 import { NextRequest } from "next/server";
 import { getMobileUserId } from "@/lib/mobile-auth";
-import { updateFlashcardReview, addReviewRecord } from "@/lib/data";
+import { updateFlashcardReview, addReviewRecord, getOwnedFlashcard } from "@/lib/data";
 import { canReviewFlashcard } from "@/lib/gates";
 import { sm2 } from "@/lib/sm2";
-import { queryOne } from "@/lib/db";
-import { mobileError, mobileOk } from "@/lib/mobile-api";
+import { mobileError, mobileOk, parseQuality, requireObject } from "@/lib/mobile-api";
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -17,23 +16,13 @@ export async function POST(req: NextRequest, { params }: Params) {
   }
 
   const { id } = await params;
-  const body = await req.json();
-  const quality = parseInt(body.quality ?? "3", 10);
+  const body = requireObject(await req.json());
+  if ("error" in body) return mobileError(body.error, 400);
+  const quality = parseQuality(body.quality);
+  if (typeof quality !== "number") return mobileError(quality.error, 400);
 
-  if (quality < 1 || quality > 5) {
-    return mobileError("quality must be between 1 and 5", 400);
-  }
-
-  const card = await queryOne<{
-    id: string;
-    front: string;
-    user_id: string;
-    interval_days: number;
-    ease_factor: number;
-    review_count: number;
-  }>("SELECT * FROM flashcards WHERE id = $1", [id]);
-
-  if (!card || card.user_id !== userId) {
+  const card = await getOwnedFlashcard(userId, id);
+  if (!card) {
     return mobileError("Not found", 404);
   }
 
