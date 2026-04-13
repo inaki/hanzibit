@@ -50,6 +50,7 @@ interface MobileJournalPageProps {
     targetEnglish?: string;
     sourceType?: string;
     sourceRef?: string;
+    assignmentId?: string;
   };
 }
 
@@ -353,6 +354,7 @@ function MobileNewEntryDialog({
           <input type="hidden" name="source_type" value={draft?.sourceType ?? ""} />
           <input type="hidden" name="source_ref" value={draft?.sourceRef ?? ""} />
           <input type="hidden" name="source_prompt" value={draft?.prompt ?? ""} />
+          <input type="hidden" name="assignment_id" value={draft?.assignmentId ?? ""} />
           <div className="themed-scrollbar min-h-0 flex-1 space-y-3 overflow-y-auto py-2 pr-3">
             <GuidedDraftPanel
               prompt={draft?.prompt}

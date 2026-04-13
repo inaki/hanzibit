@@ -4,72 +4,62 @@ A living doc. Update this whenever stopping work so the next session starts with
 
 ---
 
-## Last Session Summary (Phase 1 Web Closeout Checkpoint — 2026-04-13)
+## Last Session Summary (Phase 2 Classroom MVP Checkpoint — 2026-04-13)
 
 Completed:
 
-1. **Phase 1 learner loop** — dashboard now acts as a real `Today’s Practice` surface with adaptive Review/Study/Write ordering, weekly loop history, weakest-step diagnosis, direct recovery CTAs, and exact-word progress tracking.
-2. **Guided writing flow** — Study Guide and dashboard can open prefilled guided journal drafts with source metadata, study prompts, and target-word context instead of blank composition.
-3. **Journal UX hardening** — inline annotation markup is validated before save, blocked when malformed, and reinforced server-side; guided drafts now show revision guidance and lightweight journal feedback.
-4. **Study Guide upgrade** — no longer only a word browser; now includes input passages, response prompts, guided-response history, and a conditional today-loop panel for the active focus word with direct Review/Write/Open-response actions.
-5. **Focused review continuity** — flashcards due mode can open on today’s focus word and now links back to the related study item, guided writing flow, and latest linked response.
-6. **Annotation helper UX** — journal composers now include a lightweight annotation builder, can seed from live text selection, can replace selected text in-place, and can receive draft-level annotation candidates from reading surfaces.
-7. **Input-to-output promotion** — Study Guide and notebook gloss flows can now launch guided writing from exact words and short phrases, not only generic word-detail actions.
-8. **Mobile alignment docs** — `docs/mobile-team-update-phase-1.md` now tracks the running behavior changes, and `docs/mobile-team-phase-1-handoff.md` + `docs/phase-1-readiness.md` define the stable Phase 1 implementation target.
-9. **Backend parity for mobile** — mobile journal create now persists guided source metadata, mobile dashboard now includes `characterOfTheDay.id`, and dedicated mobile endpoints now exist for `today`, Study Guide detail presentation, and focused review continuity.
-10. **Phase 1 web polish / QA** — dark mode and dialog behavior were cleaned up across the core learner loop, including Study Guide, dashboard, flashcards, gloss flow, and journal dialogs.
+1. **Phase 2 schema and permission layer** — classrooms, assignments, submissions, feedback, and role-aware permission helpers are now implemented.
+2. **Classroom flows** — teachers can create classrooms, students can join via code, and both roles can open classroom detail with roster and assignment context.
+3. **Assignment flows** — teachers can create assignments, students can see them in the assignments page, and assignment launch reuses the notebook / Study Guide flows.
+4. **Submission linking** — assignment context now flows into journal creation and automatically creates or updates `assignment_submissions`.
+5. **Teacher review** — teachers can open submission detail pages, leave feedback, and mark submissions reviewed.
+6. **Student feedback visibility** — students can open their own submission page and see feedback plus reviewed state.
+7. **Teacher visibility** — classroom detail now shows submitted/reviewed/missing counts, and the assignment inbox now surfaces statuses like `Needs Review`, `To Do`, and `Reviewed`.
+8. **Teacher dev account** — `pnpm seed` now creates a local teacher account and the README documents both learner and teacher credentials.
 
 ---
 
 ## Immediate Follow-Up
 
-- [ ] Add `AZURE_TTS_KEY=your_key` and `AZURE_TTS_REGION=eastus` to `.env` if TTS work resumes — TTS returns 503 without them
-- [ ] Run one final manual smoke test pass:
-  - Hit review limit as free user → see upgrade prompt
-  - Switch to HSK 2 as free user → see locked state in study guide
-  - Streak increments after journal write or flashcard review
-  - "Needs attention" shows on Dashboard after repeated low scores
-  - Dark mode toggle persists on refresh
-  - Pronounce button in flashcards plays audio
-  - Journal dialogs scroll normally in desktop and mobile layouts
+- [x] Run one more manual teacher/student smoke pass:
+  - teacher creates classroom
+  - student joins classroom
+  - teacher creates assignment
+  - student submits through notebook flow
+  - teacher reviews and marks reviewed
+  - student sees feedback and reviewed state
+  - classroom `Needs Attention` updates correctly
+- [x] Start Phase 3 planning in parallel
+- [ ] Lock the first Phase 3 build scope:
+  - reusable teacher content first
+  - reporting second
+  - referral MVP after teacher reuse is real
 
 ---
 
 ## Short-Term (Next Session)
 
-- [x] **Billing portal link** — already wired in `settings-dialog.tsx` via `handleManageBilling` (lines 95–106). Shows "Manage Billing" button for Pro users.
-- [x] **Flashcard speaker button** — added "Pronounce" button on card front face in `flashcard-practice.tsx`
-- [x] **Gate grammar and export** — grammar page gates non-Pro with `UpgradePrompt`; print button in `action-bar.tsx` shows upgrade dialog for free users (`isPro` passed from notebook page server component)
-- [x] **Phase 1 web closeout pass** — core learner-loop QA and dark-mode cleanup are now in place across dashboard, Study Guide, flashcards, gloss flow, and journal dialogs
+- [x] **Phase 3 implementation spec** — turn `docs/phase-3-planning.md` into a schema + milestones spec once scope is approved
+- [ ] **Resubmission lifecycle decision** — keep the current simple revise-and-resubmit model, or add an explicit `returned for revision` / reopen state
+- [ ] **Teacher review queue polish** — possible next pass:
+  - filters by classroom
+  - sort by due date / newest submission
+  - clearer overdue treatment
 
 ---
 
 ## Medium-Term
 
-- [ ] **Journal annotation UX refinement** — the inline markup `[汉字|pinyin|meaning]` is the app's core differentiator. The first helper layer is now shipped. Next useful refinements:
-  - Auto-suggest CEDICT matches as the user types inside `[` brackets
-  - Add a dedicated “save as annotation” path from interlinear gloss, not only guided journal launch
-  - Improve phrase extraction and phrase-level annotation suggestions from reading surfaces
-- [x] **Automated tests** — added lightweight test coverage for review gating, HSK access policy, streak logic, and `sm2`
-- [x] **Mobile API normalization** — main mobile routes now share response/validation helpers and have more consistent error handling
-- [x] **Guided daily learning loop** — first V1 is now shipped:
-  - due reviews
-  - one suggested study item
-  - one guided writing task
-  - completion summary, weekly history, and adaptive recovery
-- [x] **Study guide as input surface** — first V1 is now shipped:
-  - short graded text
-  - handoff into journal writing
-  - guided-response history
-  - focus-word loop visibility
-- [ ] **Phase 1 checkpoint cleanup** — remaining standalone-learner gaps:
-  - deeper dictionary-backed annotation assistance beyond the current helper
-  - deeper input-content system beyond the current reading + transcript-first listening blocks
-  - real audio-backed input beyond transcript-first listening
-  - final route-level validation polish where useful
-- [ ] **Broader secondary-surface cleanup** — settings dialog and non-core notebook utilities still have some light-theme-biased styles; these are now secondary, not Phase 1 blockers
-- [ ] **HSK Skool comparison follow-up** — see `app-comparison.md` for the full breakdown. Main gap remaining: audio is still on-demand TTS, not pre-generated. Consider the Phase 2 audio script from `implementation-guide.md` once the `AZURE_TTS_KEY` is confirmed working
-- [x] **Mobile handoff docs for Phase 1 learner-loop changes** — see `mobile-team-update-phase-1.md`, `mobile-team-phase-1-handoff.md`, and `phase-1-readiness.md`.
+- [ ] **Phase 2 mobile parity planning** — once the Flutter team is ready to catch up, document which classroom flows should be brought over first:
+  - classes list
+  - class detail
+  - assignments inbox
+  - submission detail
+- [ ] **Teacher workflow polish** — richer classroom filtering, overdue logic, and stronger review batching
+- [ ] **Phase 3A implementation** — teacher content/reusability systems
+- [ ] **Phase 3B planning follow-up** — reporting and intervention layer
+- [ ] **Phase 3C planning follow-up** — referral MVP timing and billing details
+- [ ] **Phase 1 learner-loop improvements can continue later** — annotation/content/audio depth remains valuable, but it is no longer the current main branch
 
 ---
 
@@ -87,5 +77,46 @@ Completed:
 As of April 13, 2026:
 
 - **Web Phase 1**: stable enough to treat as the baseline
+- **Web Phase 2**: classroom MVP is now working end-to-end
 - **Mobile Phase 1**: continue parity work against current docs and endpoints
-- **Remaining work**: polish, parity, content depth, and selective QA
+- **Remaining work**: Phase 2 selective polish, mobile catch-up, and Phase 3 scope locking
+
+---
+
+## Phase 3 Status
+
+Current status:
+
+- [x] Create a concrete Phase 3 planning baseline
+- [x] Turn Phase 3 into an implementation-ready spec
+- [x] Start Milestone 1: reusable-content schema and helper layer
+- [ ] Decide whether referral MVP is part of the first Phase 3 milestone or deferred until after reusable teacher content
+- [ ] Build Milestone 2: teacher library UI and template creation flows
+
+Primary reference:
+
+- `docs/phase-3-planning.md`
+- `docs/phase-3-implementation-spec.md`
+
+---
+
+## Phase 2 Implementation Status
+
+Current status:
+
+- [x] Create a concrete Phase 2 classroom planning baseline
+- [x] Define Phase 2 schema proposal
+- [x] Define role/permissions model
+- [x] Define MVP screen map for teacher and student flows
+- [x] Turn Phase 2 into an implementation backlog by milestone
+- [x] Milestone 1: schema and permission helpers
+- [x] Milestone 2: classroom create/join/list/detail
+- [x] Milestone 3: assignment creation and assignment detail
+- [x] Milestone 4: submission linking from notebook/study flows
+- [x] Milestone 5: teacher review and feedback
+- [x] Milestone 6: classroom and assignment visibility polish
+
+Primary reference:
+
+- `docs/phase-2-classroom-planning.md`
+- `docs/phase-2-implementation-spec.md`

@@ -4,6 +4,7 @@
  */
 import { randomUUID } from "crypto";
 import { ensureAppSchema, queryOne, withTransaction, getPool } from "../src/lib/db";
+import { auth } from "../src/lib/auth";
 
 const BASE_URL = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
 
@@ -13,26 +14,124 @@ const DEV_USER = {
   password: "password123",
 };
 
+const DEV_TEACHER = {
+  name: "Dev Teacher",
+  email: "teacher@hanzibit.local",
+  password: "password123",
+};
+
 const DEV_USER_ID = "dev-user-001";
 
-async function seedAuthUser() {
-  console.log(`Signing up dev user at ${BASE_URL}...`);
-  const res = await fetch(`${BASE_URL}/api/auth/sign-up/email`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json", Origin: BASE_URL },
-    body: JSON.stringify(DEV_USER),
-  });
+async function seedAuthAccount(account: { name: string; email: string; password: string }) {
+  console.log(`Signing up ${account.email}...`);
 
-  if (res.ok) {
-    console.log("Auth user created.");
-  } else {
-    const body = await res.text();
-    if (body.includes("already") || res.status === 422) {
-      console.log("Auth user already exists.");
+  try {
+    await auth.api.signUpEmail({
+      body: account,
+    });
+    console.log(`Auth user created for ${account.email}.`);
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    if (message.toLowerCase().includes("already")) {
+      console.log(`Auth user already exists for ${account.email}.`);
     } else {
-      console.warn(`Auth signup returned ${res.status} — continuing with data seed.`);
+      console.warn(`Auth signup failed for ${account.email} — continuing with data seed.`);
     }
   }
+}
+
+async function seedAuthUsers() {
+  await seedAuthAccount(DEV_USER);
+  await seedAuthAccount(DEV_TEACHER);
+}
+
+async function seedTeacherRole() {
+  const teacherUser = await queryOne<{ id: string }>(
+    `SELECT id
+     FROM "user"
+     WHERE email = $1
+     LIMIT 1`,
+    [DEV_TEACHER.email]
+  );
+
+  if (!teacherUser) {
+    console.warn("Teacher auth user not found. Skipping teacher role seed.");
+    return;
+  }
+
+  await withTransaction(async (client) => {
+    await client.query(
+      `INSERT INTO user_roles (id, user_id, role)
+       VALUES ($1, $2, 'teacher')
+       ON CONFLICT (user_id, role) DO NOTHING`,
+      [randomUUID(), teacherUser.id]
+    );
+  });
+
+  console.log("Teacher role seeded.");
+}
+
+async function ensureTeacherAuthFallback() {
+  const existingTeacher = await queryOne<{ id: string }>(
+    `SELECT id
+     FROM "user"
+     WHERE email = $1
+     LIMIT 1`,
+    [DEV_TEACHER.email]
+  );
+
+  if (existingTeacher) {
+    return;
+  }
+
+  const devCredential = await queryOne<{ password: string }>(
+    `SELECT account.password
+     FROM account
+     INNER JOIN "user" ON "user".id = account."userId"
+     WHERE "user".email = $1
+       AND account."providerId" = 'credential'
+     LIMIT 1`,
+    [DEV_USER.email]
+  );
+
+  if (!devCredential?.password) {
+    console.warn("Could not find a credential hash to clone for the teacher user.");
+    return;
+  }
+
+  const teacherUserId = randomUUID();
+
+  await withTransaction(async (client) => {
+    await client.query(
+      `INSERT INTO "user" (
+         id,
+         name,
+         email,
+         "emailVerified",
+         image,
+         "createdAt",
+         "updatedAt"
+       )
+       VALUES ($1, $2, $3, 0, NULL, NOW(), NOW())`,
+      [teacherUserId, DEV_TEACHER.name, DEV_TEACHER.email]
+    );
+
+    await client.query(
+      `INSERT INTO account (
+         id,
+         "accountId",
+         "providerId",
+         "userId",
+         password,
+         "createdAt",
+         "updatedAt"
+       )
+       VALUES ($1, $2, 'credential', $3, $4, NOW(), NOW())`,
+      [randomUUID(), teacherUserId, teacherUserId, devCredential.password]
+    );
+  });
+
+  console.log("Teacher auth user created via fallback seed.");
 }
 
 async function seedData() {
@@ -403,15 +502,16 @@ async function seedData() {
 }
 
 async function main() {
-  try {
-    await seedAuthUser();
-  } catch {
-    console.log("Could not reach auth server — seed data only.");
-  }
+  await seedAuthUsers();
+  await ensureTeacherAuthFallback();
   await seedData();
+  await seedTeacherRole();
   console.log(`\nDev credentials:`);
   console.log(`  Email:    ${DEV_USER.email}`);
   console.log(`  Password: ${DEV_USER.password}`);
+  console.log(`\nTeacher credentials:`);
+  console.log(`  Email:    ${DEV_TEACHER.email}`);
+  console.log(`  Password: ${DEV_TEACHER.password}`);
   console.log(`\nSign in at: ${BASE_URL}/auth/signin`);
   await getPool().end();
 }

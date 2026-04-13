@@ -6,6 +6,7 @@ import { execute, queryOne } from "./db";
 import { getAuthUserId } from "./auth-utils";
 import {
   getCharacterOfTheDay,
+  getDueFlashcardCount,
   getOwnedFlashcard,
   getOwnedJournalEntry,
   getUserProgress,
@@ -27,6 +28,13 @@ import { sm2 } from "./sm2";
 import { validateInlineMarkup } from "./parse-tokens";
 import type { DailyPracticePlan } from "./daily-practice";
 import { getDailyPracticePlanForUser } from "./daily-practice-service";
+import {
+  createClassroom as createClassroomRecord,
+  joinClassroom as joinClassroomRecord,
+} from "./classrooms";
+import { createAssignment as createAssignmentRecord, type AssignmentType } from "./assignments";
+import { canManageClassroom, canReviewSubmission, canSubmitAssignment } from "./classroom-permissions";
+import { addSubmissionFeedback, markSubmissionReviewed, upsertSubmission } from "./submissions";
 
 export async function toggleBookmarkAction(entryId: string) {
   const userId = await getAuthUserId();
@@ -54,6 +62,7 @@ export async function createJournalEntry(formData: FormData) {
   const sourceType = (formData.get("source_type") as string) || null;
   const sourceRef = (formData.get("source_ref") as string) || null;
   const sourcePrompt = (formData.get("source_prompt") as string) || null;
+  const assignmentId = ((formData.get("assignment_id") as string) || "").trim();
 
   if (!titleZh || !titleEn || !contentZh) {
     return { error: "Title and content are required." };
@@ -80,6 +89,17 @@ export async function createJournalEntry(formData: FormData) {
      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`,
     [id, userId, titleZh, titleEn, unit, hskLevel, contentZh, sourceType, sourceRef, sourcePrompt]
   );
+
+  if (assignmentId && (await canSubmitAssignment(userId, assignmentId))) {
+    await upsertSubmission({
+      assignmentId,
+      studentUserId: userId,
+      journalEntryId: id,
+      status: "submitted",
+    });
+    revalidatePath("/notebook/assignments");
+    revalidatePath(`/notebook/assignments/${assignmentId}`);
+  }
 
   revalidatePath("/notebook");
   return { id };
@@ -258,6 +278,92 @@ export async function getUserStatsAction() {
   return getUserStats(userId);
 }
 
+export async function createClassroomAction(formData: FormData) {
+  const userId = await getAuthUserId();
+  const name = (formData.get("name") as string)?.trim();
+  const description = ((formData.get("description") as string) || "").trim();
+
+  if (!name) {
+    return { error: "Classroom name is required." };
+  }
+
+  const classroom = await createClassroomRecord({
+    teacherUserId: userId,
+    name,
+    description: description || null,
+  });
+
+  revalidatePath("/notebook/classes");
+  revalidatePath(`/notebook/classes/${classroom.id}`);
+  return { id: classroom.id };
+}
+
+export async function joinClassroomAction(formData: FormData) {
+  const userId = await getAuthUserId();
+  const joinCode = (formData.get("join_code") as string)?.trim().toUpperCase();
+
+  if (!joinCode) {
+    return { error: "Join code is required." };
+  }
+
+  const classroom = await joinClassroomRecord({
+    userId,
+    joinCode,
+  });
+
+  if (!classroom) {
+    return { error: "Classroom not found." };
+  }
+
+  revalidatePath("/notebook/classes");
+  revalidatePath(`/notebook/classes/${classroom.id}`);
+  return { id: classroom.id };
+}
+
+export async function createAssignmentAction(formData: FormData) {
+  const userId = await getAuthUserId();
+  const classroomId = (formData.get("classroom_id") as string) || "";
+  const title = (formData.get("title") as string)?.trim();
+  const description = ((formData.get("description") as string) || "").trim();
+  const prompt = ((formData.get("prompt") as string) || "").trim();
+  const type = (formData.get("type") as AssignmentType) || "journal_prompt";
+  const hskLevelRaw = (formData.get("hsk_level") as string) || "";
+  const sourceRef = ((formData.get("source_ref") as string) || "").trim();
+  const dueAtRaw = ((formData.get("due_at") as string) || "").trim();
+  const dueDate = ((formData.get("due_date") as string) || "").trim();
+  const dueTime = ((formData.get("due_time") as string) || "").trim();
+  const dueAt = dueAtRaw || (dueDate ? `${dueDate}T${dueTime || "23:59"}` : "");
+
+  if (!classroomId) {
+    return { error: "Classroom is required." };
+  }
+
+  if (!(await canManageClassroom(userId, classroomId))) {
+    return { error: "You cannot manage this classroom." };
+  }
+
+  if (!title) {
+    return { error: "Assignment title is required." };
+  }
+
+  const assignment = await createAssignmentRecord({
+    classroomId,
+    createdByUserId: userId,
+    type,
+    title,
+    description: description || null,
+    prompt: prompt || null,
+    hskLevel: hskLevelRaw ? Number.parseInt(hskLevelRaw, 10) : null,
+    sourceRef: sourceRef || null,
+    dueAt: dueAt || null,
+  });
+
+  revalidatePath(`/notebook/classes/${classroomId}`);
+  revalidatePath("/notebook/assignments");
+  revalidatePath(`/notebook/assignments/${assignment.id}`);
+  return { id: assignment.id, classroomId };
+}
+
 export async function searchHskWordsAction(
   query: string
 ): Promise<HskWord[]> {
@@ -328,4 +434,55 @@ export async function createFlashcardForWord(
 
   revalidatePath("/notebook/flashcards");
   return { id };
+}
+
+export async function addSubmissionFeedbackAction(formData: FormData) {
+  const userId = await getAuthUserId();
+  const submissionId = ((formData.get("submission_id") as string) || "").trim();
+  const content = ((formData.get("content") as string) || "").trim();
+
+  if (!submissionId) {
+    return { error: "Submission is required." };
+  }
+
+  if (!(await canReviewSubmission(userId, submissionId))) {
+    return { error: "You cannot review this submission." };
+  }
+
+  if (!content) {
+    return { error: "Feedback is required." };
+  }
+
+  await addSubmissionFeedback({
+    submissionId,
+    teacherUserId: userId,
+    content,
+  });
+
+  revalidatePath(`/notebook/submissions/${submissionId}`);
+  revalidatePath("/notebook/assignments");
+  return { success: true };
+}
+
+export async function markSubmissionReviewedAction(formData: FormData) {
+  const userId = await getAuthUserId();
+  const submissionId = ((formData.get("submission_id") as string) || "").trim();
+  const assignmentId = ((formData.get("assignment_id") as string) || "").trim();
+
+  if (!submissionId) {
+    return { error: "Submission is required." };
+  }
+
+  if (!(await canReviewSubmission(userId, submissionId))) {
+    return { error: "You cannot review this submission." };
+  }
+
+  await markSubmissionReviewed(submissionId);
+
+  revalidatePath(`/notebook/submissions/${submissionId}`);
+  revalidatePath("/notebook/assignments");
+  if (assignmentId) {
+    revalidatePath(`/notebook/assignments/${assignmentId}`);
+  }
+  return { success: true };
 }

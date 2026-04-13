@@ -9,6 +9,7 @@ It connects:
 - `docs/product-evolution-strategy.md`
 - `docs/language-learning-effectiveness-strategy.md`
 - `docs/referral-program-strategy.md`
+- `docs/phase-3-planning.md`
 
 The goal is to answer:
 
@@ -25,8 +26,16 @@ The product should now optimize for this order:
 3. add classroom workflows on top of that loop
 4. add teacher content systems
 5. only later add referral growth layers and marketplace ideas
+6. Phase 3 should start with reusable teacher content, not marketplace features
 
-This means the immediate implementation focus remains **Phase 1**.
+This means the immediate implementation focus is transitioning from **Phase 1 closeout** into **Phase 2 planning**.
+
+Current status:
+
+- web Phase 1 is stable
+- Phase 2 planning is complete enough to build against
+- the web Phase 2 classroom MVP is now implemented
+- the next roadmap decision is whether to keep polishing Phase 2 or move earlier into Phase 3 planning
 
 ---
 
@@ -290,6 +299,23 @@ The implementation priority should now be:
 2. support Flutter parity against the current contracts and behaviors
 3. deepen content/input quality without destabilizing the loop
 4. defer broader Phase 2 work until parity and product confidence are high enough
+
+---
+
+## Phase 2 Planning Decision
+
+Phase 2 should start as a **classroom and assignment layer**, not as a marketplace or broad teacher operating system.
+
+The immediate Phase 2 planning priority should be:
+
+1. define the classroom data model
+2. define teacher/student roles and permissions
+3. define assignment and submission flows
+4. map those flows back into the existing notebook and Study Guide
+
+Reference:
+
+- `docs/phase-2-classroom-planning.md`
 
 ### Why it matters
 

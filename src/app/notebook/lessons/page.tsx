@@ -7,9 +7,9 @@ export const dynamic = "force-dynamic";
 export default async function StudyGuidePage({
   searchParams,
 }: {
-  searchParams: Promise<{ level?: string; word?: string }>;
+  searchParams: Promise<{ level?: string; word?: string; wordId?: string; assignmentId?: string }>;
 }) {
-  const { level } = await searchParams;
+  const { level, assignmentId } = await searchParams;
   const userId = await getAuthUserId();
   const requestedLevel = Number.parseInt(level ?? "1", 10);
   const safeLevel =
@@ -20,7 +20,7 @@ export default async function StudyGuidePage({
 
   return (
     <div data-testid="study-guide-page" className="h-full overflow-hidden">
-      <StudyGuide initialData={data} />
+      <StudyGuide initialData={data} assignmentId={assignmentId} />
     </div>
   );
 }

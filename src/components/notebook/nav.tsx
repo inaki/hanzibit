@@ -22,6 +22,8 @@ import { searchHskWordsAction } from "@/lib/actions";
 import type { HskWord } from "@/lib/data";
 
 const navLinks = [
+  { label: "Classes", href: "/notebook/classes" },
+  { label: "Assignments", href: "/notebook/assignments" },
   { label: "Study Guide", href: "/notebook/lessons" },
   { label: "Flashcards", href: "/notebook/flashcards" },
   { label: "My Notebook", href: "/notebook" },

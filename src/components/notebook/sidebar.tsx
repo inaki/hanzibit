@@ -12,6 +12,8 @@ import {
   Layers,
   GraduationCap,
   LayoutDashboard,
+  Users,
+  ClipboardList,
 } from "lucide-react";
 import { useSettings } from "./settings-context";
 import { getCharacterOfTheDayAction, getDueCountAction } from "@/lib/actions";
@@ -21,6 +23,8 @@ const sections = [
   { label: "Dashboard", icon: LayoutDashboard, href: "/notebook/dashboard" },
   { label: "Daily Journal", icon: PenLine, href: "/notebook" },
   { label: "Study Guide", icon: GraduationCap, href: "/notebook/lessons" },
+  { label: "Classes", icon: Users, href: "/notebook/classes" },
+  { label: "Assignments", icon: ClipboardList, href: "/notebook/assignments" },
   { label: "Flashcards", icon: Layers, href: "/notebook/flashcards" },
   { label: "Vocabulary List", icon: BookOpen, href: "/notebook/vocabulary" },
   { label: "Numbers Guide", icon: Hash, href: "/notebook/numbers" },

@@ -24,6 +24,7 @@ interface JournalDraftPrefill {
   targetEnglish?: string;
   sourceType?: string;
   sourceRef?: string;
+  assignmentId?: string;
 }
 
 export default function NotebookPage({
@@ -46,6 +47,7 @@ export default function NotebookPage({
     draftTargetEnglish?: string;
     draftSourceType?: string;
     draftSourceRef?: string;
+    draftAssignmentId?: string;
   }>;
 }) {
   return <NotebookPageInner searchParamsPromise={searchParams} />;
@@ -71,6 +73,7 @@ async function NotebookPageInner({
     draftTargetEnglish?: string;
     draftSourceType?: string;
     draftSourceRef?: string;
+    draftAssignmentId?: string;
   }>;
 }) {
   const {
@@ -90,6 +93,7 @@ async function NotebookPageInner({
     draftTargetEnglish,
     draftSourceType,
     draftSourceRef,
+    draftAssignmentId,
   } = await searchParamsPromise;
   const userId = await getAuthUserId();
   const [entries, isPro] = await Promise.all([
@@ -119,6 +123,7 @@ async function NotebookPageInner({
     targetEnglish: draftTargetEnglish ?? "",
     sourceType: draftSourceType ?? "",
     sourceRef: draftSourceRef ?? "",
+    assignmentId: draftAssignmentId ?? "",
   };
 
   return (

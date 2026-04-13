@@ -15,7 +15,7 @@ declare global {
   var __hanzibitSchemaVersion: number | undefined;
 }
 
-const SCHEMA_VERSION = 4;
+const SCHEMA_VERSION = 7;
 
 const APP_SCHEMA_SQL = `
   CREATE TABLE IF NOT EXISTS "user" (
@@ -189,6 +189,143 @@ const APP_SCHEMA_SQL = `
   CREATE INDEX IF NOT EXISTS idx_sub_user ON subscriptions(user_id);
   CREATE INDEX IF NOT EXISTS idx_sub_stripe_customer ON subscriptions(stripe_customer_id);
 
+  CREATE TABLE IF NOT EXISTS user_roles (
+    id TEXT PRIMARY KEY,
+    user_id TEXT NOT NULL,
+    role TEXT NOT NULL CHECK(role IN ('teacher')),
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    UNIQUE(user_id, role)
+  );
+
+  CREATE INDEX IF NOT EXISTS idx_user_roles_user_id ON user_roles(user_id);
+
+  CREATE TABLE IF NOT EXISTS classrooms (
+    id TEXT PRIMARY KEY,
+    teacher_user_id TEXT NOT NULL,
+    name TEXT NOT NULL,
+    description TEXT,
+    join_code TEXT NOT NULL UNIQUE,
+    archived INTEGER NOT NULL DEFAULT 0,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+  );
+
+  CREATE INDEX IF NOT EXISTS idx_classrooms_teacher ON classrooms(teacher_user_id);
+  CREATE INDEX IF NOT EXISTS idx_classrooms_join_code ON classrooms(join_code);
+
+  CREATE TABLE IF NOT EXISTS classroom_members (
+    id TEXT PRIMARY KEY,
+    classroom_id TEXT NOT NULL REFERENCES classrooms(id) ON DELETE CASCADE,
+    user_id TEXT NOT NULL,
+    role TEXT NOT NULL CHECK(role IN ('teacher', 'student')),
+    joined_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    UNIQUE(classroom_id, user_id)
+  );
+
+  CREATE INDEX IF NOT EXISTS idx_classroom_members_user ON classroom_members(user_id);
+  CREATE INDEX IF NOT EXISTS idx_classroom_members_classroom ON classroom_members(classroom_id);
+
+  CREATE TABLE IF NOT EXISTS assignments (
+    id TEXT PRIMARY KEY,
+    classroom_id TEXT NOT NULL REFERENCES classrooms(id) ON DELETE CASCADE,
+    created_by_user_id TEXT NOT NULL,
+    type TEXT NOT NULL CHECK(type IN ('journal_prompt', 'study_guide_word', 'study_guide_level', 'reading_response')),
+    title TEXT NOT NULL,
+    description TEXT,
+    prompt TEXT,
+    hsk_level INTEGER,
+    source_ref TEXT,
+    allow_resubmission INTEGER NOT NULL DEFAULT 1,
+    due_at TIMESTAMPTZ,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+  );
+
+  CREATE INDEX IF NOT EXISTS idx_assignments_classroom_created
+    ON assignments(classroom_id, created_at DESC);
+  CREATE INDEX IF NOT EXISTS idx_assignments_classroom_due
+    ON assignments(classroom_id, due_at);
+
+  CREATE TABLE IF NOT EXISTS teacher_resources (
+    id TEXT PRIMARY KEY,
+    teacher_user_id TEXT NOT NULL,
+    resource_type TEXT NOT NULL CHECK(resource_type IN ('journal_prompt', 'study_word_set', 'study_level_set', 'reading_response', 'grammar_note')),
+    title TEXT NOT NULL,
+    description TEXT,
+    hsk_level INTEGER,
+    source_assignment_id TEXT,
+    archived INTEGER NOT NULL DEFAULT 0,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+  );
+
+  CREATE INDEX IF NOT EXISTS idx_teacher_resources_teacher
+    ON teacher_resources(teacher_user_id, created_at DESC);
+  CREATE INDEX IF NOT EXISTS idx_teacher_resources_type
+    ON teacher_resources(teacher_user_id, resource_type, archived);
+
+  CREATE TABLE IF NOT EXISTS teacher_resource_items (
+    id TEXT PRIMARY KEY,
+    resource_id TEXT NOT NULL REFERENCES teacher_resources(id) ON DELETE CASCADE,
+    item_type TEXT NOT NULL,
+    sort_order INTEGER NOT NULL DEFAULT 0,
+    content_json JSONB NOT NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+  );
+
+  CREATE INDEX IF NOT EXISTS idx_teacher_resource_items_resource
+    ON teacher_resource_items(resource_id, sort_order, created_at);
+
+  CREATE TABLE IF NOT EXISTS assignment_templates (
+    id TEXT PRIMARY KEY,
+    teacher_user_id TEXT NOT NULL,
+    resource_id TEXT REFERENCES teacher_resources(id) ON DELETE SET NULL,
+    template_type TEXT NOT NULL CHECK(template_type IN ('journal_prompt', 'study_guide_word', 'study_guide_level', 'reading_response')),
+    title TEXT NOT NULL,
+    description TEXT,
+    prompt TEXT,
+    hsk_level INTEGER,
+    source_ref TEXT,
+    allow_resubmission INTEGER NOT NULL DEFAULT 1,
+    archived INTEGER NOT NULL DEFAULT 0,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+  );
+
+  CREATE INDEX IF NOT EXISTS idx_assignment_templates_teacher
+    ON assignment_templates(teacher_user_id, created_at DESC);
+  CREATE INDEX IF NOT EXISTS idx_assignment_templates_resource
+    ON assignment_templates(resource_id);
+
+  CREATE TABLE IF NOT EXISTS assignment_submissions (
+    id TEXT PRIMARY KEY,
+    assignment_id TEXT NOT NULL REFERENCES assignments(id) ON DELETE CASCADE,
+    student_user_id TEXT NOT NULL,
+    journal_entry_id TEXT REFERENCES journal_entries(id) ON DELETE SET NULL,
+    status TEXT NOT NULL CHECK(status IN ('not_started', 'draft', 'submitted', 'reviewed')),
+    submitted_at TIMESTAMPTZ,
+    reviewed_at TIMESTAMPTZ,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    UNIQUE(assignment_id, student_user_id)
+  );
+
+  CREATE INDEX IF NOT EXISTS idx_assignment_submissions_student_status
+    ON assignment_submissions(student_user_id, status);
+  CREATE INDEX IF NOT EXISTS idx_assignment_submissions_assignment_status
+    ON assignment_submissions(assignment_id, status);
+
+  CREATE TABLE IF NOT EXISTS submission_feedback (
+    id TEXT PRIMARY KEY,
+    submission_id TEXT NOT NULL REFERENCES assignment_submissions(id) ON DELETE CASCADE,
+    teacher_user_id TEXT NOT NULL,
+    content TEXT NOT NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+  );
+
+  CREATE INDEX IF NOT EXISTS idx_submission_feedback_submission
+    ON submission_feedback(submission_id, created_at DESC);
+
   CREATE TABLE IF NOT EXISTS daily_loop_completions (
     id TEXT PRIMARY KEY,
     user_id TEXT NOT NULL,
@@ -269,6 +406,10 @@ async function initializeSchema(): Promise<void> {
   const pool = getPool();
   await pool.query(APP_SCHEMA_SQL);
   await pool.query(`
+    ALTER TABLE assignments
+      ADD COLUMN IF NOT EXISTS template_id TEXT
+  `);
+  await pool.query(`
     ALTER TABLE journal_entries
       ADD COLUMN IF NOT EXISTS source_type TEXT,
       ADD COLUMN IF NOT EXISTS source_ref TEXT,
@@ -279,6 +420,10 @@ async function initializeSchema(): Promise<void> {
       ADD COLUMN IF NOT EXISTS review_completed INTEGER NOT NULL DEFAULT 0,
       ADD COLUMN IF NOT EXISTS study_completed INTEGER NOT NULL DEFAULT 0,
       ADD COLUMN IF NOT EXISTS write_completed INTEGER NOT NULL DEFAULT 0
+  `);
+  await pool.query(`
+    CREATE INDEX IF NOT EXISTS idx_assignments_template
+      ON assignments(template_id)
   `);
 }
 

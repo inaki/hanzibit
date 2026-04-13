@@ -116,10 +116,25 @@ Open [http://localhost:3000](http://localhost:3000) to see the landing page.
 
 After running `pnpm seed`, you can sign in with:
 
+#### Learner Account
+
 | Field | Value |
 |-------|-------|
 | Email | `dev@hanzibit.local` |
 | Password | `password123` |
+
+#### Teacher Account
+
+| Field | Value |
+|-------|-------|
+| Email | `teacher@hanzibit.local` |
+| Password | `password123` |
+
+The teacher account is seeded with the `teacher` role so you can test:
+- classroom creation
+- assignment creation
+- submission review
+- teacher feedback flows
 
 The seed script creates a full demo dataset: 5 journal entries with highlights and annotations, 25 vocabulary items, 8 grammar points, 12 flashcards, 8 lessons, and 15 review history records.
 
