@@ -246,6 +246,7 @@ function MobileEditDialog({
               onInsert={handleInsertAnnotation}
               selectedText={selectedText}
               onUseSelection={captureSelection}
+              currentHskLevel={entry.hsk_level}
             />
             <MarkupValidationPanel content={content} />
             {submitError && <p className="text-sm text-red-600">{submitError}</p>}
@@ -384,6 +385,7 @@ function MobileNewEntryDialog({
               onInsert={handleInsertAnnotation}
               selectedText={selectedText || draft?.selectedText}
               onUseSelection={captureSelection}
+              currentHskLevel={draft?.hskLevel ?? 1}
               suggestedAnnotation={
                 draft?.targetWord && draft?.targetPinyin && draft?.targetEnglish
                   ? {

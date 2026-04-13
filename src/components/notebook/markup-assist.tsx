@@ -1,10 +1,17 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { parseInput, validateInlineMarkup } from "@/lib/parse-tokens";
 import { evaluateGuidedDraft } from "@/lib/composer-guidance";
 import { evaluateJournalFeedback } from "@/lib/journal-feedback";
 import { buildInlineAnnotation } from "@/lib/parse-tokens";
+import { searchAnnotationSuggestionsAction } from "@/lib/actions";
+import {
+  rankAnnotationSuggestions,
+  summarizeEnglishGloss,
+  type AnnotationLookupField,
+  type AnnotationSuggestion,
+} from "@/lib/annotation-suggestions";
 
 export function ContentPreview({ content }: { content: string }) {
   const tokens = parseInput(content);
@@ -32,7 +39,7 @@ export function MarkupValidationPanel({ content }: { content: string }) {
   const issues = validateInlineMarkup(content);
   if (issues.length === 0) {
     return (
-      <div className="rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs text-emerald-700">
+      <div className="rounded-lg border border-emerald-500/20 bg-emerald-500/10 px-3 py-2 text-xs text-emerald-400">
         Annotation format looks valid.
       </div>
     );
@@ -41,14 +48,14 @@ export function MarkupValidationPanel({ content }: { content: string }) {
   return (
     <div
       data-testid="markup-validation-panel"
-      className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-3 text-xs text-amber-900"
+      className="rounded-lg border border-amber-500/20 bg-amber-500/10 px-3 py-3 text-xs text-amber-100"
     >
       <p className="font-semibold">Fix annotation markup before saving.</p>
       <div className="mt-2 space-y-2">
         {issues.slice(0, 3).map((issue, index) => (
           <div key={`${issue.index}-${index}`}>
             <p>{issue.message}</p>
-            <p className="font-mono text-[11px] text-amber-800/80">{issue.snippet}</p>
+            <p className="font-mono text-[11px] text-amber-200/80">{issue.snippet}</p>
           </div>
         ))}
       </div>
@@ -73,13 +80,13 @@ export function GuidedDraftPanel({
   const checklist = evaluateGuidedDraft(content ?? "", targetWord);
 
   return (
-    <div className="rounded-lg border border-sky-200 bg-sky-50 px-4 py-4">
-      <p className="text-xs font-semibold uppercase tracking-wider text-sky-700">
+    <div className="rounded-lg border border-sky-500/20 bg-sky-500/10 px-4 py-4">
+      <p className="text-xs font-semibold uppercase tracking-wider text-sky-400">
         Guided Response
       </p>
       {prompt && <p className="mt-2 text-sm font-medium text-foreground">{prompt}</p>}
       {sourceZh && (
-        <div className="mt-3 rounded-md border border-white/80 bg-white/80 p-3">
+        <div className="mt-3 rounded-md border border-border/80 bg-card/90 p-3 shadow-sm">
           <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground/70">
             Source Text
           </p>
@@ -87,17 +94,17 @@ export function GuidedDraftPanel({
           {sourceEn && <p className="mt-2 text-sm text-muted-foreground">{sourceEn}</p>}
         </div>
       )}
-      <div className="mt-3 rounded-md border border-sky-100 bg-white/70 p-3">
+      <div className="mt-3 rounded-md border border-border/80 bg-card/90 p-3 shadow-sm">
         <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground/70">
           Quick Check
         </p>
         <div className="mt-2 space-y-1 text-sm">
           {targetWord && (
-            <p className={checklist.hasTargetWord ? "text-emerald-700" : "text-amber-800"}>
+            <p className={checklist.hasTargetWord ? "text-emerald-400" : "text-amber-300"}>
               {checklist.hasTargetWord ? "✓" : "•"} Use the target word: {targetWord}
             </p>
           )}
-          <p className={checklist.hasEnoughSentences ? "text-emerald-700" : "text-amber-800"}>
+          <p className={checklist.hasEnoughSentences ? "text-emerald-400" : "text-amber-300"}>
             {checklist.hasEnoughSentences ? "✓" : "•"} Write at least 2 sentences
             {checklist.sentenceCount > 0 ? ` (${checklist.sentenceCount} so far)` : ""}
           </p>
@@ -118,19 +125,19 @@ export function JournalFeedbackPanel({
   if (content.trim().length === 0) return null;
 
   return (
-    <div className="rounded-lg border border-violet-200 bg-violet-50 px-4 py-4">
-      <p className="text-xs font-semibold uppercase tracking-wider text-violet-700">
+    <div className="rounded-lg border border-violet-500/20 bg-violet-500/10 px-4 py-4">
+      <p className="text-xs font-semibold uppercase tracking-wider text-violet-300">
         Revision Feedback
       </p>
       {feedback.strengths.length > 0 && (
-        <div className="mt-2 space-y-1 text-sm text-emerald-700">
+        <div className="mt-2 space-y-1 text-sm text-emerald-400">
           {feedback.strengths.map((message) => (
             <p key={message}>✓ {message}</p>
           ))}
         </div>
       )}
       {feedback.messages.length > 0 && (
-        <div className="mt-3 space-y-1 text-sm text-violet-900">
+        <div className="mt-3 space-y-1 text-sm text-violet-100">
           {feedback.messages.map((message) => (
             <p key={message}>• {message}</p>
           ))}
@@ -145,6 +152,7 @@ export function AnnotationBuilder({
   suggestedAnnotation,
   selectedText,
   onUseSelection,
+  currentHskLevel,
 }: {
   onInsert: (annotation: string) => void;
   suggestedAnnotation?: {
@@ -154,20 +162,96 @@ export function AnnotationBuilder({
   };
   selectedText?: string;
   onUseSelection?: () => void;
+  currentHskLevel?: number;
 }) {
   const [hanzi, setHanzi] = useState("");
   const [pinyin, setPinyin] = useState("");
   const [english, setEnglish] = useState("");
+  const [lookupField, setLookupField] = useState<AnnotationLookupField | null>(null);
+  const [suggestions, setSuggestions] = useState<AnnotationSuggestion[]>([]);
+  const [lookupBusy, setLookupBusy] = useState(false);
+  const [lookupAttempted, setLookupAttempted] = useState(false);
+  const lookupTokenRef = useRef(0);
+  const suggestionCacheRef = useRef(new Map<string, AnnotationSuggestion[]>());
   const trimmedSelection = selectedText?.trim() ?? "";
 
   const canInsert = hanzi.trim() && pinyin.trim() && english.trim();
+  const lookupValue =
+    lookupField === "hanzi"
+      ? hanzi.trim()
+      : lookupField === "pinyin"
+        ? pinyin.trim()
+        : lookupField === "english"
+          ? english.trim()
+          : "";
+  const lookupCacheKey = `${lookupField ?? "none"}|${currentHskLevel ?? "any"}|${lookupValue.toLowerCase()}`;
+
+  function applyExactMatch(ranked: AnnotationSuggestion[]) {
+    const exactMatches = ranked.filter((item) => item.exact);
+    if (exactMatches.length !== 1) return;
+    const match = exactMatches[0];
+    setHanzi((current) => current.trim() || match.hanzi);
+    setPinyin((current) => current.trim() || match.pinyin);
+    setEnglish((current) => current.trim() || match.english);
+  }
+
+  useEffect(() => {
+    if (!lookupField || !lookupValue) {
+      setSuggestions([]);
+      setLookupBusy(false);
+      setLookupAttempted(false);
+      return;
+    }
+
+    const cached = suggestionCacheRef.current.get(lookupCacheKey);
+    if (cached) {
+      setSuggestions(cached);
+      setLookupBusy(false);
+      setLookupAttempted(true);
+      applyExactMatch(cached);
+      return;
+    }
+
+    const token = ++lookupTokenRef.current;
+    setLookupBusy(true);
+    const timer = window.setTimeout(async () => {
+      try {
+        const results = await searchAnnotationSuggestionsAction(lookupValue);
+        if (lookupTokenRef.current !== token) return;
+        const ranked = rankAnnotationSuggestions(
+          results,
+          lookupValue,
+          lookupField,
+          currentHskLevel
+        );
+        const topRanked = ranked.slice(0, 5);
+        suggestionCacheRef.current.set(lookupCacheKey, topRanked);
+        setSuggestions(topRanked);
+        setLookupAttempted(true);
+        applyExactMatch(topRanked);
+      } finally {
+        if (lookupTokenRef.current === token) {
+          setLookupBusy(false);
+        }
+      }
+    }, 250);
+
+    return () => window.clearTimeout(timer);
+  }, [currentHskLevel, lookupCacheKey, lookupField, lookupValue]);
 
   function handleInsert() {
     if (!canInsert) return;
     onInsert(buildInlineAnnotation(hanzi, pinyin, english));
+    resetBuilder();
+  }
+
+  function resetBuilder() {
     setHanzi("");
     setPinyin("");
     setEnglish("");
+    setSuggestions([]);
+    setLookupField(null);
+    setLookupAttempted(false);
   }
 
   function handleInsertSuggested() {
@@ -188,11 +272,26 @@ export function AnnotationBuilder({
       setPinyin(suggestedAnnotation.pinyin);
       setEnglish(suggestedAnnotation.english);
     }
+    setLookupField("hanzi");
     onUseSelection?.();
   }
 
+  function applySuggestion(suggestion: AnnotationSuggestion) {
+    setHanzi(suggestion.hanzi);
+    setPinyin(suggestion.pinyin);
+    setEnglish(suggestion.english);
+    setSuggestions([]);
+    setLookupField(null);
+  }
+
+  const topSuggestion = suggestions[0];
+  const canUseTopMatch =
+    !lookupBusy &&
+    suggestions.length > 0 &&
+    !(suggestions.length === 1 && suggestions[0]?.exact);
+
   return (
-    <div className="rounded-lg border border-orange-200 bg-orange-50 px-4 py-4">
+    <div className="rounded-lg border border-[var(--cn-orange)]/20 bg-[var(--cn-orange)]/10 px-4 py-4">
       <p className="text-xs font-semibold uppercase tracking-wider text-[var(--cn-orange)]">
         Quick Annotation
       </p>
@@ -200,7 +299,7 @@ export function AnnotationBuilder({
         Build one annotation block without typing the markup manually.
       </p>
       {trimmedSelection && (
-        <div className="mt-3 flex items-center justify-between gap-3 rounded-lg border border-orange-200/80 bg-white/70 px-3 py-2">
+        <div className="mt-3 flex items-center justify-between gap-3 rounded-lg border border-border/80 bg-card/90 px-3 py-2 shadow-sm">
           <div className="min-w-0">
             <p className="text-[11px] font-semibold uppercase tracking-wider text-[var(--cn-orange)]">
               Current selection
@@ -210,7 +309,7 @@ export function AnnotationBuilder({
           <button
             type="button"
             onClick={handleUseSelection}
-            className="shrink-0 rounded-full border border-[var(--cn-orange)]/30 bg-white px-3 py-1 text-xs font-medium text-[var(--cn-orange)] transition-colors hover:bg-white/80"
+            className="shrink-0 rounded-full border border-[var(--cn-orange)]/30 bg-card px-3 py-1 text-xs font-medium text-[var(--cn-orange)] transition-colors hover:bg-muted/60"
           >
             Use selection
           </button>
@@ -219,33 +318,102 @@ export function AnnotationBuilder({
       <div className="mt-3 grid gap-2 md:grid-cols-3">
         <input
           value={hanzi}
-          onChange={(e) => setHanzi(e.target.value)}
+          onChange={(e) => {
+            setHanzi(e.target.value);
+            setLookupField("hanzi");
+          }}
           placeholder="汉字"
-          className="rounded-lg border border-border bg-white px-3 py-2 text-sm text-foreground outline-none focus:border-[var(--cn-orange)]"
+          className="rounded-lg border border-border bg-card px-3 py-2 text-sm text-foreground outline-none focus:border-[var(--cn-orange)]"
         />
         <input
           value={pinyin}
-          onChange={(e) => setPinyin(e.target.value)}
+          onChange={(e) => {
+            setPinyin(e.target.value);
+            setLookupField("pinyin");
+          }}
           placeholder="pin1 yin1"
-          className="rounded-lg border border-border bg-white px-3 py-2 text-sm text-foreground outline-none focus:border-[var(--cn-orange)]"
+          className="rounded-lg border border-border bg-card px-3 py-2 text-sm text-foreground outline-none focus:border-[var(--cn-orange)]"
         />
         <input
           value={english}
-          onChange={(e) => setEnglish(e.target.value)}
+          onChange={(e) => {
+            setEnglish(e.target.value);
+            setLookupField("english");
+          }}
           placeholder="meaning"
-          className="rounded-lg border border-border bg-white px-3 py-2 text-sm text-foreground outline-none focus:border-[var(--cn-orange)]"
+          className="rounded-lg border border-border bg-card px-3 py-2 text-sm text-foreground outline-none focus:border-[var(--cn-orange)]"
         />
       </div>
+      {(lookupBusy || suggestions.length > 1 || (lookupAttempted && suggestions.length === 0)) && (
+        <div className="mt-3 rounded-lg border border-border/80 bg-card/90 px-3 py-3 shadow-sm">
+          <p className="text-[11px] font-semibold uppercase tracking-wider text-[var(--cn-orange)]">
+            {lookupBusy ? "Looking up..." : suggestions.length > 0 ? "Suggestions" : "No matches"}
+          </p>
+          {suggestions.length > 1 && (
+            <div className="mt-2 space-y-1">
+              {suggestions.map((suggestion) => (
+                <button
+                  key={`${suggestion.hanzi}-${suggestion.pinyin}-${suggestion.english}-${suggestion.source}`}
+                  type="button"
+                  onClick={() => applySuggestion(suggestion)}
+                  className="flex w-full items-center justify-between rounded-lg border border-border bg-card px-3 py-2 text-left text-xs transition-colors hover:border-[var(--cn-orange)]/30 hover:bg-[var(--cn-orange)]/10"
+                >
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-2">
+                      <span className="font-medium text-foreground">{suggestion.hanzi}</span>
+                      <span className="rounded-full bg-muted px-2 py-0.5 text-[10px] uppercase tracking-wide text-muted-foreground">
+                        {suggestion.source}
+                      </span>
+                    </div>
+                    <div className="mt-1 flex gap-3">
+                      <span className="truncate text-muted-foreground">{suggestion.pinyin}</span>
+                      <span
+                        className="truncate text-muted-foreground"
+                        title={suggestion.english}
+                      >
+                        {summarizeEnglishGloss(suggestion.english)}
+                      </span>
+                    </div>
+                  </div>
+                </button>
+              ))}
+            </div>
+          )}
+          {!lookupBusy && lookupAttempted && suggestions.length === 0 && (
+            <p className="mt-2 text-xs text-muted-foreground">
+              No annotation matches found for this input yet. Try a different gloss, pinyin, or Hanzi.
+            </p>
+          )}
+        </div>
+      )}
       <div className="mt-3 flex items-center justify-between gap-3">
         <p className="truncate font-mono text-xs text-muted-foreground">
           {canInsert ? buildInlineAnnotation(hanzi, pinyin, english) : "[汉字|pinyin|meaning]"}
         </p>
         <div className="flex items-center gap-2">
+          {(hanzi || pinyin || english) && (
+            <button
+              type="button"
+              onClick={resetBuilder}
+              className="rounded-full border border-border bg-card px-3 py-1 text-xs font-medium text-muted-foreground transition-colors hover:bg-muted"
+            >
+              Clear
+            </button>
+          )}
+          {canUseTopMatch && topSuggestion && (
+            <button
+              type="button"
+              onClick={() => applySuggestion(topSuggestion)}
+              className="rounded-full border border-[var(--cn-orange)]/30 bg-card px-3 py-1 text-xs font-medium text-[var(--cn-orange)] transition-colors hover:bg-muted/60"
+            >
+              Use top match
+            </button>
+          )}
           {suggestedAnnotation && (
             <button
               type="button"
               onClick={handleInsertSuggested}
-              className="rounded-full border border-[var(--cn-orange)]/30 bg-white px-3 py-1 text-xs font-medium text-[var(--cn-orange)] transition-colors hover:bg-white/80"
+              className="rounded-full border border-[var(--cn-orange)]/30 bg-card px-3 py-1 text-xs font-medium text-[var(--cn-orange)] transition-colors hover:bg-muted/60"
             >
               Insert target word
             </button>
@@ -260,6 +428,11 @@ export function AnnotationBuilder({
           </button>
         </div>
       </div>
+      {!lookupBusy && topSuggestion?.source === "cedict" && (
+        <p className="mt-2 text-[11px] text-muted-foreground">
+          Top match is from CEDICT, so it may be broader than your current HSK list.
+        </p>
+      )}
     </div>
   );
 }

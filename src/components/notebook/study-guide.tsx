@@ -40,7 +40,9 @@ export function StudyGuide({ initialData }: StudyGuideProps) {
   const { settings } = useSettings();
   const searchParams = useSearchParams();
   const [data, setData] = useState(initialData);
-  const [selectedIndex, setSelectedIndex] = useState<number>(0);
+  const [selectedWordId, setSelectedWordId] = useState<number | null>(
+    initialData.words[0]?.word.id ?? null
+  );
   const [filter, setFilter] = useState<Filter>("all");
   const [search, setSearch] = useState("");
   const [dailyPractice, setDailyPractice] = useState<DailyPracticePlan | null>(null);
@@ -63,9 +65,9 @@ export function StudyGuide({ initialData }: StudyGuideProps) {
     if (wordIdFromUrl) {
       const parsedWordId = Number.parseInt(wordIdFromUrl, 10);
       if (Number.isInteger(parsedWordId)) {
-        const idx = data.words.findIndex((item) => item.word.id === parsedWordId);
-        if (idx >= 0) {
-          setSelectedIndex(idx);
+        const selectedWord = data.words.find((item) => item.word.id === parsedWordId);
+        if (selectedWord) {
+          setSelectedWordId(selectedWord.word.id);
           return;
         }
       }
@@ -76,7 +78,7 @@ export function StudyGuide({ initialData }: StudyGuideProps) {
 
     const idx = data.words.findIndex((item) => item.word.simplified === wordFromUrl);
     if (idx >= 0) {
-      setSelectedIndex(idx);
+      setSelectedWordId(data.words[idx].word.id);
     }
   }, [data.words, searchParams]);
 
@@ -97,7 +99,7 @@ export function StudyGuide({ initialData }: StudyGuideProps) {
     startTransition(async () => {
       const newData = await getStudyGuideDataAction(level);
       setData(newData);
-      setSelectedIndex(0);
+      setSelectedWordId(newData.words[0]?.word.id ?? null);
       setSearch("");
     });
   }
@@ -118,9 +120,19 @@ export function StudyGuide({ initialData }: StudyGuideProps) {
     return true;
   });
 
-  const selected = filteredWords.length > 0
-    ? data.words[selectedIndex] ?? filteredWords[0]
-    : null;
+  const selected =
+    filteredWords.find((item) => item.word.id === selectedWordId) ?? filteredWords[0] ?? null;
+
+  useEffect(() => {
+    if (filteredWords.length === 0) {
+      setSelectedWordId(null);
+      return;
+    }
+
+    if (!selected || !filteredWords.some((item) => item.word.id === selected.word.id)) {
+      setSelectedWordId(filteredWords[0].word.id);
+    }
+  }, [filteredWords, selected]);
 
   return (
     <div
@@ -177,7 +189,9 @@ export function StudyGuide({ initialData }: StudyGuideProps) {
                   <button
                     key={f.key}
                     data-testid={`study-guide-filter-${f.key}`}
-                    onClick={() => { setFilter(f.key); setSelectedIndex(0); }}
+                    onClick={() => {
+                      setFilter(f.key);
+                    }}
                     className={`rounded-full px-2.5 py-1 text-[11px] font-medium transition-colors ${
                       filter === f.key
                         ? "bg-foreground text-background"
@@ -196,13 +210,12 @@ export function StudyGuide({ initialData }: StudyGuideProps) {
                   </p>
                 ) : (
                   filteredWords.map((item) => {
-                    const idx = data.words.indexOf(item);
-                    const isSelected = selectedIndex === idx;
+                    const isSelected = selectedWordId === item.word.id;
                     return (
                       <button
                         key={item.word.id}
                         data-testid={`study-guide-word-${item.word.simplified}`}
-                        onClick={() => setSelectedIndex(idx)}
+                        onClick={() => setSelectedWordId(item.word.id)}
                         className={`flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left transition-colors ${
                           isSelected
                             ? "border border-[var(--cn-orange)]/20 bg-[var(--cn-orange-light)]"
@@ -401,7 +414,7 @@ function WordDetail({
       {/* Status badges */}
       <div className="mb-6 flex flex-wrap justify-center gap-2">
         {item.encountered ? (
-          <span className="inline-flex items-center gap-1 rounded-full bg-green-50 px-3 py-1 text-xs font-medium text-green-700">
+          <span className="inline-flex items-center gap-1 rounded-full border border-emerald-500/20 bg-emerald-500/10 px-3 py-1 text-xs font-medium text-emerald-400">
             <CheckCircle2 className="h-3.5 w-3.5" />
             Encountered
           </span>
@@ -412,7 +425,7 @@ function WordDetail({
           </span>
         )}
         {hasFlashcard ? (
-          <span className="inline-flex items-center gap-1 rounded-full bg-blue-50 px-3 py-1 text-xs font-medium text-blue-700">
+          <span className="inline-flex items-center gap-1 rounded-full border border-sky-500/20 bg-sky-500/10 px-3 py-1 text-xs font-medium text-sky-400">
             <Layers className="h-3.5 w-3.5" />
             In flashcards
           </span>
@@ -451,7 +464,7 @@ function WordDetail({
               {!dailyPractice.focusWordProgress.wroteToday && (
                 <Link
                   href={journalHref}
-                  className="inline-flex items-center rounded-full border border-[var(--cn-orange)]/30 bg-white px-3 py-1 text-xs font-medium text-[var(--cn-orange)] transition-colors hover:bg-white/80"
+                  className="inline-flex items-center rounded-full border border-[var(--cn-orange)]/30 bg-card px-3 py-1 text-xs font-medium text-[var(--cn-orange)] transition-colors hover:bg-muted/60"
                 >
                   Write now →
                 </Link>
@@ -482,7 +495,7 @@ function WordDetail({
             {item.journalEntries.map((entry) => (
               <Link
                 key={entry.id}
-                href="/notebook"
+                href={`/notebook?entry=${entry.id}`}
                 className="flex items-center gap-2 rounded-lg border border-border px-3 py-2 text-sm transition-colors hover:border-[var(--cn-orange)]/30 hover:bg-[var(--cn-orange-light)]"
               >
                 <BookOpen className="h-3.5 w-3.5 text-[var(--cn-orange)]" />
@@ -509,13 +522,13 @@ function WordDetail({
               <Link
                 key={response.id}
                 href={`/notebook?entry=${response.id}`}
-                className="flex items-center justify-between rounded-lg border border-sky-100 bg-sky-50 px-3 py-3 text-sm transition-colors hover:border-sky-200"
+                className="flex items-center justify-between rounded-lg border border-sky-500/20 bg-sky-500/10 px-3 py-3 text-sm transition-colors hover:border-sky-500/30 hover:bg-sky-500/15"
               >
                 <div className="min-w-0">
                   <p className="font-medium text-foreground">{response.title_zh}</p>
                   <p className="truncate text-xs text-muted-foreground">{response.title_en}</p>
                 </div>
-                <span className="shrink-0 text-xs text-sky-700">
+                <span className="shrink-0 text-xs text-sky-400">
                   {new Date(response.created_at).toLocaleDateString()}
                 </span>
               </Link>
@@ -541,7 +554,7 @@ function WordDetail({
               <Link
                 key={candidate.zh}
                 href={candidate.href}
-                className="inline-flex items-center rounded-full border border-[var(--cn-orange)]/20 bg-white/80 px-3 py-1.5 text-xs font-medium text-[var(--cn-orange)] transition-colors hover:bg-white"
+                className="inline-flex items-center rounded-full border border-[var(--cn-orange)]/20 bg-card px-3 py-1.5 text-xs font-medium text-[var(--cn-orange)] transition-colors hover:bg-muted/60"
                 title={candidate.en}
               >
                 {candidate.zh}
@@ -550,7 +563,7 @@ function WordDetail({
           </div>
         </div>
         <div className="mt-4 grid gap-3 md:grid-cols-2">
-          <div className="rounded-lg border border-white/70 bg-white/70 p-4">
+          <div className="rounded-lg border border-border/80 bg-card/90 p-4 shadow-sm">
             <p className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground/70">
               <Sparkles className="h-3.5 w-3.5" />
               Notice This Phrase
@@ -564,22 +577,22 @@ function WordDetail({
               Use this phrase in journal →
             </Link>
           </div>
-          <div className="rounded-lg border border-white/70 bg-white/70 p-4">
+          <div className="rounded-lg border border-border/80 bg-card/90 p-4 shadow-sm">
             <p className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground/70">
               <CircleHelp className="h-3.5 w-3.5" />
               Quick Check
             </p>
-            <p className="mt-2 text-sm text-foreground/85">{reading.comprehensionCheck}</p>
+            <p className="mt-2 text-sm text-foreground">{reading.comprehensionCheck}</p>
           </div>
         </div>
-        <div className="mt-4 rounded-lg border border-white/70 bg-white/70 p-4">
+        <div className="mt-4 rounded-lg border border-border/80 bg-card/90 p-4 shadow-sm">
           <p className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground/70">
             <Languages className="h-3.5 w-3.5" />
             Listening Echo
           </p>
           <p className="mt-2 text-sm font-semibold text-foreground">{reading.listeningZh}</p>
           <p className="mt-1 text-sm text-muted-foreground">{reading.listeningEn}</p>
-          <p className="mt-2 text-sm text-foreground/85">{reading.listeningPrompt}</p>
+          <p className="mt-2 text-sm text-foreground">{reading.listeningPrompt}</p>
           <Link
             href={listeningJournalHref}
             className="mt-3 inline-flex items-center text-xs font-medium text-[var(--cn-orange)] hover:underline"
@@ -587,12 +600,12 @@ function WordDetail({
             Respond to listening →
           </Link>
         </div>
-        <div className="mt-4 rounded-lg border border-white/70 bg-white/70 p-4">
+        <div className="mt-4 rounded-lg border border-border/80 bg-card/90 p-4 shadow-sm">
           <p className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground/70">
             <PenSquare className="h-3.5 w-3.5" />
             Journal Response
           </p>
-          <p className="mt-2 text-sm text-foreground/85">{reading.responsePrompt}</p>
+          <p className="mt-2 text-sm text-foreground">{reading.responsePrompt}</p>
           <Link
             href={journalHref}
             className="mt-3 inline-flex items-center text-xs font-medium text-[var(--cn-orange)] hover:underline"
@@ -604,23 +617,23 @@ function WordDetail({
 
       {/* Flashcard status */}
       {item.flashcard ? (
-        <div className="mb-6 rounded-lg border border-blue-100 bg-blue-50 p-4">
-          <h4 className="mb-2 flex items-center gap-1.5 text-xs font-semibold text-blue-700">
+        <div className="mb-6 rounded-lg border border-sky-500/20 bg-sky-500/10 p-4">
+          <h4 className="mb-2 flex items-center gap-1.5 text-xs font-semibold text-sky-400">
             <Layers className="h-3.5 w-3.5" />
             Flashcard
           </h4>
           <div className="flex gap-4 text-sm">
             <div>
-              <p className="text-xs text-blue-500">Reviews</p>
-              <p className="font-bold text-blue-700">{item.flashcard.reviewCount}</p>
+              <p className="text-xs text-sky-300/80">Reviews</p>
+              <p className="font-bold text-sky-400">{item.flashcard.reviewCount}</p>
             </div>
             <div>
-              <p className="text-xs text-blue-500">Interval</p>
-              <p className="font-bold text-blue-700">{item.flashcard.intervalDays}d</p>
+              <p className="text-xs text-sky-300/80">Interval</p>
+              <p className="font-bold text-sky-400">{item.flashcard.intervalDays}d</p>
             </div>
             <div>
-              <p className="text-xs text-blue-500">Next review</p>
-              <p className="font-bold text-blue-700">
+              <p className="text-xs text-sky-300/80">Next review</p>
+              <p className="font-bold text-sky-400">
                 {new Date(item.flashcard.nextReview) <= new Date() ? (
                   <span className="flex items-center gap-1 text-amber-600">
                     <Clock className="h-3.5 w-3.5" /> Due now
@@ -645,7 +658,7 @@ function WordDetail({
           </button>
         </div>
       ) : (
-        <p className="text-center text-sm font-medium text-green-600">
+        <p className="text-center text-sm font-medium text-emerald-400">
           Flashcard created!
         </p>
       )}
@@ -658,7 +671,7 @@ function FocusStatusPill({ done, label }: { done: boolean; label: string }) {
     <span
       className={`inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-medium ${
         done
-          ? "bg-emerald-100 text-emerald-700"
+          ? "border border-emerald-500/20 bg-emerald-500/10 text-emerald-400"
           : "bg-background text-muted-foreground"
       }`}
     >

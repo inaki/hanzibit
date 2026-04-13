@@ -211,14 +211,14 @@ export function DashboardView() {
                     </p>
                   )}
                   {dailyPractice.stepPatternInsight.weakestMessage && (
-                    <p className="text-xs text-amber-700">
+                    <p className="text-xs text-amber-400">
                       {dailyPractice.stepPatternInsight.weakestMessage}
                     </p>
                   )}
                   {!dailyPractice.loopCompleted && priorityActionHref && priorityActionLabel && (
                     <Link
                       href={priorityActionHref}
-                      className="mt-2 inline-flex items-center rounded-full border border-[var(--cn-orange)]/30 bg-[var(--cn-orange-light)] px-3 py-1 text-xs font-medium text-[var(--cn-orange)] transition-colors hover:bg-[var(--cn-orange-light)]/80 lg:hidden"
+                      className="mt-2 inline-flex items-center rounded-full border border-[var(--cn-orange)]/30 bg-[var(--cn-orange)]/12 px-3 py-1 text-xs font-medium text-[var(--cn-orange)] transition-colors hover:bg-[var(--cn-orange)]/18 lg:hidden"
                     >
                       {priorityActionLabel} now →
                     </Link>
@@ -238,7 +238,7 @@ export function DashboardView() {
               <span
                 className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-medium ${
                   dailyPractice.loopCompleted
-                    ? "bg-emerald-100 text-emerald-700"
+                    ? "border border-emerald-500/20 bg-emerald-500/10 text-emerald-400"
                     : "bg-background text-muted-foreground"
                 }`}
               >
@@ -257,9 +257,9 @@ export function DashboardView() {
                   <span
                     className={`h-3 w-8 rounded-full ${
                       day.completed
-                        ? "bg-emerald-500"
+                        ? "bg-emerald-500/80"
                         : day.isToday
-                          ? "bg-amber-200"
+                          ? "bg-amber-500/40"
                           : "bg-muted-foreground/20"
                     }`}
                     title={`${day.label} ${day.date}: ${day.completed ? "completed" : "not completed"}`}
@@ -269,8 +269,8 @@ export function DashboardView() {
             </div>
           )}
           {!loading && dailyPractice && !dailyPractice.loopCompleted && dailyPractice.missingSteps.length > 0 && (
-            <div className="mt-4 rounded-lg border border-amber-200 bg-amber-50 px-3 py-3">
-              <p className="text-xs font-semibold uppercase tracking-wide text-amber-800">
+            <div className="mt-4 rounded-lg border border-amber-500/20 bg-amber-500/10 px-3 py-3">
+              <p className="text-xs font-semibold uppercase tracking-wide text-amber-400">
                 Still to do
               </p>
               <div className="mt-2 space-y-2">
@@ -356,8 +356,8 @@ export function DashboardView() {
                     {index + 1}. Study
                   </p>
                   <div className="mt-2 flex items-start gap-2">
-                    <BookText className="mt-0.5 h-4 w-4 text-blue-500" />
-                    <p className="text-sm text-foreground/85">
+                    <BookText className="mt-0.5 h-4 w-4 text-sky-400" />
+                    <p className="text-sm text-foreground">
                       {loading || !dailyPractice
                         ? "Preparing your study focus..."
                         : dailyPractice.focusWordProgress?.studiedToday && dailyPractice.recommendedStudyWord
@@ -389,7 +389,7 @@ export function DashboardView() {
                     {loading || !dailyPractice ? "..." : dailyPractice.writingPromptBody}
                   </p>
                   {!loading && dailyPractice && (
-                    <p className="mt-2 text-xs text-emerald-700">
+                    <p className="mt-2 text-xs text-emerald-400">
                       {dailyPractice.focusWordProgress?.wroteToday && dailyPractice.recommendedStudyWord
                         ? `You already wrote with ${dailyPractice.recommendedStudyWord.simplified} today.`
                         : dailyPractice.guidedResponsesToday > 0
@@ -433,7 +433,7 @@ export function DashboardView() {
         {/* Journal entries */}
         <div className="rounded-xl border bg-card p-5">
           <div className="mb-3 flex items-center gap-2">
-            <PenLine className="h-4 w-4 text-blue-500" />
+            <PenLine className="h-4 w-4 text-sky-400" />
             <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground/70">Entries</span>
           </div>
           <p className="text-4xl font-bold text-foreground">{loading ? "—" : stats.entryCount}</p>
@@ -443,7 +443,7 @@ export function DashboardView() {
         {/* Reviews */}
         <div className="rounded-xl border bg-card p-5">
           <div className="mb-3 flex items-center gap-2">
-            <RotateCcw className="h-4 w-4 text-green-500" />
+            <RotateCcw className="h-4 w-4 text-emerald-400" />
             <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground/70">Reviews</span>
           </div>
           <p className="text-4xl font-bold text-foreground">{loading ? "—" : stats.reviewCount}</p>
@@ -476,7 +476,7 @@ export function DashboardView() {
       <div className="mb-6 grid grid-cols-2 gap-4">
         <div className="rounded-xl border bg-card p-5">
           <div className="mb-3 flex items-center gap-2">
-            <Layers className="h-4 w-4 text-blue-500" />
+            <Layers className="h-4 w-4 text-sky-400" />
             <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground/70">Flashcards</span>
           </div>
           <p className="text-4xl font-bold text-foreground">{loading ? "—" : stats.vocabCount}</p>
@@ -490,7 +490,7 @@ export function DashboardView() {
         <div className="rounded-xl border bg-card p-5">
           <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground/70">Character of the day</p>
           <div className="flex items-center gap-4">
-            <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-xl bg-[var(--cn-orange-light)]">
+            <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-xl bg-[var(--cn-orange)]/12">
               <span className="text-4xl font-bold leading-none text-[var(--cn-orange)]">
                 {charOfDay ? charOfDay.simplified[0] : "—"}
               </span>
@@ -508,7 +508,7 @@ export function DashboardView() {
       {!loading && weakCards.length > 0 && (
         <div className="rounded-xl border bg-card p-6">
           <div className="mb-4 flex items-center gap-2">
-            <AlertCircle className="h-4 w-4 text-red-500" />
+            <AlertCircle className="h-4 w-4 text-rose-400" />
             <h2 className="text-sm font-semibold text-foreground/80">Needs Attention</h2>
             <span className="ml-auto text-xs text-muted-foreground/70">Low ease factor — review these soon</span>
           </div>
@@ -521,7 +521,7 @@ export function DashboardView() {
                 </div>
                 <div className="flex items-center gap-3 text-xs text-muted-foreground/70">
                   <span>{card.review_count} reviews</span>
-                  <span className="font-medium text-red-500">ease {card.ease_factor.toFixed(1)}</span>
+                  <span className="font-medium text-rose-400">ease {card.ease_factor.toFixed(1)}</span>
                 </div>
               </div>
             ))}
@@ -533,8 +533,8 @@ export function DashboardView() {
       )}
 
       {!loading && weakCards.length === 0 && (
-        <div className="rounded-xl border border-green-100 bg-green-50 p-6 text-center">
-          <p className="text-sm font-medium text-green-700">All caught up — no struggling cards right now.</p>
+        <div className="rounded-xl border border-emerald-500/20 bg-emerald-500/10 p-6 text-center">
+          <p className="text-sm font-medium text-emerald-400">All caught up — no struggling cards right now.</p>
         </div>
       )}
     </div>
@@ -583,9 +583,9 @@ function PracticeCard({
     <div
       className={`rounded-lg border p-4 ${
         done
-          ? "border-emerald-200 bg-emerald-50/70"
+          ? "border-emerald-500/20 bg-emerald-500/10"
           : emphasized
-            ? "border-[var(--cn-orange)]/40 bg-[var(--cn-orange-light)] shadow-sm"
+            ? "border-[var(--cn-orange)]/40 bg-[var(--cn-orange)]/12 shadow-sm"
             : "border-border bg-muted/40"
       }`}
     >
@@ -593,7 +593,7 @@ function PracticeCard({
         <span className="sr-only">{stepLabel}</span>
         <div className="ml-auto flex flex-wrap items-center justify-end gap-1.5">
           {done ? (
-            <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-2 py-0.5 text-[11px] font-medium text-emerald-700">
+            <span className="inline-flex items-center gap-1 rounded-full border border-emerald-500/20 bg-emerald-500/10 px-2 py-0.5 text-[11px] font-medium text-emerald-400">
               <CheckCircle2 className="h-3.5 w-3.5" />
               Done
             </span>
@@ -607,7 +607,7 @@ function PracticeCard({
             <span
               className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-medium ${
                 focusDone
-                  ? "bg-[var(--cn-orange-light)] text-[var(--cn-orange)]"
+                  ? "border border-[var(--cn-orange)]/30 bg-[var(--cn-orange)]/12 text-[var(--cn-orange)]"
                   : "bg-background/80 text-muted-foreground"
               }`}
             >
@@ -635,7 +635,7 @@ function FocusWordStepBadge({ done, label }: { done: boolean; label: string }) {
     <span
       className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 ${
         done
-          ? "bg-emerald-100 text-emerald-700"
+          ? "border border-emerald-500/20 bg-emerald-500/10 text-emerald-400"
           : "bg-background text-muted-foreground"
       }`}
     >

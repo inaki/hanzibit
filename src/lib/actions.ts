@@ -16,10 +16,12 @@ import {
   updateFlashcardReview,
   addReviewRecord,
   searchHskWords,
+  searchCedictWords,
   type Flashcard,
   type HskWord,
   type StudyGuideData,
 } from "./data";
+import type { AnnotationLookupEntry } from "./annotation-suggestions";
 import { canReviewFlashcard, canAccessHskLevel } from "./gates";
 import { sm2 } from "./sm2";
 import { validateInlineMarkup } from "./parse-tokens";
@@ -261,6 +263,47 @@ export async function searchHskWordsAction(
 ): Promise<HskWord[]> {
   if (!query || query.trim().length === 0) return [];
   return searchHskWords(query.trim());
+}
+
+export async function searchAnnotationSuggestionsAction(
+  query: string
+): Promise<AnnotationLookupEntry[]> {
+  const normalized = query.trim();
+  if (!normalized) return [];
+
+  const [hskWords, cedictWords] = await Promise.all([
+    searchHskWords(normalized),
+    searchCedictWords(normalized),
+  ]);
+
+  const deduped = new Map<string, AnnotationLookupEntry>();
+
+  for (const word of hskWords) {
+    const entry: AnnotationLookupEntry = {
+      hanzi: word.simplified,
+      pinyin: word.pinyin,
+      english: word.english,
+      source: "hsk",
+      hskLevel: word.hsk_level,
+    };
+    deduped.set(`${entry.hanzi}|${entry.pinyin}|${entry.english}`, entry);
+  }
+
+  for (const word of cedictWords) {
+    const entry: AnnotationLookupEntry = {
+      hanzi: word.simplified,
+      pinyin: word.pinyin_display,
+      english: word.english.split("; ")[0] ?? word.english,
+      source: "cedict",
+      hskLevel: null,
+    };
+    const key = `${entry.hanzi}|${entry.pinyin}|${entry.english}`;
+    if (!deduped.has(key)) {
+      deduped.set(key, entry);
+    }
+  }
+
+  return Array.from(deduped.values());
 }
 
 export async function createFlashcardForWord(

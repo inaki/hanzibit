@@ -20,10 +20,10 @@ interface FlashcardPracticeProps {
 type FilterTab = "all" | "due";
 
 const QUALITY_BUTTONS = [
-  { label: "Again", quality: 1, color: "bg-red-500 hover:bg-red-600" },
-  { label: "Hard", quality: 2, color: "bg-orange-500 hover:bg-orange-600" },
-  { label: "Good", quality: 3, color: "bg-green-500 hover:bg-green-600" },
-  { label: "Easy", quality: 5, color: "bg-blue-500 hover:bg-blue-600" },
+  { label: "Again", quality: 1, color: "bg-rose-600 hover:bg-rose-500" },
+  { label: "Hard", quality: 2, color: "bg-orange-600 hover:bg-orange-500" },
+  { label: "Good", quality: 3, color: "bg-emerald-600 hover:bg-emerald-500" },
+  { label: "Easy", quality: 5, color: "bg-sky-600 hover:bg-sky-500" },
 ];
 
 export function FlashcardPractice({
@@ -151,7 +151,7 @@ export function FlashcardPractice({
             {total > 0 && ` · Card ${currentIndex + 1} of ${total}`}
           </p>
           {focusFront && filteredCards.some((card) => card.front === focusFront) && (
-            <p className="mt-2 inline-flex items-center gap-1 rounded-full bg-[var(--cn-orange-light)] px-2.5 py-1 text-xs font-medium text-[var(--cn-orange)]">
+            <p className="mt-2 inline-flex items-center gap-1 rounded-full border border-[var(--cn-orange)]/30 bg-[var(--cn-orange)]/12 px-2.5 py-1 text-xs font-medium text-[var(--cn-orange)]">
               <Target className="h-3.5 w-3.5" />
               Focus word: {focusFront}
             </p>
@@ -181,14 +181,14 @@ export function FlashcardPractice({
 
       {/* Filter tabs */}
       {mode === "practice" && (
-        <div data-testid="flashcards-filter" className="mb-6 flex gap-2">
+        <div data-testid="flashcards-filter" className="mb-6 inline-flex rounded-full border border-border bg-card/70 p-1">
           <button
             data-testid="flashcards-filter-all"
             onClick={() => handleFilterChange("all")}
-            className={`rounded-full px-3 py-1 text-xs font-medium transition-colors ${
+            className={`rounded-full px-4 py-1.5 text-xs font-medium transition-colors ${
               filter === "all"
-                ? "bg-foreground text-background"
-                : "bg-muted text-muted-foreground hover:bg-muted"
+                ? "bg-foreground text-background shadow-sm"
+                : "text-muted-foreground hover:bg-muted/70"
             }`}
           >
             All ({cards.length})
@@ -196,10 +196,10 @@ export function FlashcardPractice({
           <button
             data-testid="flashcards-filter-due"
             onClick={() => handleFilterChange("due")}
-            className={`rounded-full px-3 py-1 text-xs font-medium transition-colors ${
+            className={`rounded-full px-4 py-1.5 text-xs font-medium transition-colors ${
               filter === "due"
-                ? "bg-foreground text-background"
-                : "bg-muted text-muted-foreground hover:bg-muted"
+                ? "bg-foreground text-background shadow-sm"
+                : "text-muted-foreground hover:bg-muted/70"
             }`}
           >
             Due ({dueCount})
@@ -215,7 +215,7 @@ export function FlashcardPractice({
         ) : (
           <>
             {focusFront && currentCard?.front === focusFront && (
-              <div className="mb-4 rounded-xl border border-[var(--cn-orange)]/30 bg-[var(--cn-orange-light)] px-4 py-3">
+              <div className="mb-4 rounded-xl border border-[var(--cn-orange)]/30 bg-[var(--cn-orange)]/12 px-4 py-3">
                 <p className="text-xs font-semibold uppercase tracking-wide text-[var(--cn-orange)]">
                   Today&apos;s Focus
                 </p>
@@ -258,7 +258,7 @@ export function FlashcardPractice({
             <button
               data-testid="flashcard-card"
               onClick={() => setFlipped(!flipped)}
-              className="mb-6 flex h-72 w-full items-center justify-center rounded-2xl border-2 bg-card shadow-sm transition-all hover:shadow-md"
+              className="mb-6 flex h-72 w-full items-center justify-center rounded-2xl border-2 bg-card px-8 shadow-sm transition-all hover:shadow-md"
             >
               {!flipped ? (
                 <div data-testid="flashcard-front" className="text-center">
@@ -270,8 +270,11 @@ export function FlashcardPractice({
                 </div>
               ) : (
                 <div data-testid="flashcard-back" className="text-center">
-                  <p className="text-2xl text-foreground/80">{currentCard.back}</p>
-                  <p className="mt-2 text-xs text-muted-foreground/70">Deck: {currentCard.deck}</p>
+                  <p className="mx-auto max-w-3xl text-2xl leading-relaxed text-foreground/90">{currentCard.back}</p>
+                  <div className="mt-4 inline-flex items-center gap-2 rounded-full border border-border bg-muted/40 px-3 py-1 text-xs text-muted-foreground">
+                    <span className="font-medium text-foreground/80">Deck</span>
+                    <span>{currentCard.deck}</span>
+                  </div>
                 </div>
               )}
             </button>
@@ -298,30 +301,35 @@ export function FlashcardPractice({
 
             {/* Review feedback */}
             {reviewFeedback && (
-              <p data-testid="flashcard-review-feedback" className="mb-4 text-center text-sm font-medium text-green-600">
+              <p data-testid="flashcard-review-feedback" className="mb-4 text-center text-sm font-medium text-emerald-400">
                 {reviewFeedback}
               </p>
             )}
 
             {/* SM-2 scoring buttons (shown after flip) */}
             {flipped && !reviewFeedback && !limitReached && (
-              <div data-testid="flashcard-scoring" className="mb-6 flex justify-center gap-2">
-                {QUALITY_BUTTONS.map((btn) => (
-                  <button
-                    key={btn.quality}
-                    data-testid={`flashcard-score-${btn.label.toLowerCase()}`}
-                    onClick={() => handleScore(btn.quality)}
-                    disabled={isPending}
-                    className={`rounded-lg px-4 py-2 text-sm font-medium text-white transition-colors disabled:opacity-50 ${btn.color}`}
-                  >
-                    {btn.label}
-                  </button>
-                ))}
+              <div data-testid="flashcard-scoring" className="mb-6 rounded-2xl border border-border bg-card/70 p-4">
+                <p className="mb-3 text-center text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground/70">
+                  How did this feel?
+                </p>
+                <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+                  {QUALITY_BUTTONS.map((btn) => (
+                    <button
+                      key={btn.quality}
+                      data-testid={`flashcard-score-${btn.label.toLowerCase()}`}
+                      onClick={() => handleScore(btn.quality)}
+                      disabled={isPending}
+                      className={`rounded-xl px-4 py-2.5 text-sm font-medium text-white transition-colors disabled:opacity-50 ${btn.color}`}
+                    >
+                      {btn.label}
+                    </button>
+                  ))}
+                </div>
               </div>
             )}
 
             {/* Navigation */}
-            <div data-testid="flashcard-navigation" className="flex items-center justify-center gap-4">
+            <div data-testid="flashcard-navigation" className="flex items-center justify-center gap-3">
               <button
                 data-testid="flashcard-prev"
                 onClick={prev}

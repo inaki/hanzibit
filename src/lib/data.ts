@@ -84,6 +84,15 @@ export interface HskWord {
   hsk_level: number;
 }
 
+export interface CedictWord {
+  simplified: string;
+  traditional: string;
+  pinyin: string;
+  pinyin_display: string;
+  english: string;
+  char_count: number;
+}
+
 export interface HskLevelSummary {
   hsk_level: number;
   word_count: number;
@@ -250,6 +259,24 @@ export async function searchHskWords(queryText: string): Promise<HskWord[]> {
     `SELECT * FROM hsk_words
      WHERE simplified ILIKE $1 OR pinyin ILIKE $1 OR english ILIKE $1
      ORDER BY hsk_level, id
+     LIMIT 50`,
+    [pattern]
+  );
+}
+
+export async function searchCedictWords(queryText: string): Promise<CedictWord[]> {
+  const pattern = `%${queryText}%`;
+  return query<CedictWord>(
+    `SELECT DISTINCT ON (simplified, pinyin_display, english)
+        simplified,
+        traditional,
+        pinyin,
+        pinyin_display,
+        english,
+        char_count
+     FROM cedict_entries
+     WHERE simplified ILIKE $1 OR pinyin_display ILIKE $1 OR english ILIKE $1
+     ORDER BY simplified, pinyin_display, english, char_count DESC
      LIMIT 50`,
     [pattern]
   );

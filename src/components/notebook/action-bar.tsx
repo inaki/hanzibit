@@ -326,17 +326,17 @@ export function NotebookActionBar({
 function MarkupHelp() {
   return (
     <div data-testid="markup-help" className="space-y-2">
-      <div className="rounded-lg bg-[var(--cn-orange-light)] border border-[var(--cn-orange)]/20 px-3 py-2 text-xs text-foreground/80">
+      <div className="rounded-lg border border-[var(--cn-orange)]/20 bg-[var(--cn-orange)]/10 px-3 py-2 text-xs text-foreground/80">
         <p className="font-semibold text-[var(--cn-orange)]">Vocabulary markup</p>
         <p className="mt-1">
-          Wrap words in <code className="rounded bg-white px-1 py-0.5 font-mono text-[var(--cn-orange)]">[汉字|pīnyīn|english]</code> to highlight them.
+          Wrap words in <code className="rounded bg-card px-1 py-0.5 font-mono text-[var(--cn-orange)]">[汉字|pīnyīn|english]</code> to highlight them.
         </p>
         <p className="mt-1 text-muted-foreground">
           Example: <code className="font-mono">我去[餐厅|can1 ting1|restaurant]吃饭</code>
         </p>
       </div>
-      <div className="rounded-lg bg-amber-50 border border-amber-200 px-3 py-2 text-xs text-foreground/80">
-        <p className="font-semibold text-amber-700">Tone shortcut</p>
+      <div className="rounded-lg border border-amber-500/20 bg-amber-500/10 px-3 py-2 text-xs text-foreground/80">
+        <p className="font-semibold text-amber-400">Tone shortcut</p>
         <p className="mt-1 font-mono text-muted-foreground">
           a1→ā &nbsp; a2→á &nbsp; a3→ǎ &nbsp; a4→à &nbsp; v=ü
         </p>
@@ -514,6 +514,7 @@ function EditEntryDialog({
                   onInsert={handleInsertAnnotation}
                   selectedText={selectedText}
                   onUseSelection={captureSelection}
+                  currentHskLevel={entry.hsk_level}
                 />
                 <MarkupValidationPanel content={content} />
                 <JournalFeedbackPanel content={content} />
@@ -738,6 +739,7 @@ function NewEntryDialog({
                   onInsert={handleInsertAnnotation}
                   selectedText={selectedText || draft?.selectedText}
                   onUseSelection={captureSelection}
+                  currentHskLevel={draft?.hskLevel ?? 1}
                   suggestedAnnotation={
                     draft?.targetWord && draft?.targetPinyin && draft?.targetEnglish
                       ? {
