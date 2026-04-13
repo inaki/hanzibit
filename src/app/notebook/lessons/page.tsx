@@ -19,7 +19,7 @@ export default async function StudyGuidePage({
   const data = await getStudyGuideData(userId, safeLevel);
 
   return (
-    <div data-testid="study-guide-page" className="h-full overflow-auto p-6 pb-20 md:p-10 lg:pb-10">
+    <div data-testid="study-guide-page" className="h-full overflow-hidden">
       <StudyGuide initialData={data} />
     </div>
   );
