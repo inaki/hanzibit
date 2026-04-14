@@ -31,10 +31,30 @@ import { getDailyPracticePlanForUser } from "./daily-practice-service";
 import {
   createClassroom as createClassroomRecord,
   joinClassroom as joinClassroomRecord,
+  isTeacherUser,
 } from "./classrooms";
 import { createAssignment as createAssignmentRecord, type AssignmentType } from "./assignments";
-import { canManageClassroom, canReviewSubmission, canSubmitAssignment } from "./classroom-permissions";
+import {
+  canManageAssignmentTemplate,
+  canManageClassroom,
+  canSubmitAssignment,
+  canUseTemplateInClassroom,
+  canReviewSubmission,
+} from "./classroom-permissions";
 import { addSubmissionFeedback, markSubmissionReviewed, upsertSubmission } from "./submissions";
+import {
+  createTeacherResource,
+  listTeacherResourcesForUser,
+  type TeacherResourceType,
+  updateTeacherResource,
+} from "./teacher-resources";
+import {
+  createAssignmentTemplate,
+  getAssignmentTemplate,
+  markAssignmentCreatedFromTemplate,
+  updateAssignmentTemplate,
+} from "./assignment-templates";
+import { getAssignment } from "./assignments";
 
 export async function toggleBookmarkAction(entryId: string) {
   const userId = await getAuthUserId();
@@ -362,6 +382,227 @@ export async function createAssignmentAction(formData: FormData) {
   revalidatePath("/notebook/assignments");
   revalidatePath(`/notebook/assignments/${assignment.id}`);
   return { id: assignment.id, classroomId };
+}
+
+export async function createTeacherResourceAction(formData: FormData) {
+  const userId = await getAuthUserId();
+
+  if (!(await isTeacherUser(userId))) {
+    return { error: "Only teachers can create resources." };
+  }
+
+  const title = ((formData.get("title") as string) || "").trim();
+  const description = ((formData.get("description") as string) || "").trim();
+  const resourceType = ((formData.get("resource_type") as string) || "journal_prompt") as TeacherResourceType;
+  const hskLevelRaw = ((formData.get("hsk_level") as string) || "").trim();
+
+  if (!title) {
+    return { error: "Resource title is required." };
+  }
+
+  const resource = await createTeacherResource({
+    teacherUserId: userId,
+    resourceType,
+    title,
+    description: description || null,
+    hskLevel: hskLevelRaw ? Number.parseInt(hskLevelRaw, 10) : null,
+  });
+
+  revalidatePath("/notebook/teacher/library");
+  return { id: resource.id };
+}
+
+export async function createAssignmentTemplateAction(formData: FormData) {
+  const userId = await getAuthUserId();
+
+  if (!(await isTeacherUser(userId))) {
+    return { error: "Only teachers can create templates." };
+  }
+
+  const title = ((formData.get("title") as string) || "").trim();
+  const description = ((formData.get("description") as string) || "").trim();
+  const prompt = ((formData.get("prompt") as string) || "").trim();
+  const templateType = ((formData.get("template_type") as string) || "journal_prompt") as AssignmentType;
+  const resourceId = ((formData.get("resource_id") as string) || "").trim();
+  const sourceRef = ((formData.get("source_ref") as string) || "").trim();
+  const hskLevelRaw = ((formData.get("hsk_level") as string) || "").trim();
+  const allowResubmission = formData.get("allow_resubmission") === "on";
+
+  if (!title) {
+    return { error: "Template title is required." };
+  }
+
+  if (resourceId) {
+    const resources = await listTeacherResourcesForUser(userId, { includeArchived: false });
+    if (!resources.some((resource) => resource.id === resourceId)) {
+      return { error: "Resource not found." };
+    }
+  }
+
+  const template = await createAssignmentTemplate({
+    teacherUserId: userId,
+    resourceId: resourceId || null,
+    templateType,
+    title,
+    description: description || null,
+    prompt: prompt || null,
+    hskLevel: hskLevelRaw ? Number.parseInt(hskLevelRaw, 10) : null,
+    sourceRef: sourceRef || null,
+    allowResubmission,
+  });
+
+  revalidatePath("/notebook/teacher/library");
+  return { id: template.id };
+}
+
+export async function createAssignmentFromTemplateAction(formData: FormData) {
+  const userId = await getAuthUserId();
+  const templateId = ((formData.get("template_id") as string) || "").trim();
+  const classroomId = ((formData.get("classroom_id") as string) || "").trim();
+  const title = ((formData.get("title") as string) || "").trim();
+  const description = ((formData.get("description") as string) || "").trim();
+  const prompt = ((formData.get("prompt") as string) || "").trim();
+  const dueDate = ((formData.get("due_date") as string) || "").trim();
+  const dueTime = ((formData.get("due_time") as string) || "").trim();
+  const dueAt = dueDate ? `${dueDate}T${dueTime || "23:59"}` : "";
+
+  if (!templateId || !classroomId) {
+    return { error: "Template and classroom are required." };
+  }
+
+  if (!(await canManageAssignmentTemplate(userId, templateId))) {
+    return { error: "You cannot use this template." };
+  }
+
+  if (!(await canUseTemplateInClassroom(userId, templateId, classroomId))) {
+    return { error: "You cannot use this template in this classroom." };
+  }
+
+  const template = await getAssignmentTemplate(templateId);
+  if (!template) {
+    return { error: "Template not found." };
+  }
+
+  const assignment = await createAssignmentRecord({
+    classroomId,
+    createdByUserId: userId,
+    templateId,
+    type: template.template_type,
+    title: title || template.title,
+    description: description || template.description,
+    prompt: prompt || template.prompt,
+    hskLevel: template.hsk_level,
+    sourceRef: template.source_ref,
+    dueAt: dueAt || null,
+    allowResubmission: template.allow_resubmission === 1,
+  });
+
+  await markAssignmentCreatedFromTemplate({
+    assignmentId: assignment.id,
+    templateId,
+  });
+
+  revalidatePath("/notebook/teacher/library");
+  revalidatePath(`/notebook/classes/${classroomId}`);
+  revalidatePath("/notebook/assignments");
+  revalidatePath(`/notebook/assignments/${assignment.id}`);
+  return { id: assignment.id };
+}
+
+export async function updateTeacherResourceAction(formData: FormData) {
+  const userId = await getAuthUserId();
+  const id = ((formData.get("id") as string) || "").trim();
+  const title = ((formData.get("title") as string) || "").trim();
+  const description = ((formData.get("description") as string) || "").trim();
+  const hskLevelRaw = ((formData.get("hsk_level") as string) || "").trim();
+  const archived = formData.get("archived") === "on";
+
+  if (!id || !title) {
+    return { error: "Resource id and title are required." };
+  }
+
+  await updateTeacherResource({
+    id,
+    teacherUserId: userId,
+    title,
+    description: description || null,
+    hskLevel: hskLevelRaw ? Number.parseInt(hskLevelRaw, 10) : null,
+    archived,
+  });
+
+  revalidatePath("/notebook/teacher/library");
+  return { success: true };
+}
+
+export async function updateAssignmentTemplateAction(formData: FormData) {
+  const userId = await getAuthUserId();
+  const id = ((formData.get("id") as string) || "").trim();
+  const title = ((formData.get("title") as string) || "").trim();
+  const description = ((formData.get("description") as string) || "").trim();
+  const prompt = ((formData.get("prompt") as string) || "").trim();
+  const sourceRef = ((formData.get("source_ref") as string) || "").trim();
+  const hskLevelRaw = ((formData.get("hsk_level") as string) || "").trim();
+  const allowResubmission = formData.get("allow_resubmission") === "on";
+  const archived = formData.get("archived") === "on";
+
+  if (!id || !title) {
+    return { error: "Template id and title are required." };
+  }
+
+  await updateAssignmentTemplate({
+    id,
+    teacherUserId: userId,
+    title,
+    description: description || null,
+    prompt: prompt || null,
+    sourceRef: sourceRef || null,
+    hskLevel: hskLevelRaw ? Number.parseInt(hskLevelRaw, 10) : null,
+    allowResubmission,
+    archived,
+  });
+
+  revalidatePath("/notebook/teacher/library");
+  return { success: true };
+}
+
+export async function saveAssignmentAsTemplateAction(formData: FormData) {
+  const userId = await getAuthUserId();
+  const assignmentId = ((formData.get("assignment_id") as string) || "").trim();
+  const classroomId = ((formData.get("classroom_id") as string) || "").trim();
+  const title = ((formData.get("title") as string) || "").trim();
+
+  if (!assignmentId || !classroomId) {
+    return { error: "Assignment context is required." };
+  }
+
+  if (!(await canManageClassroom(userId, classroomId))) {
+    return { error: "You cannot save this assignment as a template." };
+  }
+
+  const assignment = await getAssignment(assignmentId);
+  if (!assignment) {
+    return { error: "Assignment not found." };
+  }
+
+  const template = await createAssignmentTemplate({
+    teacherUserId: userId,
+    templateType: assignment.type,
+    title: title || assignment.title,
+    description: assignment.description,
+    prompt: assignment.prompt,
+    hskLevel: assignment.hsk_level,
+    sourceRef: assignment.source_ref,
+    allowResubmission: assignment.allow_resubmission === 1,
+  });
+
+  await markAssignmentCreatedFromTemplate({
+    assignmentId: assignment.id,
+    templateId: template.id,
+  });
+
+  revalidatePath("/notebook/teacher/library");
+  revalidatePath(`/notebook/assignments/${assignment.id}`);
+  return { id: template.id };
 }
 
 export async function searchHskWordsAction(

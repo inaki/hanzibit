@@ -15,7 +15,7 @@ declare global {
   var __hanzibitSchemaVersion: number | undefined;
 }
 
-const SCHEMA_VERSION = 7;
+const SCHEMA_VERSION = 8;
 
 const APP_SCHEMA_SQL = `
   CREATE TABLE IF NOT EXISTS "user" (
@@ -325,6 +325,55 @@ const APP_SCHEMA_SQL = `
 
   CREATE INDEX IF NOT EXISTS idx_submission_feedback_submission
     ON submission_feedback(submission_id, created_at DESC);
+
+  CREATE TABLE IF NOT EXISTS referral_codes (
+    id TEXT PRIMARY KEY,
+    teacher_user_id TEXT NOT NULL,
+    code TEXT NOT NULL UNIQUE,
+    active INTEGER NOT NULL DEFAULT 1,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+  );
+
+  CREATE INDEX IF NOT EXISTS idx_referral_codes_teacher
+    ON referral_codes(teacher_user_id, created_at DESC);
+
+  CREATE TABLE IF NOT EXISTS referral_attributions (
+    id TEXT PRIMARY KEY,
+    referral_code_id TEXT NOT NULL REFERENCES referral_codes(id) ON DELETE CASCADE,
+    teacher_user_id TEXT NOT NULL,
+    student_user_id TEXT NOT NULL UNIQUE,
+    referral_code TEXT NOT NULL,
+    attribution_source TEXT NOT NULL DEFAULT 'referral_link',
+    attributed_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    converted_at TIMESTAMPTZ,
+    stripe_checkout_session_id TEXT,
+    stripe_customer_id TEXT,
+    stripe_subscription_id TEXT
+  );
+
+  CREATE INDEX IF NOT EXISTS idx_referral_attributions_teacher
+    ON referral_attributions(teacher_user_id, attributed_at DESC);
+  CREATE INDEX IF NOT EXISTS idx_referral_attributions_student
+    ON referral_attributions(student_user_id);
+
+  CREATE TABLE IF NOT EXISTS referral_commissions (
+    id TEXT PRIMARY KEY,
+    attribution_id TEXT NOT NULL REFERENCES referral_attributions(id) ON DELETE CASCADE,
+    teacher_user_id TEXT NOT NULL,
+    student_user_id TEXT NOT NULL,
+    stripe_checkout_session_id TEXT UNIQUE,
+    stripe_subscription_id TEXT,
+    gross_amount_cents INTEGER NOT NULL,
+    commission_rate NUMERIC NOT NULL,
+    commission_amount_cents INTEGER NOT NULL,
+    status TEXT NOT NULL CHECK(status IN ('pending', 'approved', 'paid', 'reversed')),
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+  );
+
+  CREATE INDEX IF NOT EXISTS idx_referral_commissions_teacher_status
+    ON referral_commissions(teacher_user_id, status, created_at DESC);
 
   CREATE TABLE IF NOT EXISTS daily_loop_completions (
     id TEXT PRIMARY KEY,

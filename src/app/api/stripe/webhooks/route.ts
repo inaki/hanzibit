@@ -1,6 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { stripe } from "@/lib/stripe";
 import { upsertSubscription, getSubscriptionByCustomerId } from "@/lib/subscription";
+import {
+  createReferralCommissionForCheckout,
+  markReferralConversion,
+} from "@/lib/referrals";
 import type Stripe from "stripe";
 
 const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET!;
@@ -63,6 +67,26 @@ export async function POST(req: NextRequest) {
           currentPeriodEnd: getSubscriptionPeriodEnd(sub),
           cancelAtPeriodEnd: sub.cancel_at_period_end,
         });
+
+        const attributionId = session.metadata?.referralAttributionId;
+        const teacherUserId = session.metadata?.referralTeacherUserId;
+        if (attributionId && teacherUserId) {
+          await markReferralConversion({
+            attributionId,
+            stripeCheckoutSessionId: session.id,
+            stripeCustomerId: customerId,
+            stripeSubscriptionId: subscriptionId,
+          });
+
+          await createReferralCommissionForCheckout({
+            attributionId,
+            teacherUserId,
+            studentUserId: userId,
+            stripeCheckoutSessionId: session.id,
+            stripeSubscriptionId: subscriptionId,
+            grossAmountCents: session.amount_total ?? 0,
+          });
+        }
         break;
       }
 

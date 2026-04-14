@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { BookOpen, Github } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,12 +10,14 @@ import { signUp, signIn, useSession } from "@/lib/auth-client";
 
 export default function SignUpPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { data: session, isPending } = useSession();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const referralCode = searchParams.get("ref");
 
   // Redirect to notebook if already logged in
   if (session && !isPending) {
@@ -62,6 +64,12 @@ export default function SignUpPage() {
           <p className="mb-6 text-sm text-gray-500">
             Start your Chinese learning journey today
           </p>
+
+          {referralCode ? (
+            <div className="mb-4 rounded-lg border border-[var(--cn-orange)]/20 bg-[var(--cn-orange)]/10 p-3 text-sm text-[var(--cn-orange)]">
+              Referral code applied: <span className="font-semibold">{referralCode}</span>
+            </div>
+          ) : null}
 
           {error && (
             <div data-testid="signup-error" className="mb-4 rounded-lg bg-red-50 p-3 text-sm text-red-600">

@@ -14,6 +14,9 @@ import {
   LayoutDashboard,
   Users,
   ClipboardList,
+  FolderKanban,
+  BarChart3,
+  Share2,
 } from "lucide-react";
 import { useSettings } from "./settings-context";
 import { getCharacterOfTheDayAction, getDueCountAction } from "@/lib/actions";
@@ -25,6 +28,9 @@ const sections = [
   { label: "Study Guide", icon: GraduationCap, href: "/notebook/lessons" },
   { label: "Classes", icon: Users, href: "/notebook/classes" },
   { label: "Assignments", icon: ClipboardList, href: "/notebook/assignments" },
+  { label: "Teacher Library", icon: FolderKanban, href: "/notebook/teacher/library" },
+  { label: "Teacher Reporting", icon: BarChart3, href: "/notebook/teacher/reporting" },
+  { label: "Teacher Referrals", icon: Share2, href: "/notebook/teacher/referrals" },
   { label: "Flashcards", icon: Layers, href: "/notebook/flashcards" },
   { label: "Vocabulary List", icon: BookOpen, href: "/notebook/vocabulary" },
   { label: "Numbers Guide", icon: Hash, href: "/notebook/numbers" },

@@ -1,7 +1,8 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowRight, BookOpenText, ClipboardList, PenLine } from "lucide-react";
+import { ArrowRight, BookOpenText, ClipboardList, CopyPlus, PenLine } from "lucide-react";
 import { getAuthUserId } from "@/lib/auth-utils";
+import { saveAssignmentAsTemplateAction } from "@/lib/actions";
 import { canManageClassroom, canViewAssignment } from "@/lib/classroom-permissions";
 import { getAssignment, isAssignmentOverdue } from "@/lib/assignments";
 import { getClassroom } from "@/lib/classrooms";
@@ -65,6 +66,11 @@ export default async function AssignmentDetailPage({
     ? "Open the learner flow again to revise and resubmit this assignment inside the notebook or Study Guide."
     : "This assignment is designed to reuse the existing notebook and Study Guide flow instead of creating a separate classroom-only workflow.";
   const launchLabel = studentCanResubmit ? "Revise and resubmit" : "Open assignment flow";
+
+  async function saveAsTemplateFormAction(formData: FormData) {
+    "use server";
+    await saveAssignmentAsTemplateAction(formData);
+  }
 
   return (
     <div data-testid="assignment-detail-page" className="h-full overflow-auto p-6 pb-20 md:p-10 lg:pb-10">
@@ -141,6 +147,38 @@ export default async function AssignmentDetailPage({
                 <ArrowRight className="h-4 w-4" />
               </Link>
             </div>
+
+            {canManage ? (
+              <div className="rounded-2xl border bg-card p-5">
+                <div className="mb-4 flex items-center gap-2">
+                  <CopyPlus className="h-4 w-4 text-[var(--cn-orange)]" />
+                  <h2 className="text-sm font-semibold uppercase tracking-[0.2em] text-muted-foreground">
+                    Reuse This Assignment
+                  </h2>
+                </div>
+                <p className="text-sm text-muted-foreground">
+                  Save this assignment as a reusable template so you can launch similar work in future classrooms.
+                </p>
+                <form action={saveAsTemplateFormAction} className="mt-4 space-y-3">
+                  <input type="hidden" name="assignment_id" value={assignment.id} />
+                  <input type="hidden" name="classroom_id" value={classroom.id} />
+                  <div>
+                    <label className="mb-1 block text-sm font-medium text-foreground/80">Template title</label>
+                    <input
+                      name="title"
+                      defaultValue={assignment.title}
+                      className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-[var(--cn-orange)]"
+                    />
+                  </div>
+                  <button
+                    type="submit"
+                    className="inline-flex items-center gap-2 rounded-lg border border-[var(--cn-orange)]/20 bg-[var(--cn-orange)]/10 px-4 py-2 text-sm font-medium text-[var(--cn-orange)] transition-colors hover:bg-[var(--cn-orange)]/15"
+                  >
+                    Save as template
+                  </button>
+                </form>
+              </div>
+            ) : null}
           </section>
 
           <aside className="space-y-6">

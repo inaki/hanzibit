@@ -170,3 +170,30 @@ export async function canViewTeacherReporting(
 ): Promise<boolean> {
   return canManageClassroom(userId, classroomId);
 }
+
+export async function canManageReferralCode(
+  userId: string,
+  referralCodeId: string
+): Promise<boolean> {
+  const row = await queryOne<{ id: string }>(
+    `SELECT id
+     FROM referral_codes
+     WHERE id = $1
+       AND teacher_user_id = $2
+     LIMIT 1`,
+    [referralCodeId, userId]
+  );
+  return Boolean(row);
+}
+
+export async function canViewReferralDashboard(userId: string): Promise<boolean> {
+  const row = await queryOne<{ id: string }>(
+    `SELECT id
+     FROM user_roles
+     WHERE user_id = $1
+       AND role = 'teacher'
+     LIMIT 1`,
+    [userId]
+  );
+  return Boolean(row);
+}

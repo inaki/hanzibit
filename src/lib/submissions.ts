@@ -57,6 +57,16 @@ export interface ClassroomAssignmentSummary {
   needs_review_count: number;
 }
 
+export interface ClassroomSubmissionStudentRow {
+  assignment_id: string;
+  student_user_id: string;
+  student_name: string;
+  student_email: string;
+  status: AssignmentSubmissionStatus | null;
+  submitted_at: string | null;
+  reviewed_at: string | null;
+}
+
 export async function getSubmission(id: string): Promise<AssignmentSubmission | undefined> {
   return queryOne<AssignmentSubmission>(
     "SELECT * FROM assignment_submissions WHERE id = $1",
@@ -229,6 +239,33 @@ export async function listClassroomAssignmentSummaries(
        ON assignment_submissions.assignment_id = assignments.id
      WHERE assignments.classroom_id = $1
      GROUP BY assignments.id`,
+    [classroomId]
+  );
+}
+
+export async function listClassroomSubmissionStudentRows(
+  classroomId: string
+): Promise<ClassroomSubmissionStudentRow[]> {
+  return query<ClassroomSubmissionStudentRow>(
+    `SELECT
+       assignments.id AS assignment_id,
+       classroom_members.user_id AS student_user_id,
+       "user".name AS student_name,
+       "user".email AS student_email,
+       assignment_submissions.status,
+       assignment_submissions.submitted_at,
+       assignment_submissions.reviewed_at
+     FROM assignments
+     INNER JOIN classroom_members
+       ON classroom_members.classroom_id = assignments.classroom_id
+      AND classroom_members.role = 'student'
+     INNER JOIN "user"
+       ON "user".id = classroom_members.user_id
+     LEFT JOIN assignment_submissions
+       ON assignment_submissions.assignment_id = assignments.id
+      AND assignment_submissions.student_user_id = classroom_members.user_id
+     WHERE assignments.classroom_id = $1
+     ORDER BY "user".name ASC, assignments.created_at DESC`,
     [classroomId]
   );
 }

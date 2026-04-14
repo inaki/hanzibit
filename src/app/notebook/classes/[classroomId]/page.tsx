@@ -3,7 +3,8 @@ import { notFound, redirect } from "next/navigation";
 import { BookOpenText, ClipboardList, Users } from "lucide-react";
 import { getAuthUserId } from "@/lib/auth-utils";
 import { isAssignmentOverdue, listAssignmentsForClassroom } from "@/lib/assignments";
-import { createAssignmentAction } from "@/lib/actions";
+import { createAssignmentAction, createAssignmentFromTemplateAction } from "@/lib/actions";
+import { listAssignmentTemplatesForTeacher } from "@/lib/assignment-templates";
 import { PendingSubmitButton } from "@/components/notebook/pending-submit-button";
 import {
   getClassroom,
@@ -20,7 +21,7 @@ export default async function ClassroomDetailPage({
   searchParams,
 }: {
   params: Promise<{ classroomId: string }>;
-  searchParams: Promise<{ success?: string }>;
+  searchParams: Promise<{ success?: string; templateId?: string }>;
 }) {
   const userId = await getAuthUserId();
   const [{ classroomId }, query] = await Promise.all([params, searchParams]);
@@ -42,6 +43,10 @@ export default async function ClassroomDetailPage({
   }
 
   const isTeacher = member.role === "teacher";
+  const templates = isTeacher ? await listAssignmentTemplatesForTeacher(userId) : [];
+  const selectedTemplate = query.templateId
+    ? templates.find((template) => template.id === query.templateId)
+    : undefined;
   const summaryByAssignmentId = new Map(
     assignmentSummaries.map((summary) => [summary.assignment_id, summary])
   );
@@ -70,6 +75,15 @@ export default async function ClassroomDetailPage({
   async function createAssignmentFormAction(formData: FormData) {
     "use server";
     const result = await createAssignmentAction(formData);
+    if ("error" in result) {
+      redirect(`/notebook/classes/${classroomId}?success=${encodeURIComponent(`error:${result.error}`)}`);
+    }
+    redirect(`/notebook/assignments/${result.id}`);
+  }
+
+  async function createAssignmentFromTemplateFormAction(formData: FormData) {
+    "use server";
+    const result = await createAssignmentFromTemplateAction(formData);
     if ("error" in result) {
       redirect(`/notebook/classes/${classroomId}?success=${encodeURIComponent(`error:${result.error}`)}`);
     }
@@ -369,6 +383,84 @@ export default async function ClassroomDetailPage({
                 </form>
               </section>
             )}
+
+            {isTeacher && templates.length > 0 ? (
+              <section className="rounded-2xl border bg-card p-5">
+                <div className="mb-4 flex items-center gap-2">
+                  <BookOpenText className="h-4 w-4 text-[var(--cn-orange)]" />
+                  <h2 className="text-sm font-semibold uppercase tracking-[0.2em] text-muted-foreground">
+                    Create From Template
+                  </h2>
+                </div>
+                <form action={createAssignmentFromTemplateFormAction} className="space-y-3">
+                  <input type="hidden" name="classroom_id" value={classroom.id} />
+                  <div>
+                    <label className="mb-1 block text-sm font-medium text-foreground/80">Template</label>
+                    <select
+                      name="template_id"
+                      defaultValue={selectedTemplate?.id || templates[0]?.id || ""}
+                      className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-[var(--cn-orange)]"
+                    >
+                      {templates.map((template) => (
+                        <option key={template.id} value={template.id}>
+                          {template.title}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="mb-1 block text-sm font-medium text-foreground/80">Assignment title</label>
+                    <input
+                      name="title"
+                      defaultValue={selectedTemplate?.title || ""}
+                      placeholder="Optional override"
+                      className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-[var(--cn-orange)]"
+                    />
+                  </div>
+                  <div>
+                    <label className="mb-1 block text-sm font-medium text-foreground/80">Description</label>
+                    <textarea
+                      name="description"
+                      rows={2}
+                      defaultValue={selectedTemplate?.description || ""}
+                      placeholder="Optional override"
+                      className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-[var(--cn-orange)]"
+                    />
+                  </div>
+                  <div>
+                    <label className="mb-1 block text-sm font-medium text-foreground/80">Prompt</label>
+                    <textarea
+                      name="prompt"
+                      rows={3}
+                      defaultValue={selectedTemplate?.prompt || ""}
+                      placeholder="Optional override"
+                      className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-[var(--cn-orange)]"
+                    />
+                  </div>
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    <div>
+                      <label className="mb-1 block text-sm font-medium text-foreground/80">Due date</label>
+                      <input
+                        name="due_date"
+                        type="date"
+                        className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-[var(--cn-orange)]"
+                      />
+                    </div>
+                    <div>
+                      <label className="mb-1 block text-sm font-medium text-foreground/80">Due time</label>
+                      <input
+                        name="due_time"
+                        type="time"
+                        className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-[var(--cn-orange)]"
+                      />
+                    </div>
+                  </div>
+                  <PendingSubmitButton pendingLabel="Creating from template..." className="w-full justify-center rounded-lg border border-[var(--cn-orange)]/20 bg-[var(--cn-orange)]/10 px-4 py-2 text-sm font-medium text-[var(--cn-orange)] transition-colors hover:bg-[var(--cn-orange)]/15">
+                    Create From Template
+                  </PendingSubmitButton>
+                </form>
+              </section>
+            ) : null}
 
             <section className="rounded-2xl border bg-card p-5">
               <div className="mb-4 flex items-center gap-2">
