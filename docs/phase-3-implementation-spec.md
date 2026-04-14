@@ -14,11 +14,12 @@ It should answer:
 
 This doc is the bridge between the Phase 3 plan and actual code.
 
-Current implementation status as of April 13, 2026:
+Current implementation status as of April 14, 2026:
 
-- Milestone 1 is started
-- schema and helper foundations for reusable teacher content are in place
-- UI work has not started yet
+- Phase 3A reusable teacher content is implemented on web
+- Phase 3B reporting and drill-down reporting is implemented on web
+- Phase 3C referral MVP is implemented on web/backend
+- remaining work is now Phase 3 polish and later mobile catch-up
 
 It complements:
 
@@ -118,6 +119,7 @@ Teacher commissions should be recorded internally first.
 - referral attribution
 - commission ledger
 - payout tracking
+- internal support override workflow
 
 ### Excluded
 
@@ -128,6 +130,7 @@ Teacher commissions should be recorded internally first.
 - live teaching tools
 - full Stripe Connect automation in V1
 - public marketplace trust/review systems
+- automated fraud review and refund reversal automation
 
 ---
 
@@ -318,8 +321,8 @@ Fields:
 - `teacher_user_id TEXT NOT NULL`
 - `code TEXT NOT NULL UNIQUE`
 - `active INTEGER NOT NULL DEFAULT 1`
-- `campaign_name TEXT`
 - `created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()`
+- `updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()`
 
 ### Table: `referral_attributions`
 
@@ -330,18 +333,16 @@ Purpose:
 Fields:
 
 - `id TEXT PRIMARY KEY`
+- `referral_code_id TEXT NOT NULL`
 - `teacher_user_id TEXT NOT NULL`
 - `student_user_id TEXT NOT NULL`
-- `referral_code_id TEXT NOT NULL`
+- `referral_code TEXT NOT NULL`
+- `attribution_source TEXT NOT NULL`
 - `attributed_at TIMESTAMPTZ NOT NULL DEFAULT NOW()`
-- `attribution_status TEXT NOT NULL DEFAULT 'active'`
-
-Allowed `attribution_status` values:
-
-- `active`
-- `expired`
-- `rejected`
-- `reversed`
+- `converted_at TIMESTAMPTZ`
+- `stripe_checkout_session_id TEXT`
+- `stripe_customer_id TEXT`
+- `stripe_subscription_id TEXT`
 
 ### Table: `referral_commissions`
 
@@ -354,39 +355,23 @@ Fields:
 - `id TEXT PRIMARY KEY`
 - `teacher_user_id TEXT NOT NULL`
 - `student_user_id TEXT NOT NULL`
-- `referral_attribution_id TEXT NOT NULL`
-- `subscription_id TEXT`
-- `invoice_id TEXT`
+- `attribution_id TEXT NOT NULL`
+- `stripe_checkout_session_id TEXT`
+- `stripe_subscription_id TEXT`
+- `payout_id TEXT`
 - `gross_amount_cents INTEGER NOT NULL`
-- `commission_rate_bps INTEGER NOT NULL`
+- `commission_rate NUMERIC NOT NULL`
 - `commission_amount_cents INTEGER NOT NULL`
-- `currency TEXT NOT NULL`
 - `status TEXT NOT NULL`
+- `updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()`
 - `created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()`
 
 Allowed `status` values:
 
 - `pending`
 - `approved`
-- `held`
 - `paid`
-- `voided`
-
-### Table: `teacher_payout_accounts`
-
-Purpose:
-
-- teacher payout preferences and status
-
-Fields:
-
-- `id TEXT PRIMARY KEY`
-- `teacher_user_id TEXT NOT NULL UNIQUE`
-- `provider TEXT NOT NULL DEFAULT 'manual'`
-- `account_ref TEXT`
-- `status TEXT NOT NULL DEFAULT 'not_configured'`
-- `created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()`
-- `updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()`
+- `reversed`
 
 ### Table: `teacher_payouts`
 
@@ -398,19 +383,16 @@ Fields:
 
 - `id TEXT PRIMARY KEY`
 - `teacher_user_id TEXT NOT NULL`
-- `amount_cents INTEGER NOT NULL`
-- `currency TEXT NOT NULL`
+- `period_label TEXT NOT NULL`
+- `total_amount_cents INTEGER NOT NULL`
 - `status TEXT NOT NULL`
 - `paid_at TIMESTAMPTZ`
-- `notes TEXT`
 - `created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()`
 
 Allowed `status` values:
 
 - `pending`
-- `scheduled`
 - `paid`
-- `cancelled`
 
 ---
 
@@ -618,6 +600,12 @@ Exit criteria:
 
 - teacher can identify who needs attention from one screen
 
+Current status:
+
+- reporting summary page is implemented
+- classroom drill-down reporting is implemented
+- student drill-down reporting is implemented
+
 ## Milestone 5: Referral MVP
 
 Build:
@@ -632,6 +620,13 @@ Exit criteria:
 
 - teacher can see referral code, referred students, and commission totals
 
+Current status:
+
+- implemented
+- referral links now capture code through `/r/<code>`
+- checkout metadata and webhooks preserve attribution
+- pending commission records are created after paid conversion
+
 ## Milestone 6: Referral Operations
 
 Build:
@@ -644,6 +639,13 @@ Build:
 Exit criteria:
 
 - the team can operate referral payouts manually without external spreadsheets
+
+Current status:
+
+- implemented in a basic internal-ledger form
+- teacher payout batching exists
+- support override page exists
+- fraud review notes and reversal automation remain future polish
 
 ---
 
@@ -684,6 +686,10 @@ Recommendation:
 
 - reusable content first
 - referral MVP second
+
+Decision status:
+
+- already resolved in the shipped implementation order
 
 ---
 

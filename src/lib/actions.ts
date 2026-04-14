@@ -37,9 +37,12 @@ import { createAssignment as createAssignmentRecord, type AssignmentType } from 
 import {
   canManageAssignmentTemplate,
   canManageClassroom,
+  canConvertInquiryToClassroom,
+  canRespondToTeacherInquiry,
   canSubmitAssignment,
   canUseTemplateInClassroom,
   canReviewSubmission,
+  canViewReferralDashboard,
 } from "./classroom-permissions";
 import { addSubmissionFeedback, markSubmissionReviewed, upsertSubmission } from "./submissions";
 import {
@@ -55,6 +58,17 @@ import {
   updateAssignmentTemplate,
 } from "./assignment-templates";
 import { getAssignment } from "./assignments";
+import {
+  createTeacherPayoutBatch,
+  ensureReferralAttribution,
+  overrideReferralAttribution,
+} from "./referrals";
+import { parseList, updateTeacherProfile } from "./teacher-profiles";
+import {
+  convertInquiryToClassroom,
+  createTeacherInquiry,
+  respondToTeacherInquiry,
+} from "./teacher-inquiries";
 
 export async function toggleBookmarkAction(entryId: string) {
   const userId = await getAuthUserId();
@@ -253,6 +267,11 @@ export async function reviewFlashcard(
 export async function getDueCountAction(): Promise<number> {
   const userId = await getAuthUserId();
   return getDueFlashcardCount(userId);
+}
+
+export async function isTeacherUserAction(): Promise<boolean> {
+  const userId = await getAuthUserId();
+  return isTeacherUser(userId);
 }
 
 export async function getDailyPracticeAction(level: number): Promise<DailyPracticePlan> {
@@ -726,4 +745,212 @@ export async function markSubmissionReviewedAction(formData: FormData) {
     revalidatePath(`/notebook/assignments/${assignmentId}`);
   }
   return { success: true };
+}
+
+export async function createReferralPayoutAction(formData: FormData) {
+  const userId = await getAuthUserId();
+
+  if (!(await canViewReferralDashboard(userId))) {
+    return { error: "You cannot manage referral payouts." };
+  }
+
+  const periodLabel = ((formData.get("period_label") as string) || "").trim();
+  const payout = await createTeacherPayoutBatch({
+    teacherUserId: userId,
+    periodLabel: periodLabel || undefined,
+  });
+
+  if (!payout) {
+    return { error: "No pending commissions to pay." };
+  }
+
+  revalidatePath("/notebook/teacher/referrals");
+  return { id: payout.id };
+}
+
+export async function overrideReferralAttributionAction(formData: FormData) {
+  const userId = await getAuthUserId();
+  const studentEmail = ((formData.get("student_email") as string) || "").trim();
+  const referralCode = ((formData.get("referral_code") as string) || "").trim();
+
+  if (userId !== "dev-user-001") {
+    return { error: "Only internal support can override referral attributions." };
+  }
+
+  if (!studentEmail || !referralCode) {
+    return { error: "Student email and referral code are required." };
+  }
+
+  const result = await overrideReferralAttribution({
+    studentEmail,
+    referralCode,
+  });
+
+  if (!result) {
+    return { error: "Referral override could not be applied." };
+  }
+
+  revalidatePath("/notebook/admin/referrals");
+  revalidatePath("/notebook/teacher/referrals");
+  return result;
+}
+
+export async function applyReferralCodeForCurrentUserAction(formData: FormData) {
+  const userId = await getAuthUserId();
+  const code = ((formData.get("referral_code") as string) || "").trim();
+
+  if (!code) {
+    return { error: "Referral code is required." };
+  }
+
+  const attribution = await ensureReferralAttribution({
+    studentUserId: userId,
+    code,
+    attributionSource: "manual_apply",
+  });
+
+  if (!attribution) {
+    return { error: "Referral code not found." };
+  }
+
+  revalidatePath("/notebook/teacher/referrals");
+  return { id: attribution.id };
+}
+
+export async function createTeacherInquiryAction(formData: FormData) {
+  const studentUserId = await getAuthUserId();
+  const teacherUserId = ((formData.get("teacher_user_id") as string) || "").trim();
+  const publicSlug = ((formData.get("public_slug") as string) || "").trim();
+  const message = ((formData.get("message") as string) || "").trim();
+
+  if (!teacherUserId) {
+    return { error: "Teacher is required." };
+  }
+
+  if (teacherUserId === studentUserId) {
+    return { error: "You cannot send an inquiry to yourself." };
+  }
+
+  const inquiry = await createTeacherInquiry({
+    teacherUserId,
+    studentUserId,
+    message: message || null,
+  });
+
+  revalidatePath("/notebook/inquiries");
+  revalidatePath("/notebook/teacher/inquiries");
+  if (publicSlug) {
+    revalidatePath(`/teachers/${publicSlug}`);
+  }
+  return { id: inquiry.id };
+}
+
+export async function respondToTeacherInquiryAction(formData: FormData) {
+  const teacherUserId = await getAuthUserId();
+  const inquiryId = ((formData.get("inquiry_id") as string) || "").trim();
+  const status = ((formData.get("status") as string) || "").trim() as
+    | "accepted"
+    | "declined"
+    | "converted";
+
+  if (!inquiryId || !status) {
+    return { error: "Inquiry and status are required." };
+  }
+
+  if (!["accepted", "declined", "converted"].includes(status)) {
+    return { error: "Invalid inquiry status." };
+  }
+
+  if (!(await canRespondToTeacherInquiry(teacherUserId, inquiryId))) {
+    return { error: "You cannot respond to this inquiry." };
+  }
+
+  const inquiry = await respondToTeacherInquiry({
+    inquiryId,
+    teacherUserId,
+    status,
+  });
+
+  revalidatePath("/notebook/teacher/inquiries");
+  revalidatePath("/notebook/inquiries");
+  return { id: inquiry.id };
+}
+
+export async function convertInquiryToClassroomAction(formData: FormData) {
+  const teacherUserId = await getAuthUserId();
+  const inquiryId = ((formData.get("inquiry_id") as string) || "").trim();
+  const classroomName = ((formData.get("classroom_name") as string) || "").trim();
+
+  if (!inquiryId) {
+    return { error: "Inquiry is required." };
+  }
+
+  if (!(await canConvertInquiryToClassroom(teacherUserId, inquiryId))) {
+    return { error: "You cannot convert this inquiry yet." };
+  }
+
+  const inquiry = await convertInquiryToClassroom({
+    inquiryId,
+    teacherUserId,
+    classroomName: classroomName || null,
+  });
+
+  revalidatePath("/notebook/teacher/inquiries");
+  revalidatePath("/notebook/inquiries");
+  if (inquiry.created_classroom_id) {
+    revalidatePath(`/notebook/classes/${inquiry.created_classroom_id}`);
+    revalidatePath("/notebook/classes");
+  }
+  return { id: inquiry.id, classroomId: inquiry.created_classroom_id };
+}
+
+export async function updateTeacherProfileAction(formData: FormData) {
+  const userId = await getAuthUserId();
+
+  if (!(await isTeacherUser(userId))) {
+    return { error: "Only teachers can manage public profiles." };
+  }
+
+  const publicSlug = ((formData.get("public_slug") as string) || "").trim();
+  const headline = ((formData.get("headline") as string) || "").trim();
+  const bio = ((formData.get("bio") as string) || "").trim();
+  const languages = parseList((formData.get("languages") as string) || "");
+  const specialties = parseList((formData.get("specialties") as string) || "");
+  const levels = parseList((formData.get("levels") as string) || "");
+  const timezone = ((formData.get("timezone") as string) || "").trim();
+  const pricingSummary = ((formData.get("pricing_summary") as string) || "").trim();
+  const availabilitySummary = ((formData.get("availability_summary") as string) || "").trim();
+  const yearsExperienceRaw = ((formData.get("years_experience") as string) || "").trim();
+  const teachingStyle = ((formData.get("teaching_style") as string) || "").trim();
+  const isPublic = formData.get("is_public") === "on";
+
+  try {
+    const profile = await updateTeacherProfile({
+      teacherUserId: userId,
+      publicSlug,
+      headline: headline || null,
+      bio: bio || null,
+      languages,
+      specialties,
+      levels,
+      timezone: timezone || null,
+      pricingSummary: pricingSummary || null,
+      availabilitySummary: availabilitySummary || null,
+      yearsExperience: yearsExperienceRaw ? Number.parseInt(yearsExperienceRaw, 10) : null,
+      teachingStyle: teachingStyle || null,
+      isPublic,
+    });
+
+    revalidatePath("/notebook/teacher/profile");
+    revalidatePath(`/teachers/${profile.public_slug}`);
+    revalidatePath("/teachers");
+    return { id: profile.id, slug: profile.public_slug };
+  } catch (error) {
+    return {
+      error:
+        error instanceof Error
+          ? error.message
+          : "Failed to update teacher profile.",
+    };
+  }
 }

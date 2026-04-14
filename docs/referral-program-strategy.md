@@ -22,6 +22,22 @@ The cleanest version is:
 
 This should be treated as an **affiliate/referral program**, not as a teacher-owned subscription system.
 
+Current implementation status as of April 14, 2026:
+
+- teacher referral codes are implemented
+- teacher referral links are implemented through `/r/<code>`
+- referral attribution is stored locally
+- Stripe checkout metadata carries referral attribution
+- Stripe webhooks create internal commission ledger rows
+- teacher payout batches are tracked internally
+- a support override path exists for attribution fixes
+
+Still intentionally not implemented:
+
+- student discount/coupon flow
+- automated refund reversal workflow
+- Stripe Connect or automated external payouts
+
 ---
 
 ## Why This Fits The Current App

@@ -14,12 +14,15 @@ import {
   LayoutDashboard,
   Users,
   ClipboardList,
-  FolderKanban,
-  BarChart3,
-  Share2,
+  Inbox,
+  BriefcaseBusiness,
 } from "lucide-react";
 import { useSettings } from "./settings-context";
-import { getCharacterOfTheDayAction, getDueCountAction } from "@/lib/actions";
+import {
+  getCharacterOfTheDayAction,
+  getDueCountAction,
+  isTeacherUserAction,
+} from "@/lib/actions";
 import type { HskWord } from "@/lib/data";
 
 const sections = [
@@ -28,9 +31,8 @@ const sections = [
   { label: "Study Guide", icon: GraduationCap, href: "/notebook/lessons" },
   { label: "Classes", icon: Users, href: "/notebook/classes" },
   { label: "Assignments", icon: ClipboardList, href: "/notebook/assignments" },
-  { label: "Teacher Library", icon: FolderKanban, href: "/notebook/teacher/library" },
-  { label: "Teacher Reporting", icon: BarChart3, href: "/notebook/teacher/reporting" },
-  { label: "Teacher Referrals", icon: Share2, href: "/notebook/teacher/referrals" },
+  { label: "My Inquiries", icon: Inbox, href: "/notebook/inquiries" },
+  { label: "Teaching", icon: BriefcaseBusiness, href: "/notebook/teacher", teacherOnly: true },
   { label: "Flashcards", icon: Layers, href: "/notebook/flashcards" },
   { label: "Vocabulary List", icon: BookOpen, href: "/notebook/vocabulary" },
   { label: "Numbers Guide", icon: Hash, href: "/notebook/numbers" },
@@ -44,10 +46,12 @@ export function NotebookSidebar() {
 
   const [charOfDay, setCharOfDay] = useState<HskWord | null>(null);
   const [dueCount, setDueCount] = useState(0);
+  const [isTeacher, setIsTeacher] = useState(false);
 
   useEffect(() => {
     getCharacterOfTheDayAction(settings.hskLevel).then(setCharOfDay);
     getDueCountAction().then(setDueCount);
+    isTeacherUserAction().then(setIsTeacher);
   }, [settings.hskLevel]);
 
   function isActive(href: string) {
@@ -63,7 +67,9 @@ export function NotebookSidebar() {
           Notebook Sections
         </p>
         <div className="space-y-1">
-          {sections.map((section) => {
+          {sections
+            .filter((section) => !section.teacherOnly || isTeacher)
+            .map((section) => {
             const active = isActive(section.href);
             return (
               <Link
@@ -85,7 +91,7 @@ export function NotebookSidebar() {
                 )}
               </Link>
             );
-          })}
+            })}
         </div>
       </div>
 

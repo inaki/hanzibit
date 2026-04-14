@@ -34,6 +34,7 @@ export interface ReferralCommission {
   student_user_id: string;
   stripe_checkout_session_id: string | null;
   stripe_subscription_id: string | null;
+  payout_id?: string | null;
   gross_amount_cents: number;
   commission_rate: number;
   commission_amount_cents: number;
@@ -42,12 +43,23 @@ export interface ReferralCommission {
   updated_at: string;
 }
 
+export interface TeacherPayout {
+  id: string;
+  teacher_user_id: string;
+  period_label: string;
+  total_amount_cents: number;
+  status: "pending" | "paid";
+  paid_at: string | null;
+  created_at: string;
+}
+
 export interface TeacherReferralDashboard {
   code: ReferralCode;
   referredStudents: number;
   convertedStudents: number;
   pendingCommissionCents: number;
   paidCommissionCents: number;
+  approvedCommissionCents: number;
   recentAttributions: Array<{
     attribution_id: string;
     student_user_id: string;
@@ -60,6 +72,7 @@ export interface TeacherReferralDashboard {
     student_name: string;
     student_email: string;
   }>;
+  payouts: TeacherPayout[];
 }
 
 function compactCode(value: string): string {
@@ -279,22 +292,173 @@ export async function createReferralCommissionForCheckout(params: {
   );
 }
 
+export async function listTeacherPayouts(
+  teacherUserId: string
+): Promise<TeacherPayout[]> {
+  return query<TeacherPayout>(
+    `SELECT *
+     FROM teacher_payouts
+     WHERE teacher_user_id = $1
+     ORDER BY created_at DESC
+     LIMIT 12`,
+    [teacherUserId]
+  );
+}
+
+export async function approveReferralCommission(commissionId: string): Promise<void> {
+  await execute(
+    `UPDATE referral_commissions
+     SET status = 'approved',
+         updated_at = NOW()
+     WHERE id = $1
+       AND status = 'pending'`,
+    [commissionId]
+  );
+}
+
+export async function createTeacherPayoutBatch(params: {
+  teacherUserId: string;
+  periodLabel?: string;
+}): Promise<TeacherPayout | null> {
+  const pending = await query<{
+    id: string;
+    commission_amount_cents: number;
+  }>(
+    `SELECT id, commission_amount_cents
+     FROM referral_commissions
+     WHERE teacher_user_id = $1
+       AND status IN ('pending', 'approved')
+       AND payout_id IS NULL
+     ORDER BY created_at ASC`,
+    [params.teacherUserId]
+  );
+
+  if (pending.length === 0) return null;
+
+  const payoutId = randomUUID();
+  const totalAmountCents = pending.reduce(
+    (sum, commission) => sum + commission.commission_amount_cents,
+    0
+  );
+  const periodLabel =
+    params.periodLabel ||
+    new Date().toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "short",
+    });
+
+  await execute(
+    `INSERT INTO teacher_payouts (
+       id,
+       teacher_user_id,
+       period_label,
+       total_amount_cents,
+       status,
+       paid_at
+     )
+     VALUES ($1, $2, $3, $4, 'paid', NOW())`,
+    [payoutId, params.teacherUserId, periodLabel, totalAmountCents]
+  );
+
+  await execute(
+    `UPDATE referral_commissions
+     SET status = 'paid',
+         payout_id = $2,
+         updated_at = NOW()
+     WHERE teacher_user_id = $1
+       AND status IN ('pending', 'approved')
+       AND payout_id IS NULL`,
+    [params.teacherUserId, payoutId]
+  );
+
+  return (
+    (await queryOne<TeacherPayout>(
+    `SELECT *
+     FROM teacher_payouts
+     WHERE id = $1`,
+    [payoutId]
+    )) ?? null
+  );
+}
+
+export async function overrideReferralAttribution(params: {
+  studentEmail: string;
+  referralCode: string;
+}): Promise<{ studentUserId: string; attributionId: string } | null> {
+  const normalizedCode = normalizeReferralCode(params.referralCode);
+  if (!normalizedCode) return null;
+
+  const student = await queryOne<{ id: string }>(
+    `SELECT id
+     FROM "user"
+     WHERE LOWER(email) = LOWER($1)
+     LIMIT 1`,
+    [params.studentEmail.trim()]
+  );
+  if (!student) return null;
+
+  const referralCode = await getReferralCodeByCode(normalizedCode);
+  if (!referralCode) return null;
+  if (referralCode.teacher_user_id === student.id) return null;
+
+  const existing = await getReferralAttributionForStudent(student.id);
+  if (existing) {
+    await execute(
+      `UPDATE referral_attributions
+       SET referral_code_id = $2,
+           teacher_user_id = $3,
+           referral_code = $4,
+           attribution_source = 'support_override'
+       WHERE id = $1`,
+      [existing.id, referralCode.id, referralCode.teacher_user_id, referralCode.code]
+    );
+
+    await execute(
+      `UPDATE referral_commissions
+       SET teacher_user_id = $2,
+           updated_at = NOW()
+       WHERE attribution_id = $1`,
+      [existing.id, referralCode.teacher_user_id]
+    );
+
+    return {
+      studentUserId: student.id,
+      attributionId: existing.id,
+    };
+  }
+
+  const attribution = await ensureReferralAttribution({
+    studentUserId: student.id,
+    code: referralCode.code,
+    attributionSource: "support_override",
+  });
+
+  if (!attribution) return null;
+
+  return {
+    studentUserId: student.id,
+    attributionId: attribution.id,
+  };
+}
+
 export async function getTeacherReferralDashboard(
   teacherUserId: string
 ): Promise<TeacherReferralDashboard> {
   const code = await ensureTeacherReferralCode(teacherUserId);
 
-  const [stats, recentAttributions, recentCommissions] = await Promise.all([
+  const [stats, recentAttributions, recentCommissions, payouts] = await Promise.all([
     queryOne<{
       referred_students: number;
       converted_students: number;
       pending_commission_cents: number | null;
+      approved_commission_cents: number | null;
       paid_commission_cents: number | null;
     }>(
       `SELECT
          COUNT(DISTINCT referral_attributions.student_user_id)::int AS referred_students,
          COUNT(DISTINCT CASE WHEN referral_attributions.converted_at IS NOT NULL THEN referral_attributions.student_user_id END)::int AS converted_students,
          COALESCE(SUM(CASE WHEN referral_commissions.status = 'pending' THEN referral_commissions.commission_amount_cents ELSE 0 END), 0)::int AS pending_commission_cents,
+         COALESCE(SUM(CASE WHEN referral_commissions.status = 'approved' THEN referral_commissions.commission_amount_cents ELSE 0 END), 0)::int AS approved_commission_cents,
          COALESCE(SUM(CASE WHEN referral_commissions.status = 'paid' THEN referral_commissions.commission_amount_cents ELSE 0 END), 0)::int AS paid_commission_cents
        FROM referral_codes
        LEFT JOIN referral_attributions
@@ -335,11 +499,12 @@ export async function getTeacherReferralDashboard(
        FROM referral_commissions
        INNER JOIN "user"
          ON "user".id = referral_commissions.student_user_id
-       WHERE referral_commissions.teacher_user_id = $1
+      WHERE referral_commissions.teacher_user_id = $1
        ORDER BY referral_commissions.created_at DESC
        LIMIT 8`,
       [teacherUserId]
     ),
+    listTeacherPayouts(teacherUserId),
   ]);
 
   return {
@@ -347,8 +512,10 @@ export async function getTeacherReferralDashboard(
     referredStudents: stats?.referred_students ?? 0,
     convertedStudents: stats?.converted_students ?? 0,
     pendingCommissionCents: stats?.pending_commission_cents ?? 0,
+    approvedCommissionCents: stats?.approved_commission_cents ?? 0,
     paidCommissionCents: stats?.paid_commission_cents ?? 0,
     recentAttributions,
     recentCommissions,
+    payouts,
   };
 }

@@ -3,6 +3,11 @@ import { redirect } from "next/navigation";
 import { getAuthUserId } from "@/lib/auth-utils";
 import { isTeacherUser } from "@/lib/classrooms";
 import { getTeacherReferralDashboard } from "@/lib/referrals";
+import {
+  createReferralPayoutAction,
+} from "@/lib/actions";
+import { PendingSubmitButton } from "@/components/notebook/pending-submit-button";
+import { ReferralCopyButton } from "@/components/notebook/referral-copy-button";
 
 export const dynamic = "force-dynamic";
 
@@ -59,7 +64,13 @@ export default async function TeacherReferralsPage() {
                 <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
                   Referral link
                 </p>
-                <p className="mt-2 break-all font-medium text-foreground">{referralLink}</p>
+                <div className="mt-2 flex flex-wrap items-start justify-between gap-3">
+                  <p className="min-w-0 flex-1 break-all font-medium text-foreground">{referralLink}</p>
+                  <div className="flex shrink-0 flex-wrap gap-2">
+                    <ReferralCopyButton value={dashboard.code.code} label="Copy code" />
+                    <ReferralCopyButton value={referralLink} label="Copy link" />
+                  </div>
+                </div>
                 <p className="mt-3 text-sm text-muted-foreground">
                   Students who visit this link keep your code in a first-party cookie. Their first paid upgrade is attributed back to you.
                 </p>
@@ -118,12 +129,34 @@ export default async function TeacherReferralsPage() {
                   </p>
                 </div>
                 <div className="rounded-xl border bg-muted/40 p-4">
+                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">Approved</p>
+                  <p className="mt-2 text-2xl font-bold text-foreground">
+                    {formatUsdFromCents(dashboard.approvedCommissionCents)}
+                  </p>
+                </div>
+                <div className="rounded-xl border bg-muted/40 p-4">
                   <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">Paid</p>
                   <p className="mt-2 text-2xl font-bold text-foreground">
                     {formatUsdFromCents(dashboard.paidCommissionCents)}
                   </p>
                 </div>
               </div>
+
+              <form action={createReferralPayoutAction} className="mt-4 space-y-3 rounded-xl border border-[var(--cn-orange)]/20 bg-[var(--cn-orange)]/10 p-4">
+                <div>
+                  <label className="mb-1 block text-sm font-medium text-foreground/80">Payout label</label>
+                  <input
+                    type="text"
+                    name="period_label"
+                    placeholder="Apr 2026"
+                    className="w-full rounded-lg border bg-background px-3 py-2 text-sm"
+                  />
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  This MVP marks all unpaid referral commissions as paid in one internal payout batch. External payouts are still tracked manually.
+                </p>
+                <PendingSubmitButton idleLabel="Mark pending commissions as paid" pendingLabel="Creating payout..." />
+              </form>
 
               {dashboard.recentCommissions.length === 0 ? (
                 <div className="mt-4 rounded-xl border border-dashed p-4 text-sm text-muted-foreground">
@@ -146,6 +179,40 @@ export default async function TeacherReferralsPage() {
                         <span>Gross {formatUsdFromCents(commission.gross_amount_cents)}</span>
                         <span>Commission {formatUsdFromCents(commission.commission_amount_cents)}</span>
                         <span>{new Date(commission.created_at).toLocaleDateString("en-US")}</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </section>
+
+            <section className="rounded-2xl border bg-card p-5">
+              <h2 className="text-sm font-semibold uppercase tracking-[0.2em] text-muted-foreground">
+                Payout History
+              </h2>
+              {dashboard.payouts.length === 0 ? (
+                <div className="mt-4 rounded-xl border border-dashed p-4 text-sm text-muted-foreground">
+                  No payouts yet. Once pending commissions are paid, payout batches appear here.
+                </div>
+              ) : (
+                <div className="mt-4 space-y-3">
+                  {dashboard.payouts.map((payout) => (
+                    <div key={payout.id} className="rounded-xl border p-4">
+                      <div className="flex items-center justify-between gap-3">
+                        <div>
+                          <h3 className="font-semibold text-foreground">{payout.period_label}</h3>
+                          <p className="mt-1 text-sm text-muted-foreground">
+                            {payout.paid_at
+                              ? `Paid ${new Date(payout.paid_at).toLocaleDateString("en-US")}`
+                              : `Created ${new Date(payout.created_at).toLocaleDateString("en-US")}`}
+                          </p>
+                        </div>
+                        <span className="rounded-full border border-emerald-500/20 bg-emerald-500/10 px-2.5 py-1 text-[11px] font-medium text-emerald-400">
+                          {payout.status}
+                        </span>
+                      </div>
+                      <div className="mt-3 text-xs text-muted-foreground">
+                        Total {formatUsdFromCents(payout.total_amount_cents)}
                       </div>
                     </div>
                   ))}

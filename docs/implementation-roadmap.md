@@ -33,9 +33,9 @@ This means the immediate implementation focus is transitioning from **Phase 1 cl
 Current status:
 
 - web Phase 1 is stable
-- Phase 2 planning is complete enough to build against
 - the web Phase 2 classroom MVP is now implemented
-- the next roadmap decision is whether to keep polishing Phase 2 or move earlier into Phase 3 planning
+- the web Phase 3 teacher layer and referral MVP are now implemented
+- the next roadmap decision is how to bound Phase 4 discovery without taking on full marketplace complexity
 
 ---
 

@@ -233,12 +233,27 @@ Teacher commissions should be tracked internally first, not split at checkout in
 - checkout metadata integration
 - commission records
 - teacher referral dashboard
+- referral link capture route
+
+Status as of April 14, 2026:
+
+- implemented on web and backend
+- teachers now have a referral dashboard
+- `/r/<code>` captures attribution before signup
+- Stripe checkout and webhook flows now preserve referral metadata
+- the commission ledger is created internally on successful paid conversion
 
 ## Milestone 5: Referral Operations
 
 - payout status
 - admin/manual payout workflow
 - fraud checks and support override path
+
+Status as of April 14, 2026:
+
+- basic payout batching is implemented
+- internal support override flow is implemented
+- fraud review and refund reversal handling remain future polish
 
 ---
 

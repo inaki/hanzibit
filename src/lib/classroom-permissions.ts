@@ -197,3 +197,71 @@ export async function canViewReferralDashboard(userId: string): Promise<boolean>
   );
   return Boolean(row);
 }
+
+export async function canManageTeacherProfile(
+  userId: string,
+  profileId: string
+): Promise<boolean> {
+  const row = await queryOne<{ id: string }>(
+    `SELECT id
+     FROM teacher_profiles
+     WHERE id = $1
+       AND teacher_user_id = $2
+     LIMIT 1`,
+    [profileId, userId]
+  );
+  return Boolean(row);
+}
+
+export async function canViewTeacherInquiry(
+  userId: string,
+  inquiryId: string
+): Promise<boolean> {
+  const row = await queryOne<{ id: string }>(
+    `SELECT id
+     FROM teacher_inquiries
+     WHERE id = $1
+       AND (teacher_user_id = $2 OR student_user_id = $2)
+     LIMIT 1`,
+    [inquiryId, userId]
+  );
+  return Boolean(row);
+}
+
+export async function canRespondToTeacherInquiry(
+  userId: string,
+  inquiryId: string
+): Promise<boolean> {
+  const row = await queryOne<{ id: string }>(
+    `SELECT id
+     FROM teacher_inquiries
+     WHERE id = $1
+       AND teacher_user_id = $2
+     LIMIT 1`,
+    [inquiryId, userId]
+  );
+  return Boolean(row);
+}
+
+export async function canViewOwnInquiry(
+  userId: string,
+  inquiryId: string
+): Promise<boolean> {
+  return canViewTeacherInquiry(userId, inquiryId);
+}
+
+export async function canConvertInquiryToClassroom(
+  userId: string,
+  inquiryId: string
+): Promise<boolean> {
+  const row = await queryOne<{ id: string }>(
+    `SELECT id
+     FROM teacher_inquiries
+     WHERE id = $1
+       AND teacher_user_id = $2
+       AND status IN ('accepted', 'converted')
+     LIMIT 1`,
+    [inquiryId, userId]
+  );
+  return Boolean(row);
+}

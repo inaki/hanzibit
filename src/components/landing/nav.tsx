@@ -42,6 +42,13 @@ export function LandingNav() {
           >
             Pricing
           </Link>
+          <Link
+            href="/teachers"
+            data-testid="landing-nav-teachers-link"
+            className="text-sm text-gray-600 hover:text-gray-900"
+          >
+            Teachers
+          </Link>
         </nav>
 
         <div data-testid="landing-nav-auth-buttons" className="flex items-center gap-3">

@@ -15,7 +15,7 @@ declare global {
   var __hanzibitSchemaVersion: number | undefined;
 }
 
-const SCHEMA_VERSION = 8;
+const SCHEMA_VERSION = 11;
 
 const APP_SCHEMA_SQL = `
   CREATE TABLE IF NOT EXISTS "user" (
@@ -375,6 +375,59 @@ const APP_SCHEMA_SQL = `
   CREATE INDEX IF NOT EXISTS idx_referral_commissions_teacher_status
     ON referral_commissions(teacher_user_id, status, created_at DESC);
 
+  CREATE TABLE IF NOT EXISTS teacher_payouts (
+    id TEXT PRIMARY KEY,
+    teacher_user_id TEXT NOT NULL,
+    period_label TEXT NOT NULL,
+    total_amount_cents INTEGER NOT NULL,
+    status TEXT NOT NULL CHECK(status IN ('pending', 'paid')),
+    paid_at TIMESTAMPTZ,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+  );
+
+  CREATE INDEX IF NOT EXISTS idx_teacher_payouts_teacher
+    ON teacher_payouts(teacher_user_id, created_at DESC);
+
+  CREATE TABLE IF NOT EXISTS teacher_profiles (
+    id TEXT PRIMARY KEY,
+    teacher_user_id TEXT NOT NULL UNIQUE,
+    public_slug TEXT NOT NULL UNIQUE,
+    headline TEXT,
+    bio TEXT,
+    languages_json JSONB NOT NULL DEFAULT '[]',
+    specialties_json JSONB NOT NULL DEFAULT '[]',
+    levels_json JSONB NOT NULL DEFAULT '[]',
+    timezone TEXT,
+    pricing_summary TEXT,
+    availability_summary TEXT,
+    years_experience INTEGER,
+    teaching_style TEXT,
+    is_public INTEGER NOT NULL DEFAULT 0,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+  );
+
+  CREATE INDEX IF NOT EXISTS idx_teacher_profiles_public
+    ON teacher_profiles(is_public, updated_at DESC);
+
+  CREATE TABLE IF NOT EXISTS teacher_inquiries (
+    id TEXT PRIMARY KEY,
+    teacher_user_id TEXT NOT NULL,
+    student_user_id TEXT NOT NULL,
+    message TEXT,
+    status TEXT NOT NULL CHECK(status IN ('pending', 'accepted', 'declined', 'converted')),
+    created_classroom_id TEXT REFERENCES classrooms(id) ON DELETE SET NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+  );
+
+  CREATE INDEX IF NOT EXISTS idx_teacher_inquiries_teacher_status
+    ON teacher_inquiries(teacher_user_id, status, created_at DESC);
+  CREATE INDEX IF NOT EXISTS idx_teacher_inquiries_student_status
+    ON teacher_inquiries(student_user_id, status, created_at DESC);
+  CREATE INDEX IF NOT EXISTS idx_teacher_inquiries_pair
+    ON teacher_inquiries(teacher_user_id, student_user_id, created_at DESC);
+
   CREATE TABLE IF NOT EXISTS daily_loop_completions (
     id TEXT PRIMARY KEY,
     user_id TEXT NOT NULL,
@@ -473,6 +526,14 @@ async function initializeSchema(): Promise<void> {
   await pool.query(`
     CREATE INDEX IF NOT EXISTS idx_assignments_template
       ON assignments(template_id)
+  `);
+  await pool.query(`
+    ALTER TABLE referral_commissions
+      ADD COLUMN IF NOT EXISTS payout_id TEXT
+  `);
+  await pool.query(`
+    CREATE INDEX IF NOT EXISTS idx_referral_commissions_payout
+      ON referral_commissions(payout_id)
   `);
 }
 

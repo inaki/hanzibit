@@ -18,15 +18,14 @@ import {
 import { SettingsDialog } from "./settings-dialog";
 import { useSettings } from "./settings-context";
 import { useSession } from "@/lib/auth-client";
-import { searchHskWordsAction } from "@/lib/actions";
+import { isTeacherUserAction, searchHskWordsAction } from "@/lib/actions";
 import type { HskWord } from "@/lib/data";
 
 const navLinks = [
   { label: "Classes", href: "/notebook/classes" },
   { label: "Assignments", href: "/notebook/assignments" },
-  { label: "Teacher Library", href: "/notebook/teacher/library" },
-  { label: "Teacher Reporting", href: "/notebook/teacher/reporting" },
-  { label: "Teacher Referrals", href: "/notebook/teacher/referrals" },
+  { label: "My Inquiries", href: "/notebook/inquiries" },
+  { label: "Teaching", href: "/notebook/teacher", teacherOnly: true },
   { label: "Study Guide", href: "/notebook/lessons" },
   { label: "Flashcards", href: "/notebook/flashcards" },
   { label: "My Notebook", href: "/notebook" },
@@ -41,6 +40,7 @@ export function NotebookNav() {
   const [isPending, startTransition] = useTransition();
   const [isDark, setIsDark] = useState(false);
   const [signingOut, setSigningOut] = useState(false);
+  const [isTeacher, setIsTeacher] = useState(false);
   const searchRef = useRef<HTMLDivElement>(null);
   const { settings } = useSettings();
   const { data: session } = useSession();
@@ -54,6 +54,10 @@ export function NotebookNav() {
       (!stored && window.matchMedia("(prefers-color-scheme: dark)").matches);
     setIsDark(dark);
     document.documentElement.classList.toggle("dark", dark);
+  }, []);
+
+  useEffect(() => {
+    isTeacherUserAction().then(setIsTeacher);
   }, []);
 
   function toggleDarkMode() {
@@ -138,7 +142,9 @@ export function NotebookNav() {
         </Link>
 
         <nav data-testid="notebook-nav-links" className="hidden items-center gap-6 text-sm md:flex">
-          {navLinks.map((link) => {
+          {navLinks
+            .filter((link) => !link.teacherOnly || isTeacher)
+            .map((link) => {
             const active = isActive(link.href);
             return (
               <Link
@@ -154,7 +160,7 @@ export function NotebookNav() {
                 {link.label}
               </Link>
             );
-          })}
+            })}
         </nav>
       </div>
 
