@@ -124,6 +124,23 @@ Start with request/accept flows, not full marketplace automation.
 
 Avoid scheduling, payouts, and disputes until discovery demand is proven.
 
+### 5. Teacher tools should stay consolidated
+
+Teacher-facing features should not keep expanding as separate top-level notebook links.
+
+Phase 4 should treat teacher operations as one workspace:
+
+- `Teaching`
+
+Inside that workspace, teachers move between:
+
+- overview
+- profile
+- inquiries
+- library
+- reporting
+- referrals
+
 ---
 
 ## Why Phase 4 Should Happen Now
@@ -160,6 +177,18 @@ Recommended order:
 
 Scheduling and full marketplace monetization stay later.
 
+Teacher-facing information architecture during Phase 4:
+
+- one notebook entry point: `Teaching`
+- shared teacher shell
+- internal tabs for:
+  - overview
+  - profile
+  - inquiries
+  - library
+  - reporting
+  - referrals
+
 ---
 
 ## Phase 4A: Public Teacher Profiles
@@ -181,6 +210,7 @@ Let teachers opt into public discovery with a profile that is strong enough to e
 - timezone
 - optional pricing display
 - optional availability summary text
+- profile management should live under `Teaching > Profile`
 
 ### Success Criteria
 
@@ -206,6 +236,7 @@ Let learners find relevant teachers and signal interest.
   - language of instruction
 - teacher profile detail page
 - `Request to study` or `Contact teacher` flow
+- inquiry flow should connect back into the `Teaching` workspace cleanly
 
 ### Success Criteria
 
@@ -227,6 +258,7 @@ Turn discovery into an actual working relationship inside HanziBit.
 - create private classroom from inquiry
 - attach learner to that classroom
 - optional default onboarding assignment
+- conversion should remain visible from both the teacher workspace and learner inquiry status
 
 ### Success Criteria
 

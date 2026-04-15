@@ -28,16 +28,13 @@ export default async function TeacherProfilePage() {
       <div className="mx-auto max-w-5xl space-y-8">
         <div className="flex items-start justify-between gap-6">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.25em] text-muted-foreground">
-              Phase 4
-            </p>
-            <h1 className="mt-2 text-3xl font-bold text-foreground">Public Teacher Profile</h1>
+            <h1 className="text-3xl font-bold text-foreground">Profile</h1>
             <p className="mt-2 max-w-3xl text-sm text-muted-foreground">
-              Publish the first public-facing profile learners can discover later in the teacher directory.
+              Manage the public teacher profile learners see in the directory.
             </p>
           </div>
           <div className="inline-flex items-center rounded-full border border-[var(--cn-orange)]/20 bg-[var(--cn-orange)]/10 px-3 py-1.5 text-xs font-medium text-[var(--cn-orange)]">
-            Discovery foundation
+            Public discovery
           </div>
         </div>
 

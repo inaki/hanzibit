@@ -6,13 +6,19 @@ import { usePathname } from "next/navigation";
 const teacherTabs = [
   { label: "Overview", href: "/notebook/teacher" },
   { label: "Profile", href: "/notebook/teacher/profile" },
+  { label: "Setup", href: "/notebook/teacher/setup" },
   { label: "Inquiries", href: "/notebook/teacher/inquiries" },
+  { label: "Private Learners", href: "/notebook/teacher/private-students" },
   { label: "Library", href: "/notebook/teacher/library" },
   { label: "Reporting", href: "/notebook/teacher/reporting" },
   { label: "Referrals", href: "/notebook/teacher/referrals" },
 ];
 
-export function TeacherTabs() {
+export function TeacherTabs({
+  badges,
+}: {
+  badges?: Partial<Record<(typeof teacherTabs)[number]["href"], number>>;
+}) {
   const pathname = usePathname();
 
   function isActive(href: string) {
@@ -34,7 +40,14 @@ export function TeacherTabs() {
               : "bg-muted text-muted-foreground hover:bg-muted/80 hover:text-foreground"
           }`}
         >
-          {tab.label}
+          <span className="inline-flex items-center gap-2">
+            {tab.label}
+            {(badges?.[tab.href] ?? 0) > 0 ? (
+              <span className="inline-flex min-w-5 items-center justify-center rounded-full bg-[var(--cn-orange)] px-1.5 py-0.5 text-[10px] font-bold leading-none text-white">
+                {badges?.[tab.href]}
+              </span>
+            ) : null}
+          </span>
         </Link>
       ))}
     </div>

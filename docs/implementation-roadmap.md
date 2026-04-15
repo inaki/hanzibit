@@ -27,6 +27,7 @@ The product should now optimize for this order:
 4. add teacher content systems
 5. only later add referral growth layers and marketplace ideas
 6. Phase 3 should start with reusable teacher content, not marketplace features
+7. teacher-facing tools should consolidate into one workspace instead of multiplying notebook links
 
 This means the immediate implementation focus is transitioning from **Phase 1 closeout** into **Phase 2 planning**.
 
@@ -35,7 +36,11 @@ Current status:
 - web Phase 1 is stable
 - the web Phase 2 classroom MVP is now implemented
 - the web Phase 3 teacher layer and referral MVP are now implemented
-- the next roadmap decision is how to bound Phase 4 discovery without taking on full marketplace complexity
+- the web Phase 4 discovery/inquiry/conversion layer is now implemented
+- the web Phase 5 onboarding/reporting layer is now implemented
+- the web Phase 6 private tutoring operations layer is now implemented
+- the web Phase 7 cadence/session-planning layer is now implemented
+- the current roadmap task is transitioning from Phase 12 closeout into Phase 13 planning
 
 ---
 

@@ -20,6 +20,13 @@ export interface TeacherProfile {
   updated_at: string;
 }
 
+export interface TeacherProfileCompleteness {
+  completedCount: number;
+  totalCount: number;
+  percent: number;
+  isReadyForDiscovery: boolean;
+}
+
 interface TeacherIdentity {
   name: string;
   email: string;
@@ -30,6 +37,44 @@ function parseList(value: string): string[] {
     .split(",")
     .map((item) => item.trim())
     .filter(Boolean);
+}
+
+export function getTeacherProfileCompleteness(
+  profile: Pick<
+    TeacherProfile,
+    | "headline"
+    | "bio"
+    | "languages_json"
+    | "specialties_json"
+    | "levels_json"
+    | "timezone"
+    | "pricing_summary"
+    | "availability_summary"
+    | "teaching_style"
+  >
+): TeacherProfileCompleteness {
+  const checks = [
+    Boolean(profile.headline?.trim()),
+    Boolean(profile.bio?.trim()),
+    profile.languages_json.length > 0,
+    profile.specialties_json.length > 0,
+    profile.levels_json.length > 0,
+    Boolean(profile.timezone?.trim()),
+    Boolean(profile.pricing_summary?.trim()),
+    Boolean(profile.availability_summary?.trim()),
+    Boolean(profile.teaching_style?.trim()),
+  ];
+
+  const completedCount = checks.filter(Boolean).length;
+  const totalCount = checks.length;
+  const percent = Math.round((completedCount / totalCount) * 100);
+
+  return {
+    completedCount,
+    totalCount,
+    percent,
+    isReadyForDiscovery: completedCount >= 6,
+  };
 }
 
 export function createTeacherProfileSlug(value: string): string {

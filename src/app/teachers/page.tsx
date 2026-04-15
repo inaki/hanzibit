@@ -1,6 +1,9 @@
 import Link from "next/link";
 import { Globe2, GraduationCap, Search, Sparkles } from "lucide-react";
-import { listPublicTeacherProfiles } from "@/lib/teacher-profiles";
+import {
+  getTeacherProfileCompleteness,
+  listPublicTeacherProfiles,
+} from "@/lib/teacher-profiles";
 
 export const dynamic = "force-dynamic";
 
@@ -154,37 +157,53 @@ export default async function TeachersDirectoryPage({
         ) : (
           <div className="grid gap-4 lg:grid-cols-2">
             {filtered.map((profile) => (
-              <Link
-                key={profile.id}
-                href={`/teachers/${profile.public_slug}`}
-                className="block rounded-2xl border bg-card p-6 transition-colors hover:border-[var(--cn-orange)]/30 hover:bg-muted/10"
-              >
-                <div className="flex items-start justify-between gap-3">
-                  <div>
-                    <h2 className="text-xl font-semibold text-foreground">{profile.teacher_name}</h2>
-                    <p className="mt-2 text-sm text-muted-foreground">
-                      {profile.headline || "Mandarin teacher on HanziBit"}
-                    </p>
-                  </div>
-                  {profile.years_experience ? (
-                    <span className="rounded-full border border-[var(--cn-orange)]/20 bg-[var(--cn-orange)]/10 px-3 py-1 text-xs font-medium text-[var(--cn-orange)]">
-                      {profile.years_experience}+ yrs
-                    </span>
-                  ) : null}
-                </div>
+              (() => {
+                const completeness = getTeacherProfileCompleteness(profile);
+                return (
+                  <Link
+                    key={profile.id}
+                    href={`/teachers/${profile.public_slug}`}
+                    className="block rounded-2xl border bg-card p-6 transition-colors hover:border-[var(--cn-orange)]/30 hover:bg-muted/10"
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <div>
+                        <h2 className="text-xl font-semibold text-foreground">{profile.teacher_name}</h2>
+                        <p className="mt-2 text-sm text-muted-foreground">
+                          {profile.headline || "Mandarin teacher on HanziBit"}
+                        </p>
+                      </div>
+                      <div className="flex flex-wrap items-center justify-end gap-2">
+                        {profile.years_experience ? (
+                          <span className="rounded-full border border-[var(--cn-orange)]/20 bg-[var(--cn-orange)]/10 px-3 py-1 text-xs font-medium text-[var(--cn-orange)]">
+                            {profile.years_experience}+ yrs
+                          </span>
+                        ) : null}
+                        <span
+                          className={`rounded-full border px-3 py-1 text-xs font-medium ${
+                            completeness.isReadyForDiscovery
+                              ? "border-emerald-500/20 bg-emerald-500/10 text-emerald-400"
+                              : "border-amber-500/20 bg-amber-500/10 text-amber-500"
+                          }`}
+                        >
+                          {completeness.percent}% complete
+                        </span>
+                      </div>
+                    </div>
 
-                <div className="mt-4 space-y-3 text-sm text-foreground/85">
-                  <InfoRow icon={Globe2} label="Specialties" value={profile.specialties_json.join(", ") || "Not specified"} />
-                  <InfoRow icon={GraduationCap} label="Levels" value={profile.levels_json.join(", ") || "Not specified"} />
-                  <InfoRow icon={Sparkles} label="Languages" value={profile.languages_json.join(", ") || "Not specified"} />
-                </div>
+                    <div className="mt-4 space-y-3 text-sm text-foreground/85">
+                      <InfoRow icon={Globe2} label="Specialties" value={profile.specialties_json.join(", ") || "Not specified"} />
+                      <InfoRow icon={GraduationCap} label="Levels" value={profile.levels_json.join(", ") || "Not specified"} />
+                      <InfoRow icon={Sparkles} label="Languages" value={profile.languages_json.join(", ") || "Not specified"} />
+                    </div>
 
-                <div className="mt-4 flex flex-wrap gap-3 text-xs text-muted-foreground">
-                  {profile.timezone ? <span>{profile.timezone}</span> : null}
-                  {profile.pricing_summary ? <span>{profile.pricing_summary}</span> : null}
-                  {profile.availability_summary ? <span>{profile.availability_summary}</span> : null}
-                </div>
-              </Link>
+                    <div className="mt-4 flex flex-wrap gap-3 text-xs text-muted-foreground">
+                      {profile.timezone ? <span>{profile.timezone}</span> : null}
+                      {profile.pricing_summary ? <span>{profile.pricing_summary}</span> : null}
+                      {profile.availability_summary ? <span>{profile.availability_summary}</span> : null}
+                    </div>
+                  </Link>
+                );
+              })()
             ))}
           </div>
         )}

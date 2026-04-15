@@ -8,8 +8,11 @@ export interface TeacherInquiry {
   teacher_user_id: string;
   student_user_id: string;
   message: string | null;
+  onboarding_message: string | null;
   status: TeacherInquiryStatus;
   created_classroom_id: string | null;
+  initial_assignment_id: string | null;
+  conversion_completed_at: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -20,6 +23,7 @@ export interface TeacherInquiryListItem extends TeacherInquiry {
   student_name: string;
   student_email: string;
   classroom_name: string | null;
+  assignment_title: string | null;
 }
 
 export async function createTeacherInquiry(params: {
@@ -34,7 +38,8 @@ export async function createTeacherInquiry(params: {
        teacher_user.email AS teacher_email,
        student_user.name AS student_name,
        student_user.email AS student_email,
-       classrooms.name AS classroom_name
+       classrooms.name AS classroom_name,
+       assignments.title AS assignment_title
      FROM teacher_inquiries
      INNER JOIN "user" AS teacher_user
        ON teacher_user.id = teacher_inquiries.teacher_user_id
@@ -42,6 +47,8 @@ export async function createTeacherInquiry(params: {
        ON student_user.id = teacher_inquiries.student_user_id
      LEFT JOIN classrooms
        ON classrooms.id = teacher_inquiries.created_classroom_id
+     LEFT JOIN assignments
+       ON assignments.id = teacher_inquiries.initial_assignment_id
      WHERE teacher_inquiries.teacher_user_id = $1
        AND teacher_inquiries.student_user_id = $2
        AND teacher_inquiries.status = 'pending'
@@ -83,7 +90,8 @@ export async function getTeacherInquiry(
          teacher_user.email AS teacher_email,
          student_user.name AS student_name,
          student_user.email AS student_email,
-         classrooms.name AS classroom_name
+         classrooms.name AS classroom_name,
+         assignments.title AS assignment_title
        FROM teacher_inquiries
        INNER JOIN "user" AS teacher_user
          ON teacher_user.id = teacher_inquiries.teacher_user_id
@@ -91,6 +99,8 @@ export async function getTeacherInquiry(
          ON student_user.id = teacher_inquiries.student_user_id
        LEFT JOIN classrooms
          ON classrooms.id = teacher_inquiries.created_classroom_id
+       LEFT JOIN assignments
+         ON assignments.id = teacher_inquiries.initial_assignment_id
        WHERE teacher_inquiries.id = $1
        LIMIT 1`,
       [inquiryId]
@@ -108,7 +118,8 @@ export async function listTeacherInquiries(
        teacher_user.email AS teacher_email,
        student_user.name AS student_name,
        student_user.email AS student_email,
-       classrooms.name AS classroom_name
+       classrooms.name AS classroom_name,
+       assignments.title AS assignment_title
      FROM teacher_inquiries
      INNER JOIN "user" AS teacher_user
        ON teacher_user.id = teacher_inquiries.teacher_user_id
@@ -116,6 +127,8 @@ export async function listTeacherInquiries(
        ON student_user.id = teacher_inquiries.student_user_id
      LEFT JOIN classrooms
        ON classrooms.id = teacher_inquiries.created_classroom_id
+     LEFT JOIN assignments
+       ON assignments.id = teacher_inquiries.initial_assignment_id
      WHERE teacher_inquiries.teacher_user_id = $1
      ORDER BY
        CASE teacher_inquiries.status
@@ -140,7 +153,8 @@ export async function listStudentInquiries(
        teacher_user.email AS teacher_email,
        student_user.name AS student_name,
        student_user.email AS student_email,
-       classrooms.name AS classroom_name
+       classrooms.name AS classroom_name,
+       assignments.title AS assignment_title
      FROM teacher_inquiries
      INNER JOIN "user" AS teacher_user
        ON teacher_user.id = teacher_inquiries.teacher_user_id
@@ -148,6 +162,8 @@ export async function listStudentInquiries(
        ON student_user.id = teacher_inquiries.student_user_id
      LEFT JOIN classrooms
        ON classrooms.id = teacher_inquiries.created_classroom_id
+     LEFT JOIN assignments
+       ON assignments.id = teacher_inquiries.initial_assignment_id
      WHERE teacher_inquiries.student_user_id = $1
      ORDER BY teacher_inquiries.created_at DESC`,
     [studentUserId]
@@ -181,6 +197,9 @@ export async function convertInquiryToClassroom(params: {
   inquiryId: string;
   teacherUserId: string;
   classroomName?: string | null;
+  classroomPrefix?: string | null;
+  classroomDescription?: string | null;
+  onboardingMessage?: string | null;
 }): Promise<TeacherInquiryListItem> {
   return withTransaction(async (client) => {
     const inquiryResult = await client.query<
@@ -224,8 +243,12 @@ export async function convertInquiryToClassroom(params: {
     const classroomId = randomUUID();
     const teacherMemberId = randomUUID();
     const studentMemberId = randomUUID();
-    const classroomName =
-      params.classroomName?.trim() || `${inquiry.student_name} Private Classroom`;
+    const defaultClassroomName = params.classroomPrefix?.trim()
+      ? `${params.classroomPrefix.trim()} ${inquiry.student_name}`
+      : `${inquiry.student_name} Private Classroom`;
+    const classroomName = params.classroomName?.trim() || defaultClassroomName;
+    const classroomDescription =
+      params.classroomDescription?.trim() || "Created from a teacher inquiry.";
 
     await client.query(
       `INSERT INTO classrooms (
@@ -233,14 +256,15 @@ export async function convertInquiryToClassroom(params: {
          teacher_user_id,
          name,
          description,
-         join_code
+         join_code,
+         is_private_tutoring
        )
-       VALUES ($1, $2, $3, $4, $5)`,
+       VALUES ($1, $2, $3, $4, $5, 1)`,
       [
         classroomId,
         params.teacherUserId,
         classroomName,
-        "Created from a teacher inquiry.",
+        classroomDescription,
         joinCode,
       ]
     );
@@ -263,14 +287,61 @@ export async function convertInquiryToClassroom(params: {
     await client.query(
       `UPDATE teacher_inquiries
        SET status = 'converted',
+           onboarding_message = $3,
            created_classroom_id = $2,
+           conversion_completed_at = NOW(),
            updated_at = NOW()
        WHERE id = $1`,
-      [params.inquiryId, classroomId]
+      [params.inquiryId, classroomId, params.onboardingMessage?.trim() || null]
     );
 
     const converted = await getTeacherInquiry(params.inquiryId);
     if (!converted) throw new Error("Failed to convert inquiry.");
     return converted;
   });
+}
+
+export async function setInquiryInitialAssignment(params: {
+  inquiryId: string;
+  teacherUserId: string;
+  assignmentId: string;
+}): Promise<void> {
+  await execute(
+    `UPDATE teacher_inquiries
+     SET initial_assignment_id = $3,
+         updated_at = NOW()
+     WHERE id = $1
+       AND teacher_user_id = $2`,
+    [params.inquiryId, params.teacherUserId, params.assignmentId]
+  );
+}
+
+export async function getInquiryForClassroom(
+  classroomId: string
+): Promise<TeacherInquiryListItem | null> {
+  return (
+    (await queryOne<TeacherInquiryListItem>(
+      `SELECT
+         teacher_inquiries.*,
+         teacher_user.name AS teacher_name,
+         teacher_user.email AS teacher_email,
+         student_user.name AS student_name,
+         student_user.email AS student_email,
+         classrooms.name AS classroom_name,
+         assignments.title AS assignment_title
+       FROM teacher_inquiries
+       INNER JOIN "user" AS teacher_user
+         ON teacher_user.id = teacher_inquiries.teacher_user_id
+       INNER JOIN "user" AS student_user
+         ON student_user.id = teacher_inquiries.student_user_id
+       LEFT JOIN classrooms
+         ON classrooms.id = teacher_inquiries.created_classroom_id
+       LEFT JOIN assignments
+         ON assignments.id = teacher_inquiries.initial_assignment_id
+       WHERE teacher_inquiries.created_classroom_id = $1
+       ORDER BY teacher_inquiries.updated_at DESC
+       LIMIT 1`,
+      [classroomId]
+    )) ?? null
+  );
 }

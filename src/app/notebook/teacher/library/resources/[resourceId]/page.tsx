@@ -45,7 +45,7 @@ export default async function TeacherResourceDetailPage({
       <div className="mx-auto max-w-4xl space-y-8">
         <div className="flex items-start justify-between gap-6">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.25em] text-muted-foreground">Teacher resource</p>
+            <p className="text-xs font-semibold uppercase tracking-[0.25em] text-muted-foreground">Library resource</p>
             <h1 className="mt-2 text-3xl font-bold text-foreground">{resource.title}</h1>
             <p className="mt-2 text-sm text-muted-foreground">
               {resource.description || "No description yet."}
@@ -55,7 +55,7 @@ export default async function TeacherResourceDetailPage({
             href="/notebook/teacher/library"
             className="inline-flex items-center rounded-lg border px-3 py-2 text-sm text-muted-foreground hover:bg-muted"
           >
-            Back to library
+            Back to Library
           </Link>
         </div>
 

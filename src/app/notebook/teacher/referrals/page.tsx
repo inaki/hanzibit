@@ -34,10 +34,7 @@ export default async function TeacherReferralsPage() {
       <div className="mx-auto max-w-6xl space-y-8">
         <div className="flex items-start justify-between gap-6">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.25em] text-muted-foreground">
-              Phase 3
-            </p>
-            <h1 className="mt-2 text-3xl font-bold text-foreground">Teacher Referrals</h1>
+            <h1 className="text-3xl font-bold text-foreground">Referrals</h1>
             <p className="mt-2 max-w-3xl text-sm text-muted-foreground">
               Share your teacher code, bring students into HanziBit, and track the first referral-driven commission ledger before payouts are automated.
             </p>

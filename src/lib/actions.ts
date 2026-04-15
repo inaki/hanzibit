@@ -33,11 +33,27 @@ import {
   joinClassroom as joinClassroomRecord,
   isTeacherUser,
 } from "./classrooms";
-import { createAssignment as createAssignmentRecord, type AssignmentType } from "./assignments";
+import {
+  createAssignment as createAssignmentRecord,
+  getAssignment,
+  listAssignmentsForClassroom,
+  type AssignmentType,
+} from "./assignments";
 import {
   canManageAssignmentTemplate,
+  canApplyTeacherPlaybook,
+  canApplyTeacherStrategy,
   canManageClassroom,
+  canManagePrivateLearnerGoals,
+  canManagePrivateLearnerHistory,
+  canManagePrivateLearnerPlan,
+  canManagePrivateLearnerReview,
+  canManagePrivateLearnerAdaptation,
+  canManageTeacherPlaybook,
+  canManageTeacherStrategy,
+  canRecordTeacherStrategyOutcome,
   canConvertInquiryToClassroom,
+  canManagePrivateLearnerState,
   canRespondToTeacherInquiry,
   canSubmitAssignment,
   canUseTemplateInClassroom,
@@ -57,7 +73,16 @@ import {
   markAssignmentCreatedFromTemplate,
   updateAssignmentTemplate,
 } from "./assignment-templates";
-import { getAssignment } from "./assignments";
+import {
+  createTeacherStrategy,
+  getTeacherStrategy,
+  updateTeacherStrategy,
+} from "./teacher-strategies";
+import {
+  createTeacherPlaybook,
+  getTeacherPlaybook,
+  updateTeacherPlaybook,
+} from "./teacher-playbooks";
 import {
   createTeacherPayoutBatch,
   ensureReferralAttribution,
@@ -65,10 +90,46 @@ import {
 } from "./referrals";
 import { parseList, updateTeacherProfile } from "./teacher-profiles";
 import {
+  ensureTeacherTutoringSettings,
+  updateTeacherTutoringSettings,
+} from "./teacher-tutoring-settings";
+import {
   convertInquiryToClassroom,
   createTeacherInquiry,
   respondToTeacherInquiry,
+  setInquiryInitialAssignment,
 } from "./teacher-inquiries";
+import {
+  ensurePrivateStudent,
+  getPrivateStudentDetail,
+  updatePrivateStudentNextAssignment,
+  updatePrivateStudentState,
+} from "./private-students";
+import {
+  ensurePrivateLessonPlan,
+  updatePrivateLessonPlan,
+} from "./private-lesson-plans";
+import {
+  createPrivateStudentGoal,
+  getPrivateStudentGoal,
+  type PrivateStudentGoalProgressStatus,
+  updatePrivateStudentGoal,
+} from "./private-student-goals";
+import {
+  createPrivateLessonHistory,
+  PRIVATE_LESSON_ISSUE_TAGS,
+  type PrivateLessonIssueTag,
+} from "./private-lesson-history";
+import {
+  createPrivateStudentReview,
+  updatePrivateStudentReviewAdaptation,
+} from "./private-student-reviews";
+import { applyTeacherStrategyToPrivateStudent } from "./private-student-strategy-applications";
+import { applyTeacherPlaybookToPrivateStudent } from "./private-student-playbook-applications";
+import {
+  upsertPrivateStudentStrategyOutcome,
+  type PrivateStudentStrategyOutcomeStatus,
+} from "./private-student-strategy-outcomes";
 
 export async function toggleBookmarkAction(entryId: string) {
   const userId = await getAuthUserId();
@@ -474,6 +535,127 @@ export async function createAssignmentTemplateAction(formData: FormData) {
   return { id: template.id };
 }
 
+export async function createTeacherStrategyAction(formData: FormData) {
+  const userId = await getAuthUserId();
+
+  if (!(await isTeacherUser(userId))) {
+    return { error: "Only teachers can create strategies." };
+  }
+
+  const title = ((formData.get("title") as string) || "").trim();
+  const summary = ((formData.get("summary") as string) || "").trim();
+  const issueFocus = ((formData.get("issue_focus") as string) || "").trim();
+  const goalFocus = ((formData.get("goal_focus") as string) || "").trim();
+  const guidance = ((formData.get("guidance") as string) || "").trim();
+  const refinementNote = ((formData.get("refinement_note") as string) || "").trim();
+  const linkedTemplateId = ((formData.get("linked_template_id") as string) || "").trim();
+  const linkedResourceId = ((formData.get("linked_resource_id") as string) || "").trim();
+
+  if (!title) {
+    return { error: "Strategy title is required." };
+  }
+
+  if (!summary) {
+    return { error: "Strategy summary is required." };
+  }
+
+  if (linkedTemplateId) {
+    const templates = await listAssignmentTemplatesForTeacher(userId);
+    if (!templates.some((template) => template.id === linkedTemplateId)) {
+      return { error: "Linked template not found." };
+    }
+  }
+
+  if (linkedResourceId) {
+    const resources = await listTeacherResourcesForUser(userId, { includeArchived: false });
+    if (!resources.some((resource) => resource.id === linkedResourceId)) {
+      return { error: "Linked resource not found." };
+    }
+  }
+
+  const strategy = await createTeacherStrategy({
+    teacherUserId: userId,
+    title,
+    summary,
+    issueFocus: issueFocus || null,
+    goalFocus: goalFocus || null,
+    guidance: guidance || null,
+    refinementNote: refinementNote || null,
+    linkedTemplateId: linkedTemplateId || null,
+    linkedResourceId: linkedResourceId || null,
+  });
+
+  revalidatePath("/notebook/teacher/library");
+  return { id: strategy.id };
+}
+
+export async function createTeacherPlaybookAction(formData: FormData) {
+  const userId = await getAuthUserId();
+
+  if (!(await isTeacherUser(userId))) {
+    return { error: "Only teachers can create playbooks." };
+  }
+
+  const title = ((formData.get("title") as string) || "").trim();
+  const summary = ((formData.get("summary") as string) || "").trim();
+  const issueFocus = ((formData.get("issue_focus") as string) || "").trim();
+  const goalFocus = ((formData.get("goal_focus") as string) || "").trim();
+  const whenToUse = ((formData.get("when_to_use") as string) || "").trim();
+  const guidance = ((formData.get("guidance") as string) || "").trim();
+  const linkedTemplateId = ((formData.get("linked_template_id") as string) || "").trim();
+  const linkedResourceId = ((formData.get("linked_resource_id") as string) || "").trim();
+  const strategyIds = formData
+    .getAll("strategy_ids")
+    .map((value) => String(value).trim())
+    .filter(Boolean);
+
+  if (!title) {
+    return { error: "Playbook title is required." };
+  }
+
+  if (!summary) {
+    return { error: "Playbook summary is required." };
+  }
+
+  if (linkedTemplateId) {
+    const templates = await listAssignmentTemplatesForTeacher(userId, { includeArchived: true });
+    if (!templates.some((template) => template.id === linkedTemplateId)) {
+      return { error: "Linked template not found." };
+    }
+  }
+
+  if (linkedResourceId) {
+    const resources = await listTeacherResourcesForUser(userId, { includeArchived: true });
+    if (!resources.some((resource) => resource.id === linkedResourceId)) {
+      return { error: "Linked resource not found." };
+    }
+  }
+
+  if (strategyIds.length > 0) {
+    const strategies = await listTeacherStrategiesForTeacher(userId, { includeArchived: true });
+    const validStrategyIds = new Set(strategies.map((strategy) => strategy.id));
+    if (strategyIds.some((id) => !validStrategyIds.has(id))) {
+      return { error: "One or more linked strategies were not found." };
+    }
+  }
+
+  const playbook = await createTeacherPlaybook({
+    teacherUserId: userId,
+    title,
+    summary,
+    issueFocus: issueFocus || null,
+    goalFocus: goalFocus || null,
+    whenToUse: whenToUse || null,
+    guidance: guidance || null,
+    linkedTemplateId: linkedTemplateId || null,
+    linkedResourceId: linkedResourceId || null,
+    strategyIds,
+  });
+
+  revalidatePath("/notebook/teacher/library");
+  return { id: playbook.id };
+}
+
 export async function createAssignmentFromTemplateAction(formData: FormData) {
   const userId = await getAuthUserId();
   const templateId = ((formData.get("template_id") as string) || "").trim();
@@ -581,6 +763,202 @@ export async function updateAssignmentTemplateAction(formData: FormData) {
   });
 
   revalidatePath("/notebook/teacher/library");
+  return { success: true };
+}
+
+export async function updateTeacherStrategyAction(formData: FormData) {
+  const userId = await getAuthUserId();
+  const id = ((formData.get("id") as string) || "").trim();
+  const title = ((formData.get("title") as string) || "").trim();
+  const summary = ((formData.get("summary") as string) || "").trim();
+  const issueFocus = ((formData.get("issue_focus") as string) || "").trim();
+  const goalFocus = ((formData.get("goal_focus") as string) || "").trim();
+  const guidance = ((formData.get("guidance") as string) || "").trim();
+  const refinementNote = ((formData.get("refinement_note") as string) || "").trim();
+  const linkedTemplateId = ((formData.get("linked_template_id") as string) || "").trim();
+  const linkedResourceId = ((formData.get("linked_resource_id") as string) || "").trim();
+  const archived = formData.get("archived") === "on";
+  const markRefined = formData.get("mark_refined") === "1";
+
+  if (!id || !title) {
+    return { error: "Strategy id and title are required." };
+  }
+
+  if (!summary) {
+    return { error: "Strategy summary is required." };
+  }
+
+  if (!(await canManageTeacherStrategy(userId, id))) {
+    return { error: "You cannot update this strategy." };
+  }
+
+  if (linkedTemplateId) {
+    const templates = await listAssignmentTemplatesForTeacher(userId, { includeArchived: true });
+    if (!templates.some((template) => template.id === linkedTemplateId)) {
+      return { error: "Linked template not found." };
+    }
+  }
+
+  if (linkedResourceId) {
+    const resources = await listTeacherResourcesForUser(userId, { includeArchived: true });
+    if (!resources.some((resource) => resource.id === linkedResourceId)) {
+      return { error: "Linked resource not found." };
+    }
+  }
+
+  await updateTeacherStrategy({
+    id,
+    teacherUserId: userId,
+    title,
+    summary,
+    issueFocus: issueFocus || null,
+    goalFocus: goalFocus || null,
+    guidance: guidance || null,
+    refinementNote: refinementNote || null,
+    linkedTemplateId: linkedTemplateId || null,
+    linkedResourceId: linkedResourceId || null,
+    archived,
+    markRefined,
+  });
+
+  revalidatePath("/notebook/teacher/library");
+  return { success: true };
+}
+
+export async function updateTeacherPlaybookAction(formData: FormData) {
+  const userId = await getAuthUserId();
+  const id = ((formData.get("id") as string) || "").trim();
+  const title = ((formData.get("title") as string) || "").trim();
+  const summary = ((formData.get("summary") as string) || "").trim();
+  const issueFocus = ((formData.get("issue_focus") as string) || "").trim();
+  const goalFocus = ((formData.get("goal_focus") as string) || "").trim();
+  const whenToUse = ((formData.get("when_to_use") as string) || "").trim();
+  const guidance = ((formData.get("guidance") as string) || "").trim();
+  const linkedTemplateId = ((formData.get("linked_template_id") as string) || "").trim();
+  const linkedResourceId = ((formData.get("linked_resource_id") as string) || "").trim();
+  const strategyIds = formData
+    .getAll("strategy_ids")
+    .map((value) => String(value).trim())
+    .filter(Boolean);
+  const archived = formData.get("archived") === "on";
+
+  if (!id || !title) {
+    return { error: "Playbook id and title are required." };
+  }
+
+  if (!summary) {
+    return { error: "Playbook summary is required." };
+  }
+
+  if (!(await canManageTeacherPlaybook(userId, id))) {
+    return { error: "You cannot update this playbook." };
+  }
+
+  if (linkedTemplateId) {
+    const templates = await listAssignmentTemplatesForTeacher(userId, { includeArchived: true });
+    if (!templates.some((template) => template.id === linkedTemplateId)) {
+      return { error: "Linked template not found." };
+    }
+  }
+
+  if (linkedResourceId) {
+    const resources = await listTeacherResourcesForUser(userId, { includeArchived: true });
+    if (!resources.some((resource) => resource.id === linkedResourceId)) {
+      return { error: "Linked resource not found." };
+    }
+  }
+
+  if (strategyIds.length > 0) {
+    const strategies = await listTeacherStrategiesForTeacher(userId, { includeArchived: true });
+    const validStrategyIds = new Set(strategies.map((strategy) => strategy.id));
+    if (strategyIds.some((linkedId) => !validStrategyIds.has(linkedId))) {
+      return { error: "One or more linked strategies were not found." };
+    }
+  }
+
+  await updateTeacherPlaybook({
+    id,
+    teacherUserId: userId,
+    title,
+    summary,
+    issueFocus: issueFocus || null,
+    goalFocus: goalFocus || null,
+    whenToUse: whenToUse || null,
+    guidance: guidance || null,
+    linkedTemplateId: linkedTemplateId || null,
+    linkedResourceId: linkedResourceId || null,
+    archived,
+    strategyIds,
+  });
+
+  revalidatePath("/notebook/teacher/library");
+  return { success: true };
+}
+
+export async function applyTeacherPlaybookAction(formData: FormData) {
+  const userId = await getAuthUserId();
+  const privateStudentId = ((formData.get("private_student_id") as string) || "").trim();
+  const playbookId = ((formData.get("playbook_id") as string) || "").trim();
+  const goalId = ((formData.get("goal_id") as string) || "").trim();
+  const reviewId = ((formData.get("review_id") as string) || "").trim();
+  const applicationNote = ((formData.get("application_note") as string) || "").trim();
+  const planStatus = ((formData.get("plan_status") as string) || "").trim() as
+    | "planned"
+    | "awaiting_assignment"
+    | "awaiting_completion"
+    | "completed"
+    | "stale";
+  const targetDate = ((formData.get("target_date") as string) || "").trim();
+
+  if (!privateStudentId || !playbookId) {
+    return { error: "Private learner and playbook are required." };
+  }
+
+  if (!(await canApplyTeacherPlaybook(userId, privateStudentId, playbookId))) {
+    return { error: "You cannot apply this playbook." };
+  }
+
+  const playbook = await getTeacherPlaybook(playbookId);
+  if (!playbook) {
+    return { error: "Playbook not found." };
+  }
+
+  const privateStudent = await getPrivateStudentDetail(privateStudentId);
+  if (!privateStudent) {
+    return { error: "Private learner not found." };
+  }
+
+  const lessonPlan = await ensurePrivateLessonPlan({
+    privateStudentId,
+    teacherUserId: userId,
+    classroomId: privateStudent.classroom_id,
+  });
+
+  await updatePrivateLessonPlan({
+    privateStudentId,
+    teacherUserId: userId,
+    planStatus: planStatus || lessonPlan.plan_status,
+    targetDate: targetDate || lessonPlan.target_date,
+    focusNote: lessonPlan.focus_note || playbook.summary,
+    beforeLessonExpectation: lessonPlan.before_lesson_expectation,
+    nextAssignmentId: lessonPlan.next_assignment_id,
+    nextTemplateId: playbook.linked_template_id || lessonPlan.next_template_id,
+  });
+
+  await applyTeacherPlaybookToPrivateStudent({
+    privateStudentId,
+    playbookId,
+    appliedByUserId: userId,
+    applicationNote: applicationNote || null,
+    linkedReviewId: reviewId || null,
+    linkedLessonPlanId: lessonPlan.id,
+    linkedGoalId: goalId || null,
+  });
+
+  revalidatePath("/notebook/teacher/private-students");
+  revalidatePath(`/notebook/teacher/private-students/${privateStudentId}`);
+  revalidatePath(`/notebook/classes/${privateStudent.classroom_id}`);
+  revalidatePath("/notebook/teacher/reporting");
   return { success: true };
 }
 
@@ -880,6 +1258,8 @@ export async function convertInquiryToClassroomAction(formData: FormData) {
   const teacherUserId = await getAuthUserId();
   const inquiryId = ((formData.get("inquiry_id") as string) || "").trim();
   const classroomName = ((formData.get("classroom_name") as string) || "").trim();
+  const onboardingMessage = ((formData.get("onboarding_message") as string) || "").trim();
+  const templateIdOverride = ((formData.get("template_id") as string) || "").trim();
 
   if (!inquiryId) {
     return { error: "Inquiry is required." };
@@ -889,19 +1269,106 @@ export async function convertInquiryToClassroomAction(formData: FormData) {
     return { error: "You cannot convert this inquiry yet." };
   }
 
+  const tutoringSettings = await ensureTeacherTutoringSettings(teacherUserId);
+  const selectedTemplateId = templateIdOverride || tutoringSettings.default_template_id || "";
+
+  if (selectedTemplateId) {
+    const selectedTemplate = await getAssignmentTemplate(selectedTemplateId);
+    if (!selectedTemplate || selectedTemplate.teacher_user_id !== teacherUserId) {
+      return { error: "Selected onboarding template was not found." };
+    }
+  }
+
   const inquiry = await convertInquiryToClassroom({
     inquiryId,
     teacherUserId,
     classroomName: classroomName || null,
+    classroomPrefix: tutoringSettings.default_private_classroom_prefix,
+    classroomDescription: onboardingMessage || tutoringSettings.intro_message,
+    onboardingMessage: onboardingMessage || tutoringSettings.intro_message,
   });
+
+  if (inquiry.created_classroom_id && selectedTemplateId) {
+    const template = await getAssignmentTemplate(selectedTemplateId);
+    if (template && template.teacher_user_id === teacherUserId) {
+      const existingAssignment = await queryOne<{ id: string }>(
+        `SELECT id
+         FROM assignments
+         WHERE classroom_id = $1
+           AND template_id = $2
+         LIMIT 1`,
+        [inquiry.created_classroom_id, template.id]
+      );
+
+      if (!existingAssignment) {
+        const assignment = await createAssignmentRecord({
+          classroomId: inquiry.created_classroom_id,
+          createdByUserId: teacherUserId,
+          templateId: template.id,
+          type: template.template_type,
+          title: template.title,
+          description: template.description,
+          prompt: template.prompt,
+          hskLevel: template.hsk_level,
+          sourceRef: template.source_ref,
+          allowResubmission: template.allow_resubmission === 1,
+        });
+
+        await markAssignmentCreatedFromTemplate({
+          assignmentId: assignment.id,
+          templateId: template.id,
+        });
+        await setInquiryInitialAssignment({
+          inquiryId,
+          teacherUserId,
+          assignmentId: assignment.id,
+        });
+        await ensurePrivateStudent({
+          teacherUserId,
+          studentUserId: inquiry.student_user_id,
+          classroomId: inquiry.created_classroom_id,
+          inquiryId,
+          nextAssignmentId: assignment.id,
+        });
+        await updatePrivateStudentNextAssignment({
+          inquiryId,
+          teacherUserId,
+          nextAssignmentId: assignment.id,
+        });
+
+        revalidatePath("/notebook/assignments");
+        revalidatePath(`/notebook/assignments/${assignment.id}`);
+        revalidatePath(`/notebook/teacher/inquiries`);
+        revalidatePath("/notebook/inquiries");
+        return {
+          id: inquiry.id,
+          classroomId: inquiry.created_classroom_id,
+          success: `converted:assignment:${assignment.id}`,
+        };
+      }
+    }
+  }
 
   revalidatePath("/notebook/teacher/inquiries");
   revalidatePath("/notebook/inquiries");
+  revalidatePath("/notebook/teacher");
+  revalidatePath("/notebook/teacher/setup");
   if (inquiry.created_classroom_id) {
+    await ensurePrivateStudent({
+      teacherUserId,
+      studentUserId: inquiry.student_user_id,
+      classroomId: inquiry.created_classroom_id,
+      inquiryId,
+      nextAssignmentId: null,
+    });
     revalidatePath(`/notebook/classes/${inquiry.created_classroom_id}`);
     revalidatePath("/notebook/classes");
   }
-  return { id: inquiry.id, classroomId: inquiry.created_classroom_id };
+  return {
+    id: inquiry.id,
+    classroomId: inquiry.created_classroom_id,
+    success: "converted:no-assignment",
+  };
 }
 
 export async function updateTeacherProfileAction(formData: FormData) {
@@ -953,4 +1420,674 @@ export async function updateTeacherProfileAction(formData: FormData) {
           : "Failed to update teacher profile.",
     };
   }
+}
+
+export async function updateTeacherTutoringSettingsAction(formData: FormData) {
+  const userId = await getAuthUserId();
+
+  if (!(await isTeacherUser(userId))) {
+    return { error: "Only teachers can manage tutoring setup." };
+  }
+
+  const defaultTemplateId = ((formData.get("default_template_id") as string) || "").trim();
+  const introMessage = ((formData.get("intro_message") as string) || "").trim();
+  const defaultPrivateClassroomPrefix = ((formData.get("default_private_classroom_prefix") as string) || "").trim();
+  const cadenceType = ((formData.get("cadence_type") as string) || "").trim();
+  const targetSessionLengthRaw = ((formData.get("target_session_length_minutes") as string) || "").trim();
+  const cadenceNotes = ((formData.get("cadence_notes") as string) || "").trim();
+  const formatNotes = ((formData.get("format_notes") as string) || "").trim();
+
+  if (cadenceType && !["weekly", "twice_weekly", "flexible", "async_support"].includes(cadenceType)) {
+    return { error: "Invalid cadence type." };
+  }
+
+  const targetSessionLengthMinutes = targetSessionLengthRaw
+    ? Number.parseInt(targetSessionLengthRaw, 10)
+    : null;
+
+  if (
+    targetSessionLengthMinutes != null &&
+    (!Number.isFinite(targetSessionLengthMinutes) ||
+      targetSessionLengthMinutes < 15 ||
+      targetSessionLengthMinutes > 180)
+  ) {
+    return { error: "Session length must be between 15 and 180 minutes." };
+  }
+
+  if (defaultTemplateId) {
+    const template = await getAssignmentTemplate(defaultTemplateId);
+    if (!template || template.teacher_user_id !== userId) {
+      return { error: "Default template not found." };
+    }
+  }
+
+  const settings = await updateTeacherTutoringSettings({
+    teacherUserId: userId,
+    defaultTemplateId: defaultTemplateId || null,
+    introMessage: introMessage || null,
+    defaultPrivateClassroomPrefix: defaultPrivateClassroomPrefix || null,
+    cadenceType: cadenceType || null,
+    targetSessionLengthMinutes,
+    cadenceNotes: cadenceNotes || null,
+    formatNotes: formatNotes || null,
+  });
+
+  revalidatePath("/notebook/teacher");
+  revalidatePath("/notebook/teacher/setup");
+  revalidatePath("/notebook/teacher/inquiries");
+  return { id: settings.id };
+}
+
+export async function updatePrivateStudentStateAction(formData: FormData) {
+  const teacherUserId = await getAuthUserId();
+  const privateStudentId = ((formData.get("private_student_id") as string) || "").trim();
+  const status = ((formData.get("status") as string) || "").trim();
+  const nextStepType = ((formData.get("next_step_type") as string) || "").trim();
+  const nextAssignmentId = ((formData.get("next_assignment_id") as string) || "").trim();
+  const followUpNote = ((formData.get("follow_up_note") as string) || "").trim();
+
+  if (!privateStudentId) {
+    return { error: "Private learner is required." };
+  }
+
+  if (!(await canManagePrivateLearnerState(teacherUserId, privateStudentId))) {
+    return { error: "You cannot manage this private learner." };
+  }
+
+  if (!["onboarding", "active", "awaiting_teacher", "awaiting_student", "inactive"].includes(status)) {
+    return { error: "Invalid private learner status." };
+  }
+
+  if (
+    nextStepType &&
+    !["complete_assignment", "review_feedback", "await_teacher_assignment", "follow_up", "none"].includes(
+      nextStepType
+    )
+  ) {
+    return { error: "Invalid next step." };
+  }
+
+  const detail = await getPrivateStudentDetail(privateStudentId);
+  if (!detail) {
+    return { error: "Private learner not found." };
+  }
+
+  if (nextAssignmentId) {
+    const assignments = await listAssignmentsForClassroom(detail.classroom_id);
+    if (!assignments.some((assignment) => assignment.id === nextAssignmentId)) {
+      return { error: "Selected assignment does not belong to this private classroom." };
+    }
+  }
+
+  await updatePrivateStudentState({
+    id: privateStudentId,
+    teacherUserId,
+    status: status as
+      | "onboarding"
+      | "active"
+      | "awaiting_teacher"
+      | "awaiting_student"
+      | "inactive",
+    nextStepType: (nextStepType || "none") as
+      | "complete_assignment"
+      | "review_feedback"
+      | "await_teacher_assignment"
+      | "follow_up"
+      | "none",
+    nextAssignmentId: nextAssignmentId || null,
+    followUpNote: followUpNote || null,
+  });
+
+  revalidatePath("/notebook/teacher");
+  revalidatePath("/notebook/teacher/private-students");
+  revalidatePath(`/notebook/teacher/private-students/${privateStudentId}`);
+  revalidatePath("/notebook/teacher/reporting");
+  revalidatePath(`/notebook/classes/${detail.classroom_id}`);
+  return { id: privateStudentId };
+}
+
+export async function updatePrivateLessonPlanAction(formData: FormData) {
+  const teacherUserId = await getAuthUserId();
+  const privateStudentId = ((formData.get("private_student_id") as string) || "").trim();
+  const planStatus = ((formData.get("plan_status") as string) || "").trim();
+  const targetDate = ((formData.get("target_date") as string) || "").trim();
+  const focusNote = ((formData.get("focus_note") as string) || "").trim();
+  const beforeLessonExpectation = ((formData.get("before_lesson_expectation") as string) || "").trim();
+  const nextAssignmentId = ((formData.get("next_assignment_id") as string) || "").trim();
+  const nextTemplateId = ((formData.get("next_template_id") as string) || "").trim();
+
+  if (!privateStudentId) {
+    return { error: "Private learner is required." };
+  }
+
+  if (!(await canManagePrivateLearnerPlan(teacherUserId, privateStudentId))) {
+    return { error: "You cannot manage this lesson plan." };
+  }
+
+  if (!["planned", "awaiting_assignment", "awaiting_completion", "completed", "stale"].includes(planStatus)) {
+    return { error: "Invalid plan status." };
+  }
+
+  const detail = await getPrivateStudentDetail(privateStudentId);
+  if (!detail) {
+    return { error: "Private learner not found." };
+  }
+
+  await ensurePrivateLessonPlan({
+    privateStudentId,
+    teacherUserId,
+    classroomId: detail.classroom_id,
+  });
+
+  if (nextAssignmentId) {
+    const assignments = await listAssignmentsForClassroom(detail.classroom_id);
+    if (!assignments.some((assignment) => assignment.id === nextAssignmentId)) {
+      return { error: "Selected assignment does not belong to this private classroom." };
+    }
+  }
+
+  if (nextTemplateId) {
+    if (!(await canManageAssignmentTemplate(teacherUserId, nextTemplateId))) {
+      return { error: "Selected template does not belong to you." };
+    }
+  }
+
+  await updatePrivateLessonPlan({
+    privateStudentId,
+    teacherUserId,
+    planStatus: planStatus as
+      | "planned"
+      | "awaiting_assignment"
+      | "awaiting_completion"
+      | "completed"
+      | "stale",
+    targetDate: targetDate || null,
+    focusNote: focusNote || null,
+    beforeLessonExpectation: beforeLessonExpectation || null,
+    nextAssignmentId: nextAssignmentId || null,
+    nextTemplateId: nextTemplateId || null,
+  });
+
+  revalidatePath("/notebook/teacher/private-students");
+  revalidatePath(`/notebook/teacher/private-students/${privateStudentId}`);
+  revalidatePath("/notebook/teacher/reporting");
+  revalidatePath(`/notebook/classes/${detail.classroom_id}`);
+  return { id: privateStudentId };
+}
+
+export async function createPrivateStudentGoalAction(formData: FormData) {
+  const teacherUserId = await getAuthUserId();
+  const privateStudentId = ((formData.get("private_student_id") as string) || "").trim();
+  const title = ((formData.get("title") as string) || "").trim();
+  const detail = ((formData.get("detail") as string) || "").trim();
+  const status = ((formData.get("status") as string) || "active").trim();
+  const progressStatus = ((formData.get("progress_status") as string) || "").trim();
+  const progressNote = ((formData.get("progress_note") as string) || "").trim();
+
+  if (!privateStudentId) {
+    return { error: "Private learner is required." };
+  }
+  if (!(await canManagePrivateLearnerGoals(teacherUserId, privateStudentId))) {
+    return { error: "You cannot manage goals for this private learner." };
+  }
+  if (!title) {
+    return { error: "Goal title is required." };
+  }
+  if (!["active", "completed", "paused"].includes(status)) {
+    return { error: "Invalid goal status." };
+  }
+  if (
+    progressStatus &&
+    !["improving", "stable", "needs_reinforcement", "blocked"].includes(progressStatus)
+  ) {
+    return { error: "Invalid progress marker." };
+  }
+
+  const detailRecord = await getPrivateStudentDetail(privateStudentId);
+  if (!detailRecord) {
+    return { error: "Private learner not found." };
+  }
+
+  const goal = await createPrivateStudentGoal({
+    privateStudentId,
+    teacherUserId,
+    title,
+    detail: detail || null,
+    status: status as "active" | "completed" | "paused",
+    progressStatus: (progressStatus || null) as PrivateStudentGoalProgressStatus | null,
+    progressNote: progressNote || null,
+  });
+
+  revalidatePath("/notebook/teacher/private-students");
+  revalidatePath(`/notebook/teacher/private-students/${privateStudentId}`);
+  revalidatePath(`/notebook/classes/${detailRecord.classroom_id}`);
+  revalidatePath("/notebook/teacher/reporting");
+  return { id: goal.id };
+}
+
+export async function updatePrivateStudentGoalAction(formData: FormData) {
+  const teacherUserId = await getAuthUserId();
+  const goalId = ((formData.get("goal_id") as string) || "").trim();
+  const title = ((formData.get("title") as string) || "").trim();
+  const detail = ((formData.get("detail") as string) || "").trim();
+  const status = ((formData.get("status") as string) || "").trim();
+  const progressStatus = ((formData.get("progress_status") as string) || "").trim();
+  const progressNote = ((formData.get("progress_note") as string) || "").trim();
+
+  if (!goalId) {
+    return { error: "Goal is required." };
+  }
+  if (!title) {
+    return { error: "Goal title is required." };
+  }
+  if (!["active", "completed", "paused"].includes(status)) {
+    return { error: "Invalid goal status." };
+  }
+  if (
+    progressStatus &&
+    !["improving", "stable", "needs_reinforcement", "blocked"].includes(progressStatus)
+  ) {
+    return { error: "Invalid progress marker." };
+  }
+
+  const goal = await getPrivateStudentGoal(goalId);
+  if (!goal) {
+    return { error: "Goal not found." };
+  }
+
+  if (!(await canManagePrivateLearnerGoals(teacherUserId, goal.private_student_id))) {
+    return { error: "You cannot update this goal." };
+  }
+
+  const detailRecord = await getPrivateStudentDetail(goal.private_student_id);
+  if (!detailRecord) {
+    return { error: "Private learner not found." };
+  }
+
+  await updatePrivateStudentGoal({
+    goalId,
+    teacherUserId,
+    title,
+    detail: detail || null,
+    status: status as "active" | "completed" | "paused",
+    progressStatus: (progressStatus || null) as PrivateStudentGoalProgressStatus | null,
+    progressNote: progressNote || null,
+  });
+
+  revalidatePath("/notebook/teacher/private-students");
+  revalidatePath(`/notebook/teacher/private-students/${goal.private_student_id}`);
+  revalidatePath(`/notebook/classes/${detailRecord.classroom_id}`);
+  revalidatePath("/notebook/teacher/reporting");
+  return { id: goalId };
+}
+
+export async function createPrivateLessonHistoryAction(formData: FormData) {
+  const teacherUserId = await getAuthUserId();
+  const privateStudentId = ((formData.get("private_student_id") as string) || "").trim();
+  const assignmentId = ((formData.get("assignment_id") as string) || "").trim();
+  const lessonPlanId = ((formData.get("lesson_plan_id") as string) || "").trim();
+  const summary = ((formData.get("summary") as string) || "").trim();
+  const practiceFocus = ((formData.get("practice_focus") as string) || "").trim();
+  const interventionNote = ((formData.get("intervention_note") as string) || "").trim();
+  const issueTags = formData
+    .getAll("issue_tags")
+    .map((value) => String(value).trim())
+    .filter(Boolean);
+  const recordedAt = ((formData.get("recorded_at") as string) || "").trim();
+
+  if (!privateStudentId) {
+    return { error: "Private learner is required." };
+  }
+  if (!(await canManagePrivateLearnerHistory(teacherUserId, privateStudentId))) {
+    return { error: "You cannot add lesson history for this private learner." };
+  }
+  if (!summary) {
+    return { error: "Lesson summary is required." };
+  }
+  if (issueTags.some((tag) => !(PRIVATE_LESSON_ISSUE_TAGS as readonly string[]).includes(tag))) {
+    return { error: "Invalid repeated issue tag." };
+  }
+
+  const detailRecord = await getPrivateStudentDetail(privateStudentId);
+  if (!detailRecord) {
+    return { error: "Private learner not found." };
+  }
+
+  if (assignmentId) {
+    const assignments = await listAssignmentsForClassroom(detailRecord.classroom_id);
+    if (!assignments.some((assignment) => assignment.id === assignmentId)) {
+      return { error: "Selected assignment does not belong to this private classroom." };
+    }
+  }
+
+  await createPrivateLessonHistory({
+    privateStudentId,
+    teacherUserId,
+    classroomId: detailRecord.classroom_id,
+    lessonPlanId: lessonPlanId || null,
+    assignmentId: assignmentId || null,
+    summary,
+    practiceFocus: practiceFocus || null,
+    issueTags: issueTags as PrivateLessonIssueTag[],
+    interventionNote: interventionNote || null,
+    recordedAt: recordedAt || null,
+  });
+
+  revalidatePath("/notebook/teacher/private-students");
+  revalidatePath(`/notebook/teacher/private-students/${privateStudentId}`);
+  revalidatePath(`/notebook/classes/${detailRecord.classroom_id}`);
+  revalidatePath("/notebook/teacher/reporting");
+  return { id: privateStudentId };
+}
+
+export async function createPrivateStudentReviewAction(formData: FormData) {
+  const teacherUserId = await getAuthUserId();
+  const privateStudentId = ((formData.get("private_student_id") as string) || "").trim();
+  const reviewedAt = ((formData.get("reviewed_at") as string) || "").trim();
+  const summary = ((formData.get("summary") as string) || "").trim();
+  const whatImproved = ((formData.get("what_improved") as string) || "").trim();
+  const whatNeedsChange = ((formData.get("what_needs_change") as string) || "").trim();
+  const adaptationNote = ((formData.get("adaptation_note") as string) || "").trim();
+
+  if (!privateStudentId) {
+    return { error: "Private learner is required." };
+  }
+  if (!(await canManagePrivateLearnerReview(teacherUserId, privateStudentId))) {
+    return { error: "You cannot review this private learner." };
+  }
+  if (!summary) {
+    return { error: "Review summary is required." };
+  }
+
+  const detailRecord = await getPrivateStudentDetail(privateStudentId);
+  if (!detailRecord) {
+    return { error: "Private learner not found." };
+  }
+
+  await createPrivateStudentReview({
+    privateStudentId,
+    teacherUserId,
+    reviewedAt: reviewedAt || null,
+    summary,
+    whatImproved: whatImproved || null,
+    whatNeedsChange: whatNeedsChange || null,
+    adaptationNote: adaptationNote || null,
+  });
+
+  revalidatePath("/notebook/teacher");
+  revalidatePath("/notebook/teacher/private-students");
+  revalidatePath(`/notebook/teacher/private-students/${privateStudentId}`);
+  revalidatePath("/notebook/teacher/reporting");
+  revalidatePath(`/notebook/classes/${detailRecord.classroom_id}`);
+  return { id: privateStudentId };
+}
+
+export async function adaptPrivateLearnerPlanAction(formData: FormData) {
+  const teacherUserId = await getAuthUserId();
+  const privateStudentId = ((formData.get("private_student_id") as string) || "").trim();
+  const reviewId = ((formData.get("review_id") as string) || "").trim();
+  const planStatus = ((formData.get("plan_status") as string) || "").trim();
+  const targetDate = ((formData.get("target_date") as string) || "").trim();
+  const focusNote = ((formData.get("focus_note") as string) || "").trim();
+  const beforeLessonExpectation = ((formData.get("before_lesson_expectation") as string) || "").trim();
+  const nextAssignmentId = ((formData.get("next_assignment_id") as string) || "").trim();
+  const nextTemplateId = ((formData.get("next_template_id") as string) || "").trim();
+  const goalId = ((formData.get("goal_id") as string) || "").trim();
+  const goalProgressStatus = ((formData.get("goal_progress_status") as string) || "").trim();
+  const goalProgressNote = ((formData.get("goal_progress_note") as string) || "").trim();
+  const adaptationNote = ((formData.get("adaptation_note") as string) || "").trim();
+
+  if (!privateStudentId) {
+    return { error: "Private learner is required." };
+  }
+
+  if (!(await canManagePrivateLearnerAdaptation(teacherUserId, privateStudentId))) {
+    return { error: "You cannot adapt this private learner plan." };
+  }
+
+  if (!["planned", "awaiting_assignment", "awaiting_completion", "completed", "stale"].includes(planStatus)) {
+    return { error: "Invalid plan status." };
+  }
+
+  if (
+    goalProgressStatus &&
+    !["improving", "stable", "needs_reinforcement", "blocked"].includes(goalProgressStatus)
+  ) {
+    return { error: "Invalid goal progress marker." };
+  }
+
+  const detailRecord = await getPrivateStudentDetail(privateStudentId);
+  if (!detailRecord) {
+    return { error: "Private learner not found." };
+  }
+
+  await ensurePrivateLessonPlan({
+    privateStudentId,
+    teacherUserId,
+    classroomId: detailRecord.classroom_id,
+  });
+
+  if (nextAssignmentId) {
+    const assignments = await listAssignmentsForClassroom(detailRecord.classroom_id);
+    if (!assignments.some((assignment) => assignment.id === nextAssignmentId)) {
+      return { error: "Selected assignment does not belong to this private classroom." };
+    }
+  }
+
+  if (nextTemplateId) {
+    if (!(await canManageAssignmentTemplate(teacherUserId, nextTemplateId))) {
+      return { error: "Selected template does not belong to you." };
+    }
+  }
+
+  if (goalId) {
+    const goal = await getPrivateStudentGoal(goalId);
+    if (!goal || goal.private_student_id !== privateStudentId) {
+      return { error: "Selected goal does not belong to this private learner." };
+    }
+
+    await updatePrivateStudentGoal({
+      goalId,
+      teacherUserId,
+      title: goal.title,
+      detail: goal.detail,
+      status: goal.status,
+      progressStatus: (goalProgressStatus || goal.progress_status || null) as PrivateStudentGoalProgressStatus | null,
+      progressNote: goalProgressNote || goal.progress_note || null,
+    });
+  }
+
+  await updatePrivateLessonPlan({
+    privateStudentId,
+    teacherUserId,
+    planStatus: planStatus as
+      | "planned"
+      | "awaiting_assignment"
+      | "awaiting_completion"
+      | "completed"
+      | "stale",
+    targetDate: targetDate || null,
+    focusNote: focusNote || null,
+    beforeLessonExpectation: beforeLessonExpectation || null,
+    nextAssignmentId: nextAssignmentId || null,
+    nextTemplateId: nextTemplateId || null,
+  });
+
+  if (reviewId) {
+    await updatePrivateStudentReviewAdaptation({
+      reviewId,
+      teacherUserId,
+      adaptationNote: adaptationNote || null,
+    });
+  }
+
+  await execute(
+    `UPDATE private_students
+     SET last_plan_adapted_at = NOW(),
+         last_teacher_action_at = NOW(),
+         updated_at = NOW()
+     WHERE id = $1
+       AND teacher_user_id = $2`,
+    [privateStudentId, teacherUserId]
+  );
+
+  revalidatePath("/notebook/teacher");
+  revalidatePath("/notebook/teacher/private-students");
+  revalidatePath(`/notebook/teacher/private-students/${privateStudentId}`);
+  revalidatePath("/notebook/teacher/reporting");
+  revalidatePath(`/notebook/classes/${detailRecord.classroom_id}`);
+  return { id: privateStudentId };
+}
+
+export async function applyTeacherStrategyAction(formData: FormData) {
+  const teacherUserId = await getAuthUserId();
+  const privateStudentId = ((formData.get("private_student_id") as string) || "").trim();
+  const strategyId = ((formData.get("strategy_id") as string) || "").trim();
+  const reviewId = ((formData.get("review_id") as string) || "").trim();
+  const goalId = ((formData.get("goal_id") as string) || "").trim();
+  const applicationNote = ((formData.get("application_note") as string) || "").trim();
+  const planStatus = ((formData.get("plan_status") as string) || "").trim();
+  const targetDate = ((formData.get("target_date") as string) || "").trim();
+
+  if (!privateStudentId) {
+    return { error: "Private learner is required." };
+  }
+  if (!strategyId) {
+    return { error: "Strategy is required." };
+  }
+  if (!(await canApplyTeacherStrategy(teacherUserId, privateStudentId, strategyId))) {
+    return { error: "You cannot apply this strategy to this private learner." };
+  }
+
+  const detailRecord = await getPrivateStudentDetail(privateStudentId);
+  if (!detailRecord) {
+    return { error: "Private learner not found." };
+  }
+
+  const strategy = await getTeacherStrategy(strategyId);
+  if (!strategy) {
+    return { error: "Strategy not found." };
+  }
+
+  if (goalId) {
+    const goal = await getPrivateStudentGoal(goalId);
+    if (!goal || goal.private_student_id !== privateStudentId) {
+      return { error: "Selected goal does not belong to this private learner." };
+    }
+  }
+
+  const lessonPlan = await ensurePrivateLessonPlan({
+    privateStudentId,
+    teacherUserId,
+    classroomId: detailRecord.classroom_id,
+  });
+
+  const resolvedPlanStatus = ["planned", "awaiting_assignment", "awaiting_completion", "completed", "stale"].includes(planStatus)
+    ? (planStatus as "planned" | "awaiting_assignment" | "awaiting_completion" | "completed" | "stale")
+    : lessonPlan.plan_status;
+
+  await updatePrivateLessonPlan({
+    privateStudentId,
+    teacherUserId,
+    planStatus: resolvedPlanStatus,
+    targetDate: targetDate || lessonPlan.target_date || null,
+    focusNote: strategy.summary,
+    beforeLessonExpectation: strategy.guidance || applicationNote || lessonPlan.before_lesson_expectation || null,
+    nextAssignmentId: lessonPlan.next_assignment_id,
+    nextTemplateId: strategy.linked_template_id || lessonPlan.next_template_id,
+  });
+
+  const refreshedPlan = await ensurePrivateLessonPlan({
+    privateStudentId,
+    teacherUserId,
+    classroomId: detailRecord.classroom_id,
+  });
+
+  await applyTeacherStrategyToPrivateStudent({
+    privateStudentId,
+    teacherStrategyId: strategyId,
+    appliedByUserId: teacherUserId,
+    applicationNote: applicationNote || null,
+    linkedReviewId: reviewId || null,
+    linkedLessonPlanId: refreshedPlan.id,
+    linkedGoalId: goalId || null,
+  });
+
+  await execute(
+    `UPDATE private_students
+     SET last_plan_adapted_at = NOW(),
+         last_teacher_action_at = NOW(),
+         updated_at = NOW()
+     WHERE id = $1
+       AND teacher_user_id = $2`,
+    [privateStudentId, teacherUserId]
+  );
+
+  revalidatePath("/notebook/teacher");
+  revalidatePath("/notebook/teacher/private-students");
+  revalidatePath(`/notebook/teacher/private-students/${privateStudentId}`);
+  revalidatePath("/notebook/teacher/reporting");
+  revalidatePath(`/notebook/classes/${detailRecord.classroom_id}`);
+  return { id: privateStudentId };
+}
+
+export async function recordTeacherStrategyOutcomeAction(formData: FormData) {
+  const teacherUserId = await getAuthUserId();
+  const strategyApplicationId = ((formData.get("strategy_application_id") as string) || "").trim();
+  const outcomeStatus = ((formData.get("outcome_status") as string) || "").trim();
+  const outcomeNote = ((formData.get("outcome_note") as string) || "").trim();
+  const recordedAt = ((formData.get("recorded_at") as string) || "").trim();
+
+  if (!strategyApplicationId) {
+    return { error: "Strategy application is required." };
+  }
+
+  if (!["helped", "partial", "no_change", "replace"].includes(outcomeStatus)) {
+    return { error: "Outcome status is required." };
+  }
+
+  if (!(await canRecordTeacherStrategyOutcome(teacherUserId, strategyApplicationId))) {
+    return { error: "You cannot record an outcome for this strategy application." };
+  }
+
+  const application = await queryOne<{
+    id: string;
+    private_student_id: string;
+    teacher_strategy_id: string;
+    classroom_id: string;
+  }>(
+    `SELECT
+       apps.id,
+       apps.private_student_id,
+       apps.teacher_strategy_id,
+       private_students.classroom_id
+     FROM private_student_strategy_applications apps
+     INNER JOIN private_students
+       ON private_students.id = apps.private_student_id
+     WHERE apps.id = $1
+     LIMIT 1`,
+    [strategyApplicationId]
+  );
+
+  if (!application) {
+    return { error: "Strategy application not found." };
+  }
+
+  await upsertPrivateStudentStrategyOutcome({
+    strategyApplicationId,
+    privateStudentId: application.private_student_id,
+    teacherStrategyId: application.teacher_strategy_id,
+    teacherUserId,
+    outcomeStatus: outcomeStatus as PrivateStudentStrategyOutcomeStatus,
+    outcomeNote: outcomeNote || null,
+    recordedAt: recordedAt || null,
+  });
+
+  revalidatePath("/notebook/teacher");
+  revalidatePath("/notebook/teacher/private-students");
+  revalidatePath(`/notebook/teacher/private-students/${application.private_student_id}`);
+  revalidatePath("/notebook/teacher/reporting");
+  revalidatePath(`/notebook/classes/${application.classroom_id}`);
+  revalidatePath("/notebook/teacher/library");
+  return { id: strategyApplicationId };
 }

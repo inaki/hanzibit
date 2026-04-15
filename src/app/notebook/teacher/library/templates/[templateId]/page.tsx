@@ -41,7 +41,7 @@ export default async function AssignmentTemplateDetailPage({
       <div className="mx-auto max-w-4xl space-y-8">
         <div className="flex items-start justify-between gap-6">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.25em] text-muted-foreground">Assignment template</p>
+            <p className="text-xs font-semibold uppercase tracking-[0.25em] text-muted-foreground">Library template</p>
             <h1 className="mt-2 text-3xl font-bold text-foreground">{template.title}</h1>
             <p className="mt-2 text-sm text-muted-foreground">
               {template.description || template.prompt || "No description yet."}
@@ -51,7 +51,7 @@ export default async function AssignmentTemplateDetailPage({
             href="/notebook/teacher/library"
             className="inline-flex items-center rounded-lg border px-3 py-2 text-sm text-muted-foreground hover:bg-muted"
           >
-            Back to library
+            Back to Library
           </Link>
         </div>
 

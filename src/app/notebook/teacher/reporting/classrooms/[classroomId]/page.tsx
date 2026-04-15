@@ -34,17 +34,17 @@ export default async function TeacherClassroomReportingPage({
       <div className="mx-auto max-w-6xl space-y-8">
         <div className="flex items-start justify-between gap-6">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.25em] text-muted-foreground">Teacher reporting</p>
+            <p className="text-xs font-semibold uppercase tracking-[0.25em] text-muted-foreground">Reporting classroom</p>
             <h1 className="mt-2 text-3xl font-bold text-foreground">{reporting.classroom.name}</h1>
             <p className="mt-2 text-sm text-muted-foreground">
-              Drill-down reporting for one classroom.
+              Drill-down reporting for this classroom.
             </p>
           </div>
           <Link
             href="/notebook/teacher/reporting"
             className="inline-flex items-center rounded-lg border px-3 py-2 text-sm text-muted-foreground hover:bg-muted"
           >
-            Back to reporting
+            Back to Reporting
           </Link>
         </div>
 

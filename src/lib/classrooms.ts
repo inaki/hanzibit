@@ -9,6 +9,7 @@ export interface Classroom {
   name: string;
   description: string | null;
   join_code: string;
+  is_private_tutoring: number;
   archived: number;
   created_at: string;
   updated_at: string;
@@ -188,4 +189,3 @@ export async function joinClassroom(input: {
 
   return classroom;
 }
-

@@ -16,9 +16,11 @@ This doc is the bridge between the Phase 4 plan and actual code.
 
 Current implementation status as of April 14, 2026:
 
-- Phase 4 planning baseline is defined
-- implementation has not started yet
-- Phase 4 should begin only after keeping discovery scope constrained
+- Milestone 1 teacher profile foundation is implemented on web
+- Milestone 2 teacher discovery/directory is implemented on web
+- Milestone 3 inquiry workflow is implemented on web
+- Milestone 4 inquiry-to-classroom conversion is implemented on web
+- teacher UX is now consolidated under one `Teaching` workspace with tabs
 
 It complements:
 
@@ -103,6 +105,21 @@ Phase 4 should not absorb:
 - disputes
 - reviews
 - live lesson delivery
+
+### 5. Teacher operations should live in one workspace
+
+Teacher-facing features should stay grouped under one notebook entry:
+
+- `Teaching`
+
+That workspace should provide internal sections for:
+
+- overview
+- profile
+- inquiries
+- library
+- reporting
+- referrals
 
 ---
 
@@ -252,6 +269,22 @@ Recommended uniqueness:
 
 ## Teacher screens
 
+### 0. Teaching Workspace Shell
+
+Purpose:
+
+- provide one teacher entry point inside the notebook
+- keep teacher features grouped under a shared shell
+
+Sections:
+
+- overview
+- profile
+- inquiries
+- library
+- reporting
+- referrals
+
 ### 1. Public Profile Editor
 
 Purpose:
@@ -280,6 +313,19 @@ Actions:
 - accept
 - decline
 - convert to classroom
+
+### 2a. Teacher Overview
+
+Purpose:
+
+- summarize teacher attention inside the shared `Teaching` workspace
+
+Suggested contents:
+
+- pending inquiries
+- classroom/reporting attention
+- referral snapshot
+- quick links into the main teacher sections
 
 ## Learner-facing screens
 
@@ -374,6 +420,7 @@ Build:
 - teacher profile helper module
 - profile create/edit page
 - public profile page
+- place profile management inside the `Teaching` workspace
 
 Exit criteria:
 
@@ -387,6 +434,7 @@ Build:
 - discovery/search page
 - filter handling
 - simple ordering and empty states
+- keep the notebook teacher UX consolidated even as public discovery expands
 
 Exit criteria:
 
@@ -400,6 +448,7 @@ Build:
 - teacher inquiry inbox
 - accept / decline actions
 - learner inquiry status page
+- surface inquiries under `Teaching > Inquiries`
 
 Exit criteria:
 
@@ -413,6 +462,7 @@ Build:
 - convert accepted inquiry to classroom
 - enroll learner automatically
 - optional onboarding assignment
+- keep conversion actions inside the same `Teaching` workspace
 
 Exit criteria:
 

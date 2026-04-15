@@ -15,7 +15,7 @@ declare global {
   var __hanzibitSchemaVersion: number | undefined;
 }
 
-const SCHEMA_VERSION = 11;
+const SCHEMA_VERSION = 29;
 
 const APP_SCHEMA_SQL = `
   CREATE TABLE IF NOT EXISTS "user" (
@@ -205,6 +205,7 @@ const APP_SCHEMA_SQL = `
     name TEXT NOT NULL,
     description TEXT,
     join_code TEXT NOT NULL UNIQUE,
+    is_private_tutoring INTEGER NOT NULL DEFAULT 0,
     archived INTEGER NOT NULL DEFAULT 0,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
@@ -296,6 +297,101 @@ const APP_SCHEMA_SQL = `
     ON assignment_templates(teacher_user_id, created_at DESC);
   CREATE INDEX IF NOT EXISTS idx_assignment_templates_resource
     ON assignment_templates(resource_id);
+
+  CREATE TABLE IF NOT EXISTS teacher_strategies (
+    id TEXT PRIMARY KEY,
+    teacher_user_id TEXT NOT NULL,
+    title TEXT NOT NULL,
+    summary TEXT NOT NULL,
+    issue_focus TEXT,
+    goal_focus TEXT,
+    guidance TEXT,
+    refinement_note TEXT,
+    last_refined_at TIMESTAMPTZ,
+    linked_template_id TEXT REFERENCES assignment_templates(id) ON DELETE SET NULL,
+    linked_resource_id TEXT REFERENCES teacher_resources(id) ON DELETE SET NULL,
+    usage_count INTEGER NOT NULL DEFAULT 0,
+    archived INTEGER NOT NULL DEFAULT 0,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+  );
+
+  CREATE INDEX IF NOT EXISTS idx_teacher_strategies_teacher
+    ON teacher_strategies(teacher_user_id, created_at DESC);
+  CREATE INDEX IF NOT EXISTS idx_teacher_strategies_focus
+    ON teacher_strategies(teacher_user_id, archived, updated_at DESC);
+
+  CREATE TABLE IF NOT EXISTS teacher_playbooks (
+    id TEXT PRIMARY KEY,
+    teacher_user_id TEXT NOT NULL,
+    title TEXT NOT NULL,
+    summary TEXT NOT NULL,
+    issue_focus TEXT,
+    goal_focus TEXT,
+    when_to_use TEXT,
+    guidance TEXT,
+    linked_template_id TEXT REFERENCES assignment_templates(id) ON DELETE SET NULL,
+    linked_resource_id TEXT REFERENCES teacher_resources(id) ON DELETE SET NULL,
+    usage_count INTEGER NOT NULL DEFAULT 0,
+    archived INTEGER NOT NULL DEFAULT 0,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+  );
+
+  CREATE INDEX IF NOT EXISTS idx_teacher_playbooks_teacher
+    ON teacher_playbooks(teacher_user_id, created_at DESC);
+  CREATE INDEX IF NOT EXISTS idx_teacher_playbooks_focus
+    ON teacher_playbooks(teacher_user_id, archived, updated_at DESC);
+
+  CREATE TABLE IF NOT EXISTS teacher_playbook_strategies (
+    id TEXT PRIMARY KEY,
+    playbook_id TEXT NOT NULL REFERENCES teacher_playbooks(id) ON DELETE CASCADE,
+    strategy_id TEXT NOT NULL REFERENCES teacher_strategies(id) ON DELETE CASCADE,
+    sort_order INTEGER NOT NULL DEFAULT 0,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    UNIQUE(playbook_id, strategy_id)
+  );
+
+  CREATE INDEX IF NOT EXISTS idx_teacher_playbook_strategies_playbook
+    ON teacher_playbook_strategies(playbook_id, sort_order, created_at);
+  CREATE INDEX IF NOT EXISTS idx_teacher_playbook_strategies_strategy
+    ON teacher_playbook_strategies(strategy_id, created_at);
+
+  CREATE TABLE IF NOT EXISTS private_student_strategy_applications (
+    id TEXT PRIMARY KEY,
+    private_student_id TEXT NOT NULL REFERENCES private_students(id) ON DELETE CASCADE,
+    teacher_strategy_id TEXT NOT NULL REFERENCES teacher_strategies(id) ON DELETE CASCADE,
+    applied_by_user_id TEXT NOT NULL REFERENCES "user"(id) ON DELETE CASCADE,
+    applied_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    application_note TEXT,
+    linked_review_id TEXT REFERENCES private_student_reviews(id) ON DELETE SET NULL,
+    linked_lesson_plan_id TEXT REFERENCES private_lesson_plans(id) ON DELETE SET NULL,
+    linked_goal_id TEXT REFERENCES private_student_goals(id) ON DELETE SET NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+  );
+
+  CREATE INDEX IF NOT EXISTS idx_private_strategy_apps_private
+    ON private_student_strategy_applications(private_student_id, applied_at DESC, created_at DESC);
+  CREATE INDEX IF NOT EXISTS idx_private_strategy_apps_strategy
+    ON private_student_strategy_applications(teacher_strategy_id, applied_at DESC, created_at DESC);
+
+  CREATE TABLE IF NOT EXISTS private_student_strategy_outcomes (
+    id TEXT PRIMARY KEY,
+    strategy_application_id TEXT NOT NULL UNIQUE REFERENCES private_student_strategy_applications(id) ON DELETE CASCADE,
+    private_student_id TEXT NOT NULL REFERENCES private_students(id) ON DELETE CASCADE,
+    teacher_strategy_id TEXT NOT NULL REFERENCES teacher_strategies(id) ON DELETE CASCADE,
+    teacher_user_id TEXT NOT NULL REFERENCES "user"(id) ON DELETE CASCADE,
+    outcome_status TEXT NOT NULL CHECK(outcome_status IN ('helped', 'partial', 'no_change', 'replace')),
+    outcome_note TEXT,
+    recorded_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+  );
+
+  CREATE INDEX IF NOT EXISTS idx_private_strategy_outcomes_private
+    ON private_student_strategy_outcomes(private_student_id, recorded_at DESC, created_at DESC);
+  CREATE INDEX IF NOT EXISTS idx_private_strategy_outcomes_strategy
+    ON private_student_strategy_outcomes(teacher_strategy_id, recorded_at DESC, created_at DESC);
 
   CREATE TABLE IF NOT EXISTS assignment_submissions (
     id TEXT PRIMARY KEY,
@@ -410,13 +506,33 @@ const APP_SCHEMA_SQL = `
   CREATE INDEX IF NOT EXISTS idx_teacher_profiles_public
     ON teacher_profiles(is_public, updated_at DESC);
 
+  CREATE TABLE IF NOT EXISTS teacher_tutoring_settings (
+    id TEXT PRIMARY KEY,
+    teacher_user_id TEXT NOT NULL UNIQUE,
+    default_template_id TEXT REFERENCES assignment_templates(id) ON DELETE SET NULL,
+    intro_message TEXT,
+    default_private_classroom_prefix TEXT,
+    cadence_type TEXT,
+    target_session_length_minutes INTEGER,
+    cadence_notes TEXT,
+    format_notes TEXT,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+  );
+
+  CREATE INDEX IF NOT EXISTS idx_teacher_tutoring_settings_teacher
+    ON teacher_tutoring_settings(teacher_user_id);
+
   CREATE TABLE IF NOT EXISTS teacher_inquiries (
     id TEXT PRIMARY KEY,
     teacher_user_id TEXT NOT NULL,
     student_user_id TEXT NOT NULL,
     message TEXT,
+    onboarding_message TEXT,
     status TEXT NOT NULL CHECK(status IN ('pending', 'accepted', 'declined', 'converted')),
     created_classroom_id TEXT REFERENCES classrooms(id) ON DELETE SET NULL,
+    initial_assignment_id TEXT REFERENCES assignments(id) ON DELETE SET NULL,
+    conversion_completed_at TIMESTAMPTZ,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
   );
@@ -427,6 +543,110 @@ const APP_SCHEMA_SQL = `
     ON teacher_inquiries(student_user_id, status, created_at DESC);
   CREATE INDEX IF NOT EXISTS idx_teacher_inquiries_pair
     ON teacher_inquiries(teacher_user_id, student_user_id, created_at DESC);
+
+  CREATE TABLE IF NOT EXISTS private_students (
+    id TEXT PRIMARY KEY,
+    teacher_user_id TEXT NOT NULL,
+    student_user_id TEXT NOT NULL,
+    classroom_id TEXT NOT NULL UNIQUE REFERENCES classrooms(id) ON DELETE CASCADE,
+    inquiry_id TEXT NOT NULL UNIQUE REFERENCES teacher_inquiries(id) ON DELETE CASCADE,
+    status TEXT NOT NULL CHECK(status IN ('onboarding', 'active', 'awaiting_teacher', 'awaiting_student', 'inactive')),
+    next_step_type TEXT CHECK(next_step_type IN ('complete_assignment', 'review_feedback', 'await_teacher_assignment', 'follow_up', 'none')),
+    next_assignment_id TEXT REFERENCES assignments(id) ON DELETE SET NULL,
+    follow_up_note TEXT,
+    last_strategy_id TEXT REFERENCES teacher_strategies(id) ON DELETE SET NULL,
+    last_strategy_applied_at TIMESTAMPTZ,
+    last_playbook_id TEXT REFERENCES teacher_playbooks(id) ON DELETE SET NULL,
+    last_playbook_applied_at TIMESTAMPTZ,
+    last_review_snapshot_at TIMESTAMPTZ,
+    last_plan_adapted_at TIMESTAMPTZ,
+    last_teacher_action_at TIMESTAMPTZ,
+    last_student_activity_at TIMESTAMPTZ,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+  );
+
+  CREATE INDEX IF NOT EXISTS idx_private_students_teacher_status
+    ON private_students(teacher_user_id, status, updated_at DESC);
+  CREATE INDEX IF NOT EXISTS idx_private_students_student
+    ON private_students(student_user_id, updated_at DESC);
+
+  CREATE TABLE IF NOT EXISTS private_student_goals (
+    id TEXT PRIMARY KEY,
+    private_student_id TEXT NOT NULL REFERENCES private_students(id) ON DELETE CASCADE,
+    teacher_user_id TEXT NOT NULL,
+    title TEXT NOT NULL,
+    detail TEXT,
+    status TEXT NOT NULL CHECK(status IN ('active', 'completed', 'paused')),
+    progress_status TEXT CHECK(progress_status IN ('improving', 'stable', 'needs_reinforcement', 'blocked')),
+    progress_note TEXT,
+    last_progress_at TIMESTAMPTZ,
+    sort_order INTEGER NOT NULL DEFAULT 0,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    completed_at TIMESTAMPTZ
+  );
+
+  CREATE INDEX IF NOT EXISTS idx_private_student_goals_private_status
+    ON private_student_goals(private_student_id, status, sort_order, updated_at DESC);
+
+  CREATE TABLE IF NOT EXISTS private_lesson_history (
+    id TEXT PRIMARY KEY,
+    private_student_id TEXT NOT NULL REFERENCES private_students(id) ON DELETE CASCADE,
+    teacher_user_id TEXT NOT NULL,
+    classroom_id TEXT NOT NULL REFERENCES classrooms(id) ON DELETE CASCADE,
+    lesson_plan_id TEXT REFERENCES private_lesson_plans(id) ON DELETE SET NULL,
+    assignment_id TEXT REFERENCES assignments(id) ON DELETE SET NULL,
+    summary TEXT NOT NULL,
+    practice_focus TEXT,
+    issue_tags_json TEXT NOT NULL DEFAULT '[]',
+    intervention_note TEXT,
+    recorded_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+  );
+
+  CREATE INDEX IF NOT EXISTS idx_private_lesson_history_private_date
+    ON private_lesson_history(private_student_id, recorded_at DESC);
+  CREATE INDEX IF NOT EXISTS idx_private_lesson_history_teacher_date
+    ON private_lesson_history(teacher_user_id, recorded_at DESC);
+
+  CREATE TABLE IF NOT EXISTS private_student_reviews (
+    id TEXT PRIMARY KEY,
+    private_student_id TEXT NOT NULL REFERENCES private_students(id) ON DELETE CASCADE,
+    teacher_user_id TEXT NOT NULL,
+    reviewed_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    summary TEXT NOT NULL,
+    what_improved TEXT,
+    what_needs_change TEXT,
+    adaptation_note TEXT,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+  );
+
+  CREATE INDEX IF NOT EXISTS idx_private_student_reviews_private_date
+    ON private_student_reviews(private_student_id, reviewed_at DESC, created_at DESC);
+  CREATE INDEX IF NOT EXISTS idx_private_student_reviews_teacher_date
+    ON private_student_reviews(teacher_user_id, reviewed_at DESC, created_at DESC);
+
+  CREATE TABLE IF NOT EXISTS private_lesson_plans (
+    id TEXT PRIMARY KEY,
+    private_student_id TEXT NOT NULL UNIQUE REFERENCES private_students(id) ON DELETE CASCADE,
+    teacher_user_id TEXT NOT NULL,
+    classroom_id TEXT NOT NULL REFERENCES classrooms(id) ON DELETE CASCADE,
+    next_assignment_id TEXT REFERENCES assignments(id) ON DELETE SET NULL,
+    next_template_id TEXT REFERENCES assignment_templates(id) ON DELETE SET NULL,
+    plan_status TEXT NOT NULL CHECK(plan_status IN ('planned', 'awaiting_assignment', 'awaiting_completion', 'completed', 'stale')),
+    target_date DATE,
+    focus_note TEXT,
+    before_lesson_expectation TEXT,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+  );
+
+  CREATE INDEX IF NOT EXISTS idx_private_lesson_plans_teacher_status
+    ON private_lesson_plans(teacher_user_id, plan_status, updated_at DESC);
+  CREATE INDEX IF NOT EXISTS idx_private_lesson_plans_target_date
+    ON private_lesson_plans(target_date);
 
   CREATE TABLE IF NOT EXISTS daily_loop_completions (
     id TEXT PRIMARY KEY,
@@ -508,14 +728,121 @@ async function initializeSchema(): Promise<void> {
   const pool = getPool();
   await pool.query(APP_SCHEMA_SQL);
   await pool.query(`
+    ALTER TABLE teacher_strategies
+      ADD COLUMN IF NOT EXISTS refinement_note TEXT,
+      ADD COLUMN IF NOT EXISTS last_refined_at TIMESTAMPTZ
+  `);
+  await pool.query(`
     ALTER TABLE assignments
       ADD COLUMN IF NOT EXISTS template_id TEXT
+  `);
+  await pool.query(`
+    ALTER TABLE classrooms
+      ADD COLUMN IF NOT EXISTS is_private_tutoring INTEGER NOT NULL DEFAULT 0
   `);
   await pool.query(`
     ALTER TABLE journal_entries
       ADD COLUMN IF NOT EXISTS source_type TEXT,
       ADD COLUMN IF NOT EXISTS source_ref TEXT,
       ADD COLUMN IF NOT EXISTS source_prompt TEXT
+  `);
+  await pool.query(`
+    ALTER TABLE teacher_inquiries
+      ADD COLUMN IF NOT EXISTS onboarding_message TEXT,
+      ADD COLUMN IF NOT EXISTS initial_assignment_id TEXT,
+      ADD COLUMN IF NOT EXISTS conversion_completed_at TIMESTAMPTZ
+  `);
+  await pool.query(`
+    ALTER TABLE teacher_tutoring_settings
+      ADD COLUMN IF NOT EXISTS cadence_type TEXT,
+      ADD COLUMN IF NOT EXISTS target_session_length_minutes INTEGER,
+      ADD COLUMN IF NOT EXISTS cadence_notes TEXT
+  `);
+  await pool.query(`
+    ALTER TABLE private_student_goals
+      ADD COLUMN IF NOT EXISTS progress_status TEXT,
+      ADD COLUMN IF NOT EXISTS progress_note TEXT,
+      ADD COLUMN IF NOT EXISTS last_progress_at TIMESTAMPTZ
+  `);
+  await pool.query(`
+    ALTER TABLE private_lesson_history
+      ADD COLUMN IF NOT EXISTS issue_tags_json TEXT NOT NULL DEFAULT '[]',
+      ADD COLUMN IF NOT EXISTS intervention_note TEXT
+  `);
+  await pool.query(`
+    ALTER TABLE private_students
+      ADD COLUMN IF NOT EXISTS last_strategy_id TEXT REFERENCES teacher_strategies(id) ON DELETE SET NULL,
+      ADD COLUMN IF NOT EXISTS last_strategy_applied_at TIMESTAMPTZ,
+      ADD COLUMN IF NOT EXISTS last_playbook_id TEXT REFERENCES teacher_playbooks(id) ON DELETE SET NULL,
+      ADD COLUMN IF NOT EXISTS last_playbook_applied_at TIMESTAMPTZ,
+      ADD COLUMN IF NOT EXISTS last_review_snapshot_at TIMESTAMPTZ,
+      ADD COLUMN IF NOT EXISTS last_plan_adapted_at TIMESTAMPTZ
+  `);
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS teacher_playbooks (
+      id TEXT PRIMARY KEY,
+      teacher_user_id TEXT NOT NULL,
+      title TEXT NOT NULL,
+      summary TEXT NOT NULL,
+      issue_focus TEXT,
+      goal_focus TEXT,
+      when_to_use TEXT,
+      guidance TEXT,
+      linked_template_id TEXT REFERENCES assignment_templates(id) ON DELETE SET NULL,
+      linked_resource_id TEXT REFERENCES teacher_resources(id) ON DELETE SET NULL,
+      usage_count INTEGER NOT NULL DEFAULT 0,
+      archived INTEGER NOT NULL DEFAULT 0,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    )
+  `);
+  await pool.query(`
+    CREATE INDEX IF NOT EXISTS idx_teacher_playbooks_teacher
+      ON teacher_playbooks(teacher_user_id, created_at DESC)
+  `);
+  await pool.query(`
+    CREATE INDEX IF NOT EXISTS idx_teacher_playbooks_focus
+      ON teacher_playbooks(teacher_user_id, archived, updated_at DESC)
+  `);
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS teacher_playbook_strategies (
+      id TEXT PRIMARY KEY,
+      playbook_id TEXT NOT NULL REFERENCES teacher_playbooks(id) ON DELETE CASCADE,
+      strategy_id TEXT NOT NULL REFERENCES teacher_strategies(id) ON DELETE CASCADE,
+      sort_order INTEGER NOT NULL DEFAULT 0,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      UNIQUE(playbook_id, strategy_id)
+    )
+  `);
+  await pool.query(`
+    CREATE INDEX IF NOT EXISTS idx_teacher_playbook_strategies_playbook
+      ON teacher_playbook_strategies(playbook_id, sort_order, created_at)
+  `);
+  await pool.query(`
+    CREATE INDEX IF NOT EXISTS idx_teacher_playbook_strategies_strategy
+      ON teacher_playbook_strategies(strategy_id, created_at)
+  `);
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS private_student_playbook_applications (
+      id TEXT PRIMARY KEY,
+      private_student_id TEXT NOT NULL REFERENCES private_students(id) ON DELETE CASCADE,
+      playbook_id TEXT NOT NULL REFERENCES teacher_playbooks(id) ON DELETE CASCADE,
+      applied_by_user_id TEXT NOT NULL REFERENCES "user"(id) ON DELETE CASCADE,
+      applied_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      application_note TEXT,
+      linked_review_id TEXT REFERENCES private_student_reviews(id) ON DELETE SET NULL,
+      linked_lesson_plan_id TEXT REFERENCES private_lesson_plans(id) ON DELETE SET NULL,
+      linked_goal_id TEXT REFERENCES private_student_goals(id) ON DELETE SET NULL,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    )
+  `);
+  await pool.query(`
+    CREATE INDEX IF NOT EXISTS idx_private_playbook_apps_private
+      ON private_student_playbook_applications(private_student_id, applied_at DESC, created_at DESC)
+  `);
+  await pool.query(`
+    CREATE INDEX IF NOT EXISTS idx_private_playbook_apps_playbook
+      ON private_student_playbook_applications(playbook_id, applied_at DESC, created_at DESC)
   `);
   await pool.query(`
     ALTER TABLE daily_loop_completions
@@ -534,6 +861,50 @@ async function initializeSchema(): Promise<void> {
   await pool.query(`
     CREATE INDEX IF NOT EXISTS idx_referral_commissions_payout
       ON referral_commissions(payout_id)
+  `);
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS private_student_strategy_applications (
+      id TEXT PRIMARY KEY,
+      private_student_id TEXT NOT NULL REFERENCES private_students(id) ON DELETE CASCADE,
+      teacher_strategy_id TEXT NOT NULL REFERENCES teacher_strategies(id) ON DELETE CASCADE,
+      applied_by_user_id TEXT NOT NULL REFERENCES "user"(id) ON DELETE CASCADE,
+      applied_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      application_note TEXT,
+      linked_review_id TEXT REFERENCES private_student_reviews(id) ON DELETE SET NULL,
+      linked_lesson_plan_id TEXT REFERENCES private_lesson_plans(id) ON DELETE SET NULL,
+      linked_goal_id TEXT REFERENCES private_student_goals(id) ON DELETE SET NULL,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    )
+  `);
+  await pool.query(`
+    CREATE INDEX IF NOT EXISTS idx_private_strategy_apps_private
+      ON private_student_strategy_applications(private_student_id, applied_at DESC, created_at DESC)
+  `);
+  await pool.query(`
+    CREATE INDEX IF NOT EXISTS idx_private_strategy_apps_strategy
+      ON private_student_strategy_applications(teacher_strategy_id, applied_at DESC, created_at DESC)
+  `);
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS private_student_strategy_outcomes (
+      id TEXT PRIMARY KEY,
+      strategy_application_id TEXT NOT NULL UNIQUE REFERENCES private_student_strategy_applications(id) ON DELETE CASCADE,
+      private_student_id TEXT NOT NULL REFERENCES private_students(id) ON DELETE CASCADE,
+      teacher_strategy_id TEXT NOT NULL REFERENCES teacher_strategies(id) ON DELETE CASCADE,
+      teacher_user_id TEXT NOT NULL REFERENCES "user"(id) ON DELETE CASCADE,
+      outcome_status TEXT NOT NULL CHECK(outcome_status IN ('helped', 'partial', 'no_change', 'replace')),
+      outcome_note TEXT,
+      recorded_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    )
+  `);
+  await pool.query(`
+    CREATE INDEX IF NOT EXISTS idx_private_strategy_outcomes_private
+      ON private_student_strategy_outcomes(private_student_id, recorded_at DESC, created_at DESC)
+  `);
+  await pool.query(`
+    CREATE INDEX IF NOT EXISTS idx_private_strategy_outcomes_strategy
+      ON private_student_strategy_outcomes(teacher_strategy_id, recorded_at DESC, created_at DESC)
   `);
 }
 

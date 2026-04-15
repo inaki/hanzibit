@@ -34,7 +34,7 @@ export default async function TeacherStudentReportingPage({
       <div className="mx-auto max-w-5xl space-y-8">
         <div className="flex items-start justify-between gap-6">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.25em] text-muted-foreground">Student reporting</p>
+            <p className="text-xs font-semibold uppercase tracking-[0.25em] text-muted-foreground">Student detail</p>
             <h1 className="mt-2 text-3xl font-bold text-foreground">{reporting.student.student_name}</h1>
             <p className="mt-2 text-sm text-muted-foreground">{reporting.classroom.name}</p>
           </div>
@@ -42,7 +42,7 @@ export default async function TeacherStudentReportingPage({
             href={`/notebook/teacher/reporting/classrooms/${reporting.classroom.id}`}
             className="inline-flex items-center rounded-lg border px-3 py-2 text-sm text-muted-foreground hover:bg-muted"
           >
-            Back to classroom reporting
+            Back to Classroom
           </Link>
         </div>
 

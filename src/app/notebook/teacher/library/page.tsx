@@ -1,14 +1,18 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { BookCopy, ClipboardList, FolderKanban, Plus, Sparkles } from "lucide-react";
+import { BookCopy, ClipboardList, FolderKanban, Layers3, Plus, Sparkles, Repeat2 } from "lucide-react";
 import { getAuthUserId } from "@/lib/auth-utils";
 import {
   createAssignmentTemplateAction,
+  createTeacherPlaybookAction,
   createTeacherResourceAction,
+  createTeacherStrategyAction,
 } from "@/lib/actions";
 import { listOwnedClassrooms, isTeacherUser } from "@/lib/classrooms";
 import { listAssignmentTemplatesForTeacher } from "@/lib/assignment-templates";
 import { listTeacherResourcesForUser } from "@/lib/teacher-resources";
+import { listTeacherStrategiesForTeacher } from "@/lib/teacher-strategies";
+import { listTeacherPlaybooksForTeacher } from "@/lib/teacher-playbooks";
 import { PendingSubmitButton } from "@/components/notebook/pending-submit-button";
 
 export const dynamic = "force-dynamic";
@@ -25,7 +29,7 @@ export default async function TeacherLibraryPage({
     redirect("/notebook/classes");
   }
 
-  const [resources, templates, classrooms] = await Promise.all([
+  const [resources, templates, classrooms, strategies, playbooks] = await Promise.all([
     listTeacherResourcesForUser(userId, {
       resourceType: typeof query.resourceType === "string" && query.resourceType !== "all"
         ? (query.resourceType as Parameters<typeof listTeacherResourcesForUser>[1]["resourceType"])
@@ -33,6 +37,8 @@ export default async function TeacherLibraryPage({
     }),
     listAssignmentTemplatesForTeacher(userId),
     listOwnedClassrooms(userId),
+    listTeacherStrategiesForTeacher(userId),
+    listTeacherPlaybooksForTeacher(userId),
   ]);
 
   async function createResourceFormAction(formData: FormData) {
@@ -45,25 +51,32 @@ export default async function TeacherLibraryPage({
     await createAssignmentTemplateAction(formData);
   }
 
+  async function createStrategyFormAction(formData: FormData) {
+    "use server";
+    await createTeacherStrategyAction(formData);
+  }
+
+  async function createPlaybookFormAction(formData: FormData) {
+    "use server";
+    await createTeacherPlaybookAction(formData);
+  }
+
   return (
     <div data-testid="teacher-library-page" className="h-full overflow-auto p-6 pb-20 md:p-10 lg:pb-10">
       <div className="mx-auto max-w-6xl space-y-8">
         <div className="flex items-start justify-between gap-6">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.25em] text-muted-foreground">
-              Phase 3
-            </p>
-            <h1 className="mt-2 text-3xl font-bold text-foreground">Teacher Library</h1>
+            <h1 className="text-3xl font-bold text-foreground">Library</h1>
             <p className="mt-2 max-w-3xl text-sm text-muted-foreground">
               Save reusable teaching resources and assignment templates so classroom setup is no longer scratch-first.
             </p>
           </div>
           <div className="inline-flex items-center rounded-full border border-[var(--cn-orange)]/20 bg-[var(--cn-orange)]/10 px-3 py-1.5 text-xs font-medium text-[var(--cn-orange)]">
-            Teacher-only surface
+            Reusable content
           </div>
         </div>
 
-        <div className="grid gap-4 sm:grid-cols-3">
+        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
           <div className="rounded-2xl border bg-card p-5">
             <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">Resources</p>
             <p className="mt-3 text-3xl font-bold text-foreground">{resources.length}</p>
@@ -71,6 +84,20 @@ export default async function TeacherLibraryPage({
           <div className="rounded-2xl border bg-card p-5">
             <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">Templates</p>
             <p className="mt-3 text-3xl font-bold text-foreground">{templates.length}</p>
+          </div>
+          <div className="rounded-2xl border bg-card p-5">
+            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">Strategies</p>
+            <p className="mt-3 text-3xl font-bold text-foreground">{strategies.length}</p>
+            <p className="mt-2 text-xs text-muted-foreground">
+              {strategies.filter((strategy) => strategy.archived !== 1).length} active
+            </p>
+          </div>
+          <div className="rounded-2xl border bg-card p-5">
+            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">Playbooks</p>
+            <p className="mt-3 text-3xl font-bold text-foreground">{playbooks.length}</p>
+            <p className="mt-2 text-xs text-muted-foreground">
+              {playbooks.filter((playbook) => playbook.archived !== 1).length} active
+            </p>
           </div>
           <div className="rounded-2xl border bg-card p-5">
             <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">Your Classrooms</p>
@@ -243,6 +270,151 @@ export default async function TeacherLibraryPage({
                 </div>
               )}
             </div>
+
+            <div className="rounded-2xl border bg-card p-5">
+              <div className="mb-4 flex items-center gap-2">
+                <Layers3 className="h-4 w-4 text-[var(--cn-orange)]" />
+                <h2 className="text-sm font-semibold uppercase tracking-[0.2em] text-muted-foreground">
+                  Teaching Playbooks
+                </h2>
+              </div>
+
+              {playbooks.length === 0 ? (
+                <div className="rounded-xl border border-dashed p-4 text-sm text-muted-foreground">
+                  No playbooks yet. Group strong strategies into a repeatable support pattern when a learner needs more than a one-off response.
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {playbooks.map((playbook) => (
+                    <div key={playbook.id} className="rounded-xl border p-4">
+                      <div className="flex items-start justify-between gap-3">
+                        <div>
+                          <h3 className="font-semibold text-foreground">{playbook.title}</h3>
+                          <p className="mt-1 text-sm text-muted-foreground">{playbook.summary}</p>
+                        </div>
+                        <span className="rounded-full border bg-muted px-2.5 py-1 text-[11px] font-medium text-muted-foreground">
+                          Used {playbook.usage_count}
+                        </span>
+                      </div>
+                      <div className="mt-3 flex flex-wrap gap-3 text-xs text-muted-foreground">
+                        {playbook.issue_focus ? <span>Issue: {playbook.issue_focus}</span> : null}
+                        {playbook.goal_focus ? <span>Goal: {playbook.goal_focus}</span> : null}
+                        <span>{playbook.linked_strategy_count ?? 0} linked strategies</span>
+                        <span>Updated {new Date(playbook.updated_at).toLocaleDateString("en-US")}</span>
+                      </div>
+                      <div className="mt-3 flex flex-wrap gap-2 text-xs">
+                        {playbook.archived === 1 ? (
+                          <span className="rounded-full border bg-muted px-2.5 py-1 font-medium text-muted-foreground">
+                            Archived
+                          </span>
+                        ) : null}
+                        {playbook.usage_count === 0 ? (
+                          <span className="rounded-full border border-sky-500/20 bg-sky-500/10 px-2.5 py-1 font-medium text-sky-400">
+                            Not used yet
+                          </span>
+                        ) : (
+                          <span className="rounded-full border border-emerald-500/20 bg-emerald-500/10 px-2.5 py-1 font-medium text-emerald-400">
+                            In use
+                          </span>
+                        )}
+                        {(playbook.linked_strategy_count ?? 0) === 0 ? (
+                          <span className="rounded-full border border-amber-500/20 bg-amber-500/10 px-2.5 py-1 font-medium text-amber-300">
+                            No strategies linked yet
+                          </span>
+                        ) : null}
+                        {!playbook.when_to_use ? (
+                          <span className="rounded-full border border-amber-500/20 bg-amber-500/10 px-2.5 py-1 font-medium text-amber-300">
+                            Needs escalation rule
+                          </span>
+                        ) : null}
+                      </div>
+                      <p className="mt-3 text-sm text-muted-foreground">
+                        {playbook.when_to_use || "No explicit escalation rule recorded yet. Add when-to-use guidance so this playbook becomes operational, not just descriptive."}
+                      </p>
+                      <div className="mt-4">
+                        <Link
+                          href={`/notebook/teacher/library/playbooks/${playbook.id}`}
+                          className="inline-flex items-center gap-2 text-sm font-medium text-[var(--cn-orange)] hover:underline"
+                        >
+                          Edit playbook
+                        </Link>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <div className="rounded-2xl border bg-card p-5">
+              <div className="mb-4 flex items-center gap-2">
+                <Repeat2 className="h-4 w-4 text-[var(--cn-orange)]" />
+                <h2 className="text-sm font-semibold uppercase tracking-[0.2em] text-muted-foreground">
+                  Tutoring Strategies
+                </h2>
+              </div>
+
+              {strategies.length === 0 ? (
+                <div className="rounded-xl border border-dashed p-4 text-sm text-muted-foreground">
+                  No tutoring strategies yet. Save repeatable intervention patterns so private learner adaptation stops being scratch-first.
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {strategies.map((strategy) => (
+                    <div key={strategy.id} className="rounded-xl border p-4">
+                      <div className="flex items-start justify-between gap-3">
+                        <div>
+                          <h3 className="font-semibold text-foreground">{strategy.title}</h3>
+                          <p className="mt-1 text-sm text-muted-foreground">{strategy.summary}</p>
+                        </div>
+                        <span className="rounded-full border bg-muted px-2.5 py-1 text-[11px] font-medium text-muted-foreground">
+                          Used {strategy.usage_count}
+                        </span>
+                      </div>
+                      <div className="mt-3 flex flex-wrap gap-3 text-xs text-muted-foreground">
+                        {strategy.issue_focus ? <span>Issue: {strategy.issue_focus}</span> : null}
+                        {strategy.goal_focus ? <span>Goal: {strategy.goal_focus}</span> : null}
+                        {strategy.last_refined_at ? (
+                          <span>Refined {new Date(strategy.last_refined_at).toLocaleDateString("en-US")}</span>
+                        ) : null}
+                        <span>Updated {new Date(strategy.updated_at).toLocaleDateString("en-US")}</span>
+                      </div>
+                      <div className="mt-3 flex flex-wrap gap-2 text-xs">
+                        {strategy.archived === 1 ? (
+                          <span className="rounded-full border bg-muted px-2.5 py-1 font-medium text-muted-foreground">
+                            Archived
+                          </span>
+                        ) : null}
+                        {strategy.usage_count === 0 ? (
+                          <span className="rounded-full border border-amber-500/20 bg-amber-500/10 px-2.5 py-1 font-medium text-amber-300">
+                            Not used yet
+                          </span>
+                        ) : null}
+                        {strategy.usage_count > 0 && !strategy.last_refined_at ? (
+                          <span className="rounded-full border border-sky-500/20 bg-sky-500/10 px-2.5 py-1 font-medium text-sky-400">
+                            Outcome-aware refinement pending
+                          </span>
+                        ) : null}
+                      </div>
+                      <p className="mt-3 text-sm text-muted-foreground">
+                        {strategy.usage_count === 0
+                          ? "This strategy exists in the library, but it has not shaped any private learner plan yet."
+                          : strategy.last_refined_at
+                            ? "This strategy has already been used and refined. Keep checking outcomes before it becomes the default response."
+                            : "This strategy is in use, but it still needs enough outcome evidence or refinement to prove it is genuinely helping."}
+                      </p>
+                      <div className="mt-4">
+                        <Link
+                          href={`/notebook/teacher/library/strategies/${strategy.id}`}
+                          className="inline-flex items-center gap-2 text-sm font-medium text-[var(--cn-orange)] hover:underline"
+                        >
+                          Edit strategy
+                        </Link>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
           </section>
 
           <aside className="space-y-6">
@@ -299,6 +471,217 @@ export default async function TeacherLibraryPage({
                 </div>
                 <PendingSubmitButton pendingLabel="Saving resource..." className="w-full justify-center rounded-lg bg-[var(--cn-orange)] px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-[var(--cn-orange-dark)]">
                   Save Resource
+                </PendingSubmitButton>
+              </form>
+            </section>
+
+            <section className="rounded-2xl border bg-card p-5">
+              <div className="mb-4 flex items-center gap-2">
+                <Repeat2 className="h-4 w-4 text-[var(--cn-orange)]" />
+                <h2 className="text-sm font-semibold uppercase tracking-[0.2em] text-muted-foreground">
+                  Create Strategy
+                </h2>
+              </div>
+              <form action={createStrategyFormAction} className="space-y-3">
+                <div>
+                  <label className="mb-1 block text-sm font-medium text-foreground/80">Title</label>
+                  <input
+                    name="title"
+                    required
+                    placeholder="e.g. Tone accuracy reset"
+                    className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-[var(--cn-orange)]"
+                  />
+                </div>
+                <div>
+                  <label className="mb-1 block text-sm font-medium text-foreground/80">Summary</label>
+                  <textarea
+                    name="summary"
+                    rows={2}
+                    required
+                    placeholder="Short reusable strategy summary"
+                    className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-[var(--cn-orange)]"
+                  />
+                </div>
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <div>
+                    <label className="mb-1 block text-sm font-medium text-foreground/80">Issue focus</label>
+                    <input
+                      name="issue_focus"
+                      placeholder="e.g. tone accuracy"
+                      className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-[var(--cn-orange)]"
+                    />
+                  </div>
+                  <div>
+                    <label className="mb-1 block text-sm font-medium text-foreground/80">Goal focus</label>
+                    <input
+                      name="goal_focus"
+                      placeholder="e.g. confidence in speaking"
+                      className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-[var(--cn-orange)]"
+                    />
+                  </div>
+                </div>
+                <div>
+                  <label className="mb-1 block text-sm font-medium text-foreground/80">Guidance</label>
+                  <textarea
+                    name="guidance"
+                    rows={3}
+                    placeholder="What should the teacher do next when applying this strategy?"
+                    className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-[var(--cn-orange)]"
+                  />
+                </div>
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <div>
+                    <label className="mb-1 block text-sm font-medium text-foreground/80">Linked template</label>
+                    <select
+                      name="linked_template_id"
+                      defaultValue=""
+                      className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-[var(--cn-orange)]"
+                    >
+                      <option value="">No linked template</option>
+                      {templates.map((template) => (
+                        <option key={template.id} value={template.id}>
+                          {template.title}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="mb-1 block text-sm font-medium text-foreground/80">Linked resource</label>
+                    <select
+                      name="linked_resource_id"
+                      defaultValue=""
+                      className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-[var(--cn-orange)]"
+                    >
+                      <option value="">No linked resource</option>
+                      {resources.map((resource) => (
+                        <option key={resource.id} value={resource.id}>
+                          {resource.title}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+                <PendingSubmitButton pendingLabel="Saving strategy..." className="w-full justify-center rounded-lg bg-[var(--cn-orange)] px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-[var(--cn-orange-dark)]">
+                  Save Strategy
+                </PendingSubmitButton>
+              </form>
+            </section>
+
+            <section className="rounded-2xl border bg-card p-5">
+              <div className="mb-4 flex items-center gap-2">
+                <Layers3 className="h-4 w-4 text-[var(--cn-orange)]" />
+                <h2 className="text-sm font-semibold uppercase tracking-[0.2em] text-muted-foreground">
+                  Create Playbook
+                </h2>
+              </div>
+              <form action={createPlaybookFormAction} className="space-y-3">
+                <div>
+                  <label className="mb-1 block text-sm font-medium text-foreground/80">Title</label>
+                  <input
+                    name="title"
+                    required
+                    placeholder="e.g. Confidence rebuild playbook"
+                    className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-[var(--cn-orange)]"
+                  />
+                </div>
+                <div>
+                  <label className="mb-1 block text-sm font-medium text-foreground/80">Summary</label>
+                  <textarea
+                    name="summary"
+                    rows={2}
+                    required
+                    placeholder="Short repeatable support pattern summary"
+                    className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-[var(--cn-orange)]"
+                  />
+                </div>
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <div>
+                    <label className="mb-1 block text-sm font-medium text-foreground/80">Issue focus</label>
+                    <input
+                      name="issue_focus"
+                      placeholder="e.g. homework follow-through"
+                      className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-[var(--cn-orange)]"
+                    />
+                  </div>
+                  <div>
+                    <label className="mb-1 block text-sm font-medium text-foreground/80">Goal focus</label>
+                    <input
+                      name="goal_focus"
+                      placeholder="e.g. speaking confidence"
+                      className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-[var(--cn-orange)]"
+                    />
+                  </div>
+                </div>
+                <div>
+                  <label className="mb-1 block text-sm font-medium text-foreground/80">When to use</label>
+                  <textarea
+                    name="when_to_use"
+                    rows={2}
+                    placeholder="What recurring pattern or escalation signal should trigger this playbook?"
+                    className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-[var(--cn-orange)]"
+                  />
+                </div>
+                <div>
+                  <label className="mb-1 block text-sm font-medium text-foreground/80">Guidance</label>
+                  <textarea
+                    name="guidance"
+                    rows={3}
+                    placeholder="How should the teacher respond once this playbook is in use?"
+                    className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-[var(--cn-orange)]"
+                  />
+                </div>
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <div>
+                    <label className="mb-1 block text-sm font-medium text-foreground/80">Linked template</label>
+                    <select
+                      name="linked_template_id"
+                      defaultValue=""
+                      className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-[var(--cn-orange)]"
+                    >
+                      <option value="">No linked template</option>
+                      {templates.map((template) => (
+                        <option key={template.id} value={template.id}>
+                          {template.title}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="mb-1 block text-sm font-medium text-foreground/80">Linked resource</label>
+                    <select
+                      name="linked_resource_id"
+                      defaultValue=""
+                      className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-[var(--cn-orange)]"
+                    >
+                      <option value="">No linked resource</option>
+                      {resources.map((resource) => (
+                        <option key={resource.id} value={resource.id}>
+                          {resource.title}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+                <div>
+                  <label className="mb-2 block text-sm font-medium text-foreground/80">Linked strategies</label>
+                  <div className="max-h-48 space-y-2 overflow-auto rounded-lg border border-border bg-background p-3">
+                    {strategies.filter((strategy) => strategy.archived !== 1).length === 0 ? (
+                      <p className="text-sm text-muted-foreground">Create a strategy first, then group it into a playbook.</p>
+                    ) : (
+                      strategies.filter((strategy) => strategy.archived !== 1).map((strategy) => (
+                        <label key={strategy.id} className="flex items-start gap-2 text-sm text-foreground/85">
+                          <input type="checkbox" name="strategy_ids" value={strategy.id} className="mt-0.5 h-4 w-4" />
+                          <span>
+                            <span className="font-medium text-foreground">{strategy.title}</span>
+                            <span className="mt-0.5 block text-xs text-muted-foreground">{strategy.summary}</span>
+                          </span>
+                        </label>
+                      ))
+                    )}
+                  </div>
+                </div>
+                <PendingSubmitButton pendingLabel="Saving playbook..." className="w-full justify-center rounded-lg bg-[var(--cn-orange)] px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-[var(--cn-orange-dark)]">
+                  Save Playbook
                 </PendingSubmitButton>
               </form>
             </section>

@@ -145,6 +145,91 @@ export async function canManageAssignmentTemplate(
   return Boolean(row);
 }
 
+export async function canManageTeacherStrategy(
+  userId: string,
+  strategyId: string
+): Promise<boolean> {
+  const row = await queryOne<{ id: string }>(
+    `SELECT id
+     FROM teacher_strategies
+     WHERE id = $1
+       AND teacher_user_id = $2
+     LIMIT 1`,
+    [strategyId, userId]
+  );
+  return Boolean(row);
+}
+
+export async function canManageTeacherPlaybook(
+  userId: string,
+  playbookId: string
+): Promise<boolean> {
+  const row = await queryOne<{ id: string }>(
+    `SELECT id
+     FROM teacher_playbooks
+     WHERE id = $1
+       AND teacher_user_id = $2
+     LIMIT 1`,
+    [playbookId, userId]
+  );
+  return Boolean(row);
+}
+
+export async function canApplyTeacherStrategy(
+  userId: string,
+  privateStudentId: string,
+  strategyId: string
+): Promise<boolean> {
+  const row = await queryOne<{ id: string }>(
+    `SELECT private_students.id
+     FROM private_students
+     INNER JOIN teacher_strategies
+       ON teacher_strategies.teacher_user_id = private_students.teacher_user_id
+     WHERE private_students.id = $1
+       AND private_students.teacher_user_id = $2
+       AND teacher_strategies.id = $3
+     LIMIT 1`,
+    [privateStudentId, userId, strategyId]
+  );
+  return Boolean(row);
+}
+
+export async function canApplyTeacherPlaybook(
+  userId: string,
+  privateStudentId: string,
+  playbookId: string
+): Promise<boolean> {
+  const row = await queryOne<{ id: string }>(
+    `SELECT private_students.id
+     FROM private_students
+     INNER JOIN teacher_playbooks
+       ON teacher_playbooks.teacher_user_id = private_students.teacher_user_id
+     WHERE private_students.id = $1
+       AND private_students.teacher_user_id = $2
+       AND teacher_playbooks.id = $3
+     LIMIT 1`,
+    [privateStudentId, userId, playbookId]
+  );
+  return Boolean(row);
+}
+
+export async function canRecordTeacherStrategyOutcome(
+  userId: string,
+  strategyApplicationId: string
+): Promise<boolean> {
+  const row = await queryOne<{ id: string }>(
+    `SELECT private_student_strategy_applications.id
+     FROM private_student_strategy_applications
+     INNER JOIN private_students
+       ON private_students.id = private_student_strategy_applications.private_student_id
+     WHERE private_student_strategy_applications.id = $1
+       AND private_students.teacher_user_id = $2
+     LIMIT 1`,
+    [strategyApplicationId, userId]
+  );
+  return Boolean(row);
+}
+
 export async function canUseTemplateInClassroom(
   userId: string,
   templateId: string,
@@ -211,6 +296,93 @@ export async function canManageTeacherProfile(
     [profileId, userId]
   );
   return Boolean(row);
+}
+
+export async function canManageTeacherTutoringSetup(
+  userId: string,
+  setupId: string
+): Promise<boolean> {
+  const row = await queryOne<{ id: string }>(
+    `SELECT id
+     FROM teacher_tutoring_settings
+     WHERE id = $1
+       AND teacher_user_id = $2
+     LIMIT 1`,
+    [setupId, userId]
+  );
+  return Boolean(row);
+}
+
+export async function canManagePrivateLearnerState(
+  userId: string,
+  privateStudentId: string
+): Promise<boolean> {
+  const row = await queryOne<{ id: string }>(
+    `SELECT id
+     FROM private_students
+     WHERE id = $1
+       AND teacher_user_id = $2
+     LIMIT 1`,
+    [privateStudentId, userId]
+  );
+  return Boolean(row);
+}
+
+export async function canManagePrivateLearnerPlan(
+  userId: string,
+  privateStudentId: string
+): Promise<boolean> {
+  return canManagePrivateLearnerState(userId, privateStudentId);
+}
+
+export async function canManagePrivateLearnerAdaptation(
+  userId: string,
+  privateStudentId: string
+): Promise<boolean> {
+  return canManagePrivateLearnerState(userId, privateStudentId);
+}
+
+export async function canManagePrivateLearnerGoals(
+  userId: string,
+  privateStudentId: string
+): Promise<boolean> {
+  return canManagePrivateLearnerState(userId, privateStudentId);
+}
+
+export async function canManagePrivateLearnerReview(
+  userId: string,
+  privateStudentId: string
+): Promise<boolean> {
+  return canManagePrivateLearnerState(userId, privateStudentId);
+}
+
+export async function canManagePrivateLearnerHistory(
+  userId: string,
+  privateStudentId: string
+): Promise<boolean> {
+  return canManagePrivateLearnerState(userId, privateStudentId);
+}
+
+export async function canViewPrivateLearnerState(
+  userId: string,
+  privateStudentId: string
+): Promise<boolean> {
+  const row = await queryOne<{ id: string }>(
+    `SELECT id
+     FROM private_students
+     WHERE id = $1
+       AND (teacher_user_id = $2 OR student_user_id = $2)
+     LIMIT 1`,
+    [privateStudentId, userId]
+  );
+  return Boolean(row);
+}
+
+export async function canManagePrivateClassroomWorkflow(
+  userId: string,
+  classroomId: string
+): Promise<boolean> {
+  return canManageClassroom(userId, classroomId);
 }
 
 export async function canViewTeacherInquiry(
