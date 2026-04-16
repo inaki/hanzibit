@@ -23,11 +23,17 @@ function buildAssignmentLaunchHref(assignment: NonNullable<Awaited<ReturnType<ty
   return `/notebook?new=1&draftTitleZh=${encodeURIComponent(`作业：${assignment.title}`)}&draftTitleEn=${encodeURIComponent(`Assignment: ${assignment.title}`)}&draftUnit=${encodeURIComponent("Classroom Assignment")}&draftLevel=${encodeURIComponent(String(level))}&draftPrompt=${encodeURIComponent(assignment.prompt || assignment.description || "Complete this classroom assignment in your own words.")}&draftAssignmentId=${encodeURIComponent(assignment.id)}`;
 }
 
-export default async function AssignmentDetailPage({
-  params,
-}: {
+type AssignmentDetailPageProps = {
   params: Promise<{ assignmentId: string }>;
-}) {
+  variant?: "default" | "hub";
+  classroomBasePath?: string;
+};
+
+export async function AssignmentDetailPageContent({
+  params,
+  variant = "default",
+  classroomBasePath = "/notebook/classes",
+}: AssignmentDetailPageProps) {
   const userId = await getAuthUserId();
   const { assignmentId } = await params;
 
@@ -66,6 +72,7 @@ export default async function AssignmentDetailPage({
     ? "Open the learner flow again to revise and resubmit this assignment inside the notebook or Study Guide."
     : "This assignment is designed to reuse the existing notebook and Study Guide flow instead of creating a separate classroom-only workflow.";
   const launchLabel = studentCanResubmit ? "Revise and resubmit" : "Open assignment flow";
+  const showStandaloneHeader = variant === "default";
 
   async function saveAsTemplateFormAction(formData: FormData) {
     "use server";
@@ -77,13 +84,17 @@ export default async function AssignmentDetailPage({
       <div className="mx-auto max-w-4xl space-y-8">
         <div className="flex items-start justify-between gap-6">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.25em] text-muted-foreground">
-              Assignment
-            </p>
-            <h1 className="mt-2 text-3xl font-bold text-foreground">{assignment.title}</h1>
+            {showStandaloneHeader ? (
+              <p className="text-xs font-semibold uppercase tracking-[0.25em] text-muted-foreground">
+                Assignment
+              </p>
+            ) : null}
+            <h1 className={`${showStandaloneHeader ? "mt-2" : ""} text-3xl font-bold text-foreground`}>
+              {canManage ? assignment.title : `Assignment: ${assignment.title}`}
+            </h1>
             <p className="mt-2 text-sm text-muted-foreground">
               Classroom:{" "}
-              <Link href={`/notebook/classes/${classroom.id}`} className="text-[var(--cn-orange)] hover:underline">
+              <Link href={`${classroomBasePath}/${classroom.id}`} className="text-[var(--cn-orange)] hover:underline">
                 {classroom.name}
               </Link>
             </p>
@@ -299,4 +310,8 @@ export default async function AssignmentDetailPage({
       </div>
     </div>
   );
+}
+
+export default async function AssignmentDetailPage(props: AssignmentDetailPageProps) {
+  return <AssignmentDetailPageContent {...props} />;
 }

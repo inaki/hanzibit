@@ -51,6 +51,7 @@ import {
   canManagePrivateLearnerAdaptation,
   canManageTeacherPlaybook,
   canManageTeacherStrategy,
+  canRecordTeacherPlaybookOutcome,
   canRecordTeacherStrategyOutcome,
   canConvertInquiryToClassroom,
   canManagePrivateLearnerState,
@@ -99,6 +100,7 @@ import {
   respondToTeacherInquiry,
   setInquiryInitialAssignment,
 } from "./teacher-inquiries";
+import { getLearnerTeacherHubSummary } from "./learner-teacher-hub";
 import {
   ensurePrivateStudent,
   getPrivateStudentDetail,
@@ -126,6 +128,10 @@ import {
 } from "./private-student-reviews";
 import { applyTeacherStrategyToPrivateStudent } from "./private-student-strategy-applications";
 import { applyTeacherPlaybookToPrivateStudent } from "./private-student-playbook-applications";
+import {
+  upsertPrivateStudentPlaybookOutcome,
+  type PrivateStudentPlaybookOutcomeStatus,
+} from "./private-student-playbook-outcomes";
 import {
   upsertPrivateStudentStrategyOutcome,
   type PrivateStudentStrategyOutcomeStatus,
@@ -333,6 +339,18 @@ export async function getDueCountAction(): Promise<number> {
 export async function isTeacherUserAction(): Promise<boolean> {
   const userId = await getAuthUserId();
   return isTeacherUser(userId);
+}
+
+export async function hasLearnerTeacherHubAction(): Promise<boolean> {
+  const userId = await getAuthUserId();
+  const teacher = await isTeacherUser(userId);
+
+  if (teacher) {
+    return false;
+  }
+
+  const summary = await getLearnerTeacherHubSummary(userId);
+  return summary.hasContext;
 }
 
 export async function getDailyPracticeAction(level: number): Promise<DailyPracticePlan> {
@@ -834,13 +852,16 @@ export async function updateTeacherPlaybookAction(formData: FormData) {
   const goalFocus = ((formData.get("goal_focus") as string) || "").trim();
   const whenToUse = ((formData.get("when_to_use") as string) || "").trim();
   const guidance = ((formData.get("guidance") as string) || "").trim();
+  const refinementNote = ((formData.get("refinement_note") as string) || "").trim();
   const linkedTemplateId = ((formData.get("linked_template_id") as string) || "").trim();
   const linkedResourceId = ((formData.get("linked_resource_id") as string) || "").trim();
+  const replacementPlaybookId = ((formData.get("replacement_playbook_id") as string) || "").trim();
   const strategyIds = formData
     .getAll("strategy_ids")
     .map((value) => String(value).trim())
     .filter(Boolean);
   const archived = formData.get("archived") === "on";
+  const markRefined = formData.get("mark_refined") === "1";
 
   if (!id || !title) {
     return { error: "Playbook id and title are required." };
@@ -876,6 +897,16 @@ export async function updateTeacherPlaybookAction(formData: FormData) {
     }
   }
 
+  if (replacementPlaybookId) {
+    if (replacementPlaybookId === id) {
+      return { error: "A playbook cannot replace itself." };
+    }
+    const playbooks = await listTeacherPlaybooksForTeacher(userId, { includeArchived: true });
+    if (!playbooks.some((playbook) => playbook.id === replacementPlaybookId)) {
+      return { error: "Replacement playbook not found." };
+    }
+  }
+
   await updateTeacherPlaybook({
     id,
     teacherUserId: userId,
@@ -885,9 +916,12 @@ export async function updateTeacherPlaybookAction(formData: FormData) {
     goalFocus: goalFocus || null,
     whenToUse: whenToUse || null,
     guidance: guidance || null,
+    refinementNote: refinementNote || null,
     linkedTemplateId: linkedTemplateId || null,
     linkedResourceId: linkedResourceId || null,
+    replacementPlaybookId: replacementPlaybookId || null,
     archived,
+    markRefined,
     strategyIds,
   });
 
@@ -2090,4 +2124,65 @@ export async function recordTeacherStrategyOutcomeAction(formData: FormData) {
   revalidatePath(`/notebook/classes/${application.classroom_id}`);
   revalidatePath("/notebook/teacher/library");
   return { id: strategyApplicationId };
+}
+
+export async function recordTeacherPlaybookOutcomeAction(formData: FormData) {
+  const teacherUserId = await getAuthUserId();
+  const playbookApplicationId = ((formData.get("playbook_application_id") as string) || "").trim();
+  const outcomeStatus = ((formData.get("outcome_status") as string) || "").trim();
+  const outcomeNote = ((formData.get("outcome_note") as string) || "").trim();
+  const recordedAt = ((formData.get("recorded_at") as string) || "").trim();
+
+  if (!playbookApplicationId) {
+    return { error: "Playbook application is required." };
+  }
+
+  if (!["helped", "partial", "no_change", "replace"].includes(outcomeStatus)) {
+    return { error: "Outcome status is required." };
+  }
+
+  if (!(await canRecordTeacherPlaybookOutcome(teacherUserId, playbookApplicationId))) {
+    return { error: "You cannot record an outcome for this playbook application." };
+  }
+
+  const application = await queryOne<{
+    id: string;
+    private_student_id: string;
+    playbook_id: string;
+    classroom_id: string;
+  }>(
+    `SELECT
+       apps.id,
+       apps.private_student_id,
+       apps.playbook_id,
+       private_students.classroom_id
+     FROM private_student_playbook_applications apps
+     INNER JOIN private_students
+       ON private_students.id = apps.private_student_id
+     WHERE apps.id = $1
+     LIMIT 1`,
+    [playbookApplicationId]
+  );
+
+  if (!application) {
+    return { error: "Playbook application not found." };
+  }
+
+  await upsertPrivateStudentPlaybookOutcome({
+    playbookApplicationId,
+    privateStudentId: application.private_student_id,
+    teacherPlaybookId: application.playbook_id,
+    teacherUserId,
+    outcomeStatus: outcomeStatus as PrivateStudentPlaybookOutcomeStatus,
+    outcomeNote: outcomeNote || null,
+    recordedAt: recordedAt || null,
+  });
+
+  revalidatePath("/notebook/teacher");
+  revalidatePath("/notebook/teacher/private-students");
+  revalidatePath(`/notebook/teacher/private-students/${application.private_student_id}`);
+  revalidatePath("/notebook/teacher/reporting");
+  revalidatePath(`/notebook/classes/${application.classroom_id}`);
+  revalidatePath("/notebook/teacher/library");
+  return { id: playbookApplicationId };
 }

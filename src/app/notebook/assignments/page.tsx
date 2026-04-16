@@ -6,7 +6,13 @@ import { isTeacherUser } from "@/lib/classrooms";
 
 export const dynamic = "force-dynamic";
 
-export default async function AssignmentsPage() {
+type AssignmentsPageProps = {
+  variant?: "default" | "hub";
+};
+
+export async function AssignmentsPageContent({
+  variant = "default",
+}: AssignmentsPageProps) {
   const userId = await getAuthUserId();
   const [assignments, teacher] = await Promise.all([
     listAssignmentInboxForUser(userId),
@@ -47,23 +53,32 @@ export default async function AssignmentsPage() {
       (assignment) => !assignment.submission_status || assignment.submission_status === "not_started" || assignment.submission_status === "draft"
     ),
   };
+  const showStandaloneHeader = variant === "default";
+  const title = teacher ? "Assignments" : "Your Assignments";
+  const description = teacher
+    ? "Track classroom work without leaving the notebook system."
+    : "See the work your teachers assigned without leaving the notebook.";
 
   return (
     <div data-testid="assignments-page" className="h-full overflow-auto p-6 pb-20 md:p-10 lg:pb-10">
       <div className="mx-auto max-w-5xl space-y-8">
         <div className="flex items-start justify-between gap-6">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.25em] text-muted-foreground">
-              Phase 2
-            </p>
-            <h1 className="mt-2 text-3xl font-bold text-foreground">Assignments</h1>
+            {showStandaloneHeader ? (
+              <p className="text-xs font-semibold uppercase tracking-[0.25em] text-muted-foreground">
+                Phase 2
+              </p>
+            ) : null}
+            <h1 className={`${showStandaloneHeader ? "mt-2" : ""} text-3xl font-bold text-foreground`}>{title}</h1>
             <p className="mt-2 max-w-2xl text-sm text-muted-foreground">
-              Track classroom work without leaving the notebook system.
+              {description}
             </p>
           </div>
-          <div className="inline-flex items-center rounded-full border bg-card px-3 py-1.5 text-xs font-medium text-muted-foreground">
-            {teacher ? "Teacher and student views share this inbox" : "Student assignment inbox"}
-          </div>
+          {showStandaloneHeader ? (
+            <div className="inline-flex items-center rounded-full border bg-card px-3 py-1.5 text-xs font-medium text-muted-foreground">
+              {teacher ? "Teacher and student views share this inbox" : "Student assignment inbox"}
+            </div>
+          ) : null}
         </div>
 
         <div className="grid gap-4 sm:grid-cols-3">
@@ -137,6 +152,10 @@ export default async function AssignmentsPage() {
       </div>
     </div>
   );
+}
+
+export default async function AssignmentsPage(props: AssignmentsPageProps) {
+  return <AssignmentsPageContent {...props} />;
 }
 
 function AssignmentInboxCard({

@@ -39,17 +39,28 @@ function getLearnerNextStepCopy(inquiry: {
   return "Your teacher has created a private classroom for you. Open it to continue working together in HanziBit.";
 }
 
-export default async function LearnerInquiriesPage() {
+type LearnerInquiriesPageProps = {
+  variant?: "default" | "hub";
+};
+
+export async function LearnerInquiriesPageContent({
+  variant = "default",
+}: LearnerInquiriesPageProps) {
   const userId = await getAuthUserId();
   const inquiries = await listStudentInquiries(userId);
+  const showStandaloneHeader = variant === "default";
 
   return (
     <div data-testid="learner-inquiries-page" className="h-full overflow-auto p-6 pb-20 md:p-10 lg:pb-10">
       <div className="mx-auto max-w-5xl space-y-8">
         <div>
-          <h1 className="text-3xl font-bold text-foreground">My Teacher Inquiries</h1>
+          <h1 className="text-3xl font-bold text-foreground">
+            {showStandaloneHeader ? "My Teacher Inquiries" : "Inquiries"}
+          </h1>
           <p className="mt-2 max-w-3xl text-sm text-muted-foreground">
-            Track the teachers you contacted before they convert into a classroom or tutoring relationship.
+            {showStandaloneHeader
+              ? "Track the teachers you contacted before they convert into a classroom or tutoring relationship."
+              : "Track outreach to teachers before it turns into a classroom or private tutoring relationship."}
           </p>
         </div>
 
@@ -90,7 +101,7 @@ export default async function LearnerInquiriesPage() {
                       <div className="mt-3 flex flex-wrap gap-3">
                         {inquiry.initial_assignment_id ? (
                           <Link
-                            href={`/notebook/assignments/${inquiry.initial_assignment_id}`}
+                            href={`/notebook/with-teacher/assignments/${inquiry.initial_assignment_id}`}
                             className="font-medium text-[var(--cn-orange)] hover:underline"
                           >
                             Open first assignment
@@ -99,7 +110,7 @@ export default async function LearnerInquiriesPage() {
                         ) : null}
                         {inquiry.created_classroom_id ? (
                           <Link
-                            href={`/notebook/classes/${inquiry.created_classroom_id}`}
+                            href={`/notebook/with-teacher/classes/${inquiry.created_classroom_id}`}
                             className="font-medium text-[var(--cn-orange)] hover:underline"
                           >
                             Open classroom
@@ -110,7 +121,7 @@ export default async function LearnerInquiriesPage() {
                   ) : null}
                   {inquiry.created_classroom_id ? (
                     <Link
-                      href={`/notebook/classes/${inquiry.created_classroom_id}`}
+                      href={`/notebook/with-teacher/classes/${inquiry.created_classroom_id}`}
                       className="inline-flex text-sm font-medium text-[var(--cn-orange)] hover:underline"
                     >
                       Open classroom
@@ -124,4 +135,10 @@ export default async function LearnerInquiriesPage() {
       </div>
     </div>
   );
+}
+
+export default async function LearnerInquiriesPage(
+  props: LearnerInquiriesPageProps
+) {
+  return <LearnerInquiriesPageContent {...props} />;
 }

@@ -31,6 +31,9 @@ export interface PrivateStudent {
   last_playbook_id: string | null;
   last_playbook_title?: string | null;
   last_playbook_applied_at: string | null;
+  last_playbook_outcome_status?: string | null;
+  last_playbook_outcome_note?: string | null;
+  last_playbook_outcome_at?: string | null;
   last_strategy_outcome_status?: string | null;
   last_strategy_outcome_note?: string | null;
   last_strategy_outcome_at?: string | null;
@@ -71,6 +74,9 @@ export async function getPrivateStudentByClassroomId(
          private_students.*,
          teacher_strategies.title AS last_strategy_title,
          teacher_playbooks.title AS last_playbook_title,
+         playbook_outcomes.outcome_status AS last_playbook_outcome_status,
+         playbook_outcomes.outcome_note AS last_playbook_outcome_note,
+         playbook_outcomes.recorded_at AS last_playbook_outcome_at,
          outcomes.outcome_status AS last_strategy_outcome_status,
          outcomes.outcome_note AS last_strategy_outcome_note,
          outcomes.recorded_at AS last_strategy_outcome_at
@@ -79,6 +85,14 @@ export async function getPrivateStudentByClassroomId(
          ON teacher_strategies.id = private_students.last_strategy_id
        LEFT JOIN teacher_playbooks
          ON teacher_playbooks.id = private_students.last_playbook_id
+       LEFT JOIN private_student_playbook_outcomes playbook_outcomes
+         ON playbook_outcomes.playbook_application_id = (
+           SELECT apps.id
+           FROM private_student_playbook_applications apps
+           WHERE apps.private_student_id = private_students.id
+           ORDER BY apps.applied_at DESC, apps.created_at DESC
+           LIMIT 1
+         )
        LEFT JOIN private_student_strategy_outcomes outcomes
          ON outcomes.strategy_application_id = (
            SELECT apps.id
@@ -121,6 +135,9 @@ export async function listPrivateStudentsForTeacher(
          assignments.title AS next_assignment_title,
          teacher_strategies.title AS last_strategy_title,
          teacher_playbooks.title AS last_playbook_title,
+         playbook_outcomes.outcome_status AS last_playbook_outcome_status,
+         playbook_outcomes.outcome_note AS last_playbook_outcome_note,
+         playbook_outcomes.recorded_at AS last_playbook_outcome_at,
          outcomes.outcome_status AS last_strategy_outcome_status,
          outcomes.outcome_note AS last_strategy_outcome_note,
          outcomes.recorded_at AS last_strategy_outcome_at,
@@ -140,6 +157,14 @@ export async function listPrivateStudentsForTeacher(
        ON teacher_strategies.id = private_students.last_strategy_id
      LEFT JOIN teacher_playbooks
        ON teacher_playbooks.id = private_students.last_playbook_id
+     LEFT JOIN private_student_playbook_outcomes playbook_outcomes
+       ON playbook_outcomes.playbook_application_id = (
+         SELECT apps.id
+         FROM private_student_playbook_applications apps
+         WHERE apps.private_student_id = private_students.id
+         ORDER BY apps.applied_at DESC, apps.created_at DESC
+         LIMIT 1
+       )
      LEFT JOIN private_student_strategy_outcomes outcomes
        ON outcomes.strategy_application_id = (
          SELECT apps.id
@@ -197,6 +222,9 @@ export async function getPrivateStudentDetail(
          assignments.title AS next_assignment_title,
          teacher_strategies.title AS last_strategy_title,
          teacher_playbooks.title AS last_playbook_title,
+         playbook_outcomes.outcome_status AS last_playbook_outcome_status,
+         playbook_outcomes.outcome_note AS last_playbook_outcome_note,
+         playbook_outcomes.recorded_at AS last_playbook_outcome_at,
          outcomes.outcome_status AS last_strategy_outcome_status,
          outcomes.outcome_note AS last_strategy_outcome_note,
          outcomes.recorded_at AS last_strategy_outcome_at,
@@ -221,6 +249,14 @@ export async function getPrivateStudentDetail(
          ON teacher_strategies.id = private_students.last_strategy_id
        LEFT JOIN teacher_playbooks
          ON teacher_playbooks.id = private_students.last_playbook_id
+       LEFT JOIN private_student_playbook_outcomes playbook_outcomes
+         ON playbook_outcomes.playbook_application_id = (
+           SELECT apps.id
+           FROM private_student_playbook_applications apps
+           WHERE apps.private_student_id = private_students.id
+           ORDER BY apps.applied_at DESC, apps.created_at DESC
+           LIMIT 1
+         )
        LEFT JOIN private_student_strategy_outcomes outcomes
          ON outcomes.strategy_application_id = (
            SELECT apps.id

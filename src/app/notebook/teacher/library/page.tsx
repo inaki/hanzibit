@@ -11,8 +11,14 @@ import {
 import { listOwnedClassrooms, isTeacherUser } from "@/lib/classrooms";
 import { listAssignmentTemplatesForTeacher } from "@/lib/assignment-templates";
 import { listTeacherResourcesForUser } from "@/lib/teacher-resources";
-import { listTeacherStrategiesForTeacher } from "@/lib/teacher-strategies";
-import { listTeacherPlaybooksForTeacher } from "@/lib/teacher-playbooks";
+import {
+  getTeacherStrategyPatternSummary,
+  listTeacherStrategiesForTeacher,
+} from "@/lib/teacher-strategies";
+import {
+  getTeacherPlaybookPatternSummary,
+  listTeacherPlaybooksForTeacher,
+} from "@/lib/teacher-playbooks";
 import { PendingSubmitButton } from "@/components/notebook/pending-submit-button";
 
 export const dynamic = "force-dynamic";
@@ -40,6 +46,18 @@ export default async function TeacherLibraryPage({
     listTeacherStrategiesForTeacher(userId),
     listTeacherPlaybooksForTeacher(userId),
   ]);
+
+  const [strategyPatterns, playbookPatterns] = await Promise.all([
+    Promise.all(
+      strategies.map(async (strategy) => [strategy.id, await getTeacherStrategyPatternSummary(strategy.id)] as const)
+    ),
+    Promise.all(
+      playbooks.map(async (playbook) => [playbook.id, await getTeacherPlaybookPatternSummary(playbook.id)] as const)
+    ),
+  ]);
+
+  const strategyPatternById = new Map(strategyPatterns);
+  const playbookPatternById = new Map(playbookPatterns);
 
   async function createResourceFormAction(formData: FormData) {
     "use server";
@@ -287,6 +305,10 @@ export default async function TeacherLibraryPage({
                 <div className="space-y-3">
                   {playbooks.map((playbook) => (
                     <div key={playbook.id} className="rounded-xl border p-4">
+                      {(() => {
+                        const pattern = playbookPatternById.get(playbook.id);
+                        return (
+                          <>
                       <div className="flex items-start justify-between gap-3">
                         <div>
                           <h3 className="font-semibold text-foreground">{playbook.title}</h3>
@@ -299,6 +321,7 @@ export default async function TeacherLibraryPage({
                       <div className="mt-3 flex flex-wrap gap-3 text-xs text-muted-foreground">
                         {playbook.issue_focus ? <span>Issue: {playbook.issue_focus}</span> : null}
                         {playbook.goal_focus ? <span>Goal: {playbook.goal_focus}</span> : null}
+                        <span>{pattern?.learner_count ?? 0} learners affected</span>
                         <span>{playbook.linked_strategy_count ?? 0} linked strategies</span>
                         <span>Updated {new Date(playbook.updated_at).toLocaleDateString("en-US")}</span>
                       </div>
@@ -327,9 +350,34 @@ export default async function TeacherLibraryPage({
                             Needs escalation rule
                           </span>
                         ) : null}
+                        {playbook.replacement_playbook_title ? (
+                          <span className="rounded-full border border-violet-500/20 bg-violet-500/10 px-2.5 py-1 font-medium text-violet-300">
+                            Replaced by {playbook.replacement_playbook_title}
+                          </span>
+                        ) : null}
+                        {playbook.usage_count > 0 && !playbook.last_refined_at ? (
+                          <span className="rounded-full border border-sky-500/20 bg-sky-500/10 px-2.5 py-1 font-medium text-sky-400">
+                            Refinement pending
+                          </span>
+                        ) : null}
+                        <span className="rounded-full border bg-muted px-2.5 py-1 font-medium text-muted-foreground">
+                          {pattern?.broad_status === "helping"
+                            ? "Helping across learners"
+                            : pattern?.broad_status === "mixed"
+                              ? "Mixed across learners"
+                              : pattern?.broad_status === "weak"
+                                ? "Weak across learners"
+                                : "Insufficient cross-learner data"}
+                        </span>
                       </div>
                       <p className="mt-3 text-sm text-muted-foreground">
-                        {playbook.when_to_use || "No explicit escalation rule recorded yet. Add when-to-use guidance so this playbook becomes operational, not just descriptive."}
+                        {playbook.replacement_playbook_title
+                          ? `This playbook has a replacement path: ${playbook.replacement_playbook_title}.`
+                          : playbook.refinement_note
+                            ? `Refinement note: ${playbook.refinement_note}`
+                            : pattern?.broad_status === "weak"
+                              ? "This playbook is active across learners, but broader results still look weak. Refine or replace it before it becomes the default escalation path."
+                              : playbook.when_to_use || "No explicit escalation rule recorded yet. Add when-to-use guidance so this playbook becomes operational, not just descriptive."}
                       </p>
                       <div className="mt-4">
                         <Link
@@ -339,6 +387,9 @@ export default async function TeacherLibraryPage({
                           Edit playbook
                         </Link>
                       </div>
+                          </>
+                        );
+                      })()}
                     </div>
                   ))}
                 </div>
@@ -361,6 +412,10 @@ export default async function TeacherLibraryPage({
                 <div className="space-y-3">
                   {strategies.map((strategy) => (
                     <div key={strategy.id} className="rounded-xl border p-4">
+                      {(() => {
+                        const pattern = strategyPatternById.get(strategy.id);
+                        return (
+                          <>
                       <div className="flex items-start justify-between gap-3">
                         <div>
                           <h3 className="font-semibold text-foreground">{strategy.title}</h3>
@@ -373,6 +428,7 @@ export default async function TeacherLibraryPage({
                       <div className="mt-3 flex flex-wrap gap-3 text-xs text-muted-foreground">
                         {strategy.issue_focus ? <span>Issue: {strategy.issue_focus}</span> : null}
                         {strategy.goal_focus ? <span>Goal: {strategy.goal_focus}</span> : null}
+                        <span>{pattern?.learner_count ?? 0} learners affected</span>
                         {strategy.last_refined_at ? (
                           <span>Refined {new Date(strategy.last_refined_at).toLocaleDateString("en-US")}</span>
                         ) : null}
@@ -394,10 +450,21 @@ export default async function TeacherLibraryPage({
                             Outcome-aware refinement pending
                           </span>
                         ) : null}
+                        <span className="rounded-full border bg-muted px-2.5 py-1 font-medium text-muted-foreground">
+                          {pattern?.broad_status === "helping"
+                            ? "Helping across learners"
+                            : pattern?.broad_status === "mixed"
+                              ? "Mixed across learners"
+                              : pattern?.broad_status === "weak"
+                                ? "Weak across learners"
+                                : "Insufficient cross-learner data"}
+                        </span>
                       </div>
                       <p className="mt-3 text-sm text-muted-foreground">
                         {strategy.usage_count === 0
                           ? "This strategy exists in the library, but it has not shaped any private learner plan yet."
+                          : pattern?.broad_status === "weak"
+                            ? "This strategy is being reused, but broader outcomes still look weak enough to justify refinement."
                           : strategy.last_refined_at
                             ? "This strategy has already been used and refined. Keep checking outcomes before it becomes the default response."
                             : "This strategy is in use, but it still needs enough outcome evidence or refinement to prove it is genuinely helping."}
@@ -410,6 +477,9 @@ export default async function TeacherLibraryPage({
                           Edit strategy
                         </Link>
                       </div>
+                          </>
+                        );
+                      })()}
                     </div>
                   ))}
                 </div>

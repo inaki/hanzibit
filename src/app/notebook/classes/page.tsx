@@ -13,14 +13,20 @@ import {
 
 export const dynamic = "force-dynamic";
 
-export default async function ClassesPage({
-  searchParams,
-}: {
+type ClassesPageProps = {
   searchParams: Promise<{
     error?: string;
     success?: string;
   }>;
-}) {
+  variant?: "default" | "hub";
+  basePath?: string;
+};
+
+export async function ClassesPageContent({
+  searchParams,
+  variant = "default",
+  basePath = "/notebook/classes",
+}: ClassesPageProps) {
   const userId = await getAuthUserId();
   const [params, classrooms, teacher] = await Promise.all([
     searchParams,
@@ -32,36 +38,46 @@ export default async function ClassesPage({
     "use server";
     const result = await createClassroomAction(formData);
     if ("error" in result) {
-      redirect(`/notebook/classes?error=${encodeURIComponent(result.error)}`);
+      redirect(`${basePath}?error=${encodeURIComponent(result.error)}`);
     }
-    redirect(`/notebook/classes/${result.id}?success=created`);
+    redirect(`${basePath}/${result.id}?success=created`);
   }
 
   async function joinClassroomFormAction(formData: FormData) {
     "use server";
     const result = await joinClassroomAction(formData);
     if ("error" in result) {
-      redirect(`/notebook/classes?error=${encodeURIComponent(result.error)}`);
+      redirect(`${basePath}?error=${encodeURIComponent(result.error)}`);
     }
-    redirect(`/notebook/classes/${result.id}?success=joined`);
+    redirect(`${basePath}/${result.id}?success=joined`);
   }
+
+  const showStandaloneHeader = variant === "default";
+  const title = teacher ? "Classes" : "Your Classes";
+  const description = teacher
+    ? "Create classrooms, join by code, and keep teacher-guided work inside the same notebook flow."
+    : "See the classes where a teacher is guiding your work, and join a new one when you receive a classroom code.";
 
   return (
     <div data-testid="classes-page" className="h-full overflow-auto p-6 pb-20 md:p-10 lg:pb-10">
       <div className="mx-auto max-w-6xl space-y-8">
         <div className="flex items-start justify-between gap-6">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.25em] text-muted-foreground">
-              Phase 2
-            </p>
-            <h1 className="mt-2 text-3xl font-bold text-foreground">Classes</h1>
+            {showStandaloneHeader ? (
+              <p className="text-xs font-semibold uppercase tracking-[0.25em] text-muted-foreground">
+                Phase 2
+              </p>
+            ) : null}
+            <h1 className={`${showStandaloneHeader ? "mt-2" : ""} text-3xl font-bold text-foreground`}>{title}</h1>
             <p className="mt-2 max-w-2xl text-sm text-muted-foreground">
-              Create classrooms, join by code, and keep teacher-guided work inside the same notebook flow.
+              {description}
             </p>
           </div>
-          <div className="inline-flex items-center rounded-full border bg-card px-3 py-1.5 text-xs font-medium text-muted-foreground">
-            {teacher ? "Teacher role active" : "Learner role active"}
-          </div>
+          {showStandaloneHeader ? (
+            <div className="inline-flex items-center rounded-full border bg-card px-3 py-1.5 text-xs font-medium text-muted-foreground">
+              {teacher ? "Teacher role active" : "Learner role active"}
+            </div>
+          ) : null}
         </div>
 
         {params.error && (
@@ -91,14 +107,16 @@ export default async function ClassesPage({
 
             {classrooms.length === 0 ? (
               <div className="rounded-2xl border bg-card p-6 text-sm text-muted-foreground">
-                You are not in any classrooms yet. Create one if you want to teach, or join one with a classroom code.
+                {teacher
+                  ? "You are not in any classrooms yet. Create one if you want to teach, or join one with a classroom code."
+                  : "You are not in any classes yet. Once a teacher shares a code, it will appear here after you join."}
               </div>
             ) : (
               <div className="grid gap-4 md:grid-cols-2">
                 {classrooms.map((classroom) => (
                   <Link
                     key={classroom.id}
-                    href={`/notebook/classes/${classroom.id}`}
+                    href={`${basePath}/${classroom.id}`}
                     className="rounded-2xl border bg-card p-5 transition-colors hover:border-[var(--cn-orange)]/30 hover:bg-muted/20"
                   >
                     <div className="flex items-center justify-between gap-3">
@@ -134,7 +152,7 @@ export default async function ClassesPage({
                   Create Classroom
                 </h2>
               </div>
-              <form action={createClassroomFormAction} className="space-y-3">
+              {teacher ? <form action={createClassroomFormAction} className="space-y-3">
                 <div>
                   <label className="mb-1 block text-sm font-medium text-foreground/80">Name</label>
                   <input
@@ -159,7 +177,11 @@ export default async function ClassesPage({
                 >
                   Create classroom
                 </button>
-              </form>
+              </form> : (
+                <p className="text-sm text-muted-foreground">
+                  Teachers create classrooms. If you are learning with a teacher, use the join code they shared with you.
+                </p>
+              )}
             </section>
 
             <section className="rounded-2xl border bg-card p-5">
@@ -192,4 +214,8 @@ export default async function ClassesPage({
       </div>
     </div>
   );
+}
+
+export default async function ClassesPage(props: ClassesPageProps) {
+  return <ClassesPageContent {...props} />;
 }

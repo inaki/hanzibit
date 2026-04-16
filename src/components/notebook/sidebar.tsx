@@ -12,15 +12,14 @@ import {
   Layers,
   GraduationCap,
   LayoutDashboard,
-  Users,
-  ClipboardList,
-  Inbox,
   BriefcaseBusiness,
+  UserRoundSearch,
 } from "lucide-react";
 import { useSettings } from "./settings-context";
 import {
   getCharacterOfTheDayAction,
   getDueCountAction,
+  hasLearnerTeacherHubAction,
   isTeacherUserAction,
 } from "@/lib/actions";
 import type { HskWord } from "@/lib/data";
@@ -29,9 +28,7 @@ const sections = [
   { label: "Dashboard", icon: LayoutDashboard, href: "/notebook/dashboard" },
   { label: "Daily Journal", icon: PenLine, href: "/notebook" },
   { label: "Study Guide", icon: GraduationCap, href: "/notebook/lessons" },
-  { label: "Classes", icon: Users, href: "/notebook/classes" },
-  { label: "Assignments", icon: ClipboardList, href: "/notebook/assignments" },
-  { label: "My Inquiries", icon: Inbox, href: "/notebook/inquiries" },
+  { label: "Teacher", icon: UserRoundSearch, href: "/notebook/with-teacher", learnerTeacherOnly: true },
   { label: "Teaching", icon: BriefcaseBusiness, href: "/notebook/teacher", teacherOnly: true },
   { label: "Flashcards", icon: Layers, href: "/notebook/flashcards" },
   { label: "Vocabulary List", icon: BookOpen, href: "/notebook/vocabulary" },
@@ -47,11 +44,13 @@ export function NotebookSidebar() {
   const [charOfDay, setCharOfDay] = useState<HskWord | null>(null);
   const [dueCount, setDueCount] = useState(0);
   const [isTeacher, setIsTeacher] = useState(false);
+  const [hasLearnerTeacherHub, setHasLearnerTeacherHub] = useState(false);
 
   useEffect(() => {
     getCharacterOfTheDayAction(settings.hskLevel).then(setCharOfDay);
     getDueCountAction().then(setDueCount);
     isTeacherUserAction().then(setIsTeacher);
+    hasLearnerTeacherHubAction().then(setHasLearnerTeacherHub);
   }, [settings.hskLevel]);
 
   function isActive(href: string) {
@@ -68,7 +67,11 @@ export function NotebookSidebar() {
         </p>
         <div className="space-y-1">
           {sections
-            .filter((section) => !section.teacherOnly || isTeacher)
+            .filter(
+              (section) =>
+                (!section.teacherOnly || isTeacher) &&
+                (!section.learnerTeacherOnly || hasLearnerTeacherHub)
+            )
             .map((section) => {
             const active = isActive(section.href);
             return (

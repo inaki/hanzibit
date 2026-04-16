@@ -27,6 +27,43 @@ export interface TeacherStrategyOutcomeRollup {
   replace: number;
 }
 
+export interface TeacherStrategyPatternSummary {
+  learner_count: number;
+  active_learner_count: number;
+  recurring_issue_learner_count: number;
+  latest_applied_at: string | null;
+  broad_status: "helping" | "mixed" | "weak" | "insufficient_data";
+}
+
+function getBroadEffectivenessStatus(input: {
+  learner_count: number;
+  total_outcomes: number;
+  helped_count: number;
+  partial_count: number;
+  no_change_count: number;
+  replace_count: number;
+}): "helping" | "mixed" | "weak" | "insufficient_data" {
+  if (input.learner_count < 2 || input.total_outcomes === 0) {
+    return "insufficient_data";
+  }
+
+  if (
+    input.replace_count > 0 ||
+    (input.no_change_count >= input.helped_count && input.total_outcomes >= 2)
+  ) {
+    return "weak";
+  }
+
+  if (
+    input.helped_count >= 2 &&
+    input.helped_count >= input.partial_count + input.no_change_count + input.replace_count
+  ) {
+    return "helping";
+  }
+
+  return "mixed";
+}
+
 export async function getTeacherStrategy(
   id: string
 ): Promise<TeacherStrategy | undefined> {
@@ -36,6 +73,72 @@ export async function getTeacherStrategy(
      WHERE id = $1`,
     [id]
   );
+}
+
+export async function getTeacherStrategyPatternSummary(
+  strategyId: string
+): Promise<TeacherStrategyPatternSummary> {
+  const row = await queryOne<{
+    learner_count: number;
+    active_learner_count: number;
+    recurring_issue_learner_count: number;
+    latest_applied_at: string | null;
+    total_outcomes: number;
+    helped_count: number;
+    partial_count: number;
+    no_change_count: number;
+    replace_count: number;
+  }>(
+    `SELECT
+       COUNT(DISTINCT applications.private_student_id)::int AS learner_count,
+       COUNT(DISTINCT applications.private_student_id) FILTER (
+         WHERE private_students.last_strategy_id = teacher_strategies.id
+       )::int AS active_learner_count,
+       COUNT(DISTINCT applications.private_student_id) FILTER (
+         WHERE EXISTS (
+           SELECT 1
+           FROM private_lesson_history history
+           WHERE history.private_student_id = applications.private_student_id
+             AND history.issue_tags_json LIKE '%' || teacher_strategies.issue_focus || '%'
+         )
+       )::int AS recurring_issue_learner_count,
+       MAX(applications.applied_at) AS latest_applied_at,
+       COUNT(outcomes.id)::int AS total_outcomes,
+       COUNT(outcomes.id) FILTER (WHERE outcomes.outcome_status = 'helped')::int AS helped_count,
+       COUNT(outcomes.id) FILTER (WHERE outcomes.outcome_status = 'partial')::int AS partial_count,
+       COUNT(outcomes.id) FILTER (WHERE outcomes.outcome_status = 'no_change')::int AS no_change_count,
+       COUNT(outcomes.id) FILTER (WHERE outcomes.outcome_status = 'replace')::int AS replace_count
+     FROM teacher_strategies
+     LEFT JOIN private_student_strategy_applications applications
+       ON applications.teacher_strategy_id = teacher_strategies.id
+     LEFT JOIN private_students
+       ON private_students.id = applications.private_student_id
+     LEFT JOIN private_student_strategy_outcomes outcomes
+       ON outcomes.teacher_strategy_id = teacher_strategies.id
+     WHERE teacher_strategies.id = $1
+     GROUP BY teacher_strategies.id, teacher_strategies.issue_focus`,
+    [strategyId]
+  );
+
+  const summary = row ?? {
+    learner_count: 0,
+    active_learner_count: 0,
+    recurring_issue_learner_count: 0,
+    latest_applied_at: null,
+    total_outcomes: 0,
+    helped_count: 0,
+    partial_count: 0,
+    no_change_count: 0,
+    replace_count: 0,
+  };
+
+  return {
+    learner_count: summary.learner_count,
+    active_learner_count: summary.active_learner_count,
+    recurring_issue_learner_count: summary.recurring_issue_learner_count,
+    latest_applied_at: summary.latest_applied_at,
+    broad_status: getBroadEffectivenessStatus(summary),
+  };
 }
 
 export async function listTeacherStrategiesForTeacher(

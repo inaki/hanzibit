@@ -18,13 +18,15 @@ import {
 import { SettingsDialog } from "./settings-dialog";
 import { useSettings } from "./settings-context";
 import { useSession } from "@/lib/auth-client";
-import { isTeacherUserAction, searchHskWordsAction } from "@/lib/actions";
+import {
+  hasLearnerTeacherHubAction,
+  isTeacherUserAction,
+  searchHskWordsAction,
+} from "@/lib/actions";
 import type { HskWord } from "@/lib/data";
 
 const navLinks = [
-  { label: "Classes", href: "/notebook/classes" },
-  { label: "Assignments", href: "/notebook/assignments" },
-  { label: "My Inquiries", href: "/notebook/inquiries" },
+  { label: "Teacher", href: "/notebook/with-teacher", learnerTeacherOnly: true },
   { label: "Teaching", href: "/notebook/teacher", teacherOnly: true },
   { label: "Study Guide", href: "/notebook/lessons" },
   { label: "Flashcards", href: "/notebook/flashcards" },
@@ -41,6 +43,7 @@ export function NotebookNav() {
   const [isDark, setIsDark] = useState(false);
   const [signingOut, setSigningOut] = useState(false);
   const [isTeacher, setIsTeacher] = useState(false);
+  const [hasLearnerTeacherHub, setHasLearnerTeacherHub] = useState(false);
   const searchRef = useRef<HTMLDivElement>(null);
   const { settings } = useSettings();
   const { data: session } = useSession();
@@ -58,6 +61,7 @@ export function NotebookNav() {
 
   useEffect(() => {
     isTeacherUserAction().then(setIsTeacher);
+    hasLearnerTeacherHubAction().then(setHasLearnerTeacherHub);
   }, []);
 
   function toggleDarkMode() {
@@ -143,7 +147,11 @@ export function NotebookNav() {
 
         <nav data-testid="notebook-nav-links" className="hidden items-center gap-6 text-sm md:flex">
           {navLinks
-            .filter((link) => !link.teacherOnly || isTeacher)
+            .filter(
+              (link) =>
+                (!link.teacherOnly || isTeacher) &&
+                (!link.learnerTeacherOnly || hasLearnerTeacherHub)
+            )
             .map((link) => {
             const active = isActive(link.href);
             return (

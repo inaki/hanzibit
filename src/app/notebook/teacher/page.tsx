@@ -1,5 +1,6 @@
 import Link from "next/link";
 import {
+  AlertTriangle,
   BarChart3,
   FolderKanban,
   IdCard,
@@ -90,6 +91,15 @@ export default async function TeacherOverviewPage() {
 
   const pendingInquiries = inquiries.filter((item) => item.status === "pending").length;
   const activeClassrooms = reporting.totalClassrooms;
+  const urgentPriorityCount = reporting.priorityItems.filter(
+    (item) => item.priority_level === "urgent"
+  ).length;
+  const highPriorityCount = reporting.priorityItems.filter(
+    (item) => item.priority_level === "high"
+  ).length;
+  const watchPriorityCount = reporting.priorityItems.filter(
+    (item) => item.priority_level === "watch"
+  ).length;
   const profileCompleteness = getTeacherProfileCompleteness(profile);
   const setupCompleteness = getSetupCompletenessScore({
     introMessage: setup.intro_message,
@@ -124,8 +134,339 @@ export default async function TeacherOverviewPage() {
           <SummaryCard label="Referred students" value={referrals.referredStudents} href="/notebook/teacher/referrals" icon={Share2} />
         </div>
 
+        <div className="grid gap-4 sm:grid-cols-3">
+          <div className="rounded-2xl border border-rose-500/20 bg-rose-500/10 p-5">
+            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+              Urgent follow-through
+            </p>
+            <p className="mt-3 text-3xl font-bold text-foreground">{urgentPriorityCount}</p>
+          </div>
+          <div className="rounded-2xl border border-amber-500/20 bg-amber-500/10 p-5">
+            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+              High follow-through
+            </p>
+            <p className="mt-3 text-3xl font-bold text-foreground">{highPriorityCount}</p>
+          </div>
+          <div className="rounded-2xl border border-sky-500/20 bg-sky-500/10 p-5">
+            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+              Watch list
+            </p>
+            <p className="mt-3 text-3xl font-bold text-foreground">{watchPriorityCount}</p>
+          </div>
+        </div>
+
+        <div className="grid gap-4 sm:grid-cols-3">
+          <div className="rounded-2xl border border-amber-500/20 bg-amber-500/10 p-5">
+            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+              Review due now
+            </p>
+            <p className="mt-3 text-3xl font-bold text-foreground">{reporting.totalCheckpointsDueNow}</p>
+          </div>
+          <div className="rounded-2xl border border-rose-500/20 bg-rose-500/10 p-5">
+            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+              Review overdue
+            </p>
+            <p className="mt-3 text-3xl font-bold text-foreground">{reporting.totalCheckpointsOverdue}</p>
+          </div>
+          <div className="rounded-2xl border border-emerald-500/20 bg-emerald-500/10 p-5">
+            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+              Recently checked
+            </p>
+            <p className="mt-3 text-3xl font-bold text-foreground">{reporting.totalCheckpointsRecentlyChecked}</p>
+          </div>
+        </div>
+
+        <div className="rounded-2xl border bg-card p-5">
+          <h2 className="text-sm font-semibold uppercase tracking-[0.2em] text-muted-foreground">
+            Workload Snapshot
+          </h2>
+          <div className="mt-4 grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
+            <div className="rounded-xl border border-[var(--cn-orange)]/20 bg-[var(--cn-orange)]/10 p-4">
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+                Load state
+              </p>
+              <p className="mt-2 text-xl font-bold text-foreground">
+                {reporting.workloadSummary.load_state}
+              </p>
+            </div>
+            <div className="rounded-xl border border-rose-500/20 bg-rose-500/10 p-4">
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+                Urgent learners
+              </p>
+              <p className="mt-2 text-xl font-bold text-foreground">
+                {reporting.workloadSummary.urgent_private_learners}
+              </p>
+            </div>
+            <div className="rounded-xl border border-amber-500/20 bg-amber-500/10 p-4">
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+                Overdue checkpoints
+              </p>
+              <p className="mt-2 text-xl font-bold text-foreground">
+                {reporting.workloadSummary.overdue_checkpoints}
+              </p>
+            </div>
+            <div className="rounded-xl border border-sky-500/20 bg-sky-500/10 p-4">
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+                Repeated pressure
+              </p>
+              <p className="mt-2 text-xl font-bold text-foreground">
+                {reporting.workloadSummary.repeated_pressure_learners}
+              </p>
+            </div>
+            <div className="rounded-xl border border-violet-500/20 bg-violet-500/10 p-4">
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+                Weak support paths
+              </p>
+              <p className="mt-2 text-xl font-bold text-foreground">
+                {reporting.workloadSummary.weak_support_paths}
+              </p>
+            </div>
+          </div>
+          <p className="mt-4 text-sm text-muted-foreground">{reporting.workloadSummary.summary_note}</p>
+        </div>
+
+        <div className="grid gap-4 sm:grid-cols-3">
+          <div className="rounded-2xl border border-rose-500/20 bg-rose-500/10 p-5">
+            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+              High concentration
+            </p>
+            <p className="mt-3 text-3xl font-bold text-foreground">{reporting.totalLoadConcentrationHigh}</p>
+          </div>
+          <div className="rounded-2xl border border-amber-500/20 bg-amber-500/10 p-5">
+            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+              Repeated-pressure learners
+            </p>
+            <p className="mt-3 text-3xl font-bold text-foreground">{reporting.totalRepeatedPressureLearners}</p>
+          </div>
+          <div className="rounded-2xl border border-sky-500/20 bg-sky-500/10 p-5">
+            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+              Weak support concentration
+            </p>
+            <p className="mt-3 text-3xl font-bold text-foreground">{reporting.totalWeakSupportConcentration}</p>
+          </div>
+        </div>
+
+        <div className="rounded-2xl border bg-card p-5">
+          <h2 className="text-sm font-semibold uppercase tracking-[0.2em] text-muted-foreground">
+            Load Balancing
+          </h2>
+          <p className="mt-3 text-sm text-muted-foreground">
+            Priority tells you what to handle first. Review rhythm tells you what should be revisited now. Workload balancing shows whether that pressure is clustering too heavily around the same learners or weak support paths.
+          </p>
+        </div>
+
+        <div className="rounded-2xl border bg-card p-5">
+          <h2 className="text-sm font-semibold uppercase tracking-[0.2em] text-muted-foreground">
+            Stabilization Snapshot
+          </h2>
+          <div className="mt-4 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+            <div className="rounded-xl border border-emerald-500/20 bg-emerald-500/10 p-4">
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+                Stable learners
+              </p>
+              <p className="mt-2 text-xl font-bold text-foreground">
+                {reporting.stabilizationSummary.stable_private_learners}
+              </p>
+            </div>
+            <div className="rounded-xl border border-sky-500/20 bg-sky-500/10 p-4">
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+                Simplify support
+              </p>
+              <p className="mt-2 text-xl font-bold text-foreground">
+                {reporting.stabilizationSummary.simplify_support_candidates}
+              </p>
+            </div>
+            <div className="rounded-xl border border-[var(--cn-orange)]/20 bg-[var(--cn-orange)]/10 p-4">
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+                Handoff-ready
+              </p>
+              <p className="mt-2 text-xl font-bold text-foreground">
+                {reporting.stabilizationSummary.handoff_ready_private_learners}
+              </p>
+            </div>
+            <div className="rounded-xl border border-rose-500/20 bg-rose-500/10 p-4">
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+                Still active pressure
+              </p>
+              <p className="mt-2 text-xl font-bold text-foreground">
+                {reporting.stabilizationSummary.still_active_pressure}
+              </p>
+            </div>
+          </div>
+          <p className="mt-4 text-sm text-muted-foreground">
+            {reporting.stabilizationSummary.summary_note}
+          </p>
+          <p className="mt-2 text-xs text-muted-foreground">
+            `Keep active` means current pressure still needs active teacher follow-through. `Simplify support` means the support path may now be heavier than necessary. `Handoff-ready` means the learner looks stable enough for lighter-touch monitoring.
+          </p>
+        </div>
+
+        <div className="rounded-2xl border bg-card p-5">
+          <h2 className="text-sm font-semibold uppercase tracking-[0.2em] text-muted-foreground">
+            Portfolio Mix
+          </h2>
+          <div className="mt-4 grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
+            <div className="rounded-xl border border-rose-500/20 bg-rose-500/10 p-4">
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+                Keep active
+              </p>
+              <p className="mt-2 text-xl font-bold text-foreground">
+                {reporting.portfolioMixSummary.keep_active_count}
+              </p>
+            </div>
+            <div className="rounded-xl border border-sky-500/20 bg-sky-500/10 p-4">
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+                Simplify support
+              </p>
+              <p className="mt-2 text-xl font-bold text-foreground">
+                {reporting.portfolioMixSummary.simplify_support_count}
+              </p>
+            </div>
+            <div className="rounded-xl border border-emerald-500/20 bg-emerald-500/10 p-4">
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+                Light-touch
+              </p>
+              <p className="mt-2 text-xl font-bold text-foreground">
+                {reporting.portfolioMixSummary.light_touch_count}
+              </p>
+            </div>
+            <div className="rounded-xl border border-[var(--cn-orange)]/20 bg-[var(--cn-orange)]/10 p-4">
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+                Handoff-ready
+              </p>
+              <p className="mt-2 text-xl font-bold text-foreground">
+                {reporting.portfolioMixSummary.handoff_ready_count}
+              </p>
+            </div>
+            <div className="rounded-xl border border-violet-500/20 bg-violet-500/10 p-4">
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+                Operating mode
+              </p>
+              <p className="mt-2 text-xl font-bold text-foreground">
+                {reporting.portfolioMixSummary.operating_mode.replaceAll("_", " ")}
+              </p>
+            </div>
+          </div>
+          <p className="mt-4 text-sm text-muted-foreground">
+            {reporting.portfolioMixSummary.summary_note}
+          </p>
+          <p className="mt-2 text-xs text-muted-foreground">
+            `Portfolio mix` is different from stabilization alone: it helps you see whether your current learner base is mostly active-management work or increasingly shifting toward lighter-touch support.
+          </p>
+        </div>
+
+        <div className="rounded-2xl border bg-card p-5">
+          <h2 className="text-sm font-semibold uppercase tracking-[0.2em] text-muted-foreground">
+            Review Rhythm
+          </h2>
+          <p className="mt-3 text-sm text-muted-foreground">
+            Priority tells you what matters most right now. Review rhythm tells you what has gone too long without a fresh check-in, review, or plan update.
+          </p>
+        </div>
+
         <div className="grid gap-6 xl:grid-cols-[minmax(0,1.05fr)_minmax(320px,0.95fr)]">
           <section className="space-y-6">
+            <div className="rounded-2xl border bg-card p-5">
+              <div className="flex items-center gap-2">
+                <AlertTriangle className="h-4 w-4 text-[var(--cn-orange)]" />
+                <h2 className="text-sm font-semibold uppercase tracking-[0.2em] text-muted-foreground">
+                  Review Window
+                </h2>
+              </div>
+              {reporting.checkpointItems.length === 0 ? (
+                <div className="mt-4 rounded-xl border border-dashed p-4 text-sm text-muted-foreground">
+                  No derived review checkpoints yet. As review, adaptation, and support pressure starts to drift, the current review window will appear here.
+                </div>
+              ) : (
+                <div className="mt-4 space-y-3">
+                  {reporting.checkpointItems.slice(0, 6).map((item) => (
+                    <Link
+                      key={`${item.kind}:${item.private_student_id}:${item.days_open ?? "recent"}`}
+                      href={item.href}
+                      className="block rounded-xl border p-4 transition-colors hover:border-[var(--cn-orange)]/30 hover:bg-muted/20"
+                    >
+                      <div className="flex items-center justify-between gap-3">
+                        <div>
+                          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+                            {item.kind.replaceAll("_", " ")}
+                          </p>
+                          <h3 className="mt-1 font-semibold text-foreground">{item.student_name}</h3>
+                          <p className="mt-1 text-sm text-muted-foreground">{item.reason}</p>
+                        </div>
+                        <span
+                          className={`rounded-full border px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] ${
+                            item.due_state === "overdue"
+                              ? "border-rose-500/20 bg-rose-500/10 text-rose-300"
+                              : item.due_state === "due_now"
+                                ? "border-amber-500/20 bg-amber-500/10 text-amber-300"
+                                : "border-emerald-500/20 bg-emerald-500/10 text-emerald-400"
+                          }`}
+                        >
+                          {item.due_state === "overdue"
+                            ? "overdue"
+                            : item.due_state === "due_now"
+                              ? "due now"
+                              : "recently checked"}
+                        </span>
+                      </div>
+                      <p className="mt-2 text-xs text-muted-foreground">{item.classroom_name}</p>
+                      {item.supporting_note ? (
+                        <p className="mt-2 text-sm text-muted-foreground">{item.supporting_note}</p>
+                      ) : null}
+                    </Link>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <div className="rounded-2xl border bg-card p-5">
+              <div className="flex items-center gap-2">
+                <AlertTriangle className="h-4 w-4 text-[var(--cn-orange)]" />
+                <h2 className="text-sm font-semibold uppercase tracking-[0.2em] text-muted-foreground">
+                  Priority Queue
+                </h2>
+              </div>
+              {reporting.priorityItems.length === 0 ? (
+                <div className="mt-4 rounded-xl border border-dashed p-4 text-sm text-muted-foreground">
+                  No clear high-priority items right now. The teaching workspace is not showing stacked pressure that needs immediate follow-through.
+                </div>
+              ) : (
+                <div className="mt-4 space-y-3">
+                  {reporting.priorityItems.map((item) => (
+                    <Link
+                      key={`${item.kind}:${item.id}`}
+                      href={item.href}
+                      className="block rounded-xl border p-4 transition-colors hover:border-[var(--cn-orange)]/30 hover:bg-muted/20"
+                    >
+                      <div className="flex items-center justify-between gap-3">
+                        <div>
+                          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+                            {item.kind.replaceAll("_", " ")}
+                          </p>
+                          <h3 className="mt-1 font-semibold text-foreground">{item.title}</h3>
+                        </div>
+                        <span
+                          className={`rounded-full border px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] ${
+                            item.priority_level === "urgent"
+                              ? "border-rose-500/20 bg-rose-500/10 text-rose-300"
+                              : item.priority_level === "high"
+                                ? "border-amber-500/20 bg-amber-500/10 text-amber-300"
+                                : "border-sky-500/20 bg-sky-500/10 text-sky-400"
+                          }`}
+                        >
+                          {item.priority_level}
+                        </span>
+                      </div>
+                      <p className="mt-2 text-sm text-muted-foreground">{item.reason}</p>
+                      {item.supporting_note ? (
+                        <p className="mt-1 text-xs text-muted-foreground">{item.supporting_note}</p>
+                      ) : null}
+                    </Link>
+                  ))}
+                </div>
+              )}
+            </div>
+
             <div className="rounded-2xl border bg-card p-5">
               <h2 className="text-sm font-semibold uppercase tracking-[0.2em] text-muted-foreground">
                 Needs Attention
@@ -197,6 +538,12 @@ export default async function TeacherOverviewPage() {
                   <p className="mt-1 text-xs text-muted-foreground">
                     {reporting.totalPrivateNoPlaybook} without a playbook · {reporting.totalPrivatePlaybookGap} with a playbook gap
                   </p>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    {reporting.totalCheckpointsDueNow} due now · {reporting.totalCheckpointsOverdue} overdue checkpoints
+                  </p>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    {reporting.stabilizationSummary.simplify_support_candidates} simplify support · {reporting.stabilizationSummary.handoff_ready_private_learners} handoff-ready
+                  </p>
                 </Link>
                 <Link
                   href="/notebook/teacher/library"
@@ -216,11 +563,33 @@ export default async function TeacherOverviewPage() {
                   <p className="mt-1 text-xs text-muted-foreground">
                     {reporting.totalPrivatePlaybookGap > 0
                       ? `${reporting.totalPrivatePlaybookGap} learners show escalation pressure without a playbook`
-                      : reporting.totalStrategyWeak > 0
-                      ? `${reporting.totalStrategyWeak} saved ${reporting.totalStrategyWeak === 1 ? "strategy looks" : "strategies look"} weak or need refinement`
-                      : reporting.totalStrategyNoOutcome > 0
-                        ? `${reporting.totalStrategyNoOutcome} ${reporting.totalStrategyNoOutcome === 1 ? "strategy still needs" : "strategies still need"} outcome evidence`
-                        : "Saved strategies and playbooks have either useful evidence or no active warning signal right now"}
+                      : reporting.totalPlaybookWeak > 0
+                        ? `${reporting.totalPlaybookWeak} saved ${reporting.totalPlaybookWeak === 1 ? "playbook looks" : "playbooks look"} weak or need refinement`
+                        : reporting.totalPlaybookNoOutcome > 0
+                          ? `${reporting.totalPlaybookNoOutcome} ${reporting.totalPlaybookNoOutcome === 1 ? "playbook still needs" : "playbooks still need"} outcome evidence`
+                          : reporting.totalStrategyWeak > 0
+                            ? `${reporting.totalStrategyWeak} saved ${reporting.totalStrategyWeak === 1 ? "strategy looks" : "strategies look"} weak or need refinement`
+                            : reporting.totalStrategyNoOutcome > 0
+                              ? `${reporting.totalStrategyNoOutcome} ${reporting.totalStrategyNoOutcome === 1 ? "strategy still needs" : "strategies still need"} outcome evidence`
+                              : "Saved strategies and playbooks have either useful evidence or no active warning signal right now"}
+                  </p>
+                </Link>
+                <Link
+                  href="/notebook/teacher/reporting"
+                  className="rounded-xl border p-4 transition-colors hover:border-[var(--cn-orange)]/30 hover:bg-muted/20"
+                >
+                  <p className="text-sm font-semibold text-foreground">Teaching patterns</p>
+                  <p className="mt-1 text-sm text-muted-foreground">
+                    {reporting.totalIssueClusters > 0
+                      ? `${reporting.totalIssueClusters} recurring issue ${reporting.totalIssueClusters === 1 ? "cluster is" : "clusters are"} now visible across private learners`
+                      : "No cross-learner issue patterns are visible yet"}
+                  </p>
+                  <p className="mt-2 text-xs text-muted-foreground">
+                    {reporting.totalIssueLearnersWithoutSupportPath > 0
+                      ? `${reporting.totalIssueLearnersWithoutSupportPath} learner${reporting.totalIssueLearnersWithoutSupportPath === 1 ? "" : "s"} still show recurring pressure without a clear support path`
+                      : reporting.totalIssueSupportGaps > 0
+                        ? `${reporting.totalIssueSupportGaps} issue ${reporting.totalIssueSupportGaps === 1 ? "cluster still has" : "clusters still have"} strategy or playbook gaps`
+                        : "Cross-learner patterns are visible, but no major support gaps are standing out right now"}
                   </p>
                 </Link>
                 <Link

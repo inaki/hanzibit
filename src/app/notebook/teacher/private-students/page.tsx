@@ -149,12 +149,25 @@ function getStrategyGuidance(input: {
 
 function getPlaybookGuidance(input: {
   playbookTitle: string | null;
+  lastOutcomeStatus: string | null;
   needsPlaybookAttention: boolean;
   recurringIssueTags: string[];
   blockedGoalCount: number;
   needsReinforcementCount: number;
 }) {
   if (input.playbookTitle) {
+    if (input.lastOutcomeStatus === "helped") {
+      return `${input.playbookTitle} is not just attached, it is helping. Keep the broader support path stable before changing course.`;
+    }
+    if (input.lastOutcomeStatus === "partial") {
+      return `${input.playbookTitle} is only partly helping. Keep it visible, but refine the supporting strategy mix instead of assuming it is already enough.`;
+    }
+    if (input.lastOutcomeStatus === "no_change") {
+      return `${input.playbookTitle} is attached, but the latest outcome showed no clear lift. Refine or replace the playbook soon.`;
+    }
+    if (input.lastOutcomeStatus === "replace") {
+      return `${input.playbookTitle} now looks like a replacement candidate. Shift this learner to a stronger playbook instead of repeating it blindly.`;
+    }
     return input.needsPlaybookAttention
       ? `${input.playbookTitle} is the current structured response, but pressure is still visible. Reapply it with a clearer note or refine the linked strategies instead of drifting back to ad hoc support.`
       : `${input.playbookTitle} is the current structured playbook guiding this learner. Keep the next lesson and assignment support aligned with it.`;
@@ -179,6 +192,283 @@ function getReviewDateLabel(value: string | null) {
 function getAdaptationDateLabel(value: string | null) {
   if (!value) return "No adaptation yet";
   return new Date(value).toLocaleDateString("en-US");
+}
+
+function getPriorityScore(input: {
+  status: PrivateStudentListItem["status"];
+  blockedGoalCount: number;
+  needsReinforcementCount: number;
+  recurringIssueTags: string[];
+  needsReviewSnapshot: boolean;
+  needsAdaptation: boolean;
+  reviewWithoutAdaptation: boolean;
+  hasLessonPlan: boolean;
+  planOverdue: boolean;
+  hasRecentHistory: boolean;
+  hasStrategy: boolean;
+  hasPlaybook: boolean;
+}) {
+  return (
+    (input.blockedGoalCount > 0 ? 40 : 0) +
+    (!input.hasPlaybook &&
+    (input.needsAdaptation ||
+      input.blockedGoalCount > 0 ||
+      input.needsReinforcementCount > 0 ||
+      input.recurringIssueTags.length > 0)
+      ? 30
+      : 0) +
+    (!input.hasStrategy &&
+    (input.needsAdaptation ||
+      input.blockedGoalCount > 0 ||
+      input.needsReinforcementCount > 0 ||
+      input.recurringIssueTags.length > 0)
+      ? 20
+      : 0) +
+    (input.needsAdaptation ? 18 : 0) +
+    (input.reviewWithoutAdaptation ? 16 : 0) +
+    (input.planOverdue ? 15 : 0) +
+    (!input.hasLessonPlan ? 15 : 0) +
+    (!input.hasRecentHistory && input.status !== "onboarding" ? 12 : 0) +
+    (input.recurringIssueTags.length > 0 ? 10 : 0) +
+    (input.needsReviewSnapshot ? 10 : 0) +
+    (input.status === "awaiting_teacher" ? 12 : 0) +
+    (input.status === "inactive" ? 10 : 0)
+  );
+}
+
+function getPriorityLevel(score: number): "urgent" | "high" | "watch" {
+  if (score >= 90) return "urgent";
+  if (score >= 50) return "high";
+  return "watch";
+}
+
+function getPriorityReason(input: {
+  blockedGoalCount: number;
+  needsAdaptation: boolean;
+  reviewWithoutAdaptation: boolean;
+  planOverdue: boolean;
+  hasLessonPlan: boolean;
+  hasRecentHistory: boolean;
+  recurringIssueTags: string[];
+  hasStrategy: boolean;
+  hasPlaybook: boolean;
+}) {
+  const reasons: string[] = [];
+  if (input.blockedGoalCount > 0) reasons.push("blocked goal");
+  if (!input.hasPlaybook && (input.blockedGoalCount > 0 || input.recurringIssueTags.length > 0)) {
+    reasons.push("no playbook");
+  }
+  if (!input.hasStrategy && (input.blockedGoalCount > 0 || input.recurringIssueTags.length > 0)) {
+    reasons.push("no strategy");
+  }
+  if (input.needsAdaptation) reasons.push("needs adaptation");
+  if (input.reviewWithoutAdaptation) reasons.push("reviewed, not adapted");
+  if (input.planOverdue) reasons.push("plan overdue");
+  if (!input.hasLessonPlan) reasons.push("no next plan");
+  if (!input.hasRecentHistory) reasons.push("no recent history");
+  if (input.recurringIssueTags.length > 0) reasons.push("recurring issue pressure");
+  return reasons.length > 0 ? reasons.join(" + ") : "steady private learner";
+}
+
+function getSupportLoadState(input: {
+  blockedGoalCount: number;
+  needsReinforcementCount: number;
+  recurringIssueTags: string[];
+  hasStrategy: boolean;
+  hasPlaybook: boolean;
+  lastStrategyOutcomeStatus: string | null;
+  lastPlaybookOutcomeStatus: string | null;
+}) {
+  const pressureCount =
+    (input.blockedGoalCount > 0 ? 1 : 0) +
+    (input.needsReinforcementCount > 0 ? 1 : 0) +
+    (input.recurringIssueTags.length > 0 ? 1 : 0);
+
+  const hasNoSupportPath = !input.hasStrategy && !input.hasPlaybook && pressureCount > 0;
+  const weakSupportInUse =
+    pressureCount > 0 &&
+    ((input.hasStrategy &&
+      (input.lastStrategyOutcomeStatus === "no_change" ||
+        input.lastStrategyOutcomeStatus === "replace")) ||
+      (input.hasPlaybook &&
+        (input.lastPlaybookOutcomeStatus === "no_change" ||
+          input.lastPlaybookOutcomeStatus === "replace")));
+
+  if (hasNoSupportPath && pressureCount >= 2) {
+    return {
+      level: "high" as const,
+      label: "No support path",
+      note: "Recurring pressure is visible without any active strategy or playbook.",
+    };
+  }
+
+  if (weakSupportInUse) {
+    return {
+      level: pressureCount >= 2 ? ("high" as const) : ("medium" as const),
+      label: "Weak support path",
+      note: "Support exists, but the latest outcome suggests it is not carrying the learner well enough.",
+    };
+  }
+
+  if (pressureCount >= 2) {
+    return {
+      level: "medium" as const,
+      label: "Repeated pressure",
+      note: "Multiple pressure signals are stacking up for this learner and should be handled deliberately.",
+    };
+  }
+
+  return {
+    level: "watch" as const,
+    label: "Contained",
+    note: "Pressure is present but not concentrated enough yet to count as a support-load hotspot.",
+  };
+}
+
+function getStabilizationState(input: {
+  status: PrivateStudentListItem["status"];
+  hasLessonPlan: boolean;
+  hasSupportedPlan: boolean;
+  activeGoalCount: number;
+  blockedGoalCount: number;
+  needsReinforcementCount: number;
+  recurringIssueTags: string[];
+  hasRecentHistory: boolean;
+  hasRecentReview: boolean;
+  hasRecentAdaptation: boolean;
+  needsReviewSnapshot: boolean;
+  needsAdaptation: boolean;
+  reviewWithoutAdaptation: boolean;
+  planOverdue: boolean;
+  hasStrategyApplication: boolean;
+  hasPlaybookApplication: boolean;
+  latestStrategyOutcomeStatus: string | null;
+  latestPlaybookOutcomeStatus: string | null;
+}) {
+  const hasWeakOutcome =
+    input.latestStrategyOutcomeStatus === "no_change" ||
+    input.latestStrategyOutcomeStatus === "replace" ||
+    input.latestPlaybookOutcomeStatus === "no_change" ||
+    input.latestPlaybookOutcomeStatus === "replace";
+
+  const isStable =
+    input.status === "active" &&
+    input.blockedGoalCount === 0 &&
+    input.needsReinforcementCount === 0 &&
+    input.recurringIssueTags.length === 0 &&
+    !input.needsReviewSnapshot &&
+    !input.needsAdaptation &&
+    !input.reviewWithoutAdaptation &&
+    !input.planOverdue &&
+    input.hasRecentHistory &&
+    (input.hasRecentReview || input.hasRecentAdaptation) &&
+    !hasWeakOutcome;
+
+  if (!isStable) {
+    return {
+      state: "keep_active" as const,
+      label: "Keep active",
+      note: "This learner still needs active intervention, follow-through, or closer support.",
+    };
+  }
+
+  if (
+    input.hasLessonPlan &&
+    (input.hasStrategyApplication || input.hasPlaybookApplication) &&
+    ((input.latestStrategyOutcomeStatus === "helped" && !input.hasPlaybookApplication) ||
+      input.latestPlaybookOutcomeStatus === "helped")
+  ) {
+    if (
+      input.hasSupportedPlan &&
+      input.activeGoalCount > 0 &&
+      input.hasRecentHistory &&
+      input.hasRecentReview &&
+      input.hasRecentAdaptation
+    ) {
+      return {
+        state: "handoff_ready" as const,
+        label: "Handoff-ready",
+        note: "Support looks stable enough for lighter-touch monitoring instead of the same active intervention load.",
+      };
+    }
+
+    return {
+      state: "simplify" as const,
+      label: "Simplify support",
+      note: "The current support path looks steady enough that the teacher may be able to simplify it.",
+    };
+  }
+
+  return {
+    state: "light_touch" as const,
+    label: "Light-touch",
+    note: "This learner looks relatively stable and may only need lighter monitoring for now.",
+  };
+}
+
+function getCheckpointDueState(daysOpen: number | null): "due_now" | "overdue" | "recently_checked" {
+  if (daysOpen === null) return "recently_checked";
+  if (daysOpen > 14) return "overdue";
+  if (daysOpen >= 7) return "due_now";
+  return "recently_checked";
+}
+
+function getCheckpointState(input: {
+  needsReviewSnapshot: boolean;
+  needsAdaptation: boolean;
+  reviewWithoutAdaptation: boolean;
+  hasStrategyApplication: boolean;
+  hasPlaybookApplication: boolean;
+  latestStrategyOutcomeStatus: string | null;
+  latestPlaybookOutcomeStatus: string | null;
+  daysSinceReview: number | null;
+  daysSinceAdaptation: number | null;
+  daysSinceStrategyApplication: number | null;
+  daysSincePlaybookApplication: number | null;
+}) {
+  if (input.needsReviewSnapshot) {
+    return {
+      kind: "review_due" as const,
+      dueState: getCheckpointDueState(input.daysSinceReview),
+      reason: "review checkpoint due",
+    };
+  }
+
+  if (input.needsAdaptation || input.reviewWithoutAdaptation) {
+    return {
+      kind: "adaptation_due" as const,
+      dueState: getCheckpointDueState(input.daysSinceAdaptation),
+      reason: input.reviewWithoutAdaptation ? "reviewed, not adapted" : "adaptation checkpoint due",
+    };
+  }
+
+  const supportNeedsRecheck =
+    (input.hasStrategyApplication &&
+      (!input.latestStrategyOutcomeStatus ||
+        input.latestStrategyOutcomeStatus === "no_change" ||
+        input.latestStrategyOutcomeStatus === "replace")) ||
+    (input.hasPlaybookApplication &&
+      (!input.latestPlaybookOutcomeStatus ||
+        input.latestPlaybookOutcomeStatus === "no_change" ||
+        input.latestPlaybookOutcomeStatus === "replace"));
+
+  if (supportNeedsRecheck) {
+    const supportDays = Math.min(
+      input.daysSinceStrategyApplication ?? Number.POSITIVE_INFINITY,
+      input.daysSincePlaybookApplication ?? Number.POSITIVE_INFINITY
+    );
+    return {
+      kind: "support_recheck_due" as const,
+      dueState: getCheckpointDueState(Number.isFinite(supportDays) ? supportDays : null),
+      reason: "support recheck due",
+    };
+  }
+
+  return {
+    kind: "recently_checked" as const,
+    dueState: "recently_checked" as const,
+    reason: "reviewed recently",
+  };
 }
 
 export default async function TeacherPrivateStudentsPage() {
@@ -240,6 +530,19 @@ export default async function TeacherPrivateStudentsPage() {
           recurringIssueTags.length > 0 ||
           !hasRecentHistory) &&
         !hasRecentAdaptation;
+      const checkpoint = getCheckpointState({
+        needsReviewSnapshot,
+        needsAdaptation,
+        reviewWithoutAdaptation,
+        hasStrategyApplication: Boolean(item.last_strategy_id),
+        hasPlaybookApplication: Boolean(item.last_playbook_id),
+        latestStrategyOutcomeStatus: item.last_strategy_outcome_status,
+        latestPlaybookOutcomeStatus: item.last_playbook_outcome_status,
+        daysSinceReview,
+        daysSinceAdaptation,
+        daysSinceStrategyApplication: getDaysSince(item.last_strategy_applied_at),
+        daysSincePlaybookApplication: getDaysSince(item.last_playbook_applied_at),
+      });
 
       return {
         item,
@@ -256,6 +559,79 @@ export default async function TeacherPrivateStudentsPage() {
         hasRecentAdaptation,
         reviewWithoutAdaptation,
         needsAdaptation,
+        checkpoint,
+        priorityScore: getPriorityScore({
+          status: item.status,
+          blockedGoalCount,
+          needsReinforcementCount,
+          recurringIssueTags,
+          needsReviewSnapshot,
+          needsAdaptation,
+          reviewWithoutAdaptation,
+          hasLessonPlan: Boolean(lessonPlan),
+          planOverdue: lessonPlan ? isPlanOverdue(lessonPlan.target_date) : false,
+          hasRecentHistory,
+          hasStrategy: Boolean(item.last_strategy_id),
+          hasPlaybook: Boolean(item.last_playbook_id),
+        }),
+        priorityLevel: getPriorityLevel(
+          getPriorityScore({
+            status: item.status,
+            blockedGoalCount,
+            needsReinforcementCount,
+            recurringIssueTags,
+            needsReviewSnapshot,
+            needsAdaptation,
+            reviewWithoutAdaptation,
+            hasLessonPlan: Boolean(lessonPlan),
+            planOverdue: lessonPlan ? isPlanOverdue(lessonPlan.target_date) : false,
+            hasRecentHistory,
+            hasStrategy: Boolean(item.last_strategy_id),
+            hasPlaybook: Boolean(item.last_playbook_id),
+          })
+        ),
+        priorityReason: getPriorityReason({
+          blockedGoalCount,
+          needsAdaptation,
+          reviewWithoutAdaptation,
+          planOverdue: lessonPlan ? isPlanOverdue(lessonPlan.target_date) : false,
+          hasLessonPlan: Boolean(lessonPlan),
+          hasRecentHistory,
+          recurringIssueTags,
+          hasStrategy: Boolean(item.last_strategy_id),
+          hasPlaybook: Boolean(item.last_playbook_id),
+        }),
+        supportLoad: getSupportLoadState({
+          blockedGoalCount,
+          needsReinforcementCount,
+          recurringIssueTags,
+          hasStrategy: Boolean(item.last_strategy_id),
+          hasPlaybook: Boolean(item.last_playbook_id),
+          lastStrategyOutcomeStatus: item.last_strategy_outcome_status,
+          lastPlaybookOutcomeStatus: item.last_playbook_outcome_status,
+        }),
+        stabilization: getStabilizationState({
+          status: item.status,
+          hasLessonPlan: Boolean(lessonPlan),
+          hasSupportedPlan: Boolean(
+            lessonPlan && (lessonPlan.next_assignment_id || lessonPlan.next_template_id)
+          ),
+          activeGoalCount,
+          blockedGoalCount,
+          needsReinforcementCount,
+          recurringIssueTags,
+          hasRecentHistory,
+          hasRecentReview,
+          hasRecentAdaptation,
+          needsReviewSnapshot,
+          needsAdaptation,
+          reviewWithoutAdaptation,
+          planOverdue: lessonPlan ? isPlanOverdue(lessonPlan.target_date) : false,
+          hasStrategyApplication: Boolean(item.last_strategy_id),
+          hasPlaybookApplication: Boolean(item.last_playbook_id),
+          latestStrategyOutcomeStatus: item.last_strategy_outcome_status,
+          latestPlaybookOutcomeStatus: item.last_playbook_outcome_status,
+        }),
       };
     })
   );
@@ -263,9 +639,30 @@ export default async function TeacherPrivateStudentsPage() {
   const grouped = statusOrder
     .map((status) => ({
       status,
-      items: privateStudentsWithPlans.filter(({ item }) => item.status === status),
+      items: privateStudentsWithPlans
+        .filter(({ item }) => item.status === status)
+        .sort((a, b) => b.priorityScore - a.priorityScore),
     }))
     .filter((group) => group.items.length > 0);
+
+  const urgentPriorityCount = privateStudentsWithPlans.filter(
+    ({ priorityLevel }) => priorityLevel === "urgent"
+  ).length;
+  const highPriorityCount = privateStudentsWithPlans.filter(
+    ({ priorityLevel }) => priorityLevel === "high"
+  ).length;
+  const watchPriorityCount = privateStudentsWithPlans.filter(
+    ({ priorityLevel }) => priorityLevel === "watch"
+  ).length;
+  const checkpointDueNowCount = privateStudentsWithPlans.filter(
+    ({ checkpoint }) => checkpoint.dueState === "due_now"
+  ).length;
+  const checkpointOverdueCount = privateStudentsWithPlans.filter(
+    ({ checkpoint }) => checkpoint.dueState === "overdue"
+  ).length;
+  const checkpointRecentlyCheckedCount = privateStudentsWithPlans.filter(
+    ({ checkpoint }) => checkpoint.dueState === "recently_checked"
+  ).length;
 
   const noPlanCount = privateStudentsWithPlans.filter(({ lessonPlan }) => !lessonPlan).length;
   const overduePlanCount = privateStudentsWithPlans.filter(({ lessonPlan }) =>
@@ -286,6 +683,24 @@ export default async function TeacherPrivateStudentsPage() {
   ).length;
   const recurringIssueCount = privateStudentsWithPlans.filter(
     ({ recurringIssueTags }) => recurringIssueTags.length > 0
+  ).length;
+  const repeatedPressureCount = privateStudentsWithPlans.filter(
+    ({ supportLoad }) => supportLoad.label === "Repeated pressure"
+  ).length;
+  const noSupportPathPressureCount = privateStudentsWithPlans.filter(
+    ({ supportLoad }) => supportLoad.label === "No support path"
+  ).length;
+  const weakSupportLoadCount = privateStudentsWithPlans.filter(
+    ({ supportLoad }) => supportLoad.label === "Weak support path"
+  ).length;
+  const stableLearnerCount = privateStudentsWithPlans.filter(
+    ({ stabilization }) => stabilization.state === "light_touch"
+  ).length;
+  const simplifySupportCount = privateStudentsWithPlans.filter(
+    ({ stabilization }) => stabilization.state === "simplify"
+  ).length;
+  const handoffReadyCount = privateStudentsWithPlans.filter(
+    ({ stabilization }) => stabilization.state === "handoff_ready"
   ).length;
   const noStrategyCount = privateStudentsWithPlans.filter(
     ({ item }) => !item.last_strategy_id
@@ -346,6 +761,56 @@ export default async function TeacherPrivateStudentsPage() {
         </div>
 
         {privateStudents.length > 0 ? (
+          <div className="grid gap-4 sm:grid-cols-3">
+            <InfoCard label="Urgent priority" value={urgentPriorityCount} tone="rose" />
+            <InfoCard label="High priority" value={highPriorityCount} tone="amber" />
+            <InfoCard label="Watch list" value={watchPriorityCount} tone="sky" />
+          </div>
+        ) : null}
+
+        {privateStudents.length > 0 ? (
+          <div className="grid gap-4 sm:grid-cols-3">
+            <InfoCard label="Review due now" value={checkpointDueNowCount} tone="amber" />
+            <InfoCard label="Review overdue" value={checkpointOverdueCount} tone="rose" />
+            <InfoCard label="Recently checked" value={checkpointRecentlyCheckedCount} tone="sky" />
+          </div>
+        ) : null}
+
+        {privateStudents.length > 0 ? (
+          <div className="rounded-2xl border bg-card p-5 text-sm text-muted-foreground">
+            Review rhythm highlights what needs a fresh checkpoint. `Due now` means it should be revisited soon; `overdue` means the teacher has likely gone too long without a meaningful review, adaptation, or support recheck.
+          </div>
+        ) : null}
+
+        {privateStudents.length > 0 ? (
+          <div className="grid gap-4 sm:grid-cols-3">
+            <InfoCard label="Light-touch" value={stableLearnerCount} tone="sky" />
+            <InfoCard label="Simplify support" value={simplifySupportCount} tone="amber" />
+            <InfoCard label="Handoff-ready" value={handoffReadyCount} tone="emerald" />
+          </div>
+        ) : null}
+
+        {privateStudents.length > 0 ? (
+          <div className="rounded-2xl border bg-card p-5 text-sm text-muted-foreground">
+            Stabilization highlights where a learner no longer needs the same level of active intervention. `Keep active` means the current pressure still needs direct teacher follow-through. `Simplify support` means the current path may be heavier than necessary. `Handoff-ready` means the learner looks stable enough for lighter-touch monitoring.
+          </div>
+        ) : null}
+
+        {privateStudents.length > 0 ? (
+          <div className="grid gap-4 sm:grid-cols-3">
+            <InfoCard label="Repeated pressure" value={repeatedPressureCount} tone="amber" />
+            <InfoCard label="No support path" value={noSupportPathPressureCount} tone="rose" />
+            <InfoCard label="Weak support load" value={weakSupportLoadCount} tone="rose" />
+          </div>
+        ) : null}
+
+        {privateStudents.length > 0 ? (
+          <div className="rounded-2xl border bg-card p-5 text-sm text-muted-foreground">
+            Support-load concentration highlights where the same learner is carrying multiple pressure signals at once. `No support path` means the learner is under pressure without a strategy or playbook; `Weak support load` means support exists, but the latest outcome still suggests it is not working well enough.
+          </div>
+        ) : null}
+
+        {privateStudents.length > 0 ? (
           <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-11">
             <InfoCard label="No next plan" value={noPlanCount} tone="rose" />
             <InfoCard label="Overdue plans" value={overduePlanCount} tone="amber" />
@@ -380,7 +845,7 @@ export default async function TeacherPrivateStudentsPage() {
                   </h2>
                 </div>
                 <div className="grid gap-4">
-                  {group.items.map(({ item, lessonPlan, activeGoalCount, blockedGoalCount, needsReinforcementCount, recurringIssueTags, latestHistory, latestReview, hasRecentHistory, needsReviewSnapshot, needsAdaptation, reviewWithoutAdaptation }) => (
+                  {group.items.map(({ item, lessonPlan, activeGoalCount, blockedGoalCount, needsReinforcementCount, recurringIssueTags, latestHistory, latestReview, hasRecentHistory, needsReviewSnapshot, needsAdaptation, reviewWithoutAdaptation, priorityLevel, priorityReason, checkpoint, supportLoad, stabilization }) => (
                     <Link
                       key={item.id}
                       href={`/notebook/teacher/private-students/${item.id}`}
@@ -391,6 +856,32 @@ export default async function TeacherPrivateStudentsPage() {
                           <div className="flex flex-wrap items-center gap-3">
                             <StatusPill status={item.status} />
                             <NextStepLabel nextStepType={item.next_step_type} />
+                            <span
+                              className={`rounded-full border px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] ${
+                                priorityLevel === "urgent"
+                                  ? "border-rose-500/20 bg-rose-500/10 text-rose-300"
+                                  : priorityLevel === "high"
+                                    ? "border-amber-500/20 bg-amber-500/10 text-amber-300"
+                                    : "border-sky-500/20 bg-sky-500/10 text-sky-400"
+                              }`}
+                            >
+                              {priorityLevel}
+                            </span>
+                            <span
+                              className={`rounded-full border px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] ${
+                                checkpoint.dueState === "overdue"
+                                  ? "border-rose-500/20 bg-rose-500/10 text-rose-300"
+                                  : checkpoint.dueState === "due_now"
+                                    ? "border-amber-500/20 bg-amber-500/10 text-amber-300"
+                                    : "border-emerald-500/20 bg-emerald-500/10 text-emerald-400"
+                              }`}
+                            >
+                              {checkpoint.dueState === "overdue"
+                                ? "overdue"
+                                : checkpoint.dueState === "due_now"
+                                  ? "due now"
+                                  : "recently checked"}
+                            </span>
                             {lessonPlan ? (
                               <span className="rounded-full border border-sky-500/20 bg-sky-500/10 px-2.5 py-1 text-[11px] font-medium text-sky-400">
                                 {getPrivateLessonPlanStatusLabel(lessonPlan.plan_status)}
@@ -445,6 +936,28 @@ export default async function TeacherPrivateStudentsPage() {
                                 Reviewed, not adapted
                               </span>
                             ) : null}
+                            {supportLoad.level === "high" ? (
+                              <span className="rounded-full border border-rose-500/20 bg-rose-500/10 px-2.5 py-1 text-[11px] font-medium text-rose-300">
+                                {supportLoad.label}
+                              </span>
+                            ) : supportLoad.level === "medium" ? (
+                              <span className="rounded-full border border-amber-500/20 bg-amber-500/10 px-2.5 py-1 text-[11px] font-medium text-amber-300">
+                                {supportLoad.label}
+                              </span>
+                            ) : null}
+                            {stabilization.state === "handoff_ready" ? (
+                              <span className="rounded-full border border-emerald-500/20 bg-emerald-500/10 px-2.5 py-1 text-[11px] font-medium text-emerald-400">
+                                {stabilization.label}
+                              </span>
+                            ) : stabilization.state === "simplify" ? (
+                              <span className="rounded-full border border-[var(--cn-orange)]/20 bg-[var(--cn-orange)]/10 px-2.5 py-1 text-[11px] font-medium text-[var(--cn-orange)]">
+                                {stabilization.label}
+                              </span>
+                            ) : stabilization.state === "light_touch" ? (
+                              <span className="rounded-full border border-sky-500/20 bg-sky-500/10 px-2.5 py-1 text-[11px] font-medium text-sky-400">
+                                {stabilization.label}
+                              </span>
+                            ) : null}
                             {!item.last_playbook_id ? (
                               <span className="rounded-full border border-amber-500/20 bg-amber-500/10 px-2.5 py-1 text-[11px] font-medium text-amber-300">
                                 No playbook yet
@@ -467,6 +980,25 @@ export default async function TeacherPrivateStudentsPage() {
                             {item.last_playbook_title ? (
                               <span className="rounded-full border border-amber-500/20 bg-amber-500/10 px-2.5 py-1 text-[11px] font-medium text-amber-300">
                                 Playbook · {item.last_playbook_title}
+                              </span>
+                            ) : null}
+                            {item.last_playbook_outcome_status ? (
+                              <span className={`rounded-full border px-2.5 py-1 text-[11px] font-medium ${
+                                item.last_playbook_outcome_status === "helped"
+                                  ? "border-emerald-500/20 bg-emerald-500/10 text-emerald-400"
+                                  : item.last_playbook_outcome_status === "partial"
+                                    ? "border-sky-500/20 bg-sky-500/10 text-sky-400"
+                                    : item.last_playbook_outcome_status === "no_change"
+                                      ? "border-amber-500/20 bg-amber-500/10 text-amber-300"
+                                      : "border-rose-500/20 bg-rose-500/10 text-rose-300"
+                              }`}>
+                                {item.last_playbook_outcome_status === "helped"
+                                  ? "Playbook helped"
+                                  : item.last_playbook_outcome_status === "partial"
+                                    ? "Playbook partial"
+                                    : item.last_playbook_outcome_status === "no_change"
+                                      ? "Playbook unclear"
+                                      : "Playbook replace"}
                               </span>
                             ) : null}
                             {item.last_strategy_outcome_status ? (
@@ -644,6 +1176,7 @@ export default async function TeacherPrivateStudentsPage() {
                         Playbook:{" "}
                         {getPlaybookGuidance({
                           playbookTitle: item.last_playbook_title ?? null,
+                          lastOutcomeStatus: item.last_playbook_outcome_status ?? null,
                           needsPlaybookAttention:
                             !item.last_playbook_id &&
                             (needsAdaptation ||
@@ -655,6 +1188,15 @@ export default async function TeacherPrivateStudentsPage() {
                           needsReinforcementCount,
                         })}
                       </p>
+                      {item.last_playbook_outcome_note ? (
+                        <p className="mt-2 text-sm text-muted-foreground">
+                          Latest playbook outcome: {item.last_playbook_outcome_note}
+                        </p>
+                      ) : item.last_playbook_title && !item.last_playbook_outcome_status ? (
+                        <p className="mt-2 text-sm text-muted-foreground">
+                          No outcome has been recorded yet for the current playbook.
+                        </p>
+                      ) : null}
                       {item.last_strategy_outcome_note ? (
                         <p className="mt-2 text-sm text-muted-foreground">
                           Latest strategy outcome: {item.last_strategy_outcome_note}
@@ -662,6 +1204,25 @@ export default async function TeacherPrivateStudentsPage() {
                       ) : null}
                       <p className="mt-4 text-sm text-muted-foreground">
                         {getTeacherFocusCopy(item)}
+                      </p>
+                      <p className="mt-2 text-sm text-muted-foreground">
+                        Priority reason: {priorityReason}
+                      </p>
+                      <p className="mt-2 text-sm text-muted-foreground">
+                        Review rhythm: {checkpoint.reason}
+                      </p>
+                      <p className="mt-2 text-sm text-muted-foreground">
+                        Support load: {supportLoad.note}
+                      </p>
+                      <p className="mt-2 text-sm text-muted-foreground">
+                        Stabilization: {stabilization.note}
+                      </p>
+                      <p className="mt-1 text-xs text-muted-foreground">
+                        {checkpoint.dueState === "overdue"
+                          ? "This learner has slipped past the current review window."
+                          : checkpoint.dueState === "due_now"
+                            ? "This learner should come back into the current review window soon."
+                            : "This learner has been checked recently enough for now."}
                       </p>
                     </Link>
                   ))}

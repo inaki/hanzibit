@@ -31,12 +31,16 @@ import {
   createPrivateStudentGoalAction,
   updatePrivateStudentGoalAction,
   updatePrivateStudentStateAction,
+  recordTeacherPlaybookOutcomeAction,
   recordTeacherStrategyOutcomeAction,
 } from "@/lib/actions";
 import { listTeacherPlaybooksForTeacher } from "@/lib/teacher-playbooks";
 import { listTeacherStrategiesForTeacher } from "@/lib/teacher-strategies";
 import { listPrivateStudentPlaybookApplications } from "@/lib/private-student-playbook-applications";
 import { listPrivateStudentStrategyApplications } from "@/lib/private-student-strategy-applications";
+import {
+  getPrivateStudentPlaybookOutcomeLabel,
+} from "@/lib/private-student-playbook-outcomes";
 import {
   getPrivateStudentStrategyOutcomeLabel,
 } from "@/lib/private-student-strategy-outcomes";
@@ -449,6 +453,17 @@ export default async function TeacherPrivateStudentDetailPage({
     redirect(`/notebook/teacher/private-students/${privateStudentId}?success=strategy-outcome-saved`);
   }
 
+  async function recordPlaybookOutcomeFormAction(formData: FormData) {
+    "use server";
+    const result = await recordTeacherPlaybookOutcomeAction(formData);
+    if ("error" in result) {
+      redirect(
+        `/notebook/teacher/private-students/${privateStudentId}?success=${encodeURIComponent(`error:${result.error}`)}`
+      );
+    }
+    redirect(`/notebook/teacher/private-students/${privateStudentId}?success=playbook-outcome-saved`);
+  }
+
   return (
     <div data-testid="teacher-private-student-detail-page" className="h-full overflow-auto p-6 pb-20 md:p-10 lg:pb-10">
       <div className="mx-auto max-w-6xl space-y-8">
@@ -499,6 +514,8 @@ export default async function TeacherPrivateStudentDetailPage({
                             ? "Playbook applied."
                           : query.success === "strategy-outcome-saved"
                             ? "Strategy outcome saved."
+                          : query.success === "playbook-outcome-saved"
+                            ? "Playbook outcome saved."
                     : "Private learner workflow updated."}
           </div>
         ) : null}
@@ -562,6 +579,49 @@ export default async function TeacherPrivateStudentDetailPage({
               detail.last_playbook_applied_at
                 ? formatDateTime(detail.last_playbook_applied_at)
                 : "Not applied yet"
+            }
+          />
+        </div>
+
+        <div className="grid gap-4 sm:grid-cols-3">
+          <SummaryCard
+            label="Last playbook outcome"
+            value={
+              detail.last_playbook_outcome_status
+                ? getPrivateStudentPlaybookOutcomeLabel(
+                    detail.last_playbook_outcome_status as
+                      | "helped"
+                      | "partial"
+                      | "no_change"
+                      | "replace"
+                  )
+                : "No outcome yet"
+            }
+            tone="sky"
+          />
+          <SummaryCard
+            label="Playbook outcome recorded"
+            value={
+              detail.last_playbook_outcome_at
+                ? formatDateTime(detail.last_playbook_outcome_at)
+                : "Not recorded yet"
+            }
+          />
+          <SummaryCard
+            label="Playbook follow-through"
+            value={
+              detail.last_playbook_title
+                ? detail.last_playbook_outcome_status
+                  ? "Tracked"
+                  : "Needs outcome"
+                : "No playbook yet"
+            }
+            tone={
+              detail.last_playbook_title
+                ? detail.last_playbook_outcome_status
+                  ? "emerald"
+                  : "amber"
+                : undefined
             }
           />
         </div>
@@ -968,6 +1028,68 @@ export default async function TeacherPrivateStudentDetailPage({
                           Note: {application.application_note}
                         </p>
                       ) : null}
+                      {application.outcome_status ? (
+                        <p className="mt-2 text-sm text-muted-foreground">
+                          Outcome:{" "}
+                          {getPrivateStudentPlaybookOutcomeLabel(
+                            application.outcome_status as
+                              | "helped"
+                              | "partial"
+                              | "no_change"
+                              | "replace"
+                          )}
+                          {application.outcome_recorded_at
+                            ? ` · ${formatDateTime(application.outcome_recorded_at)}`
+                            : ""}
+                        </p>
+                      ) : null}
+                      {application.outcome_note ? (
+                        <p className="mt-2 text-sm text-muted-foreground">
+                          Outcome note: {application.outcome_note}
+                        </p>
+                      ) : null}
+                      <form action={recordPlaybookOutcomeFormAction} className="mt-3 space-y-3 rounded-xl border border-dashed p-3">
+                        <input type="hidden" name="playbook_application_id" value={application.id} />
+                        <div className="grid gap-3 md:grid-cols-[180px_minmax(0,1fr)]">
+                          <div>
+                            <label className="mb-1 block text-sm font-medium text-foreground/80">Outcome</label>
+                            <select
+                              name="outcome_status"
+                              defaultValue={application.outcome_status ?? ""}
+                              className="w-full rounded-lg border bg-background px-3 py-2 text-sm"
+                            >
+                              <option value="">Select outcome</option>
+                              <option value="helped">Helped</option>
+                              <option value="partial">Partial help</option>
+                              <option value="no_change">No clear change</option>
+                              <option value="replace">Replace playbook</option>
+                            </select>
+                          </div>
+                          <div>
+                            <label className="mb-1 block text-sm font-medium text-foreground/80">Recorded date</label>
+                            <input
+                              type="date"
+                              name="recorded_at"
+                              defaultValue={(application.outcome_recorded_at ?? application.applied_at).slice(0, 10)}
+                              className="w-full rounded-lg border bg-background px-3 py-2 text-sm"
+                            />
+                          </div>
+                        </div>
+                        <div>
+                          <label className="mb-1 block text-sm font-medium text-foreground/80">Outcome note</label>
+                          <textarea
+                            name="outcome_note"
+                            rows={2}
+                            defaultValue={application.outcome_note ?? ""}
+                            placeholder="Optional note about what changed after using this playbook."
+                            className="w-full rounded-lg border bg-background px-3 py-2 text-sm"
+                          />
+                        </div>
+                        <PendingSubmitButton
+                          idleLabel={application.outcome_status ? "Update outcome" : "Save outcome"}
+                          pendingLabel="Saving outcome..."
+                        />
+                      </form>
                     </div>
                   ))}
                 </div>

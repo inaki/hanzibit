@@ -22,6 +22,9 @@ export interface PrivateStudentPlaybookApplicationDetail
   goal_focus: string | null;
   when_to_use: string | null;
   linked_strategy_count: number;
+  outcome_status: string | null;
+  outcome_note: string | null;
+  outcome_recorded_at: string | null;
 }
 
 export async function listPrivateStudentPlaybookApplications(
@@ -35,6 +38,9 @@ export async function listPrivateStudentPlaybookApplications(
        teacher_playbooks.issue_focus,
        teacher_playbooks.goal_focus,
        teacher_playbooks.when_to_use,
+       outcomes.outcome_status,
+       outcomes.outcome_note,
+       outcomes.recorded_at AS outcome_recorded_at,
        (
          SELECT COUNT(*)
          FROM teacher_playbook_strategies links
@@ -43,6 +49,8 @@ export async function listPrivateStudentPlaybookApplications(
      FROM private_student_playbook_applications
      INNER JOIN teacher_playbooks
        ON teacher_playbooks.id = private_student_playbook_applications.playbook_id
+     LEFT JOIN private_student_playbook_outcomes outcomes
+       ON outcomes.playbook_application_id = private_student_playbook_applications.id
      WHERE private_student_playbook_applications.private_student_id = $1
      ORDER BY private_student_playbook_applications.applied_at DESC, private_student_playbook_applications.created_at DESC`,
     [privateStudentId]

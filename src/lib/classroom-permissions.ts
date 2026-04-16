@@ -230,6 +230,23 @@ export async function canRecordTeacherStrategyOutcome(
   return Boolean(row);
 }
 
+export async function canRecordTeacherPlaybookOutcome(
+  userId: string,
+  playbookApplicationId: string
+): Promise<boolean> {
+  const row = await queryOne<{ id: string }>(
+    `SELECT private_student_playbook_applications.id
+     FROM private_student_playbook_applications
+     INNER JOIN private_students
+       ON private_students.id = private_student_playbook_applications.private_student_id
+     WHERE private_student_playbook_applications.id = $1
+       AND private_students.teacher_user_id = $2
+     LIMIT 1`,
+    [playbookApplicationId, userId]
+  );
+  return Boolean(row);
+}
+
 export async function canUseTemplateInClassroom(
   userId: string,
   templateId: string,

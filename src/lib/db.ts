@@ -15,7 +15,7 @@ declare global {
   var __hanzibitSchemaVersion: number | undefined;
 }
 
-const SCHEMA_VERSION = 29;
+const SCHEMA_VERSION = 32;
 
 const APP_SCHEMA_SQL = `
   CREATE TABLE IF NOT EXISTS "user" (
@@ -332,6 +332,9 @@ const APP_SCHEMA_SQL = `
     guidance TEXT,
     linked_template_id TEXT REFERENCES assignment_templates(id) ON DELETE SET NULL,
     linked_resource_id TEXT REFERENCES teacher_resources(id) ON DELETE SET NULL,
+    refinement_note TEXT,
+    last_refined_at TIMESTAMPTZ,
+    replacement_playbook_id TEXT REFERENCES teacher_playbooks(id) ON DELETE SET NULL,
     usage_count INTEGER NOT NULL DEFAULT 0,
     archived INTEGER NOT NULL DEFAULT 0,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
@@ -356,6 +359,42 @@ const APP_SCHEMA_SQL = `
     ON teacher_playbook_strategies(playbook_id, sort_order, created_at);
   CREATE INDEX IF NOT EXISTS idx_teacher_playbook_strategies_strategy
     ON teacher_playbook_strategies(strategy_id, created_at);
+
+  CREATE TABLE IF NOT EXISTS private_student_playbook_applications (
+    id TEXT PRIMARY KEY,
+    private_student_id TEXT NOT NULL REFERENCES private_students(id) ON DELETE CASCADE,
+    playbook_id TEXT NOT NULL REFERENCES teacher_playbooks(id) ON DELETE CASCADE,
+    applied_by_user_id TEXT NOT NULL REFERENCES "user"(id) ON DELETE CASCADE,
+    applied_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    application_note TEXT,
+    linked_review_id TEXT REFERENCES private_student_reviews(id) ON DELETE SET NULL,
+    linked_lesson_plan_id TEXT REFERENCES private_lesson_plans(id) ON DELETE SET NULL,
+    linked_goal_id TEXT REFERENCES private_student_goals(id) ON DELETE SET NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+  );
+
+  CREATE INDEX IF NOT EXISTS idx_private_playbook_apps_private
+    ON private_student_playbook_applications(private_student_id, applied_at DESC, created_at DESC);
+  CREATE INDEX IF NOT EXISTS idx_private_playbook_apps_playbook
+    ON private_student_playbook_applications(playbook_id, applied_at DESC, created_at DESC);
+
+  CREATE TABLE IF NOT EXISTS private_student_playbook_outcomes (
+    id TEXT PRIMARY KEY,
+    playbook_application_id TEXT NOT NULL UNIQUE REFERENCES private_student_playbook_applications(id) ON DELETE CASCADE,
+    private_student_id TEXT NOT NULL REFERENCES private_students(id) ON DELETE CASCADE,
+    teacher_playbook_id TEXT NOT NULL REFERENCES teacher_playbooks(id) ON DELETE CASCADE,
+    teacher_user_id TEXT NOT NULL REFERENCES "user"(id) ON DELETE CASCADE,
+    outcome_status TEXT NOT NULL CHECK(outcome_status IN ('helped', 'partial', 'no_change', 'replace')),
+    outcome_note TEXT,
+    recorded_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+  );
+
+  CREATE INDEX IF NOT EXISTS idx_private_playbook_outcomes_private
+    ON private_student_playbook_outcomes(private_student_id, recorded_at DESC, created_at DESC);
+  CREATE INDEX IF NOT EXISTS idx_private_playbook_outcomes_playbook
+    ON private_student_playbook_outcomes(teacher_playbook_id, recorded_at DESC, created_at DESC);
 
   CREATE TABLE IF NOT EXISTS private_student_strategy_applications (
     id TEXT PRIMARY KEY,
@@ -790,11 +829,20 @@ async function initializeSchema(): Promise<void> {
       guidance TEXT,
       linked_template_id TEXT REFERENCES assignment_templates(id) ON DELETE SET NULL,
       linked_resource_id TEXT REFERENCES teacher_resources(id) ON DELETE SET NULL,
+      refinement_note TEXT,
+      last_refined_at TIMESTAMPTZ,
+      replacement_playbook_id TEXT REFERENCES teacher_playbooks(id) ON DELETE SET NULL,
       usage_count INTEGER NOT NULL DEFAULT 0,
       archived INTEGER NOT NULL DEFAULT 0,
       created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
       updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
     )
+  `);
+  await pool.query(`
+    ALTER TABLE teacher_playbooks
+      ADD COLUMN IF NOT EXISTS refinement_note TEXT,
+      ADD COLUMN IF NOT EXISTS last_refined_at TIMESTAMPTZ,
+      ADD COLUMN IF NOT EXISTS replacement_playbook_id TEXT REFERENCES teacher_playbooks(id) ON DELETE SET NULL
   `);
   await pool.query(`
     CREATE INDEX IF NOT EXISTS idx_teacher_playbooks_teacher
@@ -843,6 +891,28 @@ async function initializeSchema(): Promise<void> {
   await pool.query(`
     CREATE INDEX IF NOT EXISTS idx_private_playbook_apps_playbook
       ON private_student_playbook_applications(playbook_id, applied_at DESC, created_at DESC)
+  `);
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS private_student_playbook_outcomes (
+      id TEXT PRIMARY KEY,
+      playbook_application_id TEXT NOT NULL UNIQUE REFERENCES private_student_playbook_applications(id) ON DELETE CASCADE,
+      private_student_id TEXT NOT NULL REFERENCES private_students(id) ON DELETE CASCADE,
+      teacher_playbook_id TEXT NOT NULL REFERENCES teacher_playbooks(id) ON DELETE CASCADE,
+      teacher_user_id TEXT NOT NULL REFERENCES "user"(id) ON DELETE CASCADE,
+      outcome_status TEXT NOT NULL CHECK(outcome_status IN ('helped', 'partial', 'no_change', 'replace')),
+      outcome_note TEXT,
+      recorded_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    )
+  `);
+  await pool.query(`
+    CREATE INDEX IF NOT EXISTS idx_private_playbook_outcomes_private
+      ON private_student_playbook_outcomes(private_student_id, recorded_at DESC, created_at DESC)
+  `);
+  await pool.query(`
+    CREATE INDEX IF NOT EXISTS idx_private_playbook_outcomes_playbook
+      ON private_student_playbook_outcomes(teacher_playbook_id, recorded_at DESC, created_at DESC)
   `);
   await pool.query(`
     ALTER TABLE daily_loop_completions

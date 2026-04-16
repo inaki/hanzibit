@@ -44,7 +44,16 @@ export interface TeacherReportingDashboard {
   studentAttention: TeacherReportingStudentAttention[];
   conversionItems: TeacherReportingConversionItem[];
   privateLearnerItems: TeacherReportingPrivateLearnerItem[];
+  issuePatternItems: TeacherReportingIssuePatternItem[];
+  priorityItems: TeacherPriorityItem[];
+  checkpointItems: TeacherCheckpointItem[];
+  workloadSummary: TeacherWorkloadSummary;
+  stabilizationSummary: TeacherStabilizationSummary;
+  stabilizationItems: TeacherStabilizationItem[];
+  portfolioMixSummary: TeacherPortfolioMixSummary;
+  loadConcentrationItems: TeacherLoadConcentrationItem[];
   strategyItems: TeacherReportingStrategyItem[];
+  playbookItems: TeacherReportingPlaybookItem[];
   totalClassrooms: number;
   totalStudents: number;
   totalAssignments: number;
@@ -71,12 +80,29 @@ export interface TeacherReportingDashboard {
   totalPrivateNoRecentReview: number;
   totalPrivateNoRecentAdaptation: number;
   totalPrivateReviewedNotAdapted: number;
+  totalCheckpointsDueNow: number;
+  totalCheckpointsOverdue: number;
+  totalCheckpointsRecentlyChecked: number;
+  totalLoadConcentrationHigh: number;
+  totalRepeatedPressureLearners: number;
+  totalWeakSupportConcentration: number;
   totalPrivateNoStrategy: number;
   totalPrivateStrategyGap: number;
   totalPrivateNoPlaybook: number;
   totalPrivatePlaybookGap: number;
+  totalIssueClusters: number;
+  totalIssueSupportGaps: number;
+  totalIssueLearnersWithoutSupportPath: number;
   totalPlaybooksUsed: number;
+  totalPlaybookHelping: number;
+  totalPlaybookMixed: number;
+  totalPlaybookHelped: number;
+  totalPlaybookNeedsReview: number;
+  totalPlaybookWeak: number;
+  totalPlaybookNoOutcome: number;
   totalStrategiesUsed: number;
+  totalStrategyHelping: number;
+  totalStrategyMixed: number;
   totalStrategyHelped: number;
   totalStrategyNeedsReview: number;
   totalStrategyWeak: number;
@@ -163,6 +189,9 @@ export interface TeacherReportingPrivateLearnerItem {
   strategy_application_count: number;
   latest_playbook_title: string | null;
   latest_playbook_applied_at: string | null;
+  latest_playbook_outcome_status: string | null;
+  latest_playbook_outcome_note: string | null;
+  latest_playbook_outcome_at: string | null;
   playbook_application_count: number;
   days_since_review: number | null;
   days_since_adaptation: number | null;
@@ -191,6 +220,7 @@ export interface TeacherReportingStrategyItem {
   issue_focus: string | null;
   goal_focus: string | null;
   usage_count: number;
+  learner_count: number;
   archived: number;
   last_refined_at: string | null;
   helped_count: number;
@@ -201,6 +231,116 @@ export interface TeacherReportingStrategyItem {
   latest_outcome_status: string | null;
   latest_outcome_note: string | null;
   latest_outcome_at: string | null;
+  broad_status: "helping" | "mixed" | "weak" | "insufficient_data";
+  needs_refinement: boolean;
+  needs_more_outcomes: boolean;
+}
+
+export interface TeacherReportingIssuePatternItem {
+  issue_tag: string;
+  learner_count: number;
+  learner_ids: string[];
+  learner_names: string[];
+  learners_without_strategy: number;
+  learners_without_playbook: number;
+  learners_without_recent_outcome: number;
+  learners_without_support_path: number;
+  latest_intervention_note: string | null;
+  latest_history_at: string | null;
+}
+
+export interface TeacherPriorityItem {
+  kind: "private_learner" | "issue_cluster" | "strategy" | "playbook";
+  id: string;
+  title: string;
+  href: string;
+  priority_score: number;
+  priority_level: "urgent" | "high" | "watch";
+  reason: string;
+  supporting_note: string | null;
+}
+
+export interface TeacherCheckpointItem {
+  kind: "review_due" | "adaptation_due" | "support_recheck_due";
+  private_student_id: string;
+  student_name: string;
+  classroom_id: string;
+  classroom_name: string;
+  due_state: "due_now" | "overdue" | "recently_checked";
+  days_open: number | null;
+  reason: string;
+  supporting_note: string | null;
+  href: string;
+}
+
+export interface TeacherWorkloadSummary {
+  load_state: "healthy" | "stretched" | "overloaded";
+  urgent_private_learners: number;
+  overdue_checkpoints: number;
+  repeated_pressure_learners: number;
+  weak_support_paths: number;
+  summary_note: string;
+}
+
+export interface TeacherLoadConcentrationItem {
+  kind: "learner" | "issue_cluster" | "strategy" | "playbook";
+  id: string;
+  title: string;
+  href: string;
+  concentration_level: "high" | "medium" | "watch";
+  reason: string;
+  supporting_note: string | null;
+}
+
+export interface TeacherStabilizationSummary {
+  stable_private_learners: number;
+  simplify_support_candidates: number;
+  handoff_ready_private_learners: number;
+  still_active_pressure: number;
+  summary_note: string;
+}
+
+export interface TeacherPortfolioMixSummary {
+  keep_active_count: number;
+  simplify_support_count: number;
+  light_touch_count: number;
+  handoff_ready_count: number;
+  operating_mode: "balanced" | "active_heavy" | "stretched" | "stabilization_heavy";
+  summary_note: string;
+}
+
+export interface TeacherStabilizationItem {
+  kind: "learner" | "strategy" | "playbook";
+  id: string;
+  title: string;
+  href: string;
+  stabilization_state: "keep_active" | "simplify" | "light_touch" | "handoff_ready";
+  reason: string;
+  supporting_note: string | null;
+}
+
+export interface TeacherReportingPlaybookItem {
+  id: string;
+  title: string;
+  summary: string;
+  issue_focus: string | null;
+  goal_focus: string | null;
+  when_to_use: string | null;
+  usage_count: number;
+  learner_count: number;
+  archived: number;
+  last_refined_at: string | null;
+  replacement_playbook_id: string | null;
+  replacement_playbook_title: string | null;
+  helped_count: number;
+  partial_count: number;
+  no_change_count: number;
+  replace_count: number;
+  total_outcomes: number;
+  latest_outcome_status: string | null;
+  latest_outcome_note: string | null;
+  latest_outcome_at: string | null;
+  broad_status: "helping" | "mixed" | "weak" | "insufficient_data";
   needs_refinement: boolean;
   needs_more_outcomes: boolean;
 }
@@ -247,8 +387,32 @@ interface TeacherReportingStrategyRow {
   issue_focus: string | null;
   goal_focus: string | null;
   usage_count: number;
+  learner_count: number;
   archived: number;
   last_refined_at: string | null;
+  helped_count: number;
+  partial_count: number;
+  no_change_count: number;
+  replace_count: number;
+  total_outcomes: number;
+  latest_outcome_status: string | null;
+  latest_outcome_note: string | null;
+  latest_outcome_at: string | null;
+}
+
+interface TeacherReportingPlaybookRow {
+  id: string;
+  title: string;
+  summary: string;
+  issue_focus: string | null;
+  goal_focus: string | null;
+  when_to_use: string | null;
+  usage_count: number;
+  learner_count: number;
+  archived: number;
+  last_refined_at: string | null;
+  replacement_playbook_id: string | null;
+  replacement_playbook_title: string | null;
   helped_count: number;
   partial_count: number;
   no_change_count: number;
@@ -268,6 +432,65 @@ function isPlanOverdue(targetDate: string | null): boolean {
   if (!targetDate) return false;
   const endOfTargetDay = new Date(`${targetDate}T23:59:59.999Z`).getTime();
   return endOfTargetDay < Date.now();
+}
+
+function getPriorityLevel(score: number): "urgent" | "high" | "watch" {
+  if (score >= 90) return "urgent";
+  if (score >= 50) return "high";
+  return "watch";
+}
+
+function getCheckpointDueState(daysOpen: number | null): "due_now" | "overdue" | "recently_checked" {
+  if (daysOpen === null) return "recently_checked";
+  if (daysOpen > 14) return "overdue";
+  if (daysOpen >= 7) return "due_now";
+  return "recently_checked";
+}
+
+function getWorkloadState(input: {
+  urgent_private_learners: number;
+  overdue_checkpoints: number;
+  repeated_pressure_learners: number;
+  weak_support_paths: number;
+}): TeacherWorkloadSummary["load_state"] {
+  const score =
+    input.urgent_private_learners * 3 +
+    input.overdue_checkpoints * 3 +
+    input.repeated_pressure_learners * 2 +
+    input.weak_support_paths * 2;
+
+  if (score >= 18) return "overloaded";
+  if (score >= 8) return "stretched";
+  return "healthy";
+}
+
+function getBroadEffectivenessStatus(input: {
+  learner_count: number;
+  total_outcomes: number;
+  helped_count: number;
+  partial_count: number;
+  no_change_count: number;
+  replace_count: number;
+}): "helping" | "mixed" | "weak" | "insufficient_data" {
+  if (input.learner_count < 2 || input.total_outcomes === 0) {
+    return "insufficient_data";
+  }
+
+  if (
+    input.replace_count > 0 ||
+    (input.no_change_count >= input.helped_count && input.total_outcomes >= 2)
+  ) {
+    return "weak";
+  }
+
+  if (
+    input.helped_count >= 2 &&
+    input.helped_count >= input.partial_count + input.no_change_count + input.replace_count
+  ) {
+    return "helping";
+  }
+
+  return "mixed";
 }
 
 export async function getTeacherReportingDashboard(
@@ -319,6 +542,7 @@ export async function getTeacherReportingDashboard(
        teacher_strategies.issue_focus,
        teacher_strategies.goal_focus,
        teacher_strategies.usage_count,
+       COUNT(DISTINCT applications.private_student_id)::int AS learner_count,
        teacher_strategies.archived,
        teacher_strategies.last_refined_at,
        COUNT(outcomes.id)::int AS total_outcomes,
@@ -330,6 +554,8 @@ export async function getTeacherReportingDashboard(
        latest.outcome_note AS latest_outcome_note,
        latest.recorded_at AS latest_outcome_at
      FROM teacher_strategies
+     LEFT JOIN private_student_strategy_applications applications
+       ON applications.teacher_strategy_id = teacher_strategies.id
      LEFT JOIN private_student_strategy_outcomes outcomes
        ON outcomes.teacher_strategy_id = teacher_strategies.id
      LEFT JOIN LATERAL (
@@ -353,6 +579,61 @@ export async function getTeacherReportingDashboard(
        latest.outcome_note,
        latest.recorded_at
      ORDER BY teacher_strategies.archived ASC, teacher_strategies.updated_at DESC, teacher_strategies.created_at DESC`,
+    [teacherUserId]
+  );
+  const playbookRows = await query<TeacherReportingPlaybookRow>(
+    `SELECT
+       teacher_playbooks.id,
+       teacher_playbooks.title,
+       teacher_playbooks.summary,
+       teacher_playbooks.issue_focus,
+       teacher_playbooks.goal_focus,
+       teacher_playbooks.when_to_use,
+       teacher_playbooks.usage_count,
+       COUNT(DISTINCT applications.private_student_id)::int AS learner_count,
+       teacher_playbooks.archived,
+       teacher_playbooks.last_refined_at,
+       teacher_playbooks.replacement_playbook_id,
+       replacement.title AS replacement_playbook_title,
+       COUNT(outcomes.id)::int AS total_outcomes,
+       COUNT(outcomes.id) FILTER (WHERE outcomes.outcome_status = 'helped')::int AS helped_count,
+       COUNT(outcomes.id) FILTER (WHERE outcomes.outcome_status = 'partial')::int AS partial_count,
+       COUNT(outcomes.id) FILTER (WHERE outcomes.outcome_status = 'no_change')::int AS no_change_count,
+       COUNT(outcomes.id) FILTER (WHERE outcomes.outcome_status = 'replace')::int AS replace_count,
+       latest.outcome_status AS latest_outcome_status,
+       latest.outcome_note AS latest_outcome_note,
+       latest.recorded_at AS latest_outcome_at
+     FROM teacher_playbooks
+     LEFT JOIN teacher_playbooks replacement
+       ON replacement.id = teacher_playbooks.replacement_playbook_id
+     LEFT JOIN private_student_playbook_applications applications
+       ON applications.playbook_id = teacher_playbooks.id
+     LEFT JOIN private_student_playbook_outcomes outcomes
+       ON outcomes.teacher_playbook_id = teacher_playbooks.id
+     LEFT JOIN LATERAL (
+       SELECT outcome_status, outcome_note, recorded_at
+       FROM private_student_playbook_outcomes
+       WHERE teacher_playbook_id = teacher_playbooks.id
+       ORDER BY recorded_at DESC, created_at DESC
+       LIMIT 1
+     ) latest ON TRUE
+     WHERE teacher_playbooks.teacher_user_id = $1
+     GROUP BY
+       teacher_playbooks.id,
+       teacher_playbooks.title,
+       teacher_playbooks.summary,
+       teacher_playbooks.issue_focus,
+       teacher_playbooks.goal_focus,
+       teacher_playbooks.when_to_use,
+       teacher_playbooks.usage_count,
+       teacher_playbooks.archived,
+       teacher_playbooks.last_refined_at,
+       teacher_playbooks.replacement_playbook_id,
+       replacement.title,
+       latest.outcome_status,
+       latest.outcome_note,
+       latest.recorded_at
+     ORDER BY teacher_playbooks.archived ASC, teacher_playbooks.updated_at DESC, teacher_playbooks.created_at DESC`,
     [teacherUserId]
   );
 
@@ -665,6 +946,12 @@ export async function getTeacherReportingDashboard(
           latest_playbook_title: latestPlaybook?.playbook_title ?? item.last_playbook_title ?? null,
           latest_playbook_applied_at:
             latestPlaybook?.applied_at ?? item.last_playbook_applied_at ?? null,
+          latest_playbook_outcome_status:
+            latestPlaybook?.outcome_status ?? item.last_playbook_outcome_status ?? null,
+          latest_playbook_outcome_note:
+            latestPlaybook?.outcome_note ?? item.last_playbook_outcome_note ?? null,
+          latest_playbook_outcome_at:
+            latestPlaybook?.outcome_recorded_at ?? item.last_playbook_outcome_at ?? null,
           playbook_application_count: playbookApplications.length,
           days_since_review: daysSinceReview,
           days_since_adaptation: daysSinceAdaptation,
@@ -709,9 +996,11 @@ export async function getTeacherReportingDashboard(
         item.replace_count > 0 ||
         (item.total_outcomes > 0 && item.no_change_count >= item.helped_count) ||
         (item.total_outcomes > 0 && item.partial_count > item.helped_count && item.helped_count === 0);
+      const broadStatus = getBroadEffectivenessStatus(item);
 
       return {
         ...item,
+        broad_status: broadStatus,
         needs_refinement: needsRefinement,
         needs_more_outcomes: needsMoreOutcomes,
       } satisfies TeacherReportingStrategyItem;
@@ -726,13 +1015,678 @@ export async function getTeacherReportingDashboard(
       return score(b) - score(a);
     });
 
+  const playbookItems = playbookRows
+    .map((item) => {
+      const needsMoreOutcomes = item.usage_count > 0 && item.total_outcomes === 0;
+      const needsRefinement =
+        !item.replacement_playbook_id &&
+        (item.replace_count > 0 ||
+          (item.total_outcomes > 0 && item.no_change_count >= item.helped_count) ||
+          (item.total_outcomes > 0 && item.partial_count > item.helped_count && item.helped_count === 0));
+      const broadStatus = getBroadEffectivenessStatus(item);
+
+      return {
+        ...item,
+        broad_status: broadStatus,
+        needs_refinement: needsRefinement,
+        needs_more_outcomes: needsMoreOutcomes,
+      } satisfies TeacherReportingPlaybookItem;
+    })
+    .sort((a, b) => {
+      const score = (item: TeacherReportingPlaybookItem) =>
+        (item.needs_refinement ? 100 : 0) +
+        (item.needs_more_outcomes ? 70 : 0) +
+        (item.replacement_playbook_id ? -30 : 0) +
+        item.replace_count * 10 +
+        item.no_change_count * 5 -
+        item.helped_count * 2;
+      return score(b) - score(a);
+    });
+
+  const issuePatternMap = new Map<
+    string,
+    {
+      learnerIds: Set<string>;
+      learnerNames: Set<string>;
+      learnersWithoutStrategy: number;
+      learnersWithoutPlaybook: number;
+      learnersWithoutRecentOutcome: number;
+      learnersWithoutSupportPath: number;
+      latestInterventionNote: string | null;
+      latestHistoryAt: string | null;
+    }
+  >();
+
+  for (const item of privateLearnerItems) {
+    const tags = item.recurring_issue_tags;
+    if (tags.length === 0) continue;
+
+    for (const tag of tags) {
+      const existing = issuePatternMap.get(tag) ?? {
+        learnerIds: new Set<string>(),
+        learnerNames: new Set<string>(),
+        learnersWithoutStrategy: 0,
+        learnersWithoutPlaybook: 0,
+        learnersWithoutRecentOutcome: 0,
+        learnersWithoutSupportPath: 0,
+        latestInterventionNote: null,
+        latestHistoryAt: null,
+      };
+
+      existing.learnerIds.add(item.id);
+      existing.learnerNames.add(item.student_name);
+
+      if (!item.has_strategy_application) existing.learnersWithoutStrategy += 1;
+      if (!item.has_playbook_application) existing.learnersWithoutPlaybook += 1;
+      if (!item.latest_strategy_outcome_status && !item.latest_playbook_outcome_status) {
+        existing.learnersWithoutRecentOutcome += 1;
+      }
+      if (!item.has_strategy_application && !item.has_playbook_application) {
+        existing.learnersWithoutSupportPath += 1;
+      }
+
+      const nextHistoryAt = item.latest_history_at;
+      const prevHistoryAt = existing.latestHistoryAt;
+      if (
+        nextHistoryAt &&
+        (!prevHistoryAt || new Date(nextHistoryAt).getTime() > new Date(prevHistoryAt).getTime())
+      ) {
+        existing.latestHistoryAt = nextHistoryAt;
+        existing.latestInterventionNote = item.latest_intervention_note;
+      }
+
+      issuePatternMap.set(tag, existing);
+    }
+  }
+
+  const issuePatternItems = Array.from(issuePatternMap.entries())
+    .map(([issueTag, item]) => {
+      return {
+        issue_tag: issueTag,
+        learner_count: item.learnerIds.size,
+        learner_ids: Array.from(item.learnerIds),
+        learner_names: Array.from(item.learnerNames),
+        learners_without_strategy: item.learnersWithoutStrategy,
+        learners_without_playbook: item.learnersWithoutPlaybook,
+        learners_without_recent_outcome: item.learnersWithoutRecentOutcome,
+        learners_without_support_path: item.learnersWithoutSupportPath,
+        latest_intervention_note: item.latestInterventionNote,
+        latest_history_at: item.latestHistoryAt,
+      } satisfies TeacherReportingIssuePatternItem;
+    })
+    .sort((a, b) => {
+      const score = (item: TeacherReportingIssuePatternItem) =>
+        item.learner_count * 10 +
+        item.learners_without_support_path * 8 +
+        item.learners_without_recent_outcome * 5 +
+        item.learners_without_playbook * 4 +
+        item.learners_without_strategy * 3;
+      return score(b) - score(a);
+    });
+
+  const privateLearnerPriorityItems = privateLearnerItems
+    .map((item) => {
+      const score =
+        (item.blocked_goal_count > 0 ? 40 : 0) +
+        (item.needs_playbook_attention ? 30 : 0) +
+        (item.needs_strategy_attention ? 20 : 0) +
+        (item.needs_adaptation ? 18 : 0) +
+        (item.review_without_adaptation ? 16 : 0) +
+        (item.plan_is_overdue ? 15 : 0) +
+        (!item.has_lesson_plan ? 15 : 0) +
+        (!item.has_recent_history && item.status !== "onboarding" ? 12 : 0) +
+        (item.recurring_issue_tags.length > 0 ? 10 : 0) +
+        (item.status === "awaiting_teacher" ? 12 : 0) +
+        (item.status === "inactive" ? 10 : 0);
+
+      const reasons: string[] = [];
+      if (item.blocked_goal_count > 0) reasons.push("blocked goal");
+      if (item.needs_playbook_attention) reasons.push("no playbook despite pressure");
+      if (item.needs_strategy_attention) reasons.push("no strategy despite pressure");
+      if (item.needs_adaptation) reasons.push("needs adaptation");
+      if (item.review_without_adaptation) reasons.push("reviewed, not adapted");
+      if (item.plan_is_overdue) reasons.push("plan overdue");
+      if (!item.has_lesson_plan) reasons.push("no next plan");
+      if (!item.has_recent_history && item.status !== "onboarding") reasons.push("no recent history");
+
+      return {
+        kind: "private_learner" as const,
+        id: item.id,
+        title: item.student_name,
+        href: `/notebook/teacher/private-students/${item.id}`,
+        priority_score: score,
+        priority_level: getPriorityLevel(score),
+        reason: reasons.length > 0 ? reasons.join(" + ") : "active private learner",
+        supporting_note: item.classroom_name,
+      } satisfies TeacherPriorityItem;
+    })
+    .filter((item) => item.priority_score > 0);
+
+  const issuePriorityItems = issuePatternItems
+    .map((item) => {
+      const score =
+        item.learner_count * 10 +
+        item.learners_without_support_path * 15 +
+        item.learners_without_playbook * 8 +
+        item.learners_without_strategy * 6 +
+        item.learners_without_recent_outcome * 5;
+
+      const reasons: string[] = [];
+      if (item.learners_without_support_path > 0) reasons.push("no support path");
+      if (item.learners_without_playbook > 0) reasons.push("no playbook");
+      if (item.learners_without_strategy > 0) reasons.push("no strategy");
+      if (item.learners_without_recent_outcome > 0) reasons.push("no recent outcome");
+
+      return {
+        kind: "issue_cluster" as const,
+        id: item.issue_tag,
+        title: item.issue_tag.replaceAll("_", " "),
+        href: "/notebook/teacher/reporting",
+        priority_score: score,
+        priority_level: getPriorityLevel(score),
+        reason:
+          reasons.length > 0
+            ? `${item.learner_count} learners affected; ${reasons.join(" + ")}`
+            : `${item.learner_count} learners affected`,
+        supporting_note: item.latest_intervention_note,
+      } satisfies TeacherPriorityItem;
+    })
+    .filter((item) => item.priority_score > 0);
+
+  const strategyPriorityItems = strategyItems
+    .filter((item) => item.broad_status === "weak" || item.needs_refinement)
+    .map((item) => {
+      const score =
+        (item.broad_status === "weak" ? 45 : 0) +
+        (item.learner_count >= 3 ? 20 : item.learner_count >= 2 ? 10 : 0) +
+        item.replace_count * 5 +
+        item.no_change_count * 3;
+      return {
+        kind: "strategy" as const,
+        id: item.id,
+        title: item.title,
+        href: `/notebook/teacher/library/strategies/${item.id}`,
+        priority_score: score,
+        priority_level: getPriorityLevel(score),
+        reason:
+          item.broad_status === "weak"
+            ? `weak across ${item.learner_count} learners`
+            : "needs refinement",
+        supporting_note: item.latest_outcome_note,
+      } satisfies TeacherPriorityItem;
+    });
+
+  const playbookPriorityItems = playbookItems
+    .filter((item) => item.broad_status === "weak" || item.needs_refinement)
+    .map((item) => {
+      const score =
+        (item.broad_status === "weak" ? 45 : 0) +
+        (item.learner_count >= 3 ? 20 : item.learner_count >= 2 ? 10 : 0) +
+        item.replace_count * 5 +
+        item.no_change_count * 3;
+      return {
+        kind: "playbook" as const,
+        id: item.id,
+        title: item.title,
+        href: `/notebook/teacher/library/playbooks/${item.id}`,
+        priority_score: score,
+        priority_level: getPriorityLevel(score),
+        reason:
+          item.broad_status === "weak"
+            ? `weak across ${item.learner_count} learners`
+            : "needs refinement",
+        supporting_note: item.latest_outcome_note,
+      } satisfies TeacherPriorityItem;
+    });
+
+  const priorityItems = [
+    ...privateLearnerPriorityItems,
+    ...issuePriorityItems,
+    ...strategyPriorityItems,
+    ...playbookPriorityItems,
+  ]
+    .sort((a, b) => b.priority_score - a.priority_score)
+    .slice(0, 8);
+
+  const checkpointItems = privateLearnerItems
+    .flatMap((item) => {
+      const items: TeacherCheckpointItem[] = [];
+
+      if (item.needs_review_snapshot) {
+        items.push({
+          kind: "review_due",
+          private_student_id: item.id,
+          student_name: item.student_name,
+          classroom_id: item.classroom_id,
+          classroom_name: item.classroom_name,
+          due_state: getCheckpointDueState(item.days_since_review),
+          days_open: item.days_since_review,
+          reason:
+            item.blocked_goal_count > 0
+              ? "Blocked goal pressure has not had a recent review."
+              : item.recurring_issue_tags.length > 0
+                ? "Recurring issues are visible without a recent review."
+                : "This learner needs a fresh review checkpoint.",
+          supporting_note: item.latest_review_summary ?? item.latest_history_summary ?? item.latest_intervention_note,
+          href: `/notebook/teacher/private-students/${item.id}`,
+        });
+      }
+
+      if (item.needs_adaptation || item.review_without_adaptation) {
+        items.push({
+          kind: "adaptation_due",
+          private_student_id: item.id,
+          student_name: item.student_name,
+          classroom_id: item.classroom_id,
+          classroom_name: item.classroom_name,
+          due_state: getCheckpointDueState(item.days_since_adaptation),
+          days_open: item.days_since_adaptation,
+          reason: item.review_without_adaptation
+            ? "A review exists, but the live plan has not been adapted yet."
+            : "The live plan needs a fresh adaptation checkpoint.",
+          supporting_note: item.latest_adaptation_note ?? item.latest_review_summary,
+          href: `/notebook/teacher/private-students/${item.id}`,
+        });
+      }
+
+      const supportNeedsRecheck =
+        (item.has_strategy_application &&
+          (!item.latest_strategy_outcome_status ||
+            item.latest_strategy_outcome_status === "no_change" ||
+            item.latest_strategy_outcome_status === "replace")) ||
+        (item.has_playbook_application &&
+          (!item.latest_playbook_outcome_status ||
+            item.latest_playbook_outcome_status === "no_change" ||
+            item.latest_playbook_outcome_status === "replace"));
+
+      if (supportNeedsRecheck) {
+        const supportDays = Math.min(
+          item.days_since_strategy_application ?? Number.POSITIVE_INFINITY,
+          item.days_since_playbook_application ?? Number.POSITIVE_INFINITY
+        );
+        items.push({
+          kind: "support_recheck_due",
+          private_student_id: item.id,
+          student_name: item.student_name,
+          classroom_id: item.classroom_id,
+          classroom_name: item.classroom_name,
+          due_state: getCheckpointDueState(Number.isFinite(supportDays) ? supportDays : null),
+          days_open: Number.isFinite(supportDays) ? supportDays : null,
+          reason: "The current strategy or playbook needs a fresh outcome check.",
+          supporting_note:
+            item.latest_playbook_outcome_note ??
+            item.latest_strategy_outcome_note ??
+            item.latest_intervention_note,
+          href: `/notebook/teacher/private-students/${item.id}`,
+        });
+      }
+
+      return items;
+    })
+    .sort((a, b) => {
+      const stateWeight = (value: TeacherCheckpointItem["due_state"]) =>
+        value === "overdue" ? 3 : value === "due_now" ? 2 : 1;
+      return (
+        stateWeight(b.due_state) - stateWeight(a.due_state) ||
+        (b.days_open ?? 0) - (a.days_open ?? 0)
+      );
+    });
+
+  const urgent_private_learners = privateLearnerPriorityItems.filter(
+    (item) => item.priority_level === "urgent"
+  ).length;
+  const overdue_checkpoints = checkpointItems.filter((item) => item.due_state === "overdue").length;
+  const repeated_pressure_learners = privateLearnerItems.filter(
+    (item) =>
+      item.blocked_goal_count > 0 ||
+      item.recurring_issue_tags.length > 0 ||
+      item.needs_adaptation ||
+      item.review_without_adaptation
+  ).length;
+  const weak_support_paths =
+    strategyItems.filter((item) => item.broad_status === "weak" || item.needs_refinement).length +
+    playbookItems.filter((item) => item.broad_status === "weak" || item.needs_refinement).length;
+  const load_state = getWorkloadState({
+    urgent_private_learners,
+    overdue_checkpoints,
+    repeated_pressure_learners,
+    weak_support_paths,
+  });
+  const workloadSummary: TeacherWorkloadSummary = {
+    load_state,
+    urgent_private_learners,
+    overdue_checkpoints,
+    repeated_pressure_learners,
+    weak_support_paths,
+    summary_note:
+      load_state === "overloaded"
+        ? "Current teaching load is clustering around too many urgent learners, overdue checkpoints, or weak support paths."
+        : load_state === "stretched"
+          ? "Current teaching load is manageable, but pressure is starting to cluster and should be rebalanced soon."
+          : "Current teaching load looks healthy and follow-through pressure appears reasonably balanced.",
+  };
+
+  const stable_private_learners = privateLearnerItems.filter(
+    (item) =>
+      item.status === "active" &&
+      item.blocked_goal_count === 0 &&
+      item.reinforcement_goal_count === 0 &&
+      item.recurring_issue_tags.length === 0 &&
+      !item.needs_review_snapshot &&
+      !item.needs_adaptation &&
+      !item.review_without_adaptation &&
+      !item.plan_is_overdue &&
+      item.has_recent_history &&
+      (item.has_recent_review || item.latest_review_at !== null) &&
+      (!item.latest_strategy_outcome_status ||
+        item.latest_strategy_outcome_status === "helped" ||
+        item.latest_strategy_outcome_status === "partial") &&
+      (!item.latest_playbook_outcome_status ||
+        item.latest_playbook_outcome_status === "helped" ||
+        item.latest_playbook_outcome_status === "partial")
+  ).length;
+
+  const simplify_support_candidates = privateLearnerItems.filter(
+    (item) =>
+      item.status === "active" &&
+      item.has_lesson_plan &&
+      (item.has_strategy_application || item.has_playbook_application) &&
+      item.blocked_goal_count === 0 &&
+      item.reinforcement_goal_count === 0 &&
+      item.recurring_issue_tags.length === 0 &&
+      !item.needs_review_snapshot &&
+      !item.needs_adaptation &&
+      !item.review_without_adaptation &&
+      !item.plan_is_overdue &&
+      item.has_recent_history &&
+      (item.latest_strategy_outcome_status === "helped" ||
+        item.latest_playbook_outcome_status === "helped")
+  ).length;
+
+  const handoff_ready_private_learners = privateLearnerItems.filter(
+    (item) =>
+      item.status === "active" &&
+      item.has_lesson_plan &&
+      item.has_supported_plan &&
+      item.active_goal_count > 0 &&
+      item.blocked_goal_count === 0 &&
+      item.reinforcement_goal_count === 0 &&
+      item.recurring_issue_tags.length === 0 &&
+      !item.needs_review_snapshot &&
+      !item.needs_adaptation &&
+      !item.review_without_adaptation &&
+      !item.plan_is_overdue &&
+      item.has_recent_history &&
+      item.has_recent_review &&
+      item.has_recent_adaptation &&
+      ((item.has_playbook_application && item.latest_playbook_outcome_status === "helped") ||
+        (item.has_strategy_application && item.latest_strategy_outcome_status === "helped"))
+  ).length;
+
+  const still_active_pressure = privateLearnerItems.filter(
+    (item) =>
+      item.blocked_goal_count > 0 ||
+      item.reinforcement_goal_count > 0 ||
+      item.recurring_issue_tags.length > 0 ||
+      item.needs_review_snapshot ||
+      item.needs_adaptation ||
+      item.review_without_adaptation ||
+      item.plan_is_overdue ||
+      !item.has_lesson_plan
+  ).length;
+
+  const stabilizationSummary: TeacherStabilizationSummary = {
+    stable_private_learners,
+    simplify_support_candidates,
+    handoff_ready_private_learners,
+    still_active_pressure,
+    summary_note:
+      handoff_ready_private_learners > 0
+        ? "Some private learners now look stable enough for lighter-touch monitoring instead of the same active intervention load."
+        : simplify_support_candidates > 0
+          ? "Several current support paths look steady enough to simplify before they become unnecessary operational weight."
+          : still_active_pressure > stable_private_learners
+            ? "Most current private learner support still needs active follow-through rather than simplification."
+          : "Current private learner support looks relatively stable, but keep reviewing before reducing support intensity.",
+  };
+
+  const stabilizationItems = privateLearnerItems
+    .map((item) => {
+      const weakOutcome =
+        item.latest_strategy_outcome_status === "no_change" ||
+        item.latest_strategy_outcome_status === "replace" ||
+        item.latest_playbook_outcome_status === "no_change" ||
+        item.latest_playbook_outcome_status === "replace";
+
+      const stable =
+        item.status === "active" &&
+        item.blocked_goal_count === 0 &&
+        item.reinforcement_goal_count === 0 &&
+        item.recurring_issue_tags.length === 0 &&
+        !item.needs_review_snapshot &&
+        !item.needs_adaptation &&
+        !item.review_without_adaptation &&
+        !item.plan_is_overdue &&
+        item.has_recent_history &&
+        (item.has_recent_review || item.latest_review_at !== null) &&
+        !weakOutcome;
+
+      if (!stable) {
+        return {
+          kind: "learner" as const,
+          id: item.id,
+          title: item.student_name,
+          href: `/notebook/teacher/private-students/${item.id}`,
+          stabilization_state: "keep_active" as const,
+          reason: "This learner still shows active pressure and should stay under active support.",
+          supporting_note: item.classroom_name,
+        } satisfies TeacherStabilizationItem;
+      }
+
+      if (
+        item.has_lesson_plan &&
+        (item.has_strategy_application || item.has_playbook_application) &&
+        ((item.has_playbook_application && item.latest_playbook_outcome_status === "helped") ||
+          (item.has_strategy_application && item.latest_strategy_outcome_status === "helped"))
+      ) {
+        if (
+          item.has_supported_plan &&
+          item.active_goal_count > 0 &&
+          item.has_recent_history &&
+          item.has_recent_review &&
+          item.has_recent_adaptation
+        ) {
+          return {
+            kind: "learner" as const,
+            id: item.id,
+            title: item.student_name,
+            href: `/notebook/teacher/private-students/${item.id}`,
+            stabilization_state: "handoff_ready" as const,
+            reason: "This learner looks stable enough for lighter-touch monitoring.",
+            supporting_note:
+              item.latest_playbook_outcome_note ??
+              item.latest_strategy_outcome_note ??
+              item.classroom_name,
+          } satisfies TeacherStabilizationItem;
+        }
+
+        return {
+          kind: "learner" as const,
+          id: item.id,
+          title: item.student_name,
+          href: `/notebook/teacher/private-students/${item.id}`,
+          stabilization_state: "simplify" as const,
+          reason: "Current support appears to be working and may now be heavier than necessary.",
+          supporting_note:
+            item.latest_playbook_outcome_note ??
+            item.latest_strategy_outcome_note ??
+            item.classroom_name,
+        } satisfies TeacherStabilizationItem;
+      }
+
+      return {
+        kind: "learner" as const,
+        id: item.id,
+        title: item.student_name,
+        href: `/notebook/teacher/private-students/${item.id}`,
+        stabilization_state: "light_touch" as const,
+        reason: "This learner looks relatively stable and may only need lighter-touch monitoring for now.",
+        supporting_note: item.classroom_name,
+      } satisfies TeacherStabilizationItem;
+    })
+    .sort((a, b) => {
+      const weight = (value: TeacherStabilizationItem["stabilization_state"]) =>
+        value === "keep_active" ? 4 : value === "simplify" ? 3 : value === "light_touch" ? 2 : 1;
+      return weight(b.stabilization_state) - weight(a.stabilization_state);
+    });
+
+  const keep_active_count = stabilizationItems.filter(
+    (item) => item.stabilization_state === "keep_active"
+  ).length;
+  const simplify_support_count = stabilizationItems.filter(
+    (item) => item.stabilization_state === "simplify"
+  ).length;
+  const light_touch_count = stabilizationItems.filter(
+    (item) => item.stabilization_state === "light_touch"
+  ).length;
+  const handoff_ready_count = stabilizationItems.filter(
+    (item) => item.stabilization_state === "handoff_ready"
+  ).length;
+
+  const stableSide = simplify_support_count + light_touch_count + handoff_ready_count;
+  const operating_mode: TeacherPortfolioMixSummary["operating_mode"] =
+    keep_active_count >= 6 || (keep_active_count >= 4 && keep_active_count > stableSide)
+      ? "stretched"
+      : keep_active_count >= 3 && keep_active_count > stableSide
+        ? "active_heavy"
+        : stableSide >= Math.max(4, keep_active_count + 1)
+          ? "stabilization_heavy"
+          : "balanced";
+
+  const portfolioMixSummary: TeacherPortfolioMixSummary = {
+    keep_active_count,
+    simplify_support_count,
+    light_touch_count,
+    handoff_ready_count,
+    operating_mode,
+    summary_note:
+      operating_mode === "stretched"
+        ? "The current private learner mix is skewing heavily toward active support, so this portfolio likely needs more stabilization before it will feel sustainable."
+        : operating_mode === "active_heavy"
+          ? "The current learner mix leans toward active support. That can still work, but it will require tighter follow-through than a more balanced portfolio."
+          : operating_mode === "stabilization_heavy"
+            ? "A large share of current private learners now look ready for simplified or lighter-touch support, so the portfolio is leaning toward maintenance rather than active intervention."
+            : "The current private learner mix looks reasonably balanced between active support and lighter-touch maintenance.",
+  };
+
+  const learnerConcentrationItems = privateLearnerItems
+    .map((item) => {
+      const pressureCount =
+        (item.blocked_goal_count > 0 ? 1 : 0) +
+        (item.recurring_issue_tags.length > 0 ? 1 : 0) +
+        (item.needs_adaptation ? 1 : 0) +
+        (item.review_without_adaptation ? 1 : 0) +
+        (item.needs_playbook_attention ? 1 : 0) +
+        (item.needs_strategy_attention ? 1 : 0);
+      if (pressureCount < 2) return null;
+      return {
+        kind: "learner" as const,
+        id: item.id,
+        title: item.student_name,
+        href: `/notebook/teacher/private-students/${item.id}`,
+        concentration_level:
+          pressureCount >= 4 ? "high" : pressureCount >= 3 ? "medium" : "watch",
+        reason: `${pressureCount} active pressure signals are clustering around this learner.`,
+        supporting_note: item.classroom_name,
+      } satisfies TeacherLoadConcentrationItem;
+    })
+    .filter((item): item is TeacherLoadConcentrationItem => item !== null);
+
+  const issueConcentrationItems = issuePatternItems
+    .filter(
+      (item) =>
+        item.learners_without_support_path > 0 ||
+        item.learners_without_playbook > 0 ||
+        item.learners_without_strategy > 0
+    )
+    .map((item) => {
+      const gapCount =
+        item.learners_without_support_path +
+        item.learners_without_playbook +
+        item.learners_without_strategy;
+      return {
+        kind: "issue_cluster" as const,
+        id: item.issue_tag,
+        title: item.issue_tag.replaceAll("_", " "),
+        href: "/notebook/teacher/reporting",
+        concentration_level:
+          gapCount >= 4 ? "high" : gapCount >= 2 ? "medium" : "watch",
+        reason: `${item.learner_count} learners share this issue cluster with visible support gaps.`,
+        supporting_note: item.latest_intervention_note,
+      } satisfies TeacherLoadConcentrationItem;
+    });
+
+  const strategyConcentrationItems = strategyItems
+    .filter((item) => item.learner_count >= 2 && (item.broad_status === "weak" || item.broad_status === "mixed"))
+    .map((item) => ({
+      kind: "strategy" as const,
+      id: item.id,
+      title: item.title,
+      href: `/notebook/teacher/library/strategies/${item.id}`,
+      concentration_level:
+        item.broad_status === "weak" && item.learner_count >= 3
+          ? "high"
+          : item.broad_status === "weak" || item.learner_count >= 3
+            ? "medium"
+            : "watch",
+      reason: `${item.learner_count} learners are still relying on a ${item.broad_status === "weak" ? "weak" : "mixed"} strategy.`,
+      supporting_note: item.latest_outcome_note,
+    } satisfies TeacherLoadConcentrationItem));
+
+  const playbookConcentrationItems = playbookItems
+    .filter((item) => item.learner_count >= 2 && (item.broad_status === "weak" || item.broad_status === "mixed"))
+    .map((item) => ({
+      kind: "playbook" as const,
+      id: item.id,
+      title: item.title,
+      href: `/notebook/teacher/library/playbooks/${item.id}`,
+      concentration_level:
+        item.broad_status === "weak" && item.learner_count >= 3
+          ? "high"
+          : item.broad_status === "weak" || item.learner_count >= 3
+            ? "medium"
+            : "watch",
+      reason: `${item.learner_count} learners are still tied to a ${item.broad_status === "weak" ? "weak" : "mixed"} playbook.`,
+      supporting_note: item.latest_outcome_note,
+    } satisfies TeacherLoadConcentrationItem));
+
+  const loadConcentrationItems = [
+    ...learnerConcentrationItems,
+    ...issueConcentrationItems,
+    ...strategyConcentrationItems,
+    ...playbookConcentrationItems,
+  ].sort((a, b) => {
+    const weight = (value: TeacherLoadConcentrationItem["concentration_level"]) =>
+      value === "high" ? 3 : value === "medium" ? 2 : 1;
+    return weight(b.concentration_level) - weight(a.concentration_level);
+  });
+
   return {
     classroomSummaries,
     attentionItems,
     studentAttention,
     conversionItems,
     privateLearnerItems,
+    issuePatternItems,
+    priorityItems,
+    checkpointItems,
+    workloadSummary,
+    stabilizationSummary,
+    stabilizationItems,
+    portfolioMixSummary,
+    loadConcentrationItems,
     strategyItems,
+    playbookItems,
     totalClassrooms: classroomSummaries.length,
     totalStudents: classroomSummaries.reduce((sum, item) => sum + item.student_count, 0),
     totalAssignments: classroomSummaries.reduce((sum, item) => sum + item.assignment_count, 0),
@@ -779,18 +1733,53 @@ export async function getTeacherReportingDashboard(
     totalPrivateReviewedNotAdapted: privateLearnerItems.filter(
       (item) => item.review_without_adaptation
     ).length,
+    totalCheckpointsDueNow: checkpointItems.filter((item) => item.due_state === "due_now").length,
+    totalCheckpointsOverdue: checkpointItems.filter((item) => item.due_state === "overdue").length,
+    totalCheckpointsRecentlyChecked: checkpointItems.filter(
+      (item) => item.due_state === "recently_checked"
+    ).length,
+    totalLoadConcentrationHigh: loadConcentrationItems.filter(
+      (item) => item.concentration_level === "high"
+    ).length,
+    totalRepeatedPressureLearners: learnerConcentrationItems.length,
+    totalWeakSupportConcentration:
+      strategyConcentrationItems.length + playbookConcentrationItems.length,
     totalPrivateNoStrategy: privateLearnerItems.filter((item) => !item.has_strategy_application).length,
     totalPrivateStrategyGap: privateLearnerItems.filter((item) => item.needs_strategy_attention).length,
     totalPrivateNoPlaybook: privateLearnerItems.filter((item) => !item.has_playbook_application).length,
     totalPrivatePlaybookGap: privateLearnerItems.filter((item) => item.needs_playbook_attention).length,
+    totalIssueClusters: issuePatternItems.length,
+    totalIssueSupportGaps: issuePatternItems.filter(
+      (item) =>
+        item.learners_without_strategy > 0 ||
+        item.learners_without_playbook > 0 ||
+        item.learners_without_support_path > 0
+    ).length,
+    totalIssueLearnersWithoutSupportPath: new Set(
+      issuePatternItems
+        .filter((item) => item.learners_without_support_path > 0)
+        .flatMap((item) => item.learner_ids)
+    ).size,
     totalPlaybooksUsed: privateLearnerItems.reduce(
       (sum, item) => sum + item.playbook_application_count,
       0
     ),
+    totalPlaybookHelping: playbookItems.filter((item) => item.broad_status === "helping").length,
+    totalPlaybookMixed: playbookItems.filter((item) => item.broad_status === "mixed").length,
+    totalPlaybookHelped: privateLearnerItems.filter(
+      (item) => item.latest_playbook_outcome_status === "helped"
+    ).length,
+    totalPlaybookNeedsReview: privateLearnerItems.filter(
+      (item) => item.has_playbook_application && !item.latest_playbook_outcome_status
+    ).length,
+    totalPlaybookWeak: playbookItems.filter((item) => item.needs_refinement).length,
+    totalPlaybookNoOutcome: playbookItems.filter((item) => item.needs_more_outcomes).length,
     totalStrategiesUsed: privateLearnerItems.reduce(
       (sum, item) => sum + item.strategy_application_count,
       0
     ),
+    totalStrategyHelping: strategyItems.filter((item) => item.broad_status === "helping").length,
+    totalStrategyMixed: strategyItems.filter((item) => item.broad_status === "mixed").length,
     totalStrategyHelped: privateLearnerItems.filter(
       (item) => item.latest_strategy_outcome_status === "helped"
     ).length,

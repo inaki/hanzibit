@@ -208,6 +208,7 @@ function getPlaybookSummary(input: {
   isTeacher: boolean;
   latestPlaybookTitle: string | null;
   latestPlaybookAppliedAt: string | null;
+  latestPlaybookOutcomeStatus: string | null;
   activeGoals: Array<{ progress_status: string | null }>;
   latestIssueTags: string[];
 }) {
@@ -217,6 +218,26 @@ function getPlaybookSummary(input: {
   ).length;
 
   if (input.latestPlaybookTitle) {
+    if (input.latestPlaybookOutcomeStatus === "helped") {
+      return input.isTeacher
+        ? `${input.latestPlaybookTitle} is not just attached, it is helping. Keep the broader support path stable before changing course.`
+        : "Your teacher’s current playbook is helping and should stay stable while this support pattern is working.";
+    }
+    if (input.latestPlaybookOutcomeStatus === "partial") {
+      return input.isTeacher
+        ? `${input.latestPlaybookTitle} is helping only partially. Refine the supporting strategy mix before assuming the playbook is already strong enough.`
+        : "Your teacher is refining the current support playbook because it is only partly helping so far.";
+    }
+    if (input.latestPlaybookOutcomeStatus === "no_change") {
+      return input.isTeacher
+        ? `${input.latestPlaybookTitle} is attached, but the latest outcome showed no clear lift. Refine or replace it soon.`
+        : "The current support playbook is being reevaluated because it has not shown a clear lift yet.";
+    }
+    if (input.latestPlaybookOutcomeStatus === "replace") {
+      return input.isTeacher
+        ? `${input.latestPlaybookTitle} now looks like a replacement candidate. Move this learner to a stronger structured response soon.`
+        : "Your teacher is likely to replace the current broader support playbook soon.";
+    }
     return input.isTeacher
       ? `${input.latestPlaybookTitle} is the current structured playbook guiding this learner. Keep the next lesson and assignment support aligned with it.`
       : "Your teacher has attached a broader support playbook to this private tutoring plan.";
@@ -232,13 +253,21 @@ function getPlaybookSummary(input: {
   return "No broader tutoring playbook is visible yet for this relationship.";
 }
 
-export default async function ClassroomDetailPage({
-  params,
-  searchParams,
-}: {
+type ClassroomDetailPageProps = {
   params: Promise<{ classroomId: string }>;
   searchParams: Promise<{ success?: string; templateId?: string }>;
-}) {
+  variant?: "default" | "hub";
+  baseClassroomPath?: string;
+  baseAssignmentPath?: string;
+};
+
+export async function ClassroomDetailPageContent({
+  params,
+  searchParams,
+  variant = "default",
+  baseClassroomPath = "/notebook/classes",
+  baseAssignmentPath = "/notebook/assignments",
+}: ClassroomDetailPageProps) {
   const userId = await getAuthUserId();
   const [{ classroomId }, query] = await Promise.all([params, searchParams]);
 
@@ -299,29 +328,33 @@ export default async function ClassroomDetailPage({
     "use server";
     const result = await createAssignmentAction(formData);
     if ("error" in result) {
-      redirect(`/notebook/classes/${classroomId}?success=${encodeURIComponent(`error:${result.error}`)}`);
+      redirect(`${baseClassroomPath}/${classroomId}?success=${encodeURIComponent(`error:${result.error}`)}`);
     }
-    redirect(`/notebook/assignments/${result.id}`);
+    redirect(`${baseAssignmentPath}/${result.id}`);
   }
 
   async function createAssignmentFromTemplateFormAction(formData: FormData) {
     "use server";
     const result = await createAssignmentFromTemplateAction(formData);
     if ("error" in result) {
-      redirect(`/notebook/classes/${classroomId}?success=${encodeURIComponent(`error:${result.error}`)}`);
+      redirect(`${baseClassroomPath}/${classroomId}?success=${encodeURIComponent(`error:${result.error}`)}`);
     }
-    redirect(`/notebook/assignments/${result.id}`);
+    redirect(`${baseAssignmentPath}/${result.id}`);
   }
+
+  const showStandaloneHeader = variant === "default";
 
   return (
     <div data-testid="classroom-detail-page" className="h-full overflow-auto p-6 pb-20 md:p-10 lg:pb-10">
       <div className="mx-auto max-w-6xl space-y-8">
         <div className="flex items-start justify-between gap-6">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.25em] text-muted-foreground">
-              Classroom
-            </p>
-            <h1 className="mt-2 text-3xl font-bold text-foreground">{classroom.name}</h1>
+            {showStandaloneHeader ? (
+              <p className="text-xs font-semibold uppercase tracking-[0.25em] text-muted-foreground">
+                Classroom
+              </p>
+            ) : null}
+            <h1 className={`${showStandaloneHeader ? "mt-2" : ""} text-3xl font-bold text-foreground`}>{classroom.name}</h1>
             {classroom.description && (
               <p className="mt-2 max-w-3xl text-sm text-muted-foreground">
                 {classroom.description}
@@ -396,7 +429,7 @@ export default async function ClassroomDetailPage({
                   {assignmentsNeedingAttention.map(({ assignment, submitted, reviewed, missing, overdue }) => (
                     <Link
                       key={assignment.id}
-                      href={`/notebook/assignments/${assignment.id}`}
+                      href={`${baseAssignmentPath}/${assignment.id}`}
                       className="block rounded-xl border border-amber-500/20 bg-amber-500/10 p-4 transition-colors hover:bg-amber-500/15"
                     >
                       <div className="flex items-center justify-between gap-3">
@@ -632,10 +665,26 @@ export default async function ClassroomDetailPage({
                           isTeacher,
                           latestPlaybookTitle: privateStudent.last_playbook_title,
                           latestPlaybookAppliedAt: privateStudent.last_playbook_applied_at,
+                          latestPlaybookOutcomeStatus: privateStudent.last_playbook_outcome_status ?? null,
                           activeGoals,
                           latestIssueTags: latestLessonHistory?.issue_tags ?? [],
                         })}
                       </p>
+                      {privateStudent.last_playbook_outcome_status ? (
+                        <p className="mt-2 text-sm text-muted-foreground">
+                          Latest playbook outcome: {privateStudent.last_playbook_outcome_status.replaceAll("_", " ")}
+                          {privateStudent.last_playbook_outcome_at
+                            ? ` · ${new Date(privateStudent.last_playbook_outcome_at).toLocaleDateString("en-US")}`
+                            : ""}
+                          {privateStudent.last_playbook_outcome_note
+                            ? ` · ${privateStudent.last_playbook_outcome_note}`
+                            : ""}
+                        </p>
+                      ) : privateStudent.last_playbook_title ? (
+                        <p className="mt-2 text-sm text-muted-foreground">
+                          No outcome has been recorded yet for the current playbook.
+                        </p>
+                      ) : null}
                     </div>
                     {latestLessonHistory ? (
                       <div className="rounded-xl border border-amber-500/20 bg-amber-500/10 p-3 text-sm text-foreground/90">
@@ -682,14 +731,14 @@ export default async function ClassroomDetailPage({
                     </Link>
                   ) : lessonPlan?.next_assignment_id ? (
                     <Link
-                      href={`/notebook/assignments/${lessonPlan.next_assignment_id}`}
+                      href={`${baseAssignmentPath}/${lessonPlan.next_assignment_id}`}
                       className="inline-flex items-center rounded-lg border px-3 py-2 text-sm font-medium text-[var(--cn-orange)] transition-colors hover:border-[var(--cn-orange)]/30 hover:bg-[var(--cn-orange)]/10"
                     >
                       Open next lesson work
                     </Link>
                   ) : privateStudent.next_assignment_id ? (
                     <Link
-                      href={`/notebook/assignments/${privateStudent.next_assignment_id}`}
+                      href={`${baseAssignmentPath}/${privateStudent.next_assignment_id}`}
                       className="inline-flex items-center rounded-lg border px-3 py-2 text-sm font-medium text-[var(--cn-orange)] transition-colors hover:border-[var(--cn-orange)]/30 hover:bg-[var(--cn-orange)]/10"
                     >
                       Open current assignment
@@ -716,7 +765,7 @@ export default async function ClassroomDetailPage({
               ) : (
                 <div className="space-y-3">
                   {assignments.map((assignment) => (
-                    <Link key={assignment.id} href={`/notebook/assignments/${assignment.id}`} className="block rounded-xl border p-4 transition-colors hover:border-[var(--cn-orange)]/30 hover:bg-muted/20">
+                    <Link key={assignment.id} href={`${baseAssignmentPath}/${assignment.id}`} className="block rounded-xl border p-4 transition-colors hover:border-[var(--cn-orange)]/30 hover:bg-muted/20">
                       <div className="flex items-center justify-between gap-3">
                         <h3 className="font-semibold text-foreground">{assignment.title}</h3>
                         <div className="flex items-center gap-2">
@@ -785,7 +834,7 @@ export default async function ClassroomDetailPage({
                   <div className="flex flex-wrap gap-3">
                     {inquiry.initial_assignment_id ? (
                       <Link
-                        href={`/notebook/assignments/${inquiry.initial_assignment_id}`}
+                        href={`${baseAssignmentPath}/${inquiry.initial_assignment_id}`}
                         className="font-medium text-[var(--cn-orange)] hover:underline"
                       >
                         {isTeacher ? "Open onboarding assignment" : "Start first assignment"}
@@ -1037,7 +1086,7 @@ export default async function ClassroomDetailPage({
               <p className="mt-2">
                 Classroom activity is now visible here. Next up is stronger resubmission and deeper teacher review tools.
               </p>
-              <Link href="/notebook/classes" className="mt-4 inline-flex text-[var(--cn-orange)] hover:underline">
+              <Link href={baseClassroomPath} className="mt-4 inline-flex text-[var(--cn-orange)] hover:underline">
                 Back to classes
               </Link>
             </section>
@@ -1046,4 +1095,8 @@ export default async function ClassroomDetailPage({
       </div>
     </div>
   );
+}
+
+export default async function ClassroomDetailPage(props: ClassroomDetailPageProps) {
+  return <ClassroomDetailPageContent {...props} />;
 }

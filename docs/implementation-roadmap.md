@@ -40,7 +40,7 @@ Current status:
 - the web Phase 5 onboarding/reporting layer is now implemented
 - the web Phase 6 private tutoring operations layer is now implemented
 - the web Phase 7 cadence/session-planning layer is now implemented
-- the current roadmap task is transitioning from Phase 12 closeout into Phase 13 planning
+- the current roadmap task is transitioning from Phase 19 closeout into Phase 20 planning
 
 ---
 

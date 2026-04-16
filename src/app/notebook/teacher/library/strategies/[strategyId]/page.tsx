@@ -7,7 +7,10 @@ import { listAssignmentTemplatesForTeacher } from "@/lib/assignment-templates";
 import { canManageTeacherStrategy } from "@/lib/classroom-permissions";
 import { isTeacherUser } from "@/lib/classrooms";
 import { listTeacherResourcesForUser } from "@/lib/teacher-resources";
-import { getTeacherStrategy } from "@/lib/teacher-strategies";
+import {
+  getTeacherStrategy,
+  getTeacherStrategyPatternSummary,
+} from "@/lib/teacher-strategies";
 import {
   getPrivateStudentStrategyOutcomeLabel,
   getTeacherStrategyOutcomeSummary,
@@ -63,11 +66,12 @@ export default async function TeacherStrategyDetailPage({
     notFound();
   }
 
-  const [strategy, templates, resources, outcomeSummary] = await Promise.all([
+  const [strategy, templates, resources, outcomeSummary, patternSummary] = await Promise.all([
     getTeacherStrategy(strategyId),
     listAssignmentTemplatesForTeacher(userId, { includeArchived: true }),
     listTeacherResourcesForUser(userId, { includeArchived: true }),
     getTeacherStrategyOutcomeSummary(strategyId),
+    getTeacherStrategyPatternSummary(strategyId),
   ]);
 
   if (!strategy) {
@@ -236,11 +240,44 @@ export default async function TeacherStrategyDetailPage({
                   Archived
                 </span>
               ) : null}
+              <span
+                className={`rounded-full border px-2.5 py-1 font-medium ${
+                  patternSummary.broad_status === "helping"
+                    ? "border-emerald-500/20 bg-emerald-500/10 text-emerald-400"
+                    : patternSummary.broad_status === "mixed"
+                      ? "border-amber-500/20 bg-amber-500/10 text-amber-300"
+                      : patternSummary.broad_status === "weak"
+                        ? "border-rose-500/20 bg-rose-500/10 text-rose-300"
+                        : "border-border bg-muted text-muted-foreground"
+                }`}
+              >
+                {patternSummary.broad_status === "helping"
+                  ? "Helping across learners"
+                  : patternSummary.broad_status === "mixed"
+                    ? "Mixed across learners"
+                    : patternSummary.broad_status === "weak"
+                      ? "Weak across learners"
+                      : "Insufficient cross-learner data"}
+              </span>
             </div>
             <div className="mt-4 space-y-3 text-sm">
               <div className="flex items-center justify-between gap-3">
                 <span className="text-muted-foreground">Uses</span>
                 <span className="font-medium text-foreground">{strategy.usage_count}</span>
+              </div>
+              <div className="flex items-center justify-between gap-3">
+                <span className="text-muted-foreground">Learners affected</span>
+                <span className="font-medium text-foreground">{patternSummary.learner_count}</span>
+              </div>
+              <div className="flex items-center justify-between gap-3">
+                <span className="text-muted-foreground">Active learners</span>
+                <span className="font-medium text-foreground">{patternSummary.active_learner_count}</span>
+              </div>
+              <div className="flex items-center justify-between gap-3">
+                <span className="text-muted-foreground">Issue overlap</span>
+                <span className="font-medium text-foreground">
+                  {patternSummary.recurring_issue_learner_count}
+                </span>
               </div>
               <div className="flex items-center justify-between gap-3">
                 <span className="text-muted-foreground">Issue focus</span>
@@ -286,12 +323,29 @@ export default async function TeacherStrategyDetailPage({
                     : "No outcome yet"}
                 </span>
               </div>
+              <div className="flex items-center justify-between gap-3">
+                <span className="text-muted-foreground">Latest applied</span>
+                <span className="font-medium text-foreground">
+                  {patternSummary.latest_applied_at
+                    ? new Date(patternSummary.latest_applied_at).toLocaleDateString("en-US")
+                    : "Not applied yet"}
+                </span>
+              </div>
             </div>
             {outcomeSummary.latest_outcome_note ? (
               <p className="mt-4 text-sm text-muted-foreground">
                 Latest outcome note: {outcomeSummary.latest_outcome_note}
               </p>
             ) : null}
+            <p className="mt-3 text-sm text-muted-foreground">
+              {patternSummary.broad_status === "helping"
+                ? "This strategy is showing repeatable value across multiple learners."
+                : patternSummary.broad_status === "mixed"
+                  ? "This strategy is being reused across learners, but results are still mixed."
+                  : patternSummary.broad_status === "weak"
+                    ? "This strategy is being reused, but broader results are weak enough to justify refinement."
+                    : "This strategy does not yet have enough cross-learner evidence to judge it broadly."}
+            </p>
             {strategy.refinement_note ? (
               <p className="mt-3 text-sm text-muted-foreground">
                 Refinement note: {strategy.refinement_note}

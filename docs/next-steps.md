@@ -93,6 +93,43 @@ Completed:
 - [x] **Phase 12 Milestone 3** — strategy effectiveness reporting in `Teaching > Reporting`
 - [x] **Phase 12 polish** — strategy quality signals are now visible in `Teaching > Overview`, `Library`, `Private Learners`, and private classroom tutoring cards
 - [x] **Phase 13 planning baseline** — define the playbook/escalation layer after strategy effectiveness
+- [x] **Phase 13 implementation spec** — define the playbook/escalation layer before coding
+- [x] **Phase 13 Milestone 1** — playbook library foundation in `Teaching > Library`
+- [x] **Phase 13 Milestone 2** — apply playbooks inside private learner workflow
+- [x] **Phase 13 Milestone 3** — playbook escalation reporting in `Teaching > Reporting`
+- [x] **Phase 13 polish** — stronger playbook visibility across `Overview`, `Private Learners`, and `Library`
+- [x] **Phase 14 planning baseline** — define the playbook effectiveness/evolution layer after playbook escalation
+- [x] **Phase 14 implementation spec** — define the playbook effectiveness/evolution layer before coding
+- [x] **Phase 14 Milestone 1** — playbook outcome capture in private learner workflow
+- [x] **Phase 14 Milestone 2** — playbook refinement / replacement workflow in `Teaching > Library`
+- [x] **Phase 14 Milestone 3** — playbook effectiveness reporting in `Teaching > Reporting`
+- [x] **Phase 14 polish / closeout** — playbook quality signals are visible across `Overview`, `Private Learners`, classroom tutoring cards, and reporting
+- [x] **Phase 15 planning baseline** — define the cross-learner teaching pattern layer after playbook effectiveness
+- [x] **Phase 15 implementation spec** — define the cross-learner teaching pattern layer before coding
+- [x] **Phase 15 Milestone 1** — cross-learner pattern reporting in `Teaching > Reporting`
+- [x] **Phase 15 Milestone 2** — broader strategy and playbook pattern signals in `Teaching > Reporting`
+- [x] **Phase 15 Milestone 3** — pattern-aware library context for strategy/playbook detail pages
+- [x] **Phase 15 polish / closeout** — cross-learner pattern signals are now visible in `Overview`, `Library`, `Reporting`, and detail pages
+- [x] **Phase 16 planning baseline** — define the teacher prioritization and sequencing layer after cross-learner patterns
+- [x] **Phase 16 implementation spec** — define the prioritization/sequencing layer before coding
+- [x] **Phase 16 Milestone 1** — teacher priority queue in `Teaching > Overview`
+- [x] **Phase 16 Milestone 2** — private learner priority ranking
+- [x] **Phase 16 Milestone 3** — ranked pattern follow-through in `Teaching > Reporting`
+- [x] **Phase 16 polish / closeout** — priority visibility is now aligned across `Overview`, `Private Learners`, and `Reporting`
+- [x] **Phase 17 planning baseline** — define the teacher review rhythm and operational checkpoint layer
+- [x] **Phase 17 implementation spec** — define the teacher checkpoint model before coding
+- [x] **Phase 17 Milestone 1** — derived review window in `Teaching > Overview`
+- [x] **Phase 17 Milestone 2** — checkpoint visibility in `Teaching > Private Learners`
+- [x] **Phase 17 Milestone 3** — checkpoint rhythm reporting in `Teaching > Reporting`
+- [x] **Phase 17 polish / closeout** — checkpoint-rhythm guidance is now aligned across `Overview`, `Private Learners`, and `Reporting`
+- [x] **Phase 18 planning baseline** — define the teacher workload balancing and operating-capacity layer after review rhythm
+- [x] **Phase 18 implementation spec** — define the workload balancing layer before coding
+- [x] **Phase 18 Milestone 1** — derived workload summary in `Teaching > Overview`
+- [x] **Phase 18 Milestone 2** — workload concentration reporting
+- [x] **Phase 18 Milestone 3** — learner-level repeated pressure visibility
+- [x] **Phase 18 polish / closeout** — workload language and concentration signals are now aligned across `Overview`, `Private Learners`, and `Reporting`
+- [x] **Phase 19 planning baseline** — define the stabilization and handoff layer after workload balancing
+- [x] **Phase 19 implementation spec** — define the stabilization/handoff layer before coding
 
 ---
 
@@ -123,7 +160,7 @@ As of April 14, 2026:
 - **Web Phase 4**: discovery, inquiry, inquiry-to-classroom conversion, and the `Teaching` workspace are now implemented on web
 - **Mobile Phase 1**: continue parity work against current docs and endpoints
 - **Remaining work**: selective Phase 4 polish, mobile catch-up later, and later teacher-layer parity work
-- **Remaining work**: optional Phase 7/8/9/10/11/12 mobile catch-up later, and Phase 13 implementation spec
+- **Remaining work**: optional Phase 7/8/9/10/11/12/13/14/15/16 mobile catch-up later, and Phase 17 continuation
 
 ---
 
@@ -226,6 +263,184 @@ Current status:
 - [x] Create a concrete Phase 11 planning baseline
 - [x] Turn Phase 11 into an implementation-ready spec
 - [x] Milestone 1: lightweight tutoring strategies
+- [x] Milestone 2: strategy application in private learner workflow
+- [x] Milestone 3: strategy reuse reporting
+- [x] Phase 11 polish / closeout on web
+
+Primary reference:
+
+- `docs/phase-11-planning.md`
+- `docs/phase-11-implementation-spec.md`
+
+---
+
+## Phase 12 Status
+
+Current status:
+
+- [x] Create a concrete Phase 12 planning baseline
+- [x] Turn Phase 12 into an implementation-ready spec
+- [x] Milestone 1: strategy outcome capture
+- [x] Milestone 2: strategy refinement workflow
+- [x] Milestone 3: strategy effectiveness reporting
+- [x] Phase 12 polish / closeout on web
+
+Primary reference:
+
+- `docs/phase-12-planning.md`
+- `docs/phase-12-implementation-spec.md`
+
+---
+
+## Phase 13 Status
+
+Current status:
+
+- [x] Create a concrete Phase 13 planning baseline
+- [x] Turn Phase 13 into an implementation-ready spec
+- [x] Milestone 1: playbook library foundation
+- [x] Milestone 2: playbook application in private learner workflow
+- [x] Milestone 3: playbook escalation reporting
+- [x] Phase 13 polish / closeout on web
+
+Primary reference:
+
+- `docs/phase-13-planning.md`
+- `docs/phase-13-implementation-spec.md`
+
+---
+
+## Phase 14 Status
+
+Current status:
+
+- [x] Create a concrete Phase 14 planning baseline
+- [x] Turn Phase 14 into an implementation-ready spec
+- [x] Milestone 1: playbook outcome capture
+- [x] Milestone 2: playbook refinement / replacement workflow
+- [x] Milestone 3: playbook effectiveness reporting
+- [x] Phase 14 polish / closeout on web
+
+Primary reference:
+
+- `docs/phase-14-planning.md`
+- `docs/phase-14-implementation-spec.md`
+
+---
+
+## Phase 15 Status
+
+Current status:
+
+- [x] Create a concrete Phase 15 planning baseline
+- [x] Turn Phase 15 into an implementation-ready spec
+- [x] Milestone 1: cross-learner pattern reporting
+- [x] Milestone 2: strategy and playbook pattern signals
+- [x] Milestone 3: pattern-aware library context
+- [x] Phase 15 polish / closeout on web
+
+Primary reference:
+
+- `docs/phase-15-planning.md`
+- `docs/phase-15-implementation-spec.md`
+
+---
+
+## Phase 16 Status
+
+Current status:
+
+- [x] Create a concrete Phase 16 planning baseline
+- [x] Turn Phase 16 into an implementation-ready spec
+- [x] Milestone 1: teacher priority queue
+- [x] Milestone 2: private learner priority ranking
+- [x] Milestone 3: ranked pattern follow-through
+- [x] Phase 16 polish / closeout on web
+
+Primary reference:
+
+- `docs/phase-16-planning.md`
+- `docs/phase-16-implementation-spec.md`
+
+---
+
+## Phase 17 Status
+
+Current status:
+
+- [x] Create a concrete Phase 17 planning baseline
+- [x] Turn Phase 17 into an implementation-ready spec
+- [x] Milestone 1: derived review checkpoint model
+- [x] Milestone 2: checkpoint visibility in `Private Learners`
+- [x] Milestone 3: checkpoint rhythm reporting
+- [x] Phase 17 polish / closeout on web
+
+Primary reference:
+
+- `docs/phase-17-planning.md`
+- `docs/phase-17-implementation-spec.md`
+
+---
+
+## Phase 18 Status
+
+Current status:
+
+- [x] Create a concrete Phase 18 planning baseline
+- [x] Turn Phase 18 into an implementation-ready spec
+- [x] Milestone 1: derived workload summary
+- [x] Milestone 2: workload concentration reporting
+- [x] Milestone 3: learner-level repeated pressure visibility
+- [x] Phase 18 polish / closeout on web
+
+Primary reference:
+
+- `docs/phase-18-planning.md`
+- `docs/phase-18-implementation-spec.md`
+
+---
+
+## Phase 19 Status
+
+Current status:
+
+- [x] Create a concrete Phase 19 planning baseline
+- [x] Turn Phase 19 into an implementation-ready spec
+- [x] Milestone 1: derived stabilization summary
+- [x] Milestone 2: learner-level stabilization visibility
+- [x] Milestone 3: stabilization reporting
+- [x] Phase 19 polish / closeout on web
+
+Primary reference:
+
+- `docs/phase-19-planning.md`
+- `docs/phase-19-implementation-spec.md`
+
+---
+
+## Phase 20 Status
+
+Current status:
+
+- [x] Create a concrete Phase 20 planning baseline
+- [x] Turn Phase 20 into an implementation-ready spec
+- [x] Milestone 1: derived portfolio mix summary
+- [ ] Milestone 2: learner-level portfolio-mode visibility
+- [ ] Milestone 3: portfolio distribution reporting
+- [ ] Phase 20 polish / closeout on web
+
+Primary reference:
+
+- `docs/phase-20-planning.md`
+- `docs/phase-20-implementation-spec.md`
+
+## Phase 11 Status
+
+Current status:
+
+- [x] Create a concrete Phase 11 planning baseline
+- [x] Turn Phase 11 into an implementation-ready spec
+- [x] Milestone 1: lightweight tutoring strategies
 - [x] Milestone 2: strategy application into private learner workflow
 - [x] Milestone 3: strategy reuse reporting
 - [x] Phase 11 polish / closeout on web
@@ -269,6 +484,24 @@ Primary reference:
 
 - `docs/phase-13-planning.md`
 - `docs/phase-13-implementation-spec.md`
+
+---
+
+## Phase 14 Status
+
+Current status:
+
+- [x] Create a concrete Phase 14 planning baseline
+- [x] Turn Phase 14 into an implementation-ready spec
+- [x] Milestone 1: playbook outcome capture
+- [x] Milestone 2: playbook refinement / replacement workflow
+- [x] Milestone 3: playbook effectiveness reporting
+- [x] Phase 14 polish / closeout on web
+
+Primary reference:
+
+- `docs/phase-14-planning.md`
+- `docs/phase-14-implementation-spec.md`
 
 ---
 
