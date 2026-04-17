@@ -51,6 +51,8 @@ export interface TeacherReportingDashboard {
   stabilizationSummary: TeacherStabilizationSummary;
   stabilizationItems: TeacherStabilizationItem[];
   portfolioMixSummary: TeacherPortfolioMixSummary;
+  operatingReviewSummary: TeacherOperatingReviewSummary;
+  intakeReadinessSummary: TeacherIntakeReadinessSummary;
   loadConcentrationItems: TeacherLoadConcentrationItem[];
   strategyItems: TeacherReportingStrategyItem[];
   playbookItems: TeacherReportingPlaybookItem[];
@@ -306,6 +308,24 @@ export interface TeacherPortfolioMixSummary {
   light_touch_count: number;
   handoff_ready_count: number;
   operating_mode: "balanced" | "active_heavy" | "stretched" | "stabilization_heavy";
+  summary_note: string;
+}
+
+export interface TeacherOperatingReviewSummary {
+  reset_now_count: number;
+  rebalance_count: number;
+  simplify_now_count: number;
+  stable_to_maintain_count: number;
+  review_state: "steady" | "watch" | "rebalance" | "reset";
+  summary_note: string;
+}
+
+export interface TeacherIntakeReadinessSummary {
+  pause_intake_count: number;
+  hold_steady_count: number;
+  cautious_capacity_count: number;
+  ready_to_expand_count: number;
+  intake_state: "ready" | "cautious" | "hold" | "pause";
   summary_note: string;
 }
 
@@ -1579,6 +1599,91 @@ export async function getTeacherReportingDashboard(
             : "The current private learner mix looks reasonably balanced between active support and lighter-touch maintenance.",
   };
 
+  const reset_now_count = privateLearnerItems.filter(
+    (item) =>
+      (item.blocked_goal_count > 0 &&
+        (!item.has_playbook_application || !item.has_strategy_application)) ||
+      (item.review_without_adaptation &&
+        (item.recurring_issue_tags.length > 0 || item.needs_adaptation)) ||
+      (item.plan_is_overdue &&
+        (item.blocked_goal_count > 0 || item.recurring_issue_tags.length > 0))
+  ).length;
+
+  const rebalance_count = Math.max(
+    keep_active_count - reset_now_count,
+    privateLearnerItems.filter(
+      (item) =>
+        item.status === "active" &&
+        !item.plan_is_overdue &&
+        (item.needs_review_snapshot || item.needs_adaptation || item.recurring_issue_tags.length > 0)
+    ).length
+  );
+
+  const simplify_now_count = simplify_support_count;
+  const stable_to_maintain_count = light_touch_count + handoff_ready_count;
+
+  const review_state: TeacherOperatingReviewSummary["review_state"] =
+    load_state === "overloaded" || reset_now_count >= 3
+      ? "reset"
+      : portfolioMixSummary.operating_mode === "active_heavy" ||
+          load_state === "stretched" ||
+          rebalance_count >= 3
+        ? "rebalance"
+        : portfolioMixSummary.operating_mode === "balanced" && still_active_pressure > 0
+          ? "watch"
+          : "steady";
+
+  const operatingReviewSummary: TeacherOperatingReviewSummary = {
+    reset_now_count,
+    rebalance_count,
+    simplify_now_count,
+    stable_to_maintain_count,
+    review_state,
+    summary_note:
+      review_state === "reset"
+        ? "The current portfolio is carrying enough active pressure that the teacher should reset expectations before taking on more support load."
+        : review_state === "rebalance"
+          ? "The current portfolio is still workable, but support is clustering enough that the teacher should rebalance before expanding active commitments."
+          : review_state === "watch"
+            ? "The current portfolio is mostly workable, but it still needs deliberate monitoring before it can be treated as fully steady."
+            : "The current portfolio looks steady enough to maintain without immediate reset or rebalance pressure.",
+  };
+
+  const pause_intake_count = reset_now_count;
+  const hold_steady_count = rebalance_count;
+  const cautious_capacity_count = simplify_now_count;
+  const ready_to_expand_count = stable_to_maintain_count;
+
+  const intake_state: TeacherIntakeReadinessSummary["intake_state"] =
+    load_state === "overloaded" || review_state === "reset"
+      ? "pause"
+      : load_state === "stretched" ||
+          review_state === "rebalance" ||
+          portfolioMixSummary.operating_mode === "stretched" ||
+          portfolioMixSummary.operating_mode === "active_heavy"
+        ? "hold"
+        : checkpointItems.some((item) => item.due_state === "due_now") ||
+            loadConcentrationItems.some((item) => item.concentration_level === "high") ||
+            review_state === "watch"
+          ? "cautious"
+          : "ready";
+
+  const intakeReadinessSummary: TeacherIntakeReadinessSummary = {
+    pause_intake_count,
+    hold_steady_count,
+    cautious_capacity_count,
+    ready_to_expand_count,
+    intake_state,
+    summary_note:
+      intake_state === "pause"
+        ? "Current portfolio pressure is high enough that intake should pause until reset-level learners and overdue pressure are reduced."
+        : intake_state === "hold"
+          ? "The portfolio is still workable, but active support is clustered enough that new intake should hold steady for now."
+          : intake_state === "cautious"
+            ? "There may be room for selective expansion, but the current portfolio still carries enough live pressure to stay cautious."
+            : "The current portfolio looks stable enough that taking on carefully chosen new active learners is reasonable.",
+  };
+
   const learnerConcentrationItems = privateLearnerItems
     .map((item) => {
       const pressureCount =
@@ -1684,6 +1789,8 @@ export async function getTeacherReportingDashboard(
     stabilizationSummary,
     stabilizationItems,
     portfolioMixSummary,
+    operatingReviewSummary,
+    intakeReadinessSummary,
     loadConcentrationItems,
     strategyItems,
     playbookItems,

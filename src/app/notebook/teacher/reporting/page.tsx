@@ -29,6 +29,72 @@ export default async function TeacherReportingPage() {
   const playbookPriorityMap = new Map(
     patternPriorityItems.filter((item) => item.kind === "playbook").map((item) => [item.id, item])
   );
+  const operatingReviewItems = reporting.privateLearnerItems
+    .map((item) => {
+      const stabilizationState = getStabilizationState({
+        status: item.status,
+        hasLessonPlan: item.has_lesson_plan,
+        hasSupportedPlan: item.has_supported_plan,
+        activeGoalCount: item.active_goal_count,
+        blockedGoalCount: item.blocked_goal_count,
+        needsReinforcementCount: item.reinforcement_goal_count,
+        recurringIssueTags: item.recurring_issue_tags,
+        hasRecentHistory: item.has_recent_history,
+        hasRecentReview: item.has_recent_review,
+        hasRecentAdaptation: item.has_recent_adaptation,
+        needsReviewSnapshot: item.needs_review_snapshot,
+        needsAdaptation: item.needs_adaptation,
+        reviewWithoutAdaptation: item.review_without_adaptation,
+        planOverdue: item.plan_is_overdue,
+        hasStrategyApplication: item.has_strategy_application,
+        hasPlaybookApplication: item.has_playbook_application,
+        latestStrategyOutcomeStatus: item.latest_strategy_outcome_status,
+        latestPlaybookOutcomeStatus: item.latest_playbook_outcome_status,
+      });
+      const operatingReview = getOperatingReviewState({
+        blockedGoalCount: item.blocked_goal_count,
+        needsAdaptation: item.needs_adaptation,
+        reviewWithoutAdaptation: item.review_without_adaptation,
+        planOverdue: item.plan_is_overdue,
+        recurringIssueTags: item.recurring_issue_tags,
+        hasStrategy: item.has_strategy_application,
+        hasPlaybook: item.has_playbook_application,
+        stabilizationState,
+      });
+
+      return {
+        id: item.id,
+        href: `/notebook/teacher/private-students/${item.id}`,
+        studentName: item.student_name,
+        classroomName: item.classroom_name,
+        state: operatingReview.state,
+        label: operatingReview.label,
+        note: operatingReview.note,
+        reason:
+          operatingReview.state === "reset_now"
+            ? "Current support pressure is high enough that this learner should not keep moving on the same path without a reset."
+            : operatingReview.state === "rebalance"
+              ? "This learner still belongs in active support, but the current path likely needs rebalancing."
+              : operatingReview.state === "simplify_now"
+                ? "This learner looks ready for a simpler support path instead of the current heavier mode."
+                : "This learner looks steady enough to maintain without a near-term reset or rebalance.",
+        sortWeight:
+          operatingReview.state === "reset_now"
+            ? 3
+            : operatingReview.state === "rebalance"
+              ? 2
+              : operatingReview.state === "simplify_now"
+                ? 1
+                : 0,
+        supportingNote:
+          item.latest_adaptation_note ??
+          item.latest_review_summary ??
+          item.latest_history_summary ??
+          item.lesson_plan_focus_note ??
+          null,
+      };
+    })
+    .sort((a, b) => b.sortWeight - a.sortWeight || a.studentName.localeCompare(b.studentName));
 
   return (
     <div data-testid="teacher-reporting-page" className="h-full overflow-auto p-6 pb-20 md:p-10 lg:pb-10">
@@ -159,6 +225,57 @@ export default async function TeacherReportingPage() {
           />
         </div>
 
+        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
+          <SummaryCard
+            label="Keep active"
+            value={reporting.portfolioMixSummary.keep_active_count}
+            tone="rose"
+          />
+          <SummaryCard
+            label="Simplify support"
+            value={reporting.portfolioMixSummary.simplify_support_count}
+            tone="amber"
+          />
+          <SummaryCard
+            label="Light-touch"
+            value={reporting.portfolioMixSummary.light_touch_count}
+            tone="sky"
+          />
+          <SummaryCard
+            label="Handoff-ready"
+            value={reporting.portfolioMixSummary.handoff_ready_count}
+            tone="emerald"
+          />
+          <SummaryCard
+            label="Operating mode"
+            value={reporting.portfolioMixSummary.operating_mode.replaceAll("_", " ")}
+            tone="muted"
+          />
+        </div>
+
+        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+          <SummaryCard
+            label="Reset now"
+            value={reporting.operatingReviewSummary.reset_now_count}
+            tone="rose"
+          />
+          <SummaryCard
+            label="Rebalance"
+            value={reporting.operatingReviewSummary.rebalance_count}
+            tone="amber"
+          />
+          <SummaryCard
+            label="Simplify now"
+            value={reporting.operatingReviewSummary.simplify_now_count}
+            tone="sky"
+          />
+          <SummaryCard
+            label="Stable to maintain"
+            value={reporting.operatingReviewSummary.stable_to_maintain_count}
+            tone="emerald"
+          />
+        </div>
+
         <div className="rounded-2xl border bg-card p-5 text-sm text-muted-foreground">
           Review rhythm is separate from priority. Priority tells you what matters first; checkpoint rhythm tells you what has gone too long without a fresh review, adaptation, or support recheck.
         </div>
@@ -173,6 +290,22 @@ export default async function TeacherReportingPage() {
 
         <div className="rounded-2xl border bg-card p-5 text-sm text-muted-foreground">
           Read these states conservatively: `keep active` means pressure is still real, `simplify` means the support path may now be heavier than necessary, and `handoff-ready` means the learner may be stable enough for lower-intensity monitoring instead of the same active intervention load.
+        </div>
+
+        <div className="rounded-2xl border bg-card p-5 text-sm text-muted-foreground">
+          Portfolio distribution is separate from stabilization alone. It shows whether the overall learner mix is still active-heavy or whether more of the portfolio is shifting into lighter-touch and handoff-ready support.
+        </div>
+
+        <div className="rounded-2xl border bg-card p-5 text-sm text-muted-foreground">
+          Use portfolio distribution to judge sustainability, not urgency. A portfolio can be healthy even with some active learners, but an active-heavy mix should make you cautious about taking on more high-pressure support before current learners stabilize.
+        </div>
+
+        <div className="rounded-2xl border bg-card p-5 text-sm text-muted-foreground">
+          Operating review is the teacher-level “should I keep going like this?” layer. It helps distinguish learners who need a real reset from those who simply need rebalancing, simplification, or steady maintenance.
+        </div>
+
+        <div className="rounded-2xl border bg-card p-5 text-sm text-muted-foreground">
+          Treat these states as operating cues, not automation. `Reset now` means the current support path looks structurally wrong, `Rebalance` means the learner still needs active support on a different path, and `Simplify now` means the current structure may be heavier than necessary.
         </div>
 
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
@@ -208,6 +341,112 @@ export default async function TeacherReportingPage() {
 
         <div className="grid gap-6 xl:grid-cols-[minmax(0,1.1fr)_minmax(340px,0.9fr)]">
           <section className="space-y-6">
+            <div className="rounded-2xl border bg-card p-5">
+              <div className="mb-4 flex items-center gap-2">
+                <AlertTriangle className="h-4 w-4 text-[var(--cn-orange)]" />
+                <h2 className="text-sm font-semibold uppercase tracking-[0.2em] text-muted-foreground">
+                  Operating Review
+                </h2>
+              </div>
+
+              {operatingReviewItems.length === 0 ? (
+                <div className="rounded-xl border border-dashed p-4 text-sm text-muted-foreground">
+                  No operating-review signals yet. As private learner pressure settles, this section will show who should be reset, rebalanced, simplified, or simply maintained.
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {operatingReviewItems.slice(0, 8).map((item) => (
+                    <Link
+                      key={`operating-review:${item.id}`}
+                      href={item.href}
+                      className="block rounded-xl border p-4 transition-colors hover:border-[var(--cn-orange)]/30 hover:bg-muted/20"
+                    >
+                      <div className="flex items-center justify-between gap-3">
+                        <div>
+                          <div className="flex flex-wrap items-center gap-2">
+                            <MetricPill label="Learner" tone="muted" />
+                            <MetricPill
+                              label={item.label}
+                              tone={
+                                item.state === "reset_now"
+                                  ? "rose"
+                                  : item.state === "rebalance"
+                                    ? "amber"
+                                    : item.state === "simplify_now"
+                                      ? "sky"
+                                      : "emerald"
+                              }
+                            />
+                          </div>
+                          <h3 className="mt-2 font-semibold text-foreground">{item.studentName}</h3>
+                          <p className="mt-1 text-sm text-muted-foreground">{item.reason}</p>
+                        </div>
+                        <div className="text-xs font-medium text-[var(--cn-orange)]">Open →</div>
+                      </div>
+                      <div className="mt-3 flex flex-wrap gap-3 text-xs text-muted-foreground">
+                        <span>{item.classroomName}</span>
+                        <span>{item.note}</span>
+                      </div>
+                      {item.supportingNote ? (
+                        <p className="mt-2 text-sm text-muted-foreground">{item.supportingNote}</p>
+                      ) : null}
+                    </Link>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <div className="rounded-2xl border bg-card p-5">
+              <div className="mb-4 flex items-center gap-2">
+                <Users className="h-4 w-4 text-[var(--cn-orange)]" />
+                <h2 className="text-sm font-semibold uppercase tracking-[0.2em] text-muted-foreground">
+                  Portfolio Distribution
+                </h2>
+              </div>
+
+              {reporting.stabilizationItems.length === 0 ? (
+                <div className="rounded-xl border border-dashed p-4 text-sm text-muted-foreground">
+                  No portfolio distribution signals yet. As private learners settle into active support, simplification, and handoff-ready states, the portfolio mix will appear here.
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {reporting.stabilizationItems.slice(0, 8).map((item) => (
+                    <Link
+                      key={`portfolio:${item.kind}:${item.id}`}
+                      href={item.href}
+                      className="block rounded-xl border p-4 transition-colors hover:border-[var(--cn-orange)]/30 hover:bg-muted/20"
+                    >
+                      <div className="flex items-center justify-between gap-3">
+                        <div>
+                          <div className="flex flex-wrap items-center gap-2">
+                            <MetricPill label={item.kind === "learner" ? "Learner" : item.kind} tone="muted" />
+                            <MetricPill
+                              label={item.stabilization_state.replaceAll("_", " ")}
+                              tone={
+                                item.stabilization_state === "keep_active"
+                                  ? "rose"
+                                  : item.stabilization_state === "simplify"
+                                    ? "amber"
+                                    : item.stabilization_state === "light_touch"
+                                      ? "sky"
+                                      : "emerald"
+                              }
+                            />
+                          </div>
+                          <h3 className="mt-2 font-semibold text-foreground">{item.title}</h3>
+                          <p className="mt-1 text-sm text-muted-foreground">{item.reason}</p>
+                        </div>
+                        <div className="text-xs font-medium text-[var(--cn-orange)]">Open →</div>
+                      </div>
+                      {item.supporting_note ? (
+                        <p className="mt-3 text-sm text-muted-foreground">{item.supporting_note}</p>
+                      ) : null}
+                    </Link>
+                  ))}
+                </div>
+              )}
+            </div>
+
             <div className="rounded-2xl border bg-card p-5">
               <div className="mb-4 flex items-center gap-2">
                 <AlertTriangle className="h-4 w-4 text-[var(--cn-orange)]" />
@@ -1190,7 +1429,7 @@ function SummaryCard({
   tone = "default",
 }: {
   label: string;
-  value: number;
+  value: number | string;
   tone?: "default" | "sky" | "rose" | "emerald" | "amber";
 }) {
   const toneClass =
@@ -1257,4 +1496,119 @@ function getConcentrationKindLabel(kind: "learner" | "issue_cluster" | "strategy
   if (kind === "issue_cluster") return "Issue cluster";
   if (kind === "strategy") return "Strategy";
   return "Playbook";
+}
+
+function getStabilizationState(input: {
+  status: string;
+  hasLessonPlan: boolean;
+  hasSupportedPlan: boolean;
+  activeGoalCount: number;
+  blockedGoalCount: number;
+  needsReinforcementCount: number;
+  recurringIssueTags: string[];
+  hasRecentHistory: boolean;
+  hasRecentReview: boolean;
+  hasRecentAdaptation: boolean;
+  needsReviewSnapshot: boolean;
+  needsAdaptation: boolean;
+  reviewWithoutAdaptation: boolean;
+  planOverdue: boolean;
+  hasStrategyApplication: boolean;
+  hasPlaybookApplication: boolean;
+  latestStrategyOutcomeStatus: string | null;
+  latestPlaybookOutcomeStatus: string | null;
+}) {
+  const hasWeakOutcome =
+    input.latestStrategyOutcomeStatus === "no_change" ||
+    input.latestStrategyOutcomeStatus === "replace" ||
+    input.latestPlaybookOutcomeStatus === "no_change" ||
+    input.latestPlaybookOutcomeStatus === "replace";
+
+  const isStable =
+    input.status === "active" &&
+    input.blockedGoalCount === 0 &&
+    input.needsReinforcementCount === 0 &&
+    input.recurringIssueTags.length === 0 &&
+    !input.needsReviewSnapshot &&
+    !input.needsAdaptation &&
+    !input.reviewWithoutAdaptation &&
+    !input.planOverdue &&
+    input.hasRecentHistory &&
+    (input.hasRecentReview || input.hasRecentAdaptation) &&
+    !hasWeakOutcome;
+
+  if (!isStable) return "keep_active" as const;
+
+  if (
+    input.hasLessonPlan &&
+    (input.hasStrategyApplication || input.hasPlaybookApplication) &&
+    ((input.latestStrategyOutcomeStatus === "helped" && !input.hasPlaybookApplication) ||
+      input.latestPlaybookOutcomeStatus === "helped")
+  ) {
+    if (
+      input.hasSupportedPlan &&
+      input.activeGoalCount > 0 &&
+      input.hasRecentHistory &&
+      input.hasRecentReview &&
+      input.hasRecentAdaptation
+    ) {
+      return "handoff_ready" as const;
+    }
+
+    return "simplify" as const;
+  }
+
+  return "light_touch" as const;
+}
+
+function getOperatingReviewState(input: {
+  blockedGoalCount: number;
+  needsAdaptation: boolean;
+  reviewWithoutAdaptation: boolean;
+  planOverdue: boolean;
+  recurringIssueTags: string[];
+  hasStrategy: boolean;
+  hasPlaybook: boolean;
+  stabilizationState: "keep_active" | "simplify" | "light_touch" | "handoff_ready";
+}) {
+  const resetNow =
+    (input.blockedGoalCount > 0 && (!input.hasPlaybook || !input.hasStrategy)) ||
+    (input.reviewWithoutAdaptation &&
+      (input.recurringIssueTags.length > 0 || input.needsAdaptation)) ||
+    (input.planOverdue &&
+      (input.blockedGoalCount > 0 || input.recurringIssueTags.length > 0));
+
+  if (resetNow) {
+    return {
+      state: "reset_now" as const,
+      label: "Reset now",
+      note: "This learner is carrying enough unresolved pressure that the support path should be reset before simply continuing as-is.",
+    };
+  }
+
+  if (
+    input.stabilizationState === "keep_active" ||
+    input.needsAdaptation ||
+    input.reviewWithoutAdaptation
+  ) {
+    return {
+      state: "rebalance" as const,
+      label: "Rebalance",
+      note: "This learner still belongs in active support, but the current path likely needs rebalancing instead of more of the same.",
+    };
+  }
+
+  if (input.stabilizationState === "simplify") {
+    return {
+      state: "simplify_now" as const,
+      label: "Simplify now",
+      note: "This learner looks ready for a lighter and simpler support path instead of the current heavier mode.",
+    };
+  }
+
+  return {
+    state: "steady" as const,
+    label: "Stable to maintain",
+    note: "This learner looks steady enough to maintain without a near-term reset or rebalance.",
+  };
 }

@@ -720,16 +720,11 @@ export function getPool(): Pool {
 }
 
 async function resetPool(): Promise<void> {
-  if (global.__hanzibitPool) {
-    try {
-      await global.__hanzibitPool.end();
-    } catch {
-      // Ignore cleanup failures and recreate the pool anyway.
-    }
-  }
-
-  global.__hanzibitPool = undefined;
+  // Keep the singleton pool instance alive. Better Auth captures `getPool()`
+  // at module initialization time, so replacing the pool object here would
+  // leave auth holding a permanently ended/stale pool reference.
   global.__hanzibitSchemaInit = undefined;
+  global.__hanzibitSchemaVersion = undefined;
 }
 
 function isRetryableConnectionError(error: unknown): boolean {

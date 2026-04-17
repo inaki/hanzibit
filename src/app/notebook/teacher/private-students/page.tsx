@@ -406,6 +406,83 @@ function getStabilizationState(input: {
   };
 }
 
+function getPortfolioMode(stabilizationState: "keep_active" | "simplify" | "light_touch" | "handoff_ready") {
+  if (stabilizationState === "keep_active") {
+    return {
+      mode: "active-heavy" as const,
+      note: "This learner still belongs in the active-management side of the portfolio.",
+    };
+  }
+  if (stabilizationState === "simplify") {
+    return {
+      mode: "simplify support" as const,
+      note: "This learner is moving toward a simpler support mode instead of full active management.",
+    };
+  }
+  if (stabilizationState === "light_touch") {
+    return {
+      mode: "light-touch" as const,
+      note: "This learner fits the lighter-touch maintenance side of the portfolio right now.",
+    };
+  }
+  return {
+    mode: "handoff-ready" as const,
+    note: "This learner looks stable enough to sit at the handoff-ready edge of the portfolio.",
+  };
+}
+
+function getOperatingReviewState(input: {
+  blockedGoalCount: number;
+  needsAdaptation: boolean;
+  reviewWithoutAdaptation: boolean;
+  planOverdue: boolean;
+  recurringIssueTags: string[];
+  hasStrategy: boolean;
+  hasPlaybook: boolean;
+  stabilizationState: "keep_active" | "simplify" | "light_touch" | "handoff_ready";
+}) {
+  const resetNow =
+    (input.blockedGoalCount > 0 && (!input.hasPlaybook || !input.hasStrategy)) ||
+    (input.reviewWithoutAdaptation &&
+      (input.recurringIssueTags.length > 0 || input.needsAdaptation)) ||
+    (input.planOverdue &&
+      (input.blockedGoalCount > 0 || input.recurringIssueTags.length > 0));
+
+  if (resetNow) {
+    return {
+      state: "reset_now" as const,
+      label: "Reset now",
+      note: "This learner is carrying enough unresolved pressure that the support path should be reset before simply continuing as-is.",
+    };
+  }
+
+  if (
+    input.stabilizationState === "keep_active" ||
+    input.needsAdaptation ||
+    input.reviewWithoutAdaptation
+  ) {
+    return {
+      state: "rebalance" as const,
+      label: "Rebalance",
+      note: "This learner still belongs in active support, but the current path likely needs rebalancing instead of more of the same.",
+    };
+  }
+
+  if (input.stabilizationState === "simplify") {
+    return {
+      state: "simplify_now" as const,
+      label: "Simplify now",
+      note: "This learner looks ready for a lighter and simpler support path instead of the current heavier mode.",
+    };
+  }
+
+  return {
+    state: "steady" as const,
+    label: "Stable to maintain",
+    note: "This learner looks steady enough to maintain without a near-term reset or rebalance.",
+  };
+}
+
 function getCheckpointDueState(daysOpen: number | null): "due_now" | "overdue" | "recently_checked" {
   if (daysOpen === null) return "recently_checked";
   if (daysOpen > 14) return "overdue";
@@ -544,6 +621,29 @@ export default async function TeacherPrivateStudentsPage() {
         daysSincePlaybookApplication: getDaysSince(item.last_playbook_applied_at),
       });
 
+      const stabilization = getStabilizationState({
+        status: item.status,
+        hasLessonPlan: Boolean(lessonPlan),
+        hasSupportedPlan: Boolean(
+          lessonPlan && (lessonPlan.next_assignment_id || lessonPlan.next_template_id)
+        ),
+        activeGoalCount,
+        blockedGoalCount,
+        needsReinforcementCount,
+        recurringIssueTags,
+        hasRecentHistory,
+        hasRecentReview,
+        hasRecentAdaptation,
+        needsReviewSnapshot,
+        needsAdaptation,
+        reviewWithoutAdaptation,
+        planOverdue: lessonPlan ? isPlanOverdue(lessonPlan.target_date) : false,
+        hasStrategyApplication: Boolean(item.last_strategy_id),
+        hasPlaybookApplication: Boolean(item.last_playbook_id),
+        latestStrategyOutcomeStatus: item.last_strategy_outcome_status,
+        latestPlaybookOutcomeStatus: item.last_playbook_outcome_status,
+      });
+
       return {
         item,
         lessonPlan,
@@ -610,27 +710,17 @@ export default async function TeacherPrivateStudentsPage() {
           lastStrategyOutcomeStatus: item.last_strategy_outcome_status,
           lastPlaybookOutcomeStatus: item.last_playbook_outcome_status,
         }),
-        stabilization: getStabilizationState({
-          status: item.status,
-          hasLessonPlan: Boolean(lessonPlan),
-          hasSupportedPlan: Boolean(
-            lessonPlan && (lessonPlan.next_assignment_id || lessonPlan.next_template_id)
-          ),
-          activeGoalCount,
+        stabilization,
+        portfolioMode: getPortfolioMode(stabilization.state),
+        operatingReview: getOperatingReviewState({
           blockedGoalCount,
-          needsReinforcementCount,
-          recurringIssueTags,
-          hasRecentHistory,
-          hasRecentReview,
-          hasRecentAdaptation,
-          needsReviewSnapshot,
           needsAdaptation,
           reviewWithoutAdaptation,
           planOverdue: lessonPlan ? isPlanOverdue(lessonPlan.target_date) : false,
-          hasStrategyApplication: Boolean(item.last_strategy_id),
-          hasPlaybookApplication: Boolean(item.last_playbook_id),
-          latestStrategyOutcomeStatus: item.last_strategy_outcome_status,
-          latestPlaybookOutcomeStatus: item.last_playbook_outcome_status,
+          recurringIssueTags,
+          hasStrategy: Boolean(item.last_strategy_id),
+          hasPlaybook: Boolean(item.last_playbook_id),
+          stabilizationState: stabilization.state,
         }),
       };
     })
@@ -701,6 +791,30 @@ export default async function TeacherPrivateStudentsPage() {
   ).length;
   const handoffReadyCount = privateStudentsWithPlans.filter(
     ({ stabilization }) => stabilization.state === "handoff_ready"
+  ).length;
+  const keepActivePortfolioCount = privateStudentsWithPlans.filter(
+    ({ portfolioMode }) => portfolioMode.mode === "active-heavy"
+  ).length;
+  const simplifyPortfolioCount = privateStudentsWithPlans.filter(
+    ({ portfolioMode }) => portfolioMode.mode === "simplify support"
+  ).length;
+  const lightTouchPortfolioCount = privateStudentsWithPlans.filter(
+    ({ portfolioMode }) => portfolioMode.mode === "light-touch"
+  ).length;
+  const handoffPortfolioCount = privateStudentsWithPlans.filter(
+    ({ portfolioMode }) => portfolioMode.mode === "handoff-ready"
+  ).length;
+  const resetNowCount = privateStudentsWithPlans.filter(
+    ({ operatingReview }) => operatingReview.state === "reset_now"
+  ).length;
+  const rebalanceCount = privateStudentsWithPlans.filter(
+    ({ operatingReview }) => operatingReview.state === "rebalance"
+  ).length;
+  const simplifyNowCount = privateStudentsWithPlans.filter(
+    ({ operatingReview }) => operatingReview.state === "simplify_now"
+  ).length;
+  const stableToMaintainCount = privateStudentsWithPlans.filter(
+    ({ operatingReview }) => operatingReview.state === "steady"
   ).length;
   const noStrategyCount = privateStudentsWithPlans.filter(
     ({ item }) => !item.last_strategy_id
@@ -797,6 +911,48 @@ export default async function TeacherPrivateStudentsPage() {
         ) : null}
 
         {privateStudents.length > 0 ? (
+          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+            <InfoCard label="Keep active" value={keepActivePortfolioCount} tone="rose" />
+            <InfoCard label="Simplify support" value={simplifyPortfolioCount} tone="amber" />
+            <InfoCard label="Light-touch" value={lightTouchPortfolioCount} tone="sky" />
+            <InfoCard label="Handoff-ready" value={handoffPortfolioCount} tone="emerald" />
+          </div>
+        ) : null}
+
+        {privateStudents.length > 0 ? (
+          <div className="rounded-2xl border bg-card p-5 text-sm text-muted-foreground">
+            Portfolio mode is the learner-level version of the broader portfolio mix. It shows whether this learner still belongs in active management or is starting to move into lighter-touch support.
+          </div>
+        ) : null}
+
+        {privateStudents.length > 0 ? (
+          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+            <InfoCard label="Reset now" value={resetNowCount} tone="rose" />
+            <InfoCard label="Rebalance" value={rebalanceCount} tone="amber" />
+            <InfoCard label="Simplify now" value={simplifyNowCount} tone="sky" />
+            <InfoCard label="Stable to maintain" value={stableToMaintainCount} tone="emerald" />
+          </div>
+        ) : null}
+
+        {privateStudents.length > 0 ? (
+          <div className="rounded-2xl border bg-card p-5 text-sm text-muted-foreground">
+            Operating review is stricter than portfolio mode alone. `Reset now` means this learner is carrying enough unresolved pressure that the current support path should be actively reset; `Rebalance` means support should change, but not necessarily restart.
+          </div>
+        ) : null}
+
+        {privateStudents.length > 0 ? (
+          <div className="rounded-2xl border bg-card p-5 text-sm text-muted-foreground">
+            Use `Reset now` for learners whose current support path is no longer coherent, `Rebalance` for learners who still need active help but on a different path, and `Simplify now` for learners who may be ready for a lighter structure without losing continuity.
+          </div>
+        ) : null}
+
+        {privateStudents.length > 0 ? (
+          <div className="rounded-2xl border bg-card p-5 text-sm text-muted-foreground">
+            Read these portfolio states operationally: `Keep active` means this learner still belongs in the high-attention side of your portfolio, while `Light-touch` and `Handoff-ready` mean the relationship may be moving toward a more sustainable maintenance mode.
+          </div>
+        ) : null}
+
+        {privateStudents.length > 0 ? (
           <div className="grid gap-4 sm:grid-cols-3">
             <InfoCard label="Repeated pressure" value={repeatedPressureCount} tone="amber" />
             <InfoCard label="No support path" value={noSupportPathPressureCount} tone="rose" />
@@ -845,7 +1001,7 @@ export default async function TeacherPrivateStudentsPage() {
                   </h2>
                 </div>
                 <div className="grid gap-4">
-                  {group.items.map(({ item, lessonPlan, activeGoalCount, blockedGoalCount, needsReinforcementCount, recurringIssueTags, latestHistory, latestReview, hasRecentHistory, needsReviewSnapshot, needsAdaptation, reviewWithoutAdaptation, priorityLevel, priorityReason, checkpoint, supportLoad, stabilization }) => (
+                  {group.items.map(({ item, lessonPlan, activeGoalCount, blockedGoalCount, needsReinforcementCount, recurringIssueTags, latestHistory, latestReview, hasRecentHistory, needsReviewSnapshot, needsAdaptation, reviewWithoutAdaptation, priorityLevel, priorityReason, checkpoint, supportLoad, stabilization, portfolioMode, operatingReview }) => (
                     <Link
                       key={item.id}
                       href={`/notebook/teacher/private-students/${item.id}`}
@@ -958,6 +1114,32 @@ export default async function TeacherPrivateStudentsPage() {
                                 {stabilization.label}
                               </span>
                             ) : null}
+                            <span
+                              className={`rounded-full border px-2.5 py-1 text-[11px] font-medium ${
+                                portfolioMode.mode === "active-heavy"
+                                  ? "border-rose-500/20 bg-rose-500/10 text-rose-300"
+                                  : portfolioMode.mode === "simplify support"
+                                    ? "border-amber-500/20 bg-amber-500/10 text-amber-300"
+                                    : portfolioMode.mode === "light-touch"
+                                      ? "border-sky-500/20 bg-sky-500/10 text-sky-400"
+                                      : "border-emerald-500/20 bg-emerald-500/10 text-emerald-400"
+                              }`}
+                            >
+                              Portfolio · {portfolioMode.mode}
+                            </span>
+                            <span
+                              className={`rounded-full border px-2.5 py-1 text-[11px] font-medium ${
+                                operatingReview.state === "reset_now"
+                                  ? "border-rose-500/20 bg-rose-500/10 text-rose-300"
+                                  : operatingReview.state === "rebalance"
+                                    ? "border-amber-500/20 bg-amber-500/10 text-amber-300"
+                                    : operatingReview.state === "simplify_now"
+                                      ? "border-sky-500/20 bg-sky-500/10 text-sky-400"
+                                      : "border-emerald-500/20 bg-emerald-500/10 text-emerald-400"
+                              }`}
+                            >
+                              {operatingReview.label}
+                            </span>
                             {!item.last_playbook_id ? (
                               <span className="rounded-full border border-amber-500/20 bg-amber-500/10 px-2.5 py-1 text-[11px] font-medium text-amber-300">
                                 No playbook yet
@@ -1217,6 +1399,12 @@ export default async function TeacherPrivateStudentsPage() {
                       <p className="mt-2 text-sm text-muted-foreground">
                         Stabilization: {stabilization.note}
                       </p>
+                      <p className="mt-2 text-sm text-muted-foreground">
+                        Portfolio mode: {portfolioMode.note}
+                      </p>
+                      <p className="mt-2 text-sm text-muted-foreground">
+                        Operating review: {operatingReview.note}
+                      </p>
                       <p className="mt-1 text-xs text-muted-foreground">
                         {checkpoint.dueState === "overdue"
                           ? "This learner has slipped past the current review window."
@@ -1243,11 +1431,13 @@ function InfoCard({
 }: {
   label: string;
   value: number;
-  tone: "sky" | "rose" | "amber";
+  tone: "sky" | "rose" | "amber" | "emerald";
 }) {
   const toneClass =
     tone === "sky"
       ? "border-sky-500/20 bg-sky-500/10"
+      : tone === "emerald"
+        ? "border-emerald-500/20 bg-emerald-500/10"
       : tone === "amber"
         ? "border-amber-500/20 bg-amber-500/10"
         : "border-rose-500/20 bg-rose-500/10";

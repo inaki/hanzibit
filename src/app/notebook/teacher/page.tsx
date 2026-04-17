@@ -353,6 +353,120 @@ export default async function TeacherOverviewPage() {
           <p className="mt-2 text-xs text-muted-foreground">
             `Portfolio mix` is different from stabilization alone: it helps you see whether your current learner base is mostly active-management work or increasingly shifting toward lighter-touch support.
           </p>
+          <p className="mt-2 text-xs text-muted-foreground">
+            Current operating mode: {reporting.portfolioMixSummary.operating_mode.replaceAll("_", " ")}.
+          </p>
+        </div>
+
+        <div className="rounded-2xl border bg-card p-5">
+          <h2 className="text-sm font-semibold uppercase tracking-[0.2em] text-muted-foreground">
+            Operating Review
+          </h2>
+          <div className="mt-4 grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
+            <div className="rounded-xl border border-rose-500/20 bg-rose-500/10 p-4">
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+                Reset now
+              </p>
+              <p className="mt-2 text-xl font-bold text-foreground">
+                {reporting.operatingReviewSummary.reset_now_count}
+              </p>
+            </div>
+            <div className="rounded-xl border border-amber-500/20 bg-amber-500/10 p-4">
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+                Rebalance
+              </p>
+              <p className="mt-2 text-xl font-bold text-foreground">
+                {reporting.operatingReviewSummary.rebalance_count}
+              </p>
+            </div>
+            <div className="rounded-xl border border-sky-500/20 bg-sky-500/10 p-4">
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+                Simplify now
+              </p>
+              <p className="mt-2 text-xl font-bold text-foreground">
+                {reporting.operatingReviewSummary.simplify_now_count}
+              </p>
+            </div>
+            <div className="rounded-xl border border-emerald-500/20 bg-emerald-500/10 p-4">
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+                Stable to maintain
+              </p>
+              <p className="mt-2 text-xl font-bold text-foreground">
+                {reporting.operatingReviewSummary.stable_to_maintain_count}
+              </p>
+            </div>
+            <div className="rounded-xl border border-violet-500/20 bg-violet-500/10 p-4">
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+                Review state
+              </p>
+              <p className="mt-2 text-xl font-bold text-foreground">
+                {reporting.operatingReviewSummary.review_state}
+              </p>
+            </div>
+          </div>
+          <p className="mt-4 text-sm text-muted-foreground">
+            {reporting.operatingReviewSummary.summary_note}
+          </p>
+          <p className="mt-2 text-xs text-muted-foreground">
+            Operating review is different from pure workload: it helps you judge whether the current portfolio should keep expanding, rebalance, simplify, or pause before taking on more active support.
+          </p>
+          <p className="mt-2 text-xs text-muted-foreground">
+            Read the states conservatively: `Reset now` means the current support path is no longer safe to keep running unchanged, `Rebalance` means support should shift but not necessarily restart, and `Simplify now` means the learner may be ready for a lighter structure.
+          </p>
+        </div>
+
+        <div className="rounded-2xl border bg-card p-5">
+          <h2 className="text-sm font-semibold uppercase tracking-[0.2em] text-muted-foreground">
+            Intake Readiness
+          </h2>
+          <div className="mt-4 grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
+            <div className="rounded-xl border border-rose-500/20 bg-rose-500/10 p-4">
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+                Pause intake
+              </p>
+              <p className="mt-2 text-xl font-bold text-foreground">
+                {reporting.intakeReadinessSummary.pause_intake_count}
+              </p>
+            </div>
+            <div className="rounded-xl border border-amber-500/20 bg-amber-500/10 p-4">
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+                Hold steady
+              </p>
+              <p className="mt-2 text-xl font-bold text-foreground">
+                {reporting.intakeReadinessSummary.hold_steady_count}
+              </p>
+            </div>
+            <div className="rounded-xl border border-sky-500/20 bg-sky-500/10 p-4">
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+                Cautious capacity
+              </p>
+              <p className="mt-2 text-xl font-bold text-foreground">
+                {reporting.intakeReadinessSummary.cautious_capacity_count}
+              </p>
+            </div>
+            <div className="rounded-xl border border-emerald-500/20 bg-emerald-500/10 p-4">
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+                Ready to expand
+              </p>
+              <p className="mt-2 text-xl font-bold text-foreground">
+                {reporting.intakeReadinessSummary.ready_to_expand_count}
+              </p>
+            </div>
+            <div className="rounded-xl border border-violet-500/20 bg-violet-500/10 p-4">
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+                Intake state
+              </p>
+              <p className="mt-2 text-xl font-bold text-foreground">
+                {reporting.intakeReadinessSummary.intake_state}
+              </p>
+            </div>
+          </div>
+          <p className="mt-4 text-sm text-muted-foreground">
+            {reporting.intakeReadinessSummary.summary_note}
+          </p>
+          <p className="mt-2 text-xs text-muted-foreground">
+            Intake readiness is stricter than portfolio balance alone. It asks whether the current portfolio is actually stable enough to absorb more active learners without degrading follow-through quality.
+          </p>
         </div>
 
         <div className="rounded-2xl border bg-card p-5">
@@ -543,6 +657,9 @@ export default async function TeacherOverviewPage() {
                   </p>
                   <p className="mt-1 text-xs text-muted-foreground">
                     {reporting.stabilizationSummary.simplify_support_candidates} simplify support · {reporting.stabilizationSummary.handoff_ready_private_learners} handoff-ready
+                  </p>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    Portfolio mode: {reporting.portfolioMixSummary.operating_mode.replaceAll("_", " ")} · {reporting.portfolioMixSummary.keep_active_count} keep active
                   </p>
                 </Link>
                 <Link

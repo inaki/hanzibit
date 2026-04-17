@@ -425,14 +425,46 @@ Current status:
 - [x] Create a concrete Phase 20 planning baseline
 - [x] Turn Phase 20 into an implementation-ready spec
 - [x] Milestone 1: derived portfolio mix summary
-- [ ] Milestone 2: learner-level portfolio-mode visibility
-- [ ] Milestone 3: portfolio distribution reporting
-- [ ] Phase 20 polish / closeout on web
+- [x] Milestone 2: learner-level portfolio-mode visibility
+- [x] Milestone 3: portfolio distribution reporting
+- [x] Phase 20 polish / closeout on web
 
 Primary reference:
 
 - `docs/phase-20-planning.md`
 - `docs/phase-20-implementation-spec.md`
+
+## Phase 21 Status
+
+Current status:
+
+- [x] Create a concrete Phase 21 planning baseline
+- [x] Turn Phase 21 into an implementation-ready spec
+- [x] Milestone 1: operating review summary
+- [x] Milestone 2: learner-level reset / rebalance visibility
+- [x] Milestone 3: operating review reporting
+- [x] Phase 21 polish / closeout on web
+
+Primary reference:
+
+- `docs/phase-21-planning.md`
+- `docs/phase-21-implementation-spec.md`
+
+## Phase 22 Status
+
+Current status:
+
+- [x] Create a concrete Phase 22 planning baseline
+- [x] Turn Phase 22 into an implementation-ready spec
+- [x] Milestone 1: intake-readiness summary
+- [ ] Milestone 2: learner-level capacity-pressure visibility
+- [ ] Milestone 3: capacity / intake reporting
+- [ ] Phase 22 polish / closeout on web
+
+Primary reference:
+
+- `docs/phase-22-planning.md`
+- `docs/phase-22-implementation-spec.md`
 
 ## Phase 11 Status
 
