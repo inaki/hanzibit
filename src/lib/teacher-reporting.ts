@@ -1649,41 +1649,6 @@ export async function getTeacherReportingDashboard(
             : "The current portfolio looks steady enough to maintain without immediate reset or rebalance pressure.",
   };
 
-  const pause_intake_count = reset_now_count;
-  const hold_steady_count = rebalance_count;
-  const cautious_capacity_count = simplify_now_count;
-  const ready_to_expand_count = stable_to_maintain_count;
-
-  const intake_state: TeacherIntakeReadinessSummary["intake_state"] =
-    load_state === "overloaded" || review_state === "reset"
-      ? "pause"
-      : load_state === "stretched" ||
-          review_state === "rebalance" ||
-          portfolioMixSummary.operating_mode === "stretched" ||
-          portfolioMixSummary.operating_mode === "active_heavy"
-        ? "hold"
-        : checkpointItems.some((item) => item.due_state === "due_now") ||
-            loadConcentrationItems.some((item) => item.concentration_level === "high") ||
-            review_state === "watch"
-          ? "cautious"
-          : "ready";
-
-  const intakeReadinessSummary: TeacherIntakeReadinessSummary = {
-    pause_intake_count,
-    hold_steady_count,
-    cautious_capacity_count,
-    ready_to_expand_count,
-    intake_state,
-    summary_note:
-      intake_state === "pause"
-        ? "Current portfolio pressure is high enough that intake should pause until reset-level learners and overdue pressure are reduced."
-        : intake_state === "hold"
-          ? "The portfolio is still workable, but active support is clustered enough that new intake should hold steady for now."
-          : intake_state === "cautious"
-            ? "There may be room for selective expansion, but the current portfolio still carries enough live pressure to stay cautious."
-            : "The current portfolio looks stable enough that taking on carefully chosen new active learners is reasonable.",
-  };
-
   const learnerConcentrationItems = privateLearnerItems
     .map((item) => {
       const pressureCount =
@@ -1775,6 +1740,41 @@ export async function getTeacherReportingDashboard(
       value === "high" ? 3 : value === "medium" ? 2 : 1;
     return weight(b.concentration_level) - weight(a.concentration_level);
   });
+
+  const pause_intake_count = reset_now_count;
+  const hold_steady_count = rebalance_count;
+  const cautious_capacity_count = simplify_now_count;
+  const ready_to_expand_count = stable_to_maintain_count;
+
+  const intake_state: TeacherIntakeReadinessSummary["intake_state"] =
+    load_state === "overloaded" || review_state === "reset"
+      ? "pause"
+      : load_state === "stretched" ||
+          review_state === "rebalance" ||
+          portfolioMixSummary.operating_mode === "stretched" ||
+          portfolioMixSummary.operating_mode === "active_heavy"
+        ? "hold"
+        : checkpointItems.some((item) => item.due_state === "due_now") ||
+            loadConcentrationItems.some((item) => item.concentration_level === "high") ||
+            review_state === "watch"
+          ? "cautious"
+          : "ready";
+
+  const intakeReadinessSummary: TeacherIntakeReadinessSummary = {
+    pause_intake_count,
+    hold_steady_count,
+    cautious_capacity_count,
+    ready_to_expand_count,
+    intake_state,
+    summary_note:
+      intake_state === "pause"
+        ? "Current portfolio pressure is high enough that intake should pause until reset-level learners and overdue pressure are reduced."
+        : intake_state === "hold"
+          ? "The portfolio is still workable, but active support is clustered enough that new intake should hold steady for now."
+          : intake_state === "cautious"
+            ? "There may be room for selective expansion, but the current portfolio still carries enough live pressure to stay cautious."
+            : "The current portfolio looks stable enough that taking on carefully chosen new active learners is reasonable.",
+  };
 
   return {
     classroomSummaries,

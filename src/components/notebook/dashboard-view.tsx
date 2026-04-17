@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { Flame, Layers, PenLine, RotateCcw, TrendingUp, AlertCircle, CheckCircle2, Circle, BookText } from "lucide-react";
+import { Flame, Layers, PenLine, RotateCcw, TrendingUp, AlertCircle, CheckCircle2, Circle, BookText, Loader2 } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { useSettings } from "./settings-context";
 import {
@@ -151,7 +151,7 @@ export function DashboardView() {
           <h2 className="text-sm font-semibold text-foreground/80">Today&apos;s Practice</h2>
           <span className="ml-auto text-xs text-muted-foreground/70">
             {loading || !dailyPractice
-              ? "Loading..."
+              ? "Loading practice..."
               : `${dailyPractice.reviewsCompletedToday} reviews · ${dailyPractice.entriesCreatedToday} entries · ${dailyPractice.guidedResponsesToday} guided responses`}
           </span>
         </div>
@@ -173,6 +173,15 @@ export function DashboardView() {
                     ? `You reviewed, studied, and wrote today. ${dailyPractice.weeklyCompletedLoops} loop${dailyPractice.weeklyCompletedLoops === 1 ? "" : "s"} completed this week.`
                     : `${dailyPractice.weeklyCompletedLoops} of the last 7 days completed. Finish the remaining steps to complete today’s practice.`}
               </p>
+              {loading && (
+                <div className="mt-3 flex items-start gap-3">
+                  <Loader2 className="mt-0.5 h-4 w-4 animate-spin text-[var(--cn-orange)]" />
+                  <div className="space-y-2">
+                    <LoadingLine className="h-6 w-40 rounded-full" />
+                    <LoadingLine className="h-3 w-56" />
+                  </div>
+                </div>
+              )}
               {!loading && dailyPractice && (
                 <div className="mt-1 space-y-1">
                   {dailyPractice.recommendedStudyWord && (
@@ -332,7 +341,7 @@ export function DashboardView() {
                     {index + 1}. Review
                   </p>
                   <p className="mt-2 text-2xl font-bold text-foreground">
-                    {loading || !dailyPractice ? "—" : dailyPractice.dueCount}
+                    {loading || !dailyPractice ? <LoadingStatWithIcon className="h-8 w-10" /> : dailyPractice.dueCount}
                   </p>
                   <p className="mt-1 text-sm text-muted-foreground">
                     {loading || !dailyPractice
@@ -356,14 +365,24 @@ export function DashboardView() {
                     {index + 1}. Study
                   </p>
                   <div className="mt-2 flex items-start gap-2">
-                    <BookText className="mt-0.5 h-4 w-4 text-sky-400" />
-                    <p className="text-sm text-foreground">
-                      {loading || !dailyPractice
-                        ? "Preparing your study focus..."
-                        : dailyPractice.focusWordProgress?.studiedToday && dailyPractice.recommendedStudyWord
-                          ? `You already studied ${dailyPractice.recommendedStudyWord.simplified} in context today.`
-                          : dailyPractice.studyFocus}
-                    </p>
+                    {loading || !dailyPractice ? (
+                      <>
+                        <Loader2 className="mt-0.5 h-4 w-4 animate-spin text-sky-400" />
+                        <div className="space-y-2 pt-0.5">
+                          <LoadingLine className="h-3 w-40" />
+                          <LoadingLine className="h-3 w-28" />
+                        </div>
+                      </>
+                    ) : (
+                      <>
+                        <BookText className="mt-0.5 h-4 w-4 text-sky-400" />
+                        <p className="text-sm text-foreground">
+                          {dailyPractice.focusWordProgress?.studiedToday && dailyPractice.recommendedStudyWord
+                            ? `You already studied ${dailyPractice.recommendedStudyWord.simplified} in context today.`
+                            : dailyPractice.studyFocus}
+                        </p>
+                      </>
+                    )}
                   </div>
                   <Link
                     href={latestStudyHref}
@@ -383,10 +402,10 @@ export function DashboardView() {
                     {index + 1}. Write
                   </p>
                   <p className="mt-2 text-sm font-semibold text-foreground">
-                    {loading || !dailyPractice ? "Preparing prompt..." : dailyPractice.writingPromptTitle}
+                    {loading || !dailyPractice ? <LoadingLineWithIcon className="h-4 w-32" /> : dailyPractice.writingPromptTitle}
                   </p>
                   <p className="mt-1 text-sm text-muted-foreground">
-                    {loading || !dailyPractice ? "..." : dailyPractice.writingPromptBody}
+                    {loading || !dailyPractice ? <LoadingParagraph lines={2} withIcon /> : dailyPractice.writingPromptBody}
                   </p>
                   {!loading && dailyPractice && (
                     <p className="mt-2 text-xs text-emerald-400">
@@ -424,7 +443,7 @@ export function DashboardView() {
             <Flame className="h-4 w-4 text-[var(--cn-orange)]" />
             <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground/70">Streak</span>
           </div>
-          <p className="text-4xl font-bold text-foreground">{loading ? "—" : streak}</p>
+          <p className="text-4xl font-bold text-foreground">{loading ? <LoadingStatWithIcon className="h-10 w-12" /> : streak}</p>
           <p className="mt-1 text-xs text-muted-foreground">
             {streak === 0 ? "Start your streak today" : streak === 1 ? "day in a row" : "days in a row"}
           </p>
@@ -436,7 +455,7 @@ export function DashboardView() {
             <PenLine className="h-4 w-4 text-sky-400" />
             <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground/70">Entries</span>
           </div>
-          <p className="text-4xl font-bold text-foreground">{loading ? "—" : stats.entryCount}</p>
+          <p className="text-4xl font-bold text-foreground">{loading ? <LoadingStatWithIcon className="h-10 w-12" /> : stats.entryCount}</p>
           <p className="mt-1 text-xs text-muted-foreground">journal entries written</p>
         </div>
 
@@ -446,7 +465,7 @@ export function DashboardView() {
             <RotateCcw className="h-4 w-4 text-emerald-400" />
             <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground/70">Reviews</span>
           </div>
-          <p className="text-4xl font-bold text-foreground">{loading ? "—" : stats.reviewCount}</p>
+          <p className="text-4xl font-bold text-foreground">{loading ? <LoadingStatWithIcon className="h-10 w-12" /> : stats.reviewCount}</p>
           <p className="mt-1 text-xs text-muted-foreground">total reviews completed</p>
         </div>
       </div>
@@ -457,7 +476,7 @@ export function DashboardView() {
           <TrendingUp className="h-4 w-4 text-[var(--cn-orange)]" />
           <h2 className="text-sm font-semibold text-foreground/80">HSK {settings.hskLevel} Progress</h2>
           <span className="ml-auto text-sm font-bold text-[var(--cn-orange)]">
-            {loading ? "—" : `${progress.percent}%`}
+            {loading ? <LoadingStatWithIcon className="h-5 w-12" compact /> : `${progress.percent}%`}
           </span>
         </div>
         <Progress
@@ -465,7 +484,7 @@ export function DashboardView() {
           className="mb-3 h-2.5 [&_[data-slot=progress-indicator]]:bg-[var(--cn-orange)]"
         />
         <div className="flex items-center justify-between text-sm text-muted-foreground">
-          <span>{loading ? "—" : `${progress.encountered} / ${progress.total} words encountered`}</span>
+          <span>{loading ? <LoadingLineWithIcon className="h-4 w-40" compact /> : `${progress.encountered} / ${progress.total} words encountered`}</span>
           <Link href="/notebook/lessons" className="text-xs text-[var(--cn-orange)] hover:underline">
             Open study guide →
           </Link>
@@ -479,7 +498,7 @@ export function DashboardView() {
             <Layers className="h-4 w-4 text-sky-400" />
             <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground/70">Flashcards</span>
           </div>
-          <p className="text-4xl font-bold text-foreground">{loading ? "—" : stats.vocabCount}</p>
+          <p className="text-4xl font-bold text-foreground">{loading ? <LoadingStatWithIcon className="h-10 w-14" /> : stats.vocabCount}</p>
           <p className="mt-1 text-xs text-muted-foreground">cards in your deck</p>
           <Link href={dueFlashcardsHref} className="mt-3 block text-xs text-[var(--cn-orange)] hover:underline">
             Review due cards →
@@ -490,16 +509,31 @@ export function DashboardView() {
         <div className="rounded-xl border bg-card p-5">
           <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground/70">Character of the day</p>
           <div className="flex items-center gap-4">
-            <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-xl bg-[var(--cn-orange)]/12">
-              <span className="text-4xl font-bold leading-none text-[var(--cn-orange)]">
-                {charOfDay ? charOfDay.simplified[0] : "—"}
-              </span>
-            </div>
-            <div>
-              <p className="font-semibold text-foreground">{charOfDay?.simplified ?? ""}</p>
-              <p className="text-sm text-foreground/70">{charOfDay?.pinyin ?? ""}</p>
-              <p className="text-sm text-muted-foreground">{charOfDay?.english ?? ""}</p>
-            </div>
+            {loading ? (
+              <>
+                <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-xl bg-[var(--cn-orange)]/12">
+                  <Loader2 className="h-7 w-7 animate-spin text-[var(--cn-orange)]" />
+                </div>
+                <div className="space-y-2">
+                  <LoadingLine className="h-4 w-16" />
+                  <LoadingLine className="h-3 w-20" />
+                  <LoadingLine className="h-3 w-28" />
+                </div>
+              </>
+            ) : (
+              <>
+                <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-xl bg-[var(--cn-orange)]/12">
+                  <span className="text-4xl font-bold leading-none text-[var(--cn-orange)]">
+                    {charOfDay ? charOfDay.simplified[0] : "—"}
+                  </span>
+                </div>
+                <div>
+                  <p className="font-semibold text-foreground">{charOfDay?.simplified ?? ""}</p>
+                  <p className="text-sm text-foreground/70">{charOfDay?.pinyin ?? ""}</p>
+                  <p className="text-sm text-muted-foreground">{charOfDay?.english ?? ""}</p>
+                </div>
+              </>
+            )}
           </div>
         </div>
       </div>
@@ -619,6 +653,72 @@ function PracticeCard({
       </div>
       {children}
     </div>
+  );
+}
+
+function LoadingValue({ className = "h-8 w-10" }: { className?: string }) {
+  return <span className={`inline-block animate-pulse rounded-md bg-muted/70 align-middle ${className}`} />;
+}
+
+function LoadingLine({ className = "h-3 w-24" }: { className?: string }) {
+  return <span className={`block animate-pulse rounded-full bg-muted/60 ${className}`} />;
+}
+
+function LoadingParagraph({ lines = 2, withIcon = false }: { lines?: number; withIcon?: boolean }) {
+  if (withIcon) {
+    return (
+      <span className="flex items-start gap-2 pt-0.5">
+        <Loader2 className="mt-0.5 h-4 w-4 animate-spin text-[var(--cn-orange)]" />
+        <span className="block flex-1 space-y-2">
+          {Array.from({ length: lines }).map((_, index) => (
+            <LoadingLine
+              key={index}
+              className={`h-3 ${index === lines - 1 ? "w-24" : "w-full max-w-[14rem]"}`}
+            />
+          ))}
+        </span>
+      </span>
+    );
+  }
+  return (
+    <span className="block space-y-2 pt-0.5">
+      {Array.from({ length: lines }).map((_, index) => (
+        <LoadingLine
+          key={index}
+          className={`h-3 ${index === lines - 1 ? "w-24" : "w-full max-w-[14rem]"}`}
+        />
+      ))}
+    </span>
+  );
+}
+
+function LoadingLineWithIcon({
+  className = "h-3 w-24",
+  compact = false,
+}: {
+  className?: string;
+  compact?: boolean;
+}) {
+  return (
+    <span className="inline-flex items-center gap-2 align-middle">
+      <Loader2 className={`${compact ? "h-3.5 w-3.5" : "h-4 w-4"} animate-spin text-[var(--cn-orange)]`} />
+      <LoadingLine className={className} />
+    </span>
+  );
+}
+
+function LoadingStatWithIcon({
+  className = "h-8 w-10",
+  compact = false,
+}: {
+  className?: string;
+  compact?: boolean;
+}) {
+  return (
+    <span className="inline-flex items-center gap-2 align-middle">
+      <Loader2 className={`${compact ? "h-3.5 w-3.5" : "h-4 w-4"} animate-spin text-[var(--cn-orange)]`} />
+      <LoadingValue className={className} />
+    </span>
   );
 }
 

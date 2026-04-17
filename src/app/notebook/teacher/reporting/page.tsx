@@ -111,201 +111,228 @@ export default async function TeacherReportingPage() {
           </div>
         </div>
 
-        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-6">
-          <SummaryCard label="Classrooms" value={reporting.totalClassrooms} />
-          <SummaryCard label="Students" value={reporting.totalStudents} />
-          <SummaryCard label="Private learners" value={reporting.privateLearnerCount} />
-          <SummaryCard label="Assignments" value={reporting.totalAssignments} />
-          <SummaryCard label="Converted" value={reporting.totalConvertedInquiries} tone="sky" />
-          <SummaryCard label="Inactive private" value={reporting.totalConvertedInactive} tone="rose" />
-        </div>
+        <div className="grid gap-6 xl:grid-cols-[minmax(0,1.2fr)_300px]">
+          <section className="space-y-6">
+            <div className="rounded-3xl border bg-card p-6">
+              <div className="flex items-start justify-between gap-4">
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">
+                    Core Portfolio Overview
+                  </p>
+                  <div className="mt-4 flex flex-wrap gap-8">
+                    <OverviewMetric label="Classrooms" value={reporting.totalClassrooms} />
+                    <OverviewMetric label="Students" value={reporting.totalStudents} />
+                    <OverviewMetric label="Private learners" value={reporting.privateLearnerCount} />
+                  </div>
+                </div>
+                <div className="rounded-2xl border border-sky-500/20 bg-sky-500/10 px-4 py-3">
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+                    Operating mode
+                  </p>
+                  <p className="mt-1 text-lg font-semibold text-foreground">
+                    {reporting.portfolioMixSummary.operating_mode.replaceAll("_", " ")}
+                  </p>
+                </div>
+              </div>
+            </div>
 
-        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-          <SummaryCard label="Waiting review" value={reporting.totalWaitingReview} tone="sky" />
-          <SummaryCard label="Missing work" value={reporting.totalMissingSubmissions} tone="rose" />
-          <SummaryCard label="Active private" value={reporting.totalConvertedActive} tone="emerald" />
-        </div>
+            <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_280px]">
+              <div className="rounded-3xl border bg-card p-6">
+                <div className="mb-5 flex items-center gap-2">
+                  <h2 className="text-sm font-semibold uppercase tracking-[0.2em] text-muted-foreground">
+                    Priority & Rhythm
+                  </h2>
+                </div>
+                <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+                  <CompactStatCard label="Waiting review" value={reporting.totalWaitingReview} tone="sky" />
+                  <CompactStatCard label="Review due now" value={reporting.totalCheckpointsDueNow} tone="amber" />
+                  <CompactStatCard label="Review overdue" value={reporting.totalCheckpointsOverdue} tone="rose" />
+                  <CompactStatCard label="Missing work" value={reporting.totalMissingSubmissions} tone="rose" />
+                  <CompactStatCard label="Overdue plans" value={reporting.totalPrivateOverduePlan} tone="amber" />
+                  <CompactStatCard label="No next plan" value={reporting.totalPrivateNoPlan} tone="rose" />
+                </div>
+              </div>
 
-        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-          <SummaryCard label="Private awaiting teacher" value={reporting.totalPrivateAwaitingTeacher} tone="amber" />
-          <SummaryCard label="Private awaiting student" value={reporting.totalPrivateAwaitingStudent} tone="sky" />
-          <SummaryCard label="Private inactive" value={reporting.totalPrivateInactive} tone="rose" />
-          <SummaryCard label="Private stalled" value={reporting.totalPrivateStalled} tone="amber" />
-        </div>
+              <div className="rounded-3xl border border-[var(--cn-orange)]/20 bg-[var(--cn-orange)]/[0.08] p-5">
+                <div className="mb-4 flex items-center gap-2">
+                  <AlertTriangle className="h-4 w-4 text-[var(--cn-orange)]" />
+                  <h2 className="text-sm font-semibold uppercase tracking-[0.2em] text-muted-foreground">
+                    Review Actions
+                  </h2>
+                </div>
+                <div className="space-y-3">
+                  <ActionRow
+                    label="Reset now"
+                    value={reporting.operatingReviewSummary.reset_now_count}
+                    tone="rose"
+                  />
+                  <ActionRow
+                    label="Rebalance"
+                    value={reporting.operatingReviewSummary.rebalance_count}
+                    tone="amber"
+                  />
+                  <ActionRow
+                    label="Simplify now"
+                    value={reporting.operatingReviewSummary.simplify_now_count}
+                    tone="sky"
+                  />
+                  <ActionRow
+                    label="Stable to maintain"
+                    value={reporting.operatingReviewSummary.stable_to_maintain_count}
+                    tone="emerald"
+                  />
+                </div>
+              </div>
+            </div>
 
-        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-          <SummaryCard label="No next plan" value={reporting.totalPrivateNoPlan} tone="rose" />
-          <SummaryCard label="Overdue plans" value={reporting.totalPrivateOverduePlan} tone="amber" />
-          <SummaryCard label="Plan without support" value={reporting.totalPrivateUnsupportedPlan} tone="sky" />
-        </div>
+            <div className="rounded-3xl border bg-card p-6">
+              <div className="mb-5 flex items-center justify-between gap-3">
+                <h2 className="text-sm font-semibold uppercase tracking-[0.2em] text-muted-foreground">
+                  Workload & Support Health
+                </h2>
+                <MetricPill
+                  label={
+                    reporting.workloadSummary.load_state === "healthy"
+                      ? "optimal"
+                      : reporting.workloadSummary.load_state
+                  }
+                  tone={
+                    reporting.workloadSummary.load_state === "overloaded"
+                      ? "rose"
+                      : reporting.workloadSummary.load_state === "stretched"
+                        ? "amber"
+                        : "sky"
+                  }
+                />
+              </div>
+              <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(220px,0.85fr)]">
+                <div className="space-y-4">
+                  <HealthRow label="Issue clusters" value={reporting.totalIssueClusters} tone="amber" />
+                  <HealthRow label="Issue support gaps" value={reporting.totalIssueSupportGaps} tone="rose" />
+                  <HealthRow
+                    label="Learners w/o path"
+                    value={reporting.totalIssueLearnersWithoutSupportPath}
+                    tone="rose"
+                  />
+                </div>
+                <div className="space-y-3">
+                  <CompactBadgeRow
+                    label="Playbook gaps"
+                    value={reporting.totalPrivatePlaybookGap > 0 ? reporting.totalPrivatePlaybookGap : "None"}
+                    tone={reporting.totalPrivatePlaybookGap > 0 ? "rose" : "muted"}
+                  />
+                  <CompactBadgeRow
+                    label="Weak strategies"
+                    value={reporting.totalStrategyWeak > 0 ? reporting.totalStrategyWeak : "None"}
+                    tone={reporting.totalStrategyWeak > 0 ? "amber" : "muted"}
+                  />
+                  <CompactBadgeRow
+                    label="Path integrity"
+                    value={`${Math.max(
+                      0,
+                      100 -
+                        Math.round(
+                          ((reporting.totalIssueLearnersWithoutSupportPath +
+                            reporting.totalWeakSupportConcentration) /
+                            Math.max(1, reporting.privateLearnerCount)) *
+                            100
+                        )
+                    )}%`}
+                    tone="sky"
+                  />
+                </div>
+              </div>
+            </div>
 
-        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-          <SummaryCard label="No active goals" value={reporting.totalPrivateNoActiveGoal} tone="rose" />
-          <SummaryCard label="No recent history" value={reporting.totalPrivateNoRecentHistory} tone="amber" />
-          <SummaryCard label="Weak continuity" value={reporting.totalPrivateWeakContinuity} tone="sky" />
-        </div>
+            <div className="rounded-3xl border bg-card p-6">
+              <div className="mb-5 flex items-center gap-2">
+                <h2 className="text-sm font-semibold uppercase tracking-[0.2em] text-muted-foreground">
+                  Stabilization & Handoff
+                </h2>
+              </div>
+              <div className="grid gap-3 md:grid-cols-3">
+                <CompactStatCard
+                  label="Stable learners"
+                  value={reporting.stabilizationSummary.stable_private_learners}
+                  tone="emerald"
+                />
+                <CompactStatCard
+                  label="Simplify support"
+                  value={reporting.stabilizationSummary.simplify_support_candidates}
+                  tone="amber"
+                />
+                <CompactStatCard
+                  label="Handoff-ready"
+                  value={reporting.stabilizationSummary.handoff_ready_private_learners}
+                  tone="sky"
+                />
+              </div>
+              <div className="mt-4 rounded-2xl border border-border bg-muted/20 px-4 py-3 text-sm text-muted-foreground">
+                Handoff-ready means the learner may be stable enough for lower-intensity monitoring. Maintain caution before shifting tiers.
+              </div>
+            </div>
+          </section>
 
-        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-2">
-          <SummaryCard label="Blocked goals" value={reporting.totalPrivateBlockedGoals} tone="rose" />
-          <SummaryCard
-            label="Needs reinforcement"
-            value={reporting.totalPrivateNeedsReinforcement}
-            tone="amber"
-          />
-        </div>
+          <aside className="space-y-6">
+            <div className="rounded-3xl border border-[var(--cn-orange)]/20 bg-[var(--cn-orange)]/[0.08] p-5">
+              <div className="mb-4 flex items-center gap-2">
+                <AlertTriangle className="h-4 w-4 text-[var(--cn-orange)]" />
+                <h2 className="text-sm font-semibold uppercase tracking-[0.2em] text-muted-foreground">
+                  Urgent Actions
+                </h2>
+              </div>
+              <div className="rounded-2xl border border-dashed border-[var(--cn-orange)]/20 bg-card/60 p-5 text-center">
+                <p className="text-3xl font-bold text-foreground">
+                  {reporting.totalWaitingReview +
+                    reporting.totalMissingSubmissions +
+                    reporting.totalCheckpointsOverdue +
+                    reporting.operatingReviewSummary.reset_now_count}
+                </p>
+                <p className="mt-2 text-sm font-medium text-foreground">
+                  {reporting.totalWaitingReview +
+                    reporting.totalMissingSubmissions +
+                    reporting.totalCheckpointsOverdue +
+                    reporting.operatingReviewSummary.reset_now_count >
+                  0
+                    ? "Action needed"
+                    : "Clear horizons"}
+                </p>
+                <p className="mt-2 text-xs text-muted-foreground">
+                  {reporting.totalWaitingReview +
+                    reporting.totalMissingSubmissions +
+                    reporting.totalCheckpointsOverdue +
+                    reporting.operatingReviewSummary.reset_now_count >
+                  0
+                    ? "Waiting review, missing work, overdue checkpoints, or reset-level learners still need follow-through."
+                    : "No urgent actions require immediate intervention in the current cycle."}
+                </p>
+              </div>
+              <div className="mt-4 border-l-2 border-[var(--cn-orange)]/60 pl-3 text-sm">
+                <p className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+                  Next scheduled sync
+                </p>
+                <p className="mt-1 font-medium text-foreground">
+                  {reporting.totalCheckpointsDueNow > 0 || reporting.totalCheckpointsOverdue > 0
+                    ? "Review rhythm active"
+                    : "Clear horizons"}
+                </p>
+              </div>
+            </div>
 
-        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-2">
-          <SummaryCard label="Recurring issues" value={reporting.totalPrivateRecurringIssues} tone="amber" />
-          <SummaryCard label="Intervention now" value={reporting.totalPrivateInterventionNow} tone="rose" />
-        </div>
-
-        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-          <SummaryCard label="Issue clusters" value={reporting.totalIssueClusters} tone="amber" />
-          <SummaryCard label="Issue support gaps" value={reporting.totalIssueSupportGaps} tone="rose" />
-          <SummaryCard
-            label="Learners with no support path"
-            value={reporting.totalIssueLearnersWithoutSupportPath}
-            tone="rose"
-          />
-        </div>
-
-        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-1">
-          <SummaryCard label="No recent review" value={reporting.totalPrivateNoRecentReview} tone="rose" />
-        </div>
-
-        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-2">
-          <SummaryCard label="No recent adaptation" value={reporting.totalPrivateNoRecentAdaptation} tone="rose" />
-          <SummaryCard label="Reviewed, not adapted" value={reporting.totalPrivateReviewedNotAdapted} tone="amber" />
-        </div>
-
-        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-          <SummaryCard label="Review due now" value={reporting.totalCheckpointsDueNow} tone="amber" />
-          <SummaryCard label="Review overdue" value={reporting.totalCheckpointsOverdue} tone="rose" />
-          <SummaryCard
-            label="Recently checked"
-            value={reporting.totalCheckpointsRecentlyChecked}
-            tone="emerald"
-          />
-        </div>
-
-        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-          <SummaryCard label="High concentration" value={reporting.totalLoadConcentrationHigh} tone="rose" />
-          <SummaryCard
-            label="Repeated-pressure learners"
-            value={reporting.totalRepeatedPressureLearners}
-            tone="amber"
-          />
-          <SummaryCard
-            label="Weak support concentration"
-            value={reporting.totalWeakSupportConcentration}
-            tone="sky"
-          />
-        </div>
-
-        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-          <SummaryCard
-            label="Stable learners"
-            value={reporting.stabilizationSummary.stable_private_learners}
-            tone="emerald"
-          />
-          <SummaryCard
-            label="Simplify support"
-            value={reporting.stabilizationSummary.simplify_support_candidates}
-            tone="amber"
-          />
-          <SummaryCard
-            label="Handoff-ready"
-            value={reporting.stabilizationSummary.handoff_ready_private_learners}
-            tone="sky"
-          />
-          <SummaryCard
-            label="Still active pressure"
-            value={reporting.stabilizationSummary.still_active_pressure}
-            tone="rose"
-          />
-        </div>
-
-        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
-          <SummaryCard
-            label="Keep active"
-            value={reporting.portfolioMixSummary.keep_active_count}
-            tone="rose"
-          />
-          <SummaryCard
-            label="Simplify support"
-            value={reporting.portfolioMixSummary.simplify_support_count}
-            tone="amber"
-          />
-          <SummaryCard
-            label="Light-touch"
-            value={reporting.portfolioMixSummary.light_touch_count}
-            tone="sky"
-          />
-          <SummaryCard
-            label="Handoff-ready"
-            value={reporting.portfolioMixSummary.handoff_ready_count}
-            tone="emerald"
-          />
-          <SummaryCard
-            label="Operating mode"
-            value={reporting.portfolioMixSummary.operating_mode.replaceAll("_", " ")}
-            tone="muted"
-          />
-        </div>
-
-        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-          <SummaryCard
-            label="Reset now"
-            value={reporting.operatingReviewSummary.reset_now_count}
-            tone="rose"
-          />
-          <SummaryCard
-            label="Rebalance"
-            value={reporting.operatingReviewSummary.rebalance_count}
-            tone="amber"
-          />
-          <SummaryCard
-            label="Simplify now"
-            value={reporting.operatingReviewSummary.simplify_now_count}
-            tone="sky"
-          />
-          <SummaryCard
-            label="Stable to maintain"
-            value={reporting.operatingReviewSummary.stable_to_maintain_count}
-            tone="emerald"
-          />
-        </div>
-
-        <div className="rounded-2xl border bg-card p-5 text-sm text-muted-foreground">
-          Review rhythm is separate from priority. Priority tells you what matters first; checkpoint rhythm tells you what has gone too long without a fresh review, adaptation, or support recheck.
-        </div>
-
-        <div className="rounded-2xl border bg-card p-5 text-sm text-muted-foreground">
-          Workload balancing is separate from both priority and rhythm. It highlights where pressure is clustering too heavily around the same learners, issue patterns, or weak support paths so the teacher can rebalance before follow-through quality starts slipping.
-        </div>
-
-        <div className="rounded-2xl border bg-card p-5 text-sm text-muted-foreground">
-          Stabilization highlights where support can stay active, where it may be safe to simplify, and where learners look steady enough for lighter-touch monitoring. It is intentionally conservative and should support teacher judgment, not replace it.
-        </div>
-
-        <div className="rounded-2xl border bg-card p-5 text-sm text-muted-foreground">
-          Read these states conservatively: `keep active` means pressure is still real, `simplify` means the support path may now be heavier than necessary, and `handoff-ready` means the learner may be stable enough for lower-intensity monitoring instead of the same active intervention load.
-        </div>
-
-        <div className="rounded-2xl border bg-card p-5 text-sm text-muted-foreground">
-          Portfolio distribution is separate from stabilization alone. It shows whether the overall learner mix is still active-heavy or whether more of the portfolio is shifting into lighter-touch and handoff-ready support.
-        </div>
-
-        <div className="rounded-2xl border bg-card p-5 text-sm text-muted-foreground">
-          Use portfolio distribution to judge sustainability, not urgency. A portfolio can be healthy even with some active learners, but an active-heavy mix should make you cautious about taking on more high-pressure support before current learners stabilize.
-        </div>
-
-        <div className="rounded-2xl border bg-card p-5 text-sm text-muted-foreground">
-          Operating review is the teacher-level “should I keep going like this?” layer. It helps distinguish learners who need a real reset from those who simply need rebalancing, simplification, or steady maintenance.
-        </div>
-
-        <div className="rounded-2xl border bg-card p-5 text-sm text-muted-foreground">
-          Treat these states as operating cues, not automation. `Reset now` means the current support path looks structurally wrong, `Rebalance` means the learner still needs active support on a different path, and `Simplify now` means the current structure may be heavier than necessary.
+            <div className="rounded-3xl border bg-card p-5">
+              <div className="mb-4 flex items-center gap-2">
+                <Users className="h-4 w-4 text-[var(--cn-orange)]" />
+                <h2 className="text-sm font-semibold uppercase tracking-[0.2em] text-muted-foreground">
+                  Reporting Notes
+                </h2>
+              </div>
+              <div className="space-y-3 text-sm text-muted-foreground">
+                <p>Priority tells you what matters first. Rhythm tells you what has gone too long without a fresh check-in.</p>
+                <p>Workload and support health show whether pressure is clustering too heavily around the same learners or weak support paths.</p>
+                <p>Stabilization and handoff help you decide whether support should stay active or start shifting into a lighter-touch mode.</p>
+              </div>
+            </div>
+          </aside>
         </div>
 
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
@@ -1419,6 +1446,132 @@ export default async function TeacherReportingPage() {
           </aside>
         </div>
       </div>
+    </div>
+  );
+}
+
+function OverviewMetric({
+  label,
+  value,
+}: {
+  label: string;
+  value: number | string;
+}) {
+  return (
+    <div>
+      <p className="text-3xl font-bold text-foreground">{value}</p>
+      <p className="mt-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+        {label}
+      </p>
+    </div>
+  );
+}
+
+function CompactStatCard({
+  label,
+  value,
+  tone,
+}: {
+  label: string;
+  value: number | string;
+  tone: "sky" | "rose" | "emerald" | "amber";
+}) {
+  const toneClass =
+    tone === "sky"
+      ? "border-sky-500/20 bg-sky-500/10"
+      : tone === "emerald"
+        ? "border-emerald-500/20 bg-emerald-500/10"
+        : tone === "amber"
+          ? "border-amber-500/20 bg-amber-500/10"
+          : "border-rose-500/20 bg-rose-500/10";
+
+  return (
+    <div className={`rounded-2xl border p-4 ${toneClass}`}>
+      <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+        {label}
+      </p>
+      <p className="mt-3 text-3xl font-bold text-foreground">{value}</p>
+    </div>
+  );
+}
+
+function ActionRow({
+  label,
+  value,
+  tone,
+}: {
+  label: string;
+  value: number | string;
+  tone: "sky" | "rose" | "emerald" | "amber";
+}) {
+  const toneClass =
+    tone === "sky"
+      ? "border-sky-500/20 bg-sky-500/10 text-sky-400"
+      : tone === "emerald"
+        ? "border-emerald-500/20 bg-emerald-500/10 text-emerald-400"
+        : tone === "amber"
+          ? "border-amber-500/20 bg-amber-500/10 text-amber-300"
+          : "border-rose-500/20 bg-rose-500/10 text-rose-300";
+
+  return (
+    <div className="flex items-center justify-between rounded-2xl border border-border/70 bg-card/70 px-4 py-3">
+      <span className={`rounded-full border px-2 py-1 text-[11px] font-semibold uppercase tracking-[0.16em] ${toneClass}`}>
+        {label}
+      </span>
+      <span className="text-sm font-semibold text-foreground">{value} pending</span>
+    </div>
+  );
+}
+
+function HealthRow({
+  label,
+  value,
+  tone,
+}: {
+  label: string;
+  value: number | string;
+  tone: "sky" | "rose" | "amber";
+}) {
+  const dotClass =
+    tone === "sky"
+      ? "bg-sky-400"
+      : tone === "amber"
+        ? "bg-amber-300"
+        : "bg-rose-300";
+
+  return (
+    <div className="flex items-center justify-between gap-4 text-sm">
+      <span className="text-foreground">{label}</span>
+      <span className="flex items-center gap-2 font-medium text-foreground">
+        <span className={`h-2 w-2 rounded-full ${dotClass}`} />
+        {value}
+      </span>
+    </div>
+  );
+}
+
+function CompactBadgeRow({
+  label,
+  value,
+  tone,
+}: {
+  label: string;
+  value: number | string;
+  tone: "muted" | "sky" | "rose" | "amber";
+}) {
+  const toneClass =
+    tone === "sky"
+      ? "border-sky-500/20 bg-sky-500/10 text-sky-400"
+      : tone === "amber"
+        ? "border-amber-500/20 bg-amber-500/10 text-amber-300"
+        : tone === "rose"
+          ? "border-rose-500/20 bg-rose-500/10 text-rose-300"
+          : "border-border bg-muted/40 text-muted-foreground";
+
+  return (
+    <div className={`flex items-center justify-between rounded-2xl border px-4 py-3 text-sm ${toneClass}`}>
+      <span className="font-medium">{label}</span>
+      <span className="font-semibold">{value}</span>
     </div>
   );
 }
