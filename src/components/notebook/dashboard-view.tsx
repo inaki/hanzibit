@@ -4,6 +4,8 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { Flame, Layers, PenLine, RotateCcw, TrendingUp, AlertCircle, CheckCircle2, Circle, BookText, Loader2 } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
+import { MetricPill } from "@/components/patterns/status";
+import { FocusWordStepBadge, PriorityBadge } from "@/components/patterns/status";
 import { useSettings } from "./settings-context";
 import {
   getDailyPracticeAction,
@@ -111,6 +113,7 @@ export function DashboardView() {
             : "Focus on writing"
     : null;
   const practiceStepOrder = getPracticeStepOrder(dailyPractice);
+  const dashboardMode = !loading && dailyPractice ? getDashboardMode(dailyPractice, stats) : null;
 
   useEffect(() => {
     let cancelled = false;
@@ -141,8 +144,17 @@ export function DashboardView() {
   return (
     <div className="mx-auto max-w-3xl">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-foreground">Dashboard</h1>
-        <p className="mt-1 text-sm text-muted-foreground">Your learning progress at a glance</p>
+        <div className="flex items-start justify-between gap-6">
+          <div>
+            <h1 className="text-3xl font-bold text-foreground">Dashboard</h1>
+            <p className="mt-1 text-sm text-muted-foreground">Your learning progress at a glance</p>
+          </div>
+          {!loading && dashboardMode && (
+            <div className="inline-flex items-center rounded-full border border-[var(--cn-orange)]/20 bg-[var(--cn-orange)]/10 px-3 py-1.5 text-xs font-medium text-[var(--cn-orange)]">
+              {dashboardMode.badge}
+            </div>
+          )}
+        </div>
       </div>
 
       <div className="mb-6 rounded-xl border bg-card p-6">
@@ -209,6 +221,11 @@ export function DashboardView() {
                           <FocusWordStepBadge done={dailyPractice.focusWordProgress.wroteToday} label="Write" />
                         </div>
                       )}
+                    </div>
+                  )}
+                  {dashboardMode && (
+                    <div className="pt-1">
+                      <MetricPill label={dashboardMode.pillLabel} tone={dashboardMode.pillTone} />
                     </div>
                   )}
                   <p className="text-xs text-muted-foreground">
@@ -278,9 +295,17 @@ export function DashboardView() {
             </div>
           )}
           {!loading && dailyPractice && !dailyPractice.loopCompleted && dailyPractice.missingSteps.length > 0 && (
-            <div className="mt-4 rounded-lg border border-amber-500/20 bg-amber-500/10 px-3 py-3">
+            <div
+              className={`mt-4 rounded-lg border px-3 py-3 ${
+                dashboardMode?.guidanceTone === "sky"
+                  ? "border-sky-500/20 bg-sky-500/10"
+                  : dashboardMode?.guidanceTone === "violet"
+                    ? "border-violet-500/20 bg-violet-500/10"
+                    : "border-amber-500/20 bg-amber-500/10"
+              }`}
+            >
               <p className="text-xs font-semibold uppercase tracking-wide text-amber-400">
-                Still to do
+                {dashboardMode?.guidanceTitle ?? "Still to do"}
               </p>
               <div className="mt-2 space-y-2">
                 {dailyPractice.missingSteps.map((step) => (
@@ -575,6 +600,64 @@ export function DashboardView() {
   );
 }
 
+function getDashboardMode(dailyPractice: DailyPracticePlan, stats: Stats): {
+  badge: string;
+  pillLabel: string;
+  pillTone: "muted" | "rose" | "amber" | "emerald" | "sky" | "violet";
+  guidanceTone: "sky" | "amber" | "violet";
+  guidanceTitle: string;
+} {
+  const noRealActivityYet =
+    stats.entryCount === 0 &&
+    stats.reviewCount === 0 &&
+    dailyPractice.guidedResponsesToday === 0 &&
+    dailyPractice.completedSteps === 0;
+
+  if (noRealActivityYet) {
+    return {
+      badge: "New learner",
+      pillLabel: "Start here",
+      pillTone: "sky",
+      guidanceTone: "sky",
+      guidanceTitle: "Start here",
+    };
+  }
+
+  const slipping =
+    dailyPractice.dueCount >= 6 ||
+    (dailyPractice.stepPattern.reviewCompletedDays <= 1 &&
+      dailyPractice.stepPattern.writeCompletedDays === 0 &&
+      dailyPractice.completedSteps === 0);
+
+  if (slipping) {
+    return {
+      badge: "Needs attention",
+      pillLabel: "Needs attention",
+      pillTone: "violet",
+      guidanceTone: "violet",
+      guidanceTitle: "Needs attention",
+    };
+  }
+
+  if (dailyPractice.loopCompleted || dailyPractice.completedSteps >= 2) {
+    return {
+      badge: "Active learner",
+      pillLabel: "In progress",
+      pillTone: "amber",
+      guidanceTone: "amber",
+      guidanceTitle: "Still to do",
+    };
+  }
+
+  return {
+    badge: "In progress",
+    pillLabel: "In progress",
+    pillTone: "amber",
+    guidanceTone: "amber",
+    guidanceTitle: "Still to do",
+  };
+}
+
 function getPracticeStepOrder(dailyPractice: DailyPracticePlan | null): PracticeStepKey[] {
   const defaultOrder: PracticeStepKey[] = ["review", "study", "write"];
   if (!dailyPractice) return defaultOrder;
@@ -718,29 +801,6 @@ function LoadingStatWithIcon({
     <span className="inline-flex items-center gap-2 align-middle">
       <Loader2 className={`${compact ? "h-3.5 w-3.5" : "h-4 w-4"} animate-spin text-[var(--cn-orange)]`} />
       <LoadingValue className={className} />
-    </span>
-  );
-}
-
-function PriorityBadge() {
-  return (
-    <span className="mb-2 inline-flex items-center rounded-full bg-[var(--cn-orange)] px-2 py-0.5 text-[11px] font-medium text-white">
-      Priority
-    </span>
-  );
-}
-
-function FocusWordStepBadge({ done, label }: { done: boolean; label: string }) {
-  return (
-    <span
-      className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 ${
-        done
-          ? "border border-emerald-500/20 bg-emerald-500/10 text-emerald-400"
-          : "bg-background text-muted-foreground"
-      }`}
-    >
-      {done ? <CheckCircle2 className="h-3 w-3" /> : <Circle className="h-3 w-3" />}
-      {label}
     </span>
   );
 }

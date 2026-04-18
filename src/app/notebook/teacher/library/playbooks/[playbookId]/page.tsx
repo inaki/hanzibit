@@ -19,6 +19,11 @@ import {
   listTeacherPlaybookStrategies,
 } from "@/lib/teacher-playbooks";
 import { PendingSubmitButton } from "@/components/notebook/pending-submit-button";
+import {
+  TeachingCollectionSection,
+  TeachingExplainerBlock,
+  TeachingPageHeader,
+} from "@/components/patterns/teaching";
 
 export const dynamic = "force-dynamic";
 
@@ -88,26 +93,18 @@ export default async function TeacherPlaybookDetailPage({
   return (
     <div data-testid="teacher-playbook-detail-page" className="h-full overflow-auto p-6 pb-20 md:p-10 lg:pb-10">
       <div className="mx-auto max-w-4xl space-y-8">
-        <div className="flex items-start justify-between gap-6">
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.25em] text-muted-foreground">Library playbook</p>
-            <h1 className="mt-2 text-3xl font-bold text-foreground">{playbook.title}</h1>
-            <p className="mt-2 text-sm text-muted-foreground">{playbook.summary}</p>
-          </div>
-          <Link
-            href="/notebook/teacher/library"
-            className="inline-flex items-center rounded-lg border px-3 py-2 text-sm text-muted-foreground hover:bg-muted"
-          >
-            Back to Library
-          </Link>
-        </div>
+        <TeachingPageHeader
+          title={playbook.title}
+          description={playbook.summary}
+          badge={
+            <Link href="/notebook/teacher/library" className="inline-flex items-center text-xs font-medium">
+              Back to Library
+            </Link>
+          }
+        />
 
         <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
-          <section className="rounded-2xl border bg-card p-5">
-            <div className="mb-4 flex items-center gap-2">
-              <Layers3 className="h-4 w-4 text-[var(--cn-orange)]" />
-              <h2 className="text-sm font-semibold uppercase tracking-[0.2em] text-muted-foreground">Details</h2>
-            </div>
+          <TeachingCollectionSection title="Playbook Details" icon={Layers3}>
             <form action={updatePlaybookFormAction} className="space-y-3">
               <input type="hidden" name="id" value={playbook.id} />
               <div>
@@ -166,14 +163,14 @@ export default async function TeacherPlaybookDetailPage({
                   className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-[var(--cn-orange)]"
                 />
               </div>
-              <div className="rounded-xl border border-sky-500/20 bg-sky-500/10 p-3 text-sm text-foreground/90">
+              <TeachingExplainerBlock tone="sky">
                 {getPlaybookGuidance({
                   linkedStrategyCount: linkedStrategies.length,
                   whenToUse: playbook.when_to_use,
                   usageCount: playbook.usage_count,
                   replacementTitle: playbook.replacement_playbook_title ?? null,
                 })}
-              </div>
+              </TeachingExplainerBlock>
               <div className="grid gap-3 sm:grid-cols-2">
               <div>
                 <label className="mb-1 block text-sm font-medium text-foreground/80">Refinement note</label>
@@ -271,10 +268,9 @@ export default async function TeacherPlaybookDetailPage({
                 Update Playbook
               </PendingSubmitButton>
             </form>
-          </section>
+          </TeachingCollectionSection>
 
-          <aside className="rounded-2xl border bg-card p-5">
-            <h2 className="text-sm font-semibold uppercase tracking-[0.2em] text-muted-foreground">Metadata</h2>
+          <TeachingCollectionSection title="Metadata">
               <div className="mt-4 flex flex-wrap gap-2 text-xs">
               {playbook.usage_count === 0 ? (
                 <span className="rounded-full border border-sky-500/20 bg-sky-500/10 px-2.5 py-1 font-medium text-sky-400">
@@ -448,7 +444,7 @@ export default async function TeacherPlaybookDetailPage({
                 ))}
               </div>
             ) : null}
-          </aside>
+          </TeachingCollectionSection>
         </div>
       </div>
     </div>

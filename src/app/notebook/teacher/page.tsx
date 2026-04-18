@@ -18,6 +18,14 @@ import {
   ensureTeacherProfile,
   getTeacherProfileCompleteness,
 } from "@/lib/teacher-profiles";
+import { SummaryStatCard } from "@/components/patterns/metrics";
+import { GuidanceBanner } from "@/components/patterns/guidance";
+import { MetricPill } from "@/components/patterns/status";
+import { SectionCard } from "@/components/patterns/surfaces";
+import {
+  TeachingPageHeader,
+  TeachingToneMetricCard,
+} from "@/components/patterns/teaching";
 import {
   ensureTeacherTutoringSettings,
   getCadenceLabel,
@@ -113,17 +121,11 @@ export default async function TeacherOverviewPage() {
   return (
     <div data-testid="teacher-overview-page" className="h-full overflow-auto p-6 pb-20 md:p-10 lg:pb-10">
       <div className="mx-auto max-w-6xl space-y-8">
-        <div className="flex items-start justify-between gap-6">
-          <div>
-            <h1 className="text-3xl font-bold text-foreground">Teaching Workspace</h1>
-            <p className="mt-2 max-w-3xl text-sm text-muted-foreground">
-              Manage your public profile, incoming inquiries, reusable teaching assets, classroom reporting, and referral growth from one place.
-            </p>
-          </div>
-          <div className="inline-flex items-center rounded-full border border-[var(--cn-orange)]/20 bg-[var(--cn-orange)]/10 px-3 py-1.5 text-xs font-medium text-[var(--cn-orange)]">
-            Consolidated teacher hub
-          </div>
-        </div>
+        <TeachingPageHeader
+          title="Teaching Workspace"
+          description="Manage your public profile, incoming inquiries, reusable teaching assets, classroom reporting, and referral growth from one place."
+          badge="Consolidated teacher hub"
+        />
 
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-6">
           <SummaryCard label="Public profile" value={profile.is_public === 1 ? "Live" : "Draft"} href="/notebook/teacher/profile" icon={IdCard} />
@@ -135,338 +137,230 @@ export default async function TeacherOverviewPage() {
         </div>
 
         <div className="grid gap-4 sm:grid-cols-3">
-          <div className="rounded-2xl border border-rose-500/20 bg-rose-500/10 p-5">
-            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-              Urgent follow-through
-            </p>
-            <p className="mt-3 text-3xl font-bold text-foreground">{urgentPriorityCount}</p>
-          </div>
-          <div className="rounded-2xl border border-amber-500/20 bg-amber-500/10 p-5">
-            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-              High follow-through
-            </p>
-            <p className="mt-3 text-3xl font-bold text-foreground">{highPriorityCount}</p>
-          </div>
-          <div className="rounded-2xl border border-sky-500/20 bg-sky-500/10 p-5">
-            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-              Watch list
-            </p>
-            <p className="mt-3 text-3xl font-bold text-foreground">{watchPriorityCount}</p>
-          </div>
+          <SummaryStatCard label="Urgent follow-through" value={urgentPriorityCount} tone="rose" />
+          <SummaryStatCard label="High follow-through" value={highPriorityCount} tone="amber" />
+          <SummaryStatCard label="Watch list" value={watchPriorityCount} tone="sky" />
         </div>
 
         <div className="grid gap-4 sm:grid-cols-3">
-          <div className="rounded-2xl border border-amber-500/20 bg-amber-500/10 p-5">
-            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-              Review due now
+          <SummaryStatCard label="Review due now" value={reporting.totalCheckpointsDueNow} tone="amber" />
+          <SummaryStatCard label="Review overdue" value={reporting.totalCheckpointsOverdue} tone="rose" />
+          <SummaryStatCard label="Recently checked" value={reporting.totalCheckpointsRecentlyChecked} tone="emerald" />
+        </div>
+
+        <div className="grid gap-6 lg:grid-cols-2">
+          <SectionCard title="Workload Snapshot" icon={AlertTriangle}>
+            <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
+              <TeachingToneMetricCard
+                label="Load state"
+                value={reporting.workloadSummary.load_state}
+                tone="orange"
+              />
+              <TeachingToneMetricCard
+                label="Urgent learners"
+                value={reporting.workloadSummary.urgent_private_learners}
+                tone="rose"
+              />
+              <TeachingToneMetricCard
+                label="Overdue checkpoints"
+                value={reporting.workloadSummary.overdue_checkpoints}
+                tone="amber"
+              />
+              <TeachingToneMetricCard
+                label="Repeated pressure"
+                value={reporting.workloadSummary.repeated_pressure_learners}
+                tone="sky"
+              />
+              <TeachingToneMetricCard
+                label="Weak support paths"
+                value={reporting.workloadSummary.weak_support_paths}
+                tone="violet"
+              />
+            </div>
+            <p className="mt-4 text-sm text-muted-foreground">{reporting.workloadSummary.summary_note}</p>
+          </SectionCard>
+
+          <SectionCard title="Strategy & Playbook Reuse" icon={FolderKanban}>
+            <div className="flex flex-wrap gap-2">
+              {reporting.totalStrategyHelping > 0 || reporting.totalPlaybookHelping > 0 ? (
+                <MetricPill label="Helping broadly" tone="emerald" />
+              ) : null}
+              {reporting.totalStrategyMixed > 0 || reporting.totalPlaybookMixed > 0 ? (
+                <MetricPill label="Mixed across learners" tone="amber" />
+              ) : null}
+              {reporting.totalStrategyWeak > 0 || reporting.totalPlaybookWeak > 0 ? (
+                <MetricPill label="Weak across learners" tone="rose" />
+              ) : null}
+              {reporting.totalStrategyNoOutcome > 0 || reporting.totalPlaybookNoOutcome > 0 ? (
+                <MetricPill label="Needs outcomes" tone="sky" />
+              ) : null}
+            </div>
+            <GuidanceBanner
+              tone={
+                reporting.totalPlaybookWeak > 0 || reporting.totalStrategyWeak > 0
+                  ? "amber"
+                  : reporting.totalStrategyHelping > 0 || reporting.totalPlaybookHelping > 0
+                    ? "sky"
+                    : "violet"
+              }
+              className="mt-4"
+            >
+              <p className="text-sm">
+                {reporting.totalPlaybookWeak > 0
+                  ? `${reporting.totalPlaybookWeak} saved ${reporting.totalPlaybookWeak === 1 ? "playbook looks" : "playbooks look"} weak or need refinement.`
+                  : reporting.totalPlaybookNoOutcome > 0
+                    ? `${reporting.totalPlaybookNoOutcome} ${reporting.totalPlaybookNoOutcome === 1 ? "playbook still needs" : "playbooks still need"} outcome evidence.`
+                    : reporting.totalStrategyWeak > 0
+                      ? `${reporting.totalStrategyWeak} saved ${reporting.totalStrategyWeak === 1 ? "strategy looks" : "strategies look"} weak or need refinement.`
+                      : reporting.totalStrategyNoOutcome > 0
+                        ? `${reporting.totalStrategyNoOutcome} ${reporting.totalStrategyNoOutcome === 1 ? "strategy still needs" : "strategies still need"} outcome evidence.`
+                        : "Current support reuse is being shaped by real outcomes instead of guesswork."}
+              </p>
+            </GuidanceBanner>
+          </SectionCard>
+        </div>
+
+        <div className="grid gap-6 lg:grid-cols-2">
+          <SectionCard title="Stabilization & Handoff" icon={Users}>
+            <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+              <TeachingToneMetricCard
+                label="Stable learners"
+                value={reporting.stabilizationSummary.stable_private_learners}
+                tone="emerald"
+              />
+              <TeachingToneMetricCard
+                label="Simplify support"
+                value={reporting.stabilizationSummary.simplify_support_candidates}
+                tone="sky"
+              />
+              <TeachingToneMetricCard
+                label="Handoff-ready"
+                value={reporting.stabilizationSummary.handoff_ready_private_learners}
+                tone="orange"
+              />
+              <TeachingToneMetricCard
+                label="Still active pressure"
+                value={reporting.stabilizationSummary.still_active_pressure}
+                tone="rose"
+              />
+            </div>
+            <p className="mt-4 text-sm text-muted-foreground">
+              {reporting.stabilizationSummary.summary_note}
             </p>
-            <p className="mt-3 text-3xl font-bold text-foreground">{reporting.totalCheckpointsDueNow}</p>
-          </div>
-          <div className="rounded-2xl border border-rose-500/20 bg-rose-500/10 p-5">
-            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-              Review overdue
+            <p className="mt-2 text-xs text-muted-foreground">
+              `Keep active` means current pressure still needs active teacher follow-through. `Simplify support` means the support path may now be heavier than necessary. `Handoff-ready` means the learner looks stable enough for lighter-touch monitoring.
             </p>
-            <p className="mt-3 text-3xl font-bold text-foreground">{reporting.totalCheckpointsOverdue}</p>
-          </div>
-          <div className="rounded-2xl border border-emerald-500/20 bg-emerald-500/10 p-5">
-            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-              Recently checked
+          </SectionCard>
+
+          <SectionCard title="Portfolio Mix" icon={BarChart3}>
+            <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
+              <TeachingToneMetricCard
+                label="Keep active"
+                value={reporting.portfolioMixSummary.keep_active_count}
+                tone="rose"
+              />
+              <TeachingToneMetricCard
+                label="Simplify support"
+                value={reporting.portfolioMixSummary.simplify_support_count}
+                tone="sky"
+              />
+              <TeachingToneMetricCard
+                label="Light-touch"
+                value={reporting.portfolioMixSummary.light_touch_count}
+                tone="emerald"
+              />
+              <TeachingToneMetricCard
+                label="Handoff-ready"
+                value={reporting.portfolioMixSummary.handoff_ready_count}
+                tone="orange"
+              />
+              <TeachingToneMetricCard
+                label="Operating mode"
+                value={reporting.portfolioMixSummary.operating_mode.replaceAll("_", " ")}
+                tone="violet"
+              />
+            </div>
+            <p className="mt-4 text-sm text-muted-foreground">
+              {reporting.portfolioMixSummary.summary_note}
             </p>
-            <p className="mt-3 text-3xl font-bold text-foreground">{reporting.totalCheckpointsRecentlyChecked}</p>
-          </div>
-        </div>
-
-        <div className="rounded-2xl border bg-card p-5">
-          <h2 className="text-sm font-semibold uppercase tracking-[0.2em] text-muted-foreground">
-            Workload Snapshot
-          </h2>
-          <div className="mt-4 grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
-            <div className="rounded-xl border border-[var(--cn-orange)]/20 bg-[var(--cn-orange)]/10 p-4">
-              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-                Load state
-              </p>
-              <p className="mt-2 text-xl font-bold text-foreground">
-                {reporting.workloadSummary.load_state}
-              </p>
-            </div>
-            <div className="rounded-xl border border-rose-500/20 bg-rose-500/10 p-4">
-              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-                Urgent learners
-              </p>
-              <p className="mt-2 text-xl font-bold text-foreground">
-                {reporting.workloadSummary.urgent_private_learners}
-              </p>
-            </div>
-            <div className="rounded-xl border border-amber-500/20 bg-amber-500/10 p-4">
-              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-                Overdue checkpoints
-              </p>
-              <p className="mt-2 text-xl font-bold text-foreground">
-                {reporting.workloadSummary.overdue_checkpoints}
-              </p>
-            </div>
-            <div className="rounded-xl border border-sky-500/20 bg-sky-500/10 p-4">
-              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-                Repeated pressure
-              </p>
-              <p className="mt-2 text-xl font-bold text-foreground">
-                {reporting.workloadSummary.repeated_pressure_learners}
-              </p>
-            </div>
-            <div className="rounded-xl border border-violet-500/20 bg-violet-500/10 p-4">
-              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-                Weak support paths
-              </p>
-              <p className="mt-2 text-xl font-bold text-foreground">
-                {reporting.workloadSummary.weak_support_paths}
-              </p>
-            </div>
-          </div>
-          <p className="mt-4 text-sm text-muted-foreground">{reporting.workloadSummary.summary_note}</p>
-        </div>
-
-        <div className="grid gap-4 sm:grid-cols-3">
-          <div className="rounded-2xl border border-rose-500/20 bg-rose-500/10 p-5">
-            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-              High concentration
+            <p className="mt-2 text-xs text-muted-foreground">
+              `Portfolio mix` is different from stabilization alone: it helps you see whether your current learner base is mostly active-management work or increasingly shifting toward lighter-touch support.
             </p>
-            <p className="mt-3 text-3xl font-bold text-foreground">{reporting.totalLoadConcentrationHigh}</p>
-          </div>
-          <div className="rounded-2xl border border-amber-500/20 bg-amber-500/10 p-5">
-            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-              Repeated-pressure learners
+          </SectionCard>
+        </div>
+
+        <div className="grid gap-6 lg:grid-cols-2">
+          <SectionCard title="Operating Review" icon={AlertTriangle}>
+            <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
+              <TeachingToneMetricCard
+                label="Reset now"
+                value={reporting.operatingReviewSummary.reset_now_count}
+                tone="rose"
+              />
+              <TeachingToneMetricCard
+                label="Rebalance"
+                value={reporting.operatingReviewSummary.rebalance_count}
+                tone="amber"
+              />
+              <TeachingToneMetricCard
+                label="Simplify now"
+                value={reporting.operatingReviewSummary.simplify_now_count}
+                tone="sky"
+              />
+              <TeachingToneMetricCard
+                label="Stable to maintain"
+                value={reporting.operatingReviewSummary.stable_to_maintain_count}
+                tone="emerald"
+              />
+              <TeachingToneMetricCard
+                label="Review state"
+                value={reporting.operatingReviewSummary.review_state}
+                tone="violet"
+              />
+            </div>
+            <p className="mt-4 text-sm text-muted-foreground">
+              {reporting.operatingReviewSummary.summary_note}
             </p>
-            <p className="mt-3 text-3xl font-bold text-foreground">{reporting.totalRepeatedPressureLearners}</p>
-          </div>
-          <div className="rounded-2xl border border-sky-500/20 bg-sky-500/10 p-5">
-            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-              Weak support concentration
+            <p className="mt-2 text-xs text-muted-foreground">
+              Read the states conservatively: `Reset now` means the current support path is no longer safe to keep running unchanged, `Rebalance` means support should shift but not necessarily restart, and `Simplify now` means the learner may be ready for a lighter structure.
             </p>
-            <p className="mt-3 text-3xl font-bold text-foreground">{reporting.totalWeakSupportConcentration}</p>
-          </div>
-        </div>
+          </SectionCard>
 
-        <div className="rounded-2xl border bg-card p-5">
-          <h2 className="text-sm font-semibold uppercase tracking-[0.2em] text-muted-foreground">
-            Load Balancing
-          </h2>
-          <p className="mt-3 text-sm text-muted-foreground">
-            Priority tells you what to handle first. Review rhythm tells you what should be revisited now. Workload balancing shows whether that pressure is clustering too heavily around the same learners or weak support paths.
-          </p>
-        </div>
-
-        <div className="rounded-2xl border bg-card p-5">
-          <h2 className="text-sm font-semibold uppercase tracking-[0.2em] text-muted-foreground">
-            Stabilization Snapshot
-          </h2>
-          <div className="mt-4 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-            <div className="rounded-xl border border-emerald-500/20 bg-emerald-500/10 p-4">
-              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-                Stable learners
-              </p>
-              <p className="mt-2 text-xl font-bold text-foreground">
-                {reporting.stabilizationSummary.stable_private_learners}
-              </p>
+          <SectionCard title="Intake Readiness" icon={Inbox}>
+            <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
+              <TeachingToneMetricCard
+                label="Pause intake"
+                value={reporting.intakeReadinessSummary.pause_intake_count}
+                tone="rose"
+              />
+              <TeachingToneMetricCard
+                label="Hold steady"
+                value={reporting.intakeReadinessSummary.hold_steady_count}
+                tone="amber"
+              />
+              <TeachingToneMetricCard
+                label="Cautious capacity"
+                value={reporting.intakeReadinessSummary.cautious_capacity_count}
+                tone="sky"
+              />
+              <TeachingToneMetricCard
+                label="Ready to expand"
+                value={reporting.intakeReadinessSummary.ready_to_expand_count}
+                tone="emerald"
+              />
+              <TeachingToneMetricCard
+                label="Intake state"
+                value={reporting.intakeReadinessSummary.intake_state}
+                tone="violet"
+              />
             </div>
-            <div className="rounded-xl border border-sky-500/20 bg-sky-500/10 p-4">
-              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-                Simplify support
-              </p>
-              <p className="mt-2 text-xl font-bold text-foreground">
-                {reporting.stabilizationSummary.simplify_support_candidates}
-              </p>
-            </div>
-            <div className="rounded-xl border border-[var(--cn-orange)]/20 bg-[var(--cn-orange)]/10 p-4">
-              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-                Handoff-ready
-              </p>
-              <p className="mt-2 text-xl font-bold text-foreground">
-                {reporting.stabilizationSummary.handoff_ready_private_learners}
-              </p>
-            </div>
-            <div className="rounded-xl border border-rose-500/20 bg-rose-500/10 p-4">
-              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-                Still active pressure
-              </p>
-              <p className="mt-2 text-xl font-bold text-foreground">
-                {reporting.stabilizationSummary.still_active_pressure}
-              </p>
-            </div>
-          </div>
-          <p className="mt-4 text-sm text-muted-foreground">
-            {reporting.stabilizationSummary.summary_note}
-          </p>
-          <p className="mt-2 text-xs text-muted-foreground">
-            `Keep active` means current pressure still needs active teacher follow-through. `Simplify support` means the support path may now be heavier than necessary. `Handoff-ready` means the learner looks stable enough for lighter-touch monitoring.
-          </p>
-        </div>
-
-        <div className="rounded-2xl border bg-card p-5">
-          <h2 className="text-sm font-semibold uppercase tracking-[0.2em] text-muted-foreground">
-            Portfolio Mix
-          </h2>
-          <div className="mt-4 grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
-            <div className="rounded-xl border border-rose-500/20 bg-rose-500/10 p-4">
-              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-                Keep active
-              </p>
-              <p className="mt-2 text-xl font-bold text-foreground">
-                {reporting.portfolioMixSummary.keep_active_count}
-              </p>
-            </div>
-            <div className="rounded-xl border border-sky-500/20 bg-sky-500/10 p-4">
-              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-                Simplify support
-              </p>
-              <p className="mt-2 text-xl font-bold text-foreground">
-                {reporting.portfolioMixSummary.simplify_support_count}
-              </p>
-            </div>
-            <div className="rounded-xl border border-emerald-500/20 bg-emerald-500/10 p-4">
-              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-                Light-touch
-              </p>
-              <p className="mt-2 text-xl font-bold text-foreground">
-                {reporting.portfolioMixSummary.light_touch_count}
-              </p>
-            </div>
-            <div className="rounded-xl border border-[var(--cn-orange)]/20 bg-[var(--cn-orange)]/10 p-4">
-              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-                Handoff-ready
-              </p>
-              <p className="mt-2 text-xl font-bold text-foreground">
-                {reporting.portfolioMixSummary.handoff_ready_count}
-              </p>
-            </div>
-            <div className="rounded-xl border border-violet-500/20 bg-violet-500/10 p-4">
-              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-                Operating mode
-              </p>
-              <p className="mt-2 text-xl font-bold text-foreground">
-                {reporting.portfolioMixSummary.operating_mode.replaceAll("_", " ")}
-              </p>
-            </div>
-          </div>
-          <p className="mt-4 text-sm text-muted-foreground">
-            {reporting.portfolioMixSummary.summary_note}
-          </p>
-          <p className="mt-2 text-xs text-muted-foreground">
-            `Portfolio mix` is different from stabilization alone: it helps you see whether your current learner base is mostly active-management work or increasingly shifting toward lighter-touch support.
-          </p>
-          <p className="mt-2 text-xs text-muted-foreground">
-            Current operating mode: {reporting.portfolioMixSummary.operating_mode.replaceAll("_", " ")}.
-          </p>
-        </div>
-
-        <div className="rounded-2xl border bg-card p-5">
-          <h2 className="text-sm font-semibold uppercase tracking-[0.2em] text-muted-foreground">
-            Operating Review
-          </h2>
-          <div className="mt-4 grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
-            <div className="rounded-xl border border-rose-500/20 bg-rose-500/10 p-4">
-              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-                Reset now
-              </p>
-              <p className="mt-2 text-xl font-bold text-foreground">
-                {reporting.operatingReviewSummary.reset_now_count}
-              </p>
-            </div>
-            <div className="rounded-xl border border-amber-500/20 bg-amber-500/10 p-4">
-              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-                Rebalance
-              </p>
-              <p className="mt-2 text-xl font-bold text-foreground">
-                {reporting.operatingReviewSummary.rebalance_count}
-              </p>
-            </div>
-            <div className="rounded-xl border border-sky-500/20 bg-sky-500/10 p-4">
-              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-                Simplify now
-              </p>
-              <p className="mt-2 text-xl font-bold text-foreground">
-                {reporting.operatingReviewSummary.simplify_now_count}
-              </p>
-            </div>
-            <div className="rounded-xl border border-emerald-500/20 bg-emerald-500/10 p-4">
-              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-                Stable to maintain
-              </p>
-              <p className="mt-2 text-xl font-bold text-foreground">
-                {reporting.operatingReviewSummary.stable_to_maintain_count}
-              </p>
-            </div>
-            <div className="rounded-xl border border-violet-500/20 bg-violet-500/10 p-4">
-              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-                Review state
-              </p>
-              <p className="mt-2 text-xl font-bold text-foreground">
-                {reporting.operatingReviewSummary.review_state}
-              </p>
-            </div>
-          </div>
-          <p className="mt-4 text-sm text-muted-foreground">
-            {reporting.operatingReviewSummary.summary_note}
-          </p>
-          <p className="mt-2 text-xs text-muted-foreground">
-            Operating review is different from pure workload: it helps you judge whether the current portfolio should keep expanding, rebalance, simplify, or pause before taking on more active support.
-          </p>
-          <p className="mt-2 text-xs text-muted-foreground">
-            Read the states conservatively: `Reset now` means the current support path is no longer safe to keep running unchanged, `Rebalance` means support should shift but not necessarily restart, and `Simplify now` means the learner may be ready for a lighter structure.
-          </p>
-        </div>
-
-        <div className="rounded-2xl border bg-card p-5">
-          <h2 className="text-sm font-semibold uppercase tracking-[0.2em] text-muted-foreground">
-            Intake Readiness
-          </h2>
-          <div className="mt-4 grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
-            <div className="rounded-xl border border-rose-500/20 bg-rose-500/10 p-4">
-              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-                Pause intake
-              </p>
-              <p className="mt-2 text-xl font-bold text-foreground">
-                {reporting.intakeReadinessSummary.pause_intake_count}
-              </p>
-            </div>
-            <div className="rounded-xl border border-amber-500/20 bg-amber-500/10 p-4">
-              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-                Hold steady
-              </p>
-              <p className="mt-2 text-xl font-bold text-foreground">
-                {reporting.intakeReadinessSummary.hold_steady_count}
-              </p>
-            </div>
-            <div className="rounded-xl border border-sky-500/20 bg-sky-500/10 p-4">
-              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-                Cautious capacity
-              </p>
-              <p className="mt-2 text-xl font-bold text-foreground">
-                {reporting.intakeReadinessSummary.cautious_capacity_count}
-              </p>
-            </div>
-            <div className="rounded-xl border border-emerald-500/20 bg-emerald-500/10 p-4">
-              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-                Ready to expand
-              </p>
-              <p className="mt-2 text-xl font-bold text-foreground">
-                {reporting.intakeReadinessSummary.ready_to_expand_count}
-              </p>
-            </div>
-            <div className="rounded-xl border border-violet-500/20 bg-violet-500/10 p-4">
-              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-                Intake state
-              </p>
-              <p className="mt-2 text-xl font-bold text-foreground">
-                {reporting.intakeReadinessSummary.intake_state}
-              </p>
-            </div>
-          </div>
-          <p className="mt-4 text-sm text-muted-foreground">
-            {reporting.intakeReadinessSummary.summary_note}
-          </p>
-          <p className="mt-2 text-xs text-muted-foreground">
-            Intake readiness is stricter than portfolio balance alone. It asks whether the current portfolio is actually stable enough to absorb more active learners without degrading follow-through quality.
-          </p>
+            <p className="mt-4 text-sm text-muted-foreground">
+              {reporting.intakeReadinessSummary.summary_note}
+            </p>
+            <p className="mt-2 text-xs text-muted-foreground">
+              Intake readiness is stricter than portfolio balance alone. It asks whether the current portfolio is actually stable enough to absorb more active learners without degrading follow-through quality.
+            </p>
+          </SectionCard>
         </div>
 
         <div className="rounded-2xl border bg-card p-5">

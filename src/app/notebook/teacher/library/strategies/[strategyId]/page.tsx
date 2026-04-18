@@ -16,6 +16,11 @@ import {
   getTeacherStrategyOutcomeSummary,
 } from "@/lib/private-student-strategy-outcomes";
 import { PendingSubmitButton } from "@/components/notebook/pending-submit-button";
+import {
+  TeachingCollectionSection,
+  TeachingExplainerBlock,
+  TeachingPageHeader,
+} from "@/components/patterns/teaching";
 
 export const dynamic = "force-dynamic";
 
@@ -86,26 +91,18 @@ export default async function TeacherStrategyDetailPage({
   return (
     <div data-testid="teacher-strategy-detail-page" className="h-full overflow-auto p-6 pb-20 md:p-10 lg:pb-10">
       <div className="mx-auto max-w-4xl space-y-8">
-        <div className="flex items-start justify-between gap-6">
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.25em] text-muted-foreground">Library strategy</p>
-            <h1 className="mt-2 text-3xl font-bold text-foreground">{strategy.title}</h1>
-            <p className="mt-2 text-sm text-muted-foreground">{strategy.summary}</p>
-          </div>
-          <Link
-            href="/notebook/teacher/library"
-            className="inline-flex items-center rounded-lg border px-3 py-2 text-sm text-muted-foreground hover:bg-muted"
-          >
-            Back to Library
-          </Link>
-        </div>
+        <TeachingPageHeader
+          title={strategy.title}
+          description={strategy.summary}
+          badge={
+            <Link href="/notebook/teacher/library" className="inline-flex items-center text-xs font-medium">
+              Back to Library
+            </Link>
+          }
+        />
 
         <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
-          <section className="rounded-2xl border bg-card p-5">
-            <div className="mb-4 flex items-center gap-2">
-              <Repeat2 className="h-4 w-4 text-[var(--cn-orange)]" />
-              <h2 className="text-sm font-semibold uppercase tracking-[0.2em] text-muted-foreground">Details</h2>
-            </div>
+          <TeachingCollectionSection title="Strategy Details" icon={Repeat2}>
             <form action={updateStrategyFormAction} className="space-y-3">
               <input type="hidden" name="id" value={strategy.id} />
               <input type="hidden" name="mark_refined" value="1" />
@@ -155,7 +152,7 @@ export default async function TeacherStrategyDetailPage({
                   className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-[var(--cn-orange)]"
                 />
               </div>
-              <div className="rounded-xl border border-sky-500/20 bg-sky-500/10 p-3 text-sm text-foreground/90">
+              <TeachingExplainerBlock tone="sky">
                 {getRefinementGuidance({
                   total: outcomeSummary.total,
                   helped: outcomeSummary.helped,
@@ -164,7 +161,7 @@ export default async function TeacherStrategyDetailPage({
                   replace: outcomeSummary.replace,
                   refinementNote: strategy.refinement_note,
                 })}
-              </div>
+              </TeachingExplainerBlock>
               <div>
                 <label className="mb-1 block text-sm font-medium text-foreground/80">Refinement note</label>
                 <textarea
@@ -218,10 +215,9 @@ export default async function TeacherStrategyDetailPage({
                 Update Strategy
               </PendingSubmitButton>
             </form>
-          </section>
+          </TeachingCollectionSection>
 
-          <aside className="rounded-2xl border bg-card p-5">
-            <h2 className="text-sm font-semibold uppercase tracking-[0.2em] text-muted-foreground">Metadata</h2>
+          <TeachingCollectionSection title="Metadata">
             <div className="mt-4 flex flex-wrap gap-2 text-xs">
               {outcomeSummary.total === 0 ? (
                 <span className="rounded-full border border-amber-500/20 bg-amber-500/10 px-2.5 py-1 font-medium text-amber-300">
@@ -351,7 +347,7 @@ export default async function TeacherStrategyDetailPage({
                 Refinement note: {strategy.refinement_note}
               </p>
             ) : null}
-          </aside>
+          </TeachingCollectionSection>
         </div>
       </div>
     </div>

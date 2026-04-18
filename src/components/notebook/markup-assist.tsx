@@ -6,6 +6,7 @@ import { evaluateGuidedDraft } from "@/lib/composer-guidance";
 import { evaluateJournalFeedback } from "@/lib/journal-feedback";
 import { buildInlineAnnotation } from "@/lib/parse-tokens";
 import { searchAnnotationSuggestionsAction } from "@/lib/actions";
+import { EmptyStateNotice, GuidanceBanner } from "@/components/patterns/guidance";
 import {
   rankAnnotationSuggestions,
   summarizeEnglishGloss,
@@ -18,7 +19,10 @@ export function ContentPreview({ content }: { content: string }) {
   if (tokens.length === 0) return null;
 
   return (
-    <div data-testid="content-preview" className="rounded-lg border border-dashed border-border bg-muted/50 p-4">
+    <EmptyStateNotice
+      data-testid="content-preview"
+      className="rounded-lg border-border bg-muted/50"
+    >
       <p className="mb-2 text-xs font-medium text-muted-foreground/70">Preview</p>
       <div className="text-base leading-[2] text-foreground/90">
         {tokens.map((t, i) => {
@@ -31,7 +35,7 @@ export function ContentPreview({ content }: { content: string }) {
           );
         })}
       </div>
-    </div>
+    </EmptyStateNotice>
   );
 }
 
@@ -39,18 +43,19 @@ export function MarkupValidationPanel({ content }: { content: string }) {
   const issues = validateInlineMarkup(content);
   if (issues.length === 0) {
     return (
-      <div className="rounded-lg border border-emerald-500/20 bg-emerald-500/10 px-3 py-2 text-xs text-emerald-400">
+      <GuidanceBanner tone="emerald" className="px-3 py-2 text-xs">
         Annotation format looks valid.
-      </div>
+      </GuidanceBanner>
     );
   }
 
   return (
-    <div
+    <GuidanceBanner
       data-testid="markup-validation-panel"
-      className="rounded-lg border border-amber-500/20 bg-amber-500/10 px-3 py-3 text-xs text-amber-100"
+      tone="amber"
+      title="Fix annotation markup before saving."
+      className="px-3 py-3 text-xs"
     >
-      <p className="font-semibold">Fix annotation markup before saving.</p>
       <div className="mt-2 space-y-2">
         {issues.slice(0, 3).map((issue, index) => (
           <div key={`${issue.index}-${index}`}>
@@ -59,7 +64,7 @@ export function MarkupValidationPanel({ content }: { content: string }) {
           </div>
         ))}
       </div>
-    </div>
+    </GuidanceBanner>
   );
 }
 
@@ -80,10 +85,7 @@ export function GuidedDraftPanel({
   const checklist = evaluateGuidedDraft(content ?? "", targetWord);
 
   return (
-    <div className="rounded-lg border border-sky-500/20 bg-sky-500/10 px-4 py-4">
-      <p className="text-xs font-semibold uppercase tracking-wider text-sky-400">
-        Guided Response
-      </p>
+    <GuidanceBanner title="Guided Response" tone="sky">
       {prompt && <p className="mt-2 text-sm font-medium text-foreground">{prompt}</p>}
       {sourceZh && (
         <div className="mt-3 rounded-md border border-border/80 bg-card/90 p-3 shadow-sm">
@@ -110,7 +112,7 @@ export function GuidedDraftPanel({
           </p>
         </div>
       </div>
-    </div>
+    </GuidanceBanner>
   );
 }
 
@@ -125,10 +127,7 @@ export function JournalFeedbackPanel({
   if (content.trim().length === 0) return null;
 
   return (
-    <div className="rounded-lg border border-violet-500/20 bg-violet-500/10 px-4 py-4">
-      <p className="text-xs font-semibold uppercase tracking-wider text-violet-300">
-        Revision Feedback
-      </p>
+    <GuidanceBanner title="Revision Feedback" tone="violet">
       {feedback.strengths.length > 0 && (
         <div className="mt-2 space-y-1 text-sm text-emerald-400">
           {feedback.strengths.map((message) => (
@@ -143,7 +142,7 @@ export function JournalFeedbackPanel({
           ))}
         </div>
       )}
-    </div>
+    </GuidanceBanner>
   );
 }
 
@@ -186,6 +185,12 @@ export function AnnotationBuilder({
           : "";
   const lookupCacheKey = `${lookupField ?? "none"}|${currentHskLevel ?? "any"}|${lookupValue.toLowerCase()}`;
 
+  function clearLookupState() {
+    setSuggestions([]);
+    setLookupBusy(false);
+    setLookupAttempted(false);
+  }
+
   function applyExactMatch(ranked: AnnotationSuggestion[]) {
     const exactMatches = ranked.filter((item) => item.exact);
     if (exactMatches.length !== 1) return;
@@ -197,9 +202,6 @@ export function AnnotationBuilder({
 
   useEffect(() => {
     if (!lookupField || !lookupValue) {
-      setSuggestions([]);
-      setLookupBusy(false);
-      setLookupAttempted(false);
       return;
     }
 
@@ -249,9 +251,8 @@ export function AnnotationBuilder({
     setHanzi("");
     setPinyin("");
     setEnglish("");
-    setSuggestions([]);
+    clearLookupState();
     setLookupField(null);
-    setLookupAttempted(false);
   }
 
   function handleInsertSuggested() {
@@ -319,8 +320,10 @@ export function AnnotationBuilder({
         <input
           value={hanzi}
           onChange={(e) => {
-            setHanzi(e.target.value);
+            const nextValue = e.target.value;
+            setHanzi(nextValue);
             setLookupField("hanzi");
+            if (!nextValue.trim()) clearLookupState();
           }}
           placeholder="汉字"
           className="rounded-lg border border-border bg-card px-3 py-2 text-sm text-foreground outline-none focus:border-[var(--cn-orange)]"
@@ -328,8 +331,10 @@ export function AnnotationBuilder({
         <input
           value={pinyin}
           onChange={(e) => {
-            setPinyin(e.target.value);
+            const nextValue = e.target.value;
+            setPinyin(nextValue);
             setLookupField("pinyin");
+            if (!nextValue.trim()) clearLookupState();
           }}
           placeholder="pin1 yin1"
           className="rounded-lg border border-border bg-card px-3 py-2 text-sm text-foreground outline-none focus:border-[var(--cn-orange)]"
@@ -337,8 +342,10 @@ export function AnnotationBuilder({
         <input
           value={english}
           onChange={(e) => {
-            setEnglish(e.target.value);
+            const nextValue = e.target.value;
+            setEnglish(nextValue);
             setLookupField("english");
+            if (!nextValue.trim()) clearLookupState();
           }}
           placeholder="meaning"
           className="rounded-lg border border-border bg-card px-3 py-2 text-sm text-foreground outline-none focus:border-[var(--cn-orange)]"

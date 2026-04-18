@@ -21,6 +21,8 @@ import {
   ChevronDown,
 } from "lucide-react";
 import { UpgradePrompt } from "@/components/upgrade-prompt";
+import { EmptyStateNotice } from "@/components/patterns/guidance";
+import { InfoPanel, SectionCard } from "@/components/patterns/surfaces";
 import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
 import { useSettings } from "./settings-context";
@@ -61,27 +63,21 @@ export function StudyGuide({ initialData, assignmentId }: StudyGuideProps) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  useEffect(() => {
+  const requestedWordId = (() => {
     const wordIdFromUrl = searchParams.get("wordId");
     if (wordIdFromUrl) {
       const parsedWordId = Number.parseInt(wordIdFromUrl, 10);
-      if (Number.isInteger(parsedWordId)) {
-        const selectedWord = data.words.find((item) => item.word.id === parsedWordId);
-        if (selectedWord) {
-          setSelectedWordId(selectedWord.word.id);
-          return;
-        }
+      if (Number.isInteger(parsedWordId) && data.words.some((item) => item.word.id === parsedWordId)) {
+        return parsedWordId;
       }
     }
 
     const wordFromUrl = searchParams.get("word");
-    if (!wordFromUrl) return;
+    if (!wordFromUrl) return null;
 
-    const idx = data.words.findIndex((item) => item.word.simplified === wordFromUrl);
-    if (idx >= 0) {
-      setSelectedWordId(data.words[idx].word.id);
-    }
-  }, [data.words, searchParams]);
+    const found = data.words.find((item) => item.word.simplified === wordFromUrl);
+    return found?.word.id ?? null;
+  })();
 
   useEffect(() => {
     let cancelled = false;
@@ -121,19 +117,9 @@ export function StudyGuide({ initialData, assignmentId }: StudyGuideProps) {
     return true;
   });
 
+  const effectiveSelectedWordId = requestedWordId ?? selectedWordId;
   const selected =
-    filteredWords.find((item) => item.word.id === selectedWordId) ?? filteredWords[0] ?? null;
-
-  useEffect(() => {
-    if (filteredWords.length === 0) {
-      setSelectedWordId(null);
-      return;
-    }
-
-    if (!selected || !filteredWords.some((item) => item.word.id === selected.word.id)) {
-      setSelectedWordId(filteredWords[0].word.id);
-    }
-  }, [filteredWords, selected]);
+    filteredWords.find((item) => item.word.id === effectiveSelectedWordId) ?? filteredWords[0] ?? null;
 
   return (
     <div
@@ -268,22 +254,17 @@ export function StudyGuide({ initialData, assignmentId }: StudyGuideProps) {
             </div>
           ) : (
             <>
-              <div className="rounded-xl border bg-card p-5">
-                <div className="mb-3 flex items-center justify-between">
-                  <div>
-                    <span className="text-sm font-medium text-foreground/80">
-                      HSK {data.level} Progress
-                    </span>
-                    <p className="mt-1 text-xs text-muted-foreground">
-                      Track how much of this level you have already encountered and reviewed.
-                    </p>
-                  </div>
+              <SectionCard
+                title={`HSK ${data.level} Progress`}
+                description="Track how much of this level you have already encountered and reviewed."
+                action={
                   <span className="text-sm font-bold text-[var(--cn-orange)]">
                     {data.summary.total > 0
                       ? Math.round((data.summary.encountered / data.summary.total) * 100)
                       : 0}%
                   </span>
-                </div>
+                }
+              >
                 <Progress
                   value={data.summary.total > 0 ? (data.summary.encountered / data.summary.total) * 100 : 0}
                   className="mb-4 h-2 [&_[data-slot=progress-indicator]]:bg-[var(--cn-orange)]"
@@ -306,24 +287,27 @@ export function StudyGuide({ initialData, assignmentId }: StudyGuideProps) {
                     <p className="text-xs text-muted-foreground">Due for review</p>
                   </div>
                 </div>
-              </div>
+              </SectionCard>
 
               <div className="mt-6">
                 {selected ? (
                   <WordDetail item={selected} level={data.level} dailyPractice={dailyPractice} assignmentId={assignmentId} />
                 ) : (
-                  <div data-testid="study-guide-empty" className="flex h-64 items-center justify-center rounded-xl border bg-card text-sm text-muted-foreground/70">
+                  <EmptyStateNotice
+                    data-testid="study-guide-empty"
+                    className="flex h-64 items-center justify-center rounded-xl border bg-card text-sm"
+                  >
                     Select a word to view details
-                  </div>
+                  </EmptyStateNotice>
                 )}
               </div>
 
               {data.grammarPoints.length > 0 && (
-                <div className="mt-6 rounded-xl border bg-card p-6">
-                  <h3 className="mb-4 flex items-center gap-2 text-sm font-semibold text-foreground/80">
-                    <Languages className="h-4 w-4 text-[var(--cn-orange)]" />
-                    Grammar Points — HSK {data.level}
-                  </h3>
+                <SectionCard
+                  className="mt-6 p-6"
+                  title={`Grammar Points — HSK ${data.level}`}
+                  icon={Languages}
+                >
                   <div className="space-y-3">
                     {data.grammarPoints.map((gp) => (
                       <div key={gp.id} className="rounded-lg border border-border bg-muted/50 p-4">
@@ -335,7 +319,7 @@ export function StudyGuide({ initialData, assignmentId }: StudyGuideProps) {
                       </div>
                     ))}
                   </div>
-                </div>
+                </SectionCard>
               )}
             </>
           )}
@@ -359,7 +343,7 @@ function WordDetail({
   assignmentId?: string;
 }) {
   const [creating, setCreating] = useState(false);
-  const [created, setCreated] = useState(false);
+  const [createdWordId, setCreatedWordId] = useState<number | null>(null);
   const reading = buildStudyGuideReading(item, level);
   const draftTitleZh = `练习：${item.word.simplified}`;
   const draftTitleEn = `Practice: ${item.word.english}`;
@@ -382,11 +366,6 @@ function WordDetail({
       ? `/notebook?entry=${dailyPractice.latestGuidedResponseToday.id}`
       : null;
 
-  // Reset created state when word changes
-  useEffect(() => {
-    setCreated(false);
-  }, [item.word.id]);
-
   async function handleCreateFlashcard() {
     setCreating(true);
     try {
@@ -396,13 +375,14 @@ function WordDetail({
         item.word.english
       );
       if ("id" in result || "duplicate" in result) {
-        setCreated(true);
+        setCreatedWordId(item.word.id);
       }
     } finally {
       setCreating(false);
     }
   }
 
+  const created = createdWordId === item.word.id;
   const hasFlashcard = item.flashcard !== null || created;
 
   return (
@@ -519,9 +499,9 @@ function WordDetail({
           Guided Responses
         </h4>
         {item.guidedResponses.length === 0 ? (
-          <div className="rounded-lg border border-dashed border-border bg-muted/30 px-4 py-3 text-sm text-muted-foreground">
+          <EmptyStateNotice className="border-border bg-muted/30 px-4 py-3">
             No guided response yet for this study item.
-          </div>
+          </EmptyStateNotice>
         ) : (
           <div className="space-y-2">
             {item.guidedResponses.map((response) => (
@@ -543,11 +523,11 @@ function WordDetail({
         )}
       </div>
 
-      <div className="mb-6 rounded-lg border border-[var(--cn-orange)]/20 bg-[var(--cn-orange-light)] p-5">
-        <h4 className="mb-2 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-[var(--cn-orange)]">
-          <BookText className="h-3.5 w-3.5" />
-          Input Practice
-        </h4>
+      <SectionCard
+        className="mb-6 border-[var(--cn-orange)]/20 bg-[var(--cn-orange-light)] p-5"
+        title="Input Practice"
+        icon={BookText}
+      >
         <p className="text-sm font-semibold text-foreground">{reading.title}</p>
         <p className="mt-3 text-lg leading-[1.9] text-foreground/90">{reading.passageZh}</p>
         <p className="mt-3 text-sm text-muted-foreground">{reading.passageEn}</p>
@@ -569,11 +549,7 @@ function WordDetail({
           </div>
         </div>
         <div className="mt-4 grid gap-3 md:grid-cols-2">
-          <div className="rounded-lg border border-border/80 bg-card/90 p-4 shadow-sm">
-            <p className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground/70">
-              <Sparkles className="h-3.5 w-3.5" />
-              Notice This Phrase
-            </p>
+          <InfoPanel title="Notice This Phrase" icon={Sparkles}>
             <p className="mt-2 text-sm font-semibold text-foreground">{reading.focusPhraseZh}</p>
             <p className="mt-1 text-sm text-muted-foreground">{reading.focusPhraseEn}</p>
             <Link
@@ -582,20 +558,12 @@ function WordDetail({
             >
               Use this phrase in journal →
             </Link>
-          </div>
-          <div className="rounded-lg border border-border/80 bg-card/90 p-4 shadow-sm">
-            <p className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground/70">
-              <CircleHelp className="h-3.5 w-3.5" />
-              Quick Check
-            </p>
+          </InfoPanel>
+          <InfoPanel title="Quick Check" icon={CircleHelp}>
             <p className="mt-2 text-sm text-foreground">{reading.comprehensionCheck}</p>
-          </div>
+          </InfoPanel>
         </div>
-        <div className="mt-4 rounded-lg border border-border/80 bg-card/90 p-4 shadow-sm">
-          <p className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground/70">
-            <Languages className="h-3.5 w-3.5" />
-            Listening Echo
-          </p>
+        <InfoPanel title="Listening Echo" icon={Languages} className="mt-4">
           <p className="mt-2 text-sm font-semibold text-foreground">{reading.listeningZh}</p>
           <p className="mt-1 text-sm text-muted-foreground">{reading.listeningEn}</p>
           <p className="mt-2 text-sm text-foreground">{reading.listeningPrompt}</p>
@@ -605,12 +573,8 @@ function WordDetail({
           >
             Respond to listening →
           </Link>
-        </div>
-        <div className="mt-4 rounded-lg border border-border/80 bg-card/90 p-4 shadow-sm">
-          <p className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground/70">
-            <PenSquare className="h-3.5 w-3.5" />
-            Journal Response
-          </p>
+        </InfoPanel>
+        <InfoPanel title="Journal Response" icon={PenSquare} className="mt-4">
           <p className="mt-2 text-sm text-foreground">{reading.responsePrompt}</p>
           <Link
             href={journalHref}
@@ -618,8 +582,8 @@ function WordDetail({
           >
             Respond in journal →
           </Link>
-        </div>
-      </div>
+        </InfoPanel>
+      </SectionCard>
 
       {/* Flashcard status */}
       {item.flashcard ? (

@@ -1,6 +1,24 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { AlertTriangle, BarChart3, UserRoundSearch, Users } from "lucide-react";
+import {
+  ActionRow,
+  CompactBadgeRow,
+  CompactStatCard,
+  HealthRow,
+  SummaryStatCard,
+} from "@/components/patterns/metrics";
+import { EmptyStateNotice, GuidanceBanner } from "@/components/patterns/guidance";
+import { OverviewMetric } from "@/components/patterns/reporting";
+import { MetricPill, PriorityPill } from "@/components/patterns/status";
+import { SectionCard } from "@/components/patterns/surfaces";
+import {
+  TeachingEntityCard,
+  TeachingPageHeader,
+  TeachingExplainerBlock,
+  TeachingToneMetricCard,
+  TeachingCollectionSection,
+} from "@/components/patterns/teaching";
 import { getAuthUserId } from "@/lib/auth-utils";
 import { isTeacherUser } from "@/lib/classrooms";
 import { getTeacherReportingDashboard } from "@/lib/teacher-reporting";
@@ -99,17 +117,11 @@ export default async function TeacherReportingPage() {
   return (
     <div data-testid="teacher-reporting-page" className="h-full overflow-auto p-6 pb-20 md:p-10 lg:pb-10">
       <div className="mx-auto max-w-6xl space-y-8">
-        <div className="flex items-start justify-between gap-6">
-          <div>
-            <h1 className="text-3xl font-bold text-foreground">Reporting</h1>
-            <p className="mt-2 max-w-3xl text-sm text-muted-foreground">
-              Track classroom health, missing work, and submissions that still need review without opening each assignment one by one.
-            </p>
-          </div>
-          <div className="inline-flex items-center rounded-full border border-[var(--cn-orange)]/20 bg-[var(--cn-orange)]/10 px-3 py-1.5 text-xs font-medium text-[var(--cn-orange)]">
-            Lightweight intervention layer
-          </div>
-        </div>
+        <TeachingPageHeader
+          title="Reporting"
+          description="Track classroom health, missing work, and submissions that still need review without opening each assignment one by one."
+          badge="Lightweight intervention layer"
+        />
 
         <div className="grid gap-6 xl:grid-cols-[minmax(0,1.2fr)_300px]">
           <section className="space-y-6">
@@ -185,11 +197,8 @@ export default async function TeacherReportingPage() {
               </div>
             </div>
 
-            <div className="rounded-3xl border bg-card p-6">
+            <SectionCard title="Workload & Support Health">
               <div className="mb-5 flex items-center justify-between gap-3">
-                <h2 className="text-sm font-semibold uppercase tracking-[0.2em] text-muted-foreground">
-                  Workload & Support Health
-                </h2>
                 <MetricPill
                   label={
                     reporting.workloadSummary.load_state === "healthy"
@@ -242,34 +251,64 @@ export default async function TeacherReportingPage() {
                   />
                 </div>
               </div>
-            </div>
+            </SectionCard>
 
-            <div className="rounded-3xl border bg-card p-6">
-              <div className="mb-5 flex items-center gap-2">
-                <h2 className="text-sm font-semibold uppercase tracking-[0.2em] text-muted-foreground">
-                  Stabilization & Handoff
-                </h2>
-              </div>
-              <div className="grid gap-3 md:grid-cols-3">
-                <CompactStatCard
-                  label="Stable learners"
-                  value={reporting.stabilizationSummary.stable_private_learners}
-                  tone="emerald"
-                />
-                <CompactStatCard
-                  label="Simplify support"
-                  value={reporting.stabilizationSummary.simplify_support_candidates}
-                  tone="amber"
-                />
-                <CompactStatCard
-                  label="Handoff-ready"
-                  value={reporting.stabilizationSummary.handoff_ready_private_learners}
-                  tone="sky"
-                />
-              </div>
-              <div className="mt-4 rounded-2xl border border-border bg-muted/20 px-4 py-3 text-sm text-muted-foreground">
-                Handoff-ready means the learner may be stable enough for lower-intensity monitoring. Maintain caution before shifting tiers.
-              </div>
+            <div className="grid gap-6 lg:grid-cols-2">
+              <SectionCard title="Stabilization & Handoff">
+                <div className="grid gap-3 md:grid-cols-3">
+                  <CompactStatCard
+                    label="Stable learners"
+                    value={reporting.stabilizationSummary.stable_private_learners}
+                    tone="emerald"
+                  />
+                  <CompactStatCard
+                    label="Simplify support"
+                    value={reporting.stabilizationSummary.simplify_support_candidates}
+                    tone="amber"
+                  />
+                  <CompactStatCard
+                    label="Handoff-ready"
+                    value={reporting.stabilizationSummary.handoff_ready_private_learners}
+                    tone="sky"
+                  />
+                </div>
+                <div className="mt-4 rounded-2xl border border-border bg-muted/20 px-4 py-3 text-sm text-muted-foreground">
+                  Handoff-ready means the learner may be stable enough for lower-intensity monitoring. Maintain caution before shifting tiers.
+                </div>
+              </SectionCard>
+
+              <SectionCard title="Support Reuse">
+                <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+                  <TeachingToneMetricCard label="Strategies used" value={reporting.totalStrategiesUsed} tone="sky" />
+                  <TeachingToneMetricCard label="Helping broadly" value={reporting.totalStrategyHelping} tone="emerald" />
+                  <TeachingToneMetricCard label="Mixed strategies" value={reporting.totalStrategyMixed} tone="amber" />
+                  <TeachingToneMetricCard label="Playbooks used" value={reporting.totalPlaybooksUsed} tone="sky" />
+                  <TeachingToneMetricCard label="Helping broadly" value={reporting.totalPlaybookHelping} tone="emerald" />
+                  <TeachingToneMetricCard label="Mixed playbooks" value={reporting.totalPlaybookMixed} tone="amber" />
+                </div>
+                <GuidanceBanner
+                  tone={
+                    reporting.totalPlaybookWeak > 0 || reporting.totalStrategyWeak > 0
+                      ? "amber"
+                      : reporting.totalStrategyHelping > 0 || reporting.totalPlaybookHelping > 0
+                        ? "sky"
+                        : "violet"
+                  }
+                  className="mt-4"
+                >
+                  <p className="text-sm">
+                    {reporting.totalPlaybookWeak > 0
+                      ? `${reporting.totalPlaybookWeak} saved ${reporting.totalPlaybookWeak === 1 ? "playbook looks" : "playbooks look"} weak or need refinement.`
+                      : reporting.totalPlaybookNoOutcome > 0
+                        ? `${reporting.totalPlaybookNoOutcome} ${reporting.totalPlaybookNoOutcome === 1 ? "playbook still needs" : "playbooks still need"} outcome evidence.`
+                        : reporting.totalStrategyWeak > 0
+                          ? `${reporting.totalStrategyWeak} saved ${reporting.totalStrategyWeak === 1 ? "strategy looks" : "strategies look"} weak or need refinement.`
+                          : reporting.totalStrategyNoOutcome > 0
+                            ? `${reporting.totalStrategyNoOutcome} ${reporting.totalStrategyNoOutcome === 1 ? "strategy still needs" : "strategies still need"} outcome evidence.`
+                            : "Current support reuse is being shaped by real outcomes instead of guesswork."}
+                  </p>
+                </GuidanceBanner>
+              </SectionCard>
             </div>
           </section>
 
@@ -281,7 +320,7 @@ export default async function TeacherReportingPage() {
                   Urgent Actions
                 </h2>
               </div>
-              <div className="rounded-2xl border border-dashed border-[var(--cn-orange)]/20 bg-card/60 p-5 text-center">
+              <EmptyStateNotice className="rounded-2xl border-[var(--cn-orange)]/20 bg-card/60 text-center">
                 <p className="text-3xl font-bold text-foreground">
                   {reporting.totalWaitingReview +
                     reporting.totalMissingSubmissions +
@@ -306,7 +345,7 @@ export default async function TeacherReportingPage() {
                     ? "Waiting review, missing work, overdue checkpoints, or reset-level learners still need follow-through."
                     : "No urgent actions require immediate intervention in the current cycle."}
                 </p>
-              </div>
+              </EmptyStateNotice>
               <div className="mt-4 border-l-2 border-[var(--cn-orange)]/60 pl-3 text-sm">
                 <p className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">
                   Next scheduled sync
@@ -326,700 +365,605 @@ export default async function TeacherReportingPage() {
                   Reporting Notes
                 </h2>
               </div>
-              <div className="space-y-3 text-sm text-muted-foreground">
-                <p>Priority tells you what matters first. Rhythm tells you what has gone too long without a fresh check-in.</p>
-                <p>Workload and support health show whether pressure is clustering too heavily around the same learners or weak support paths.</p>
-                <p>Stabilization and handoff help you decide whether support should stay active or start shifting into a lighter-touch mode.</p>
+              <div className="space-y-3">
+                <TeachingExplainerBlock>
+                  Priority tells you what matters first. Rhythm tells you what has gone too long without a fresh check-in.
+                </TeachingExplainerBlock>
+                <TeachingExplainerBlock>
+                  Workload and support health show whether pressure is clustering too heavily around the same learners or weak support paths.
+                </TeachingExplainerBlock>
+                <TeachingExplainerBlock>
+                  Stabilization and handoff help you decide whether support should stay active or start shifting into a lighter-touch mode.
+                </TeachingExplainerBlock>
               </div>
             </div>
           </aside>
         </div>
 
-        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-          <SummaryCard label="Strategies used" value={reporting.totalStrategiesUsed} tone="sky" />
-          <SummaryCard label="Helping broadly" value={reporting.totalStrategyHelping} tone="emerald" />
-          <SummaryCard label="Mixed strategies" value={reporting.totalStrategyMixed} tone="amber" />
-        </div>
+        <div className="grid gap-6 lg:grid-cols-2">
+          <SectionCard title="Support Gaps">
+            <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+              <SummaryStatCard label="No playbook yet" value={reporting.totalPrivateNoPlaybook} tone="amber" />
+              <SummaryStatCard label="Playbook gap" value={reporting.totalPrivatePlaybookGap} tone="rose" />
+              <SummaryStatCard label="Weak playbooks" value={reporting.totalPlaybookWeak} tone="rose" />
+              <SummaryStatCard label="No playbook outcomes" value={reporting.totalPlaybookNoOutcome} tone="amber" />
+              <SummaryStatCard label="No strategy yet" value={reporting.totalPrivateNoStrategy} tone="amber" />
+              <SummaryStatCard label="Strategy gap" value={reporting.totalPrivateStrategyGap} tone="rose" />
+              <SummaryStatCard label="Weak strategies" value={reporting.totalStrategyWeak} tone="rose" />
+              <SummaryStatCard label="No strategy outcomes" value={reporting.totalStrategyNoOutcome} tone="amber" />
+            </div>
+          </SectionCard>
 
-        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-          <SummaryCard label="Playbooks used" value={reporting.totalPlaybooksUsed} tone="sky" />
-          <SummaryCard label="Helping broadly" value={reporting.totalPlaybookHelping} tone="emerald" />
-          <SummaryCard label="Mixed playbooks" value={reporting.totalPlaybookMixed} tone="amber" />
-        </div>
-
-        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-          <SummaryCard label="No playbook yet" value={reporting.totalPrivateNoPlaybook} tone="amber" />
-          <SummaryCard label="Playbook gap" value={reporting.totalPrivatePlaybookGap} tone="rose" />
-          <SummaryCard label="Weak playbooks" value={reporting.totalPlaybookWeak} tone="rose" />
-          <SummaryCard label="No playbook outcomes" value={reporting.totalPlaybookNoOutcome} tone="amber" />
-        </div>
-
-        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-          <SummaryCard label="No strategy yet" value={reporting.totalPrivateNoStrategy} tone="amber" />
-          <SummaryCard label="Strategy gap" value={reporting.totalPrivateStrategyGap} tone="rose" />
-          <SummaryCard label="Weak strategies" value={reporting.totalStrategyWeak} tone="rose" />
-          <SummaryCard label="No strategy outcomes" value={reporting.totalStrategyNoOutcome} tone="amber" />
-        </div>
-
-        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-2">
-          <SummaryCard label="Needs strategy outcome" value={reporting.totalStrategyNeedsReview} tone="amber" />
-          <SummaryCard label="Needs playbook outcome" value={reporting.totalPlaybookNeedsReview} tone="amber" />
+          <SectionCard title="Outcome Follow-Through">
+            <div className="grid gap-4 sm:grid-cols-2">
+              <SummaryStatCard label="Needs strategy outcome" value={reporting.totalStrategyNeedsReview} tone="amber" />
+              <SummaryStatCard label="Needs playbook outcome" value={reporting.totalPlaybookNeedsReview} tone="amber" />
+            </div>
+            <div className="mt-4">
+              <TeachingExplainerBlock>
+              Outcome follow-through helps distinguish real reuse from support that is still being applied without enough evidence.
+              </TeachingExplainerBlock>
+            </div>
+          </SectionCard>
         </div>
 
         <div className="grid gap-6 xl:grid-cols-[minmax(0,1.1fr)_minmax(340px,0.9fr)]">
           <section className="space-y-6">
-            <div className="rounded-2xl border bg-card p-5">
-              <div className="mb-4 flex items-center gap-2">
-                <AlertTriangle className="h-4 w-4 text-[var(--cn-orange)]" />
-                <h2 className="text-sm font-semibold uppercase tracking-[0.2em] text-muted-foreground">
-                  Operating Review
-                </h2>
-              </div>
-
-              {operatingReviewItems.length === 0 ? (
-                <div className="rounded-xl border border-dashed p-4 text-sm text-muted-foreground">
-                  No operating-review signals yet. As private learner pressure settles, this section will show who should be reset, rebalanced, simplified, or simply maintained.
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  {operatingReviewItems.slice(0, 8).map((item) => (
-                    <Link
-                      key={`operating-review:${item.id}`}
-                      href={item.href}
-                      className="block rounded-xl border p-4 transition-colors hover:border-[var(--cn-orange)]/30 hover:bg-muted/20"
-                    >
-                      <div className="flex items-center justify-between gap-3">
-                        <div>
-                          <div className="flex flex-wrap items-center gap-2">
-                            <MetricPill label="Learner" tone="muted" />
-                            <MetricPill
-                              label={item.label}
-                              tone={
-                                item.state === "reset_now"
-                                  ? "rose"
-                                  : item.state === "rebalance"
-                                    ? "amber"
-                                    : item.state === "simplify_now"
-                                      ? "sky"
-                                      : "emerald"
-                              }
-                            />
-                          </div>
-                          <h3 className="mt-2 font-semibold text-foreground">{item.studentName}</h3>
-                          <p className="mt-1 text-sm text-muted-foreground">{item.reason}</p>
-                        </div>
-                        <div className="text-xs font-medium text-[var(--cn-orange)]">Open →</div>
-                      </div>
-                      <div className="mt-3 flex flex-wrap gap-3 text-xs text-muted-foreground">
-                        <span>{item.classroomName}</span>
-                        <span>{item.note}</span>
-                      </div>
-                      {item.supportingNote ? (
-                        <p className="mt-2 text-sm text-muted-foreground">{item.supportingNote}</p>
-                      ) : null}
-                    </Link>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            <div className="rounded-2xl border bg-card p-5">
-              <div className="mb-4 flex items-center gap-2">
-                <Users className="h-4 w-4 text-[var(--cn-orange)]" />
-                <h2 className="text-sm font-semibold uppercase tracking-[0.2em] text-muted-foreground">
-                  Portfolio Distribution
-                </h2>
-              </div>
-
-              {reporting.stabilizationItems.length === 0 ? (
-                <div className="rounded-xl border border-dashed p-4 text-sm text-muted-foreground">
-                  No portfolio distribution signals yet. As private learners settle into active support, simplification, and handoff-ready states, the portfolio mix will appear here.
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  {reporting.stabilizationItems.slice(0, 8).map((item) => (
-                    <Link
-                      key={`portfolio:${item.kind}:${item.id}`}
-                      href={item.href}
-                      className="block rounded-xl border p-4 transition-colors hover:border-[var(--cn-orange)]/30 hover:bg-muted/20"
-                    >
-                      <div className="flex items-center justify-between gap-3">
-                        <div>
-                          <div className="flex flex-wrap items-center gap-2">
-                            <MetricPill label={item.kind === "learner" ? "Learner" : item.kind} tone="muted" />
-                            <MetricPill
-                              label={item.stabilization_state.replaceAll("_", " ")}
-                              tone={
-                                item.stabilization_state === "keep_active"
-                                  ? "rose"
-                                  : item.stabilization_state === "simplify"
-                                    ? "amber"
-                                    : item.stabilization_state === "light_touch"
-                                      ? "sky"
-                                      : "emerald"
-                              }
-                            />
-                          </div>
-                          <h3 className="mt-2 font-semibold text-foreground">{item.title}</h3>
-                          <p className="mt-1 text-sm text-muted-foreground">{item.reason}</p>
-                        </div>
-                        <div className="text-xs font-medium text-[var(--cn-orange)]">Open →</div>
-                      </div>
-                      {item.supporting_note ? (
-                        <p className="mt-3 text-sm text-muted-foreground">{item.supporting_note}</p>
-                      ) : null}
-                    </Link>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            <div className="rounded-2xl border bg-card p-5">
-              <div className="mb-4 flex items-center gap-2">
-                <AlertTriangle className="h-4 w-4 text-[var(--cn-orange)]" />
-                <h2 className="text-sm font-semibold uppercase tracking-[0.2em] text-muted-foreground">
-                  Stabilization
-                </h2>
-              </div>
-
-              {reporting.stabilizationItems.length === 0 ? (
-                <div className="rounded-xl border border-dashed p-4 text-sm text-muted-foreground">
-                  No stabilization signals yet. This section will surface learners who still need active support and those now looking stable enough for simplification.
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  {reporting.stabilizationItems.slice(0, 8).map((item) => (
-                    <Link
-                      key={`${item.kind}:${item.id}`}
-                      href={item.href}
-                      className="block rounded-xl border p-4 transition-colors hover:border-[var(--cn-orange)]/30 hover:bg-muted/20"
-                    >
-                      <div className="flex items-center justify-between gap-3">
-                        <div>
-                          <div className="flex flex-wrap items-center gap-2">
-                            <MetricPill label={item.kind === "learner" ? "Learner" : item.kind} tone="muted" />
-                            <MetricPill
-                              label={item.stabilization_state.replaceAll("_", " ")}
-                              tone={
-                                item.stabilization_state === "keep_active"
-                                  ? "rose"
-                                  : item.stabilization_state === "simplify"
-                                    ? "amber"
-                                    : item.stabilization_state === "light_touch"
-                                      ? "sky"
-                                      : "emerald"
-                              }
-                            />
-                          </div>
-                          <h3 className="mt-2 font-semibold text-foreground">{item.title}</h3>
-                          <p className="mt-1 text-sm text-muted-foreground">{item.reason}</p>
-                        </div>
-                        <div className="text-xs font-medium text-[var(--cn-orange)]">Open →</div>
-                      </div>
-                      {item.supporting_note ? (
-                        <p className="mt-3 text-sm text-muted-foreground">{item.supporting_note}</p>
-                      ) : null}
-                    </Link>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            <div className="rounded-2xl border bg-card p-5">
-              <div className="mb-4 flex items-center gap-2">
-                <AlertTriangle className="h-4 w-4 text-[var(--cn-orange)]" />
-                <h2 className="text-sm font-semibold uppercase tracking-[0.2em] text-muted-foreground">
-                  Checkpoint Rhythm
-                </h2>
-              </div>
-
-              {reporting.checkpointItems.length === 0 ? (
-                <div className="rounded-xl border border-dashed p-4 text-sm text-muted-foreground">
-                  No review checkpoints are surfacing yet. This section will show what is due now, overdue, or recently checked once private learner follow-through starts to drift.
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  {reporting.checkpointItems.slice(0, 8).map((item) => (
-                    <Link
-                      key={`${item.kind}:${item.private_student_id}:${item.days_open ?? "recent"}`}
-                      href={item.href}
-                      className="block rounded-xl border p-4 transition-colors hover:border-[var(--cn-orange)]/30 hover:bg-muted/20"
-                    >
-                      <div className="flex items-center justify-between gap-3">
-                        <div>
-                          <div className="flex flex-wrap items-center gap-2">
-                            <MetricPill
-                              label={item.kind.replaceAll("_", " ")}
-                              tone="muted"
-                            />
-                            <MetricPill
-                              label={
-                                item.due_state === "overdue"
-                                  ? "overdue"
-                                  : item.due_state === "due_now"
-                                    ? "due now"
-                                    : "recently checked"
-                              }
-                              tone={
-                                item.due_state === "overdue"
-                                  ? "rose"
-                                  : item.due_state === "due_now"
-                                    ? "amber"
+            <TeachingCollectionSection
+              title="Operating Review"
+              icon={AlertTriangle}
+              isEmpty={operatingReviewItems.length === 0}
+              emptyMessage="No operating-review signals yet. As private learner pressure settles, this section will show who should be reset, rebalanced, simplified, or simply maintained."
+            >
+              <div className="space-y-3">
+                {operatingReviewItems.slice(0, 8).map((item) => (
+                  <Link
+                    key={`operating-review:${item.id}`}
+                    href={item.href}
+                    className="block rounded-xl border p-4 transition-colors hover:border-[var(--cn-orange)]/30 hover:bg-muted/20"
+                  >
+                    <div className="flex items-center justify-between gap-3">
+                      <div>
+                        <div className="flex flex-wrap items-center gap-2">
+                          <MetricPill label="Learner" tone="muted" />
+                          <MetricPill
+                            label={item.label}
+                            tone={
+                              item.state === "reset_now"
+                                ? "rose"
+                                : item.state === "rebalance"
+                                  ? "amber"
+                                  : item.state === "simplify_now"
+                                    ? "sky"
                                     : "emerald"
-                              }
-                            />
-                          </div>
-                          <h3 className="mt-2 font-semibold text-foreground">{item.student_name}</h3>
-                          <p className="mt-1 text-sm text-muted-foreground">{item.reason}</p>
+                            }
+                          />
                         </div>
-                        <div className="text-right text-xs text-muted-foreground">
-                          <div>{item.classroom_name}</div>
-                          <div className="mt-1">
-                            {item.days_open === null
-                              ? "checked recently"
-                              : `${item.days_open} day${item.days_open === 1 ? "" : "s"} open`}
-                          </div>
-                        </div>
+                        <h3 className="mt-2 font-semibold text-foreground">{item.studentName}</h3>
+                        <p className="mt-1 text-sm text-muted-foreground">{item.reason}</p>
                       </div>
-                      {item.supporting_note ? (
-                        <p className="mt-3 text-sm text-muted-foreground">{item.supporting_note}</p>
-                      ) : null}
-                    </Link>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            <div className="rounded-2xl border bg-card p-5">
-              <div className="mb-4 flex items-center gap-2">
-                <AlertTriangle className="h-4 w-4 text-[var(--cn-orange)]" />
-                <h2 className="text-sm font-semibold uppercase tracking-[0.2em] text-muted-foreground">
-                  Load Concentration
-                </h2>
-              </div>
-
-              {reporting.loadConcentrationItems.length === 0 ? (
-                <div className="rounded-xl border border-dashed p-4 text-sm text-muted-foreground">
-                  No strong concentration signals yet. This section will surface repeated-pressure learners and weak support paths once load starts clustering.
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  {reporting.loadConcentrationItems.slice(0, 8).map((item) => (
-                    <Link
-                      key={`${item.kind}:${item.id}`}
-                      href={item.href}
-                      className="block rounded-xl border p-4 transition-colors hover:border-[var(--cn-orange)]/30 hover:bg-muted/20"
-                    >
-                      <div className="flex items-center justify-between gap-3">
-                        <div>
-                          <div className="flex flex-wrap items-center gap-2">
-                            <MetricPill label={getConcentrationKindLabel(item.kind)} tone="muted" />
-                            <MetricPill
-                              label={item.concentration_level}
-                              tone={
-                                item.concentration_level === "high"
-                                  ? "rose"
-                                  : item.concentration_level === "medium"
-                                    ? "amber"
-                                    : "sky"
-                              }
-                            />
-                          </div>
-                          <h3 className="mt-2 font-semibold text-foreground">{item.title}</h3>
-                          <p className="mt-1 text-sm text-muted-foreground">{item.reason}</p>
-                        </div>
-                        <div className="text-xs font-medium text-[var(--cn-orange)]">Open →</div>
-                      </div>
-                      {item.supporting_note ? (
-                        <p className="mt-3 text-sm text-muted-foreground">{item.supporting_note}</p>
-                      ) : null}
-                    </Link>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            <div className="rounded-2xl border bg-card p-5">
-              <div className="mb-4 flex items-center gap-2">
-                <AlertTriangle className="h-4 w-4 text-[var(--cn-orange)]" />
-                <h2 className="text-sm font-semibold uppercase tracking-[0.2em] text-muted-foreground">
-                  Priority Follow-Through
-                </h2>
-              </div>
-
-              {patternPriorityItems.length === 0 ? (
-                <div className="rounded-xl border border-dashed p-4 text-sm text-muted-foreground">
-                  No ranked pattern follow-through items yet. Once pressure builds across issues, strategies, or playbooks, the highest-value actions will surface here first.
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  {patternPriorityItems.map((item) => (
-                    <Link
-                      key={`${item.kind}:${item.id}`}
-                      href={item.href}
-                      className="block rounded-xl border p-4 transition-colors hover:border-[var(--cn-orange)]/30 hover:bg-muted/20"
-                    >
-                      <div className="flex items-center justify-between gap-3">
-                        <div>
-                          <div className="flex flex-wrap items-center gap-2">
-                            <MetricPill label={getPatternKindLabel(item.kind)} tone="muted" />
-                            <PriorityPill level={item.priority_level} />
-                          </div>
-                          <h3 className="mt-2 font-semibold text-foreground">{item.title}</h3>
-                          <p className="mt-1 text-sm text-muted-foreground">{item.reason}</p>
-                        </div>
-                        <div className="text-xs font-medium text-[var(--cn-orange)]">Open →</div>
-                      </div>
-                      {item.supporting_note ? (
-                        <p className="mt-3 text-sm text-muted-foreground">{item.supporting_note}</p>
-                      ) : null}
-                    </Link>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            <div className="rounded-2xl border bg-card p-5">
-              <div className="mb-4 flex items-center gap-2">
-                <AlertTriangle className="h-4 w-4 text-[var(--cn-orange)]" />
-                <h2 className="text-sm font-semibold uppercase tracking-[0.2em] text-muted-foreground">
-                  Teaching Patterns
-                </h2>
-              </div>
-
-              {reporting.issuePatternItems.length === 0 ? (
-                <div className="rounded-xl border border-dashed p-4 text-sm text-muted-foreground">
-                  No recurring cross-learner issue patterns yet. Pattern reporting starts once the same issue repeats across multiple private learner histories.
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  {reporting.issuePatternItems.map((item) => (
-                    <div key={item.issue_tag} className="rounded-xl border p-4">
-                      <div className="flex items-center justify-between gap-3">
-                        <div>
-                          <div className="flex flex-wrap items-center gap-2">
-                            <h3 className="font-semibold text-foreground">
-                              {item.issue_tag.replaceAll("_", " ")}
-                            </h3>
-                            {issuePriorityMap.has(item.issue_tag) ? (
-                              <PriorityPill
-                                level={issuePriorityMap.get(item.issue_tag)!.priority_level}
-                              />
-                            ) : null}
-                          </div>
-                          <p className="mt-1 text-sm text-muted-foreground">
-                            Affecting {item.learner_count} learner{item.learner_count === 1 ? "" : "s"}:{" "}
-                            {item.learner_names.join(", ")}
-                          </p>
-                        </div>
-                        <div className="flex flex-wrap gap-2 text-xs">
-                          <MetricPill label={`${item.learner_count} learners`} tone="amber" />
-                          {item.learners_without_support_path > 0 ? (
-                            <MetricPill
-                              label={`${item.learners_without_support_path} no support path`}
-                              tone="rose"
-                            />
-                          ) : null}
-                          {item.learners_without_strategy > 0 ? (
-                            <MetricPill
-                              label={`${item.learners_without_strategy} no strategy`}
-                              tone="amber"
-                            />
-                          ) : null}
-                          {item.learners_without_playbook > 0 ? (
-                            <MetricPill
-                              label={`${item.learners_without_playbook} no playbook`}
-                              tone="sky"
-                            />
-                          ) : null}
-                          {item.learners_without_recent_outcome > 0 ? (
-                            <MetricPill
-                              label={`${item.learners_without_recent_outcome} no recent outcome`}
-                              tone="amber"
-                            />
-                          ) : null}
-                        </div>
-                      </div>
-                      <div className="mt-3 flex flex-wrap gap-3 text-xs text-muted-foreground">
-                        <span>
-                          {item.learners_without_support_path > 0
-                            ? `${item.learners_without_support_path} learner${item.learners_without_support_path === 1 ? "" : "s"} still being handled ad hoc`
-                            : "Each affected learner has at least one support path"}
-                        </span>
-                        <span>
-                          {item.latest_history_at
-                            ? `Latest seen ${new Date(item.latest_history_at).toLocaleDateString("en-US")}`
-                            : "No recent history timestamp"}
-                        </span>
-                      </div>
-                      {item.latest_intervention_note ? (
-                        <p className="mt-2 text-sm text-muted-foreground">
-                          Latest intervention: {item.latest_intervention_note}
-                        </p>
-                      ) : null}
-                      {issuePriorityMap.has(item.issue_tag) ? (
-                        <p className="mt-2 text-sm text-[var(--cn-orange)]">
-                          Follow-through reason: {issuePriorityMap.get(item.issue_tag)!.reason}
-                        </p>
-                      ) : null}
+                      <div className="text-xs font-medium text-[var(--cn-orange)]">Open →</div>
                     </div>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            <div className="rounded-2xl border bg-card p-5">
-              <div className="mb-4 flex items-center gap-2">
-                <BarChart3 className="h-4 w-4 text-[var(--cn-orange)]" />
-                <h2 className="text-sm font-semibold uppercase tracking-[0.2em] text-muted-foreground">
-                  Classroom Health
-                </h2>
+                    <div className="mt-3 flex flex-wrap gap-3 text-xs text-muted-foreground">
+                      <span>{item.classroomName}</span>
+                      <span>{item.note}</span>
+                    </div>
+                    {item.supportingNote ? (
+                      <p className="mt-2 text-sm text-muted-foreground">{item.supportingNote}</p>
+                    ) : null}
+                  </Link>
+                ))}
               </div>
+            </TeachingCollectionSection>
 
-              {reporting.classroomSummaries.length === 0 ? (
-                <div className="rounded-xl border border-dashed p-4 text-sm text-muted-foreground">
-                  No classrooms yet. Reporting will appear as soon as you create at least one class.
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  {reporting.classroomSummaries.map((summary) => (
-                    <Link
-                      key={summary.classroom.id}
-                      href={`/notebook/teacher/reporting/classrooms/${summary.classroom.id}`}
-                      className="block rounded-xl border p-4 transition-colors hover:border-[var(--cn-orange)]/30 hover:bg-muted/20"
-                    >
-                      <div className="flex items-center justify-between gap-3">
-                        <div>
-                          <h3 className="font-semibold text-foreground">{summary.classroom.name}</h3>
-                          <p className="mt-1 text-sm text-muted-foreground">
-                            {summary.classroom.description || "No classroom description"}
-                          </p>
+            <TeachingCollectionSection
+              title="Portfolio Distribution"
+              icon={Users}
+              isEmpty={reporting.stabilizationItems.length === 0}
+              emptyMessage="No portfolio distribution signals yet. As private learners settle into active support, simplification, and handoff-ready states, the portfolio mix will appear here."
+            >
+              <div className="space-y-3">
+                {reporting.stabilizationItems.slice(0, 8).map((item) => (
+                  <Link
+                    key={`portfolio:${item.kind}:${item.id}`}
+                    href={item.href}
+                    className="block rounded-xl border p-4 transition-colors hover:border-[var(--cn-orange)]/30 hover:bg-muted/20"
+                  >
+                    <div className="flex items-center justify-between gap-3">
+                      <div>
+                        <div className="flex flex-wrap items-center gap-2">
+                          <MetricPill label={item.kind === "learner" ? "Learner" : item.kind} tone="muted" />
+                          <MetricPill
+                            label={item.stabilization_state.replaceAll("_", " ")}
+                            tone={
+                              item.stabilization_state === "keep_active"
+                                ? "rose"
+                                : item.stabilization_state === "simplify"
+                                  ? "amber"
+                                  : item.stabilization_state === "light_touch"
+                                    ? "sky"
+                                    : "emerald"
+                            }
+                          />
                         </div>
-                        <div className="flex flex-wrap items-center gap-2 text-xs">
-                          <MetricPill label={`${summary.student_count} students`} tone="muted" />
-                          <MetricPill label={`${summary.assignment_count} assignments`} tone="muted" />
-                          {summary.needs_review_count > 0 ? (
-                            <MetricPill label={`${summary.needs_review_count} waiting review`} tone="sky" />
-                          ) : null}
-                          {summary.missing_submission_count > 0 ? (
-                            <MetricPill label={`${summary.missing_submission_count} missing`} tone="rose" />
-                          ) : null}
+                        <h3 className="mt-2 font-semibold text-foreground">{item.title}</h3>
+                        <p className="mt-1 text-sm text-muted-foreground">{item.reason}</p>
+                      </div>
+                      <div className="text-xs font-medium text-[var(--cn-orange)]">Open →</div>
+                    </div>
+                    {item.supporting_note ? (
+                      <p className="mt-3 text-sm text-muted-foreground">{item.supporting_note}</p>
+                    ) : null}
+                  </Link>
+                ))}
+              </div>
+            </TeachingCollectionSection>
+
+            <TeachingCollectionSection
+              title="Stabilization"
+              icon={AlertTriangle}
+              isEmpty={reporting.stabilizationItems.length === 0}
+              emptyMessage="No stabilization signals yet. This section will surface learners who still need active support and those now looking stable enough for simplification."
+            >
+              <div className="space-y-3">
+                {reporting.stabilizationItems.slice(0, 8).map((item) => (
+                  <Link
+                    key={`${item.kind}:${item.id}`}
+                    href={item.href}
+                    className="block rounded-xl border p-4 transition-colors hover:border-[var(--cn-orange)]/30 hover:bg-muted/20"
+                  >
+                    <div className="flex items-center justify-between gap-3">
+                      <div>
+                        <div className="flex flex-wrap items-center gap-2">
+                          <MetricPill label={item.kind === "learner" ? "Learner" : item.kind} tone="muted" />
+                          <MetricPill
+                            label={item.stabilization_state.replaceAll("_", " ")}
+                            tone={
+                              item.stabilization_state === "keep_active"
+                                ? "rose"
+                                : item.stabilization_state === "simplify"
+                                  ? "amber"
+                                  : item.stabilization_state === "light_touch"
+                                    ? "sky"
+                                    : "emerald"
+                            }
+                          />
+                        </div>
+                        <h3 className="mt-2 font-semibold text-foreground">{item.title}</h3>
+                        <p className="mt-1 text-sm text-muted-foreground">{item.reason}</p>
+                      </div>
+                      <div className="text-xs font-medium text-[var(--cn-orange)]">Open →</div>
+                    </div>
+                    {item.supporting_note ? (
+                      <p className="mt-3 text-sm text-muted-foreground">{item.supporting_note}</p>
+                    ) : null}
+                  </Link>
+                ))}
+              </div>
+            </TeachingCollectionSection>
+
+            <TeachingCollectionSection
+              title="Checkpoint Rhythm"
+              icon={AlertTriangle}
+              isEmpty={reporting.checkpointItems.length === 0}
+              emptyMessage="No review checkpoints are surfacing yet. This section will show what is due now, overdue, or recently checked once private learner follow-through starts to drift."
+            >
+              <div className="space-y-3">
+                {reporting.checkpointItems.slice(0, 8).map((item) => (
+                  <Link
+                    key={`${item.kind}:${item.private_student_id}:${item.days_open ?? "recent"}`}
+                    href={item.href}
+                    className="block rounded-xl border p-4 transition-colors hover:border-[var(--cn-orange)]/30 hover:bg-muted/20"
+                  >
+                    <div className="flex items-center justify-between gap-3">
+                      <div>
+                        <div className="flex flex-wrap items-center gap-2">
+                          <MetricPill label={item.kind.replaceAll("_", " ")} tone="muted" />
+                          <MetricPill
+                            label={
+                              item.due_state === "overdue"
+                                ? "overdue"
+                                : item.due_state === "due_now"
+                                  ? "due now"
+                                  : "recently checked"
+                            }
+                            tone={
+                              item.due_state === "overdue"
+                                ? "rose"
+                                : item.due_state === "due_now"
+                                  ? "amber"
+                                  : "emerald"
+                            }
+                          />
+                        </div>
+                        <h3 className="mt-2 font-semibold text-foreground">{item.student_name}</h3>
+                        <p className="mt-1 text-sm text-muted-foreground">{item.reason}</p>
+                      </div>
+                      <div className="text-right text-xs text-muted-foreground">
+                        <div>{item.classroom_name}</div>
+                        <div className="mt-1">
+                          {item.days_open === null
+                            ? "checked recently"
+                            : `${item.days_open} day${item.days_open === 1 ? "" : "s"} open`}
                         </div>
                       </div>
-                    </Link>
-                  ))}
-                </div>
-              )}
-            </div>
+                    </div>
+                    {item.supporting_note ? (
+                      <p className="mt-3 text-sm text-muted-foreground">{item.supporting_note}</p>
+                    ) : null}
+                  </Link>
+                ))}
+              </div>
+            </TeachingCollectionSection>
 
-            <div className="rounded-2xl border bg-card p-5">
-              <div className="mb-4 flex items-center gap-2">
-                <BarChart3 className="h-4 w-4 text-[var(--cn-orange)]" />
-                <h2 className="text-sm font-semibold uppercase tracking-[0.2em] text-muted-foreground">
-                  Strategy Effectiveness
-                </h2>
+            <TeachingCollectionSection
+              title="Load Concentration"
+              icon={AlertTriangle}
+              isEmpty={reporting.loadConcentrationItems.length === 0}
+              emptyMessage="No strong concentration signals yet. This section will surface repeated-pressure learners and weak support paths once load starts clustering."
+            >
+              <div className="space-y-3">
+                {reporting.loadConcentrationItems.slice(0, 8).map((item) => (
+                  <Link
+                    key={`${item.kind}:${item.id}`}
+                    href={item.href}
+                    className="block rounded-xl border p-4 transition-colors hover:border-[var(--cn-orange)]/30 hover:bg-muted/20"
+                  >
+                    <div className="flex items-center justify-between gap-3">
+                      <div>
+                        <div className="flex flex-wrap items-center gap-2">
+                          <MetricPill label={getConcentrationKindLabel(item.kind)} tone="muted" />
+                          <MetricPill
+                            label={item.concentration_level}
+                            tone={
+                              item.concentration_level === "high"
+                                ? "rose"
+                                : item.concentration_level === "medium"
+                                  ? "amber"
+                                  : "sky"
+                            }
+                          />
+                        </div>
+                        <h3 className="mt-2 font-semibold text-foreground">{item.title}</h3>
+                        <p className="mt-1 text-sm text-muted-foreground">{item.reason}</p>
+                      </div>
+                      <div className="text-xs font-medium text-[var(--cn-orange)]">Open →</div>
+                    </div>
+                    {item.supporting_note ? (
+                      <p className="mt-3 text-sm text-muted-foreground">{item.supporting_note}</p>
+                    ) : null}
+                  </Link>
+                ))}
+              </div>
+            </TeachingCollectionSection>
+
+            <TeachingCollectionSection
+              title="Priority Follow-Through"
+              icon={AlertTriangle}
+              isEmpty={patternPriorityItems.length === 0}
+              emptyMessage="No ranked pattern follow-through items yet. Once pressure builds across issues, strategies, or playbooks, the highest-value actions will surface here first."
+            >
+              <div className="space-y-3">
+                {patternPriorityItems.map((item) => (
+                  <Link
+                    key={`${item.kind}:${item.id}`}
+                    href={item.href}
+                    className="block rounded-xl border p-4 transition-colors hover:border-[var(--cn-orange)]/30 hover:bg-muted/20"
+                  >
+                    <div className="flex items-center justify-between gap-3">
+                      <div>
+                        <div className="flex flex-wrap items-center gap-2">
+                          <MetricPill label={getPatternKindLabel(item.kind)} tone="muted" />
+                          <PriorityPill level={item.priority_level} />
+                        </div>
+                        <h3 className="mt-2 font-semibold text-foreground">{item.title}</h3>
+                        <p className="mt-1 text-sm text-muted-foreground">{item.reason}</p>
+                      </div>
+                      <div className="text-xs font-medium text-[var(--cn-orange)]">Open →</div>
+                    </div>
+                    {item.supporting_note ? (
+                      <p className="mt-3 text-sm text-muted-foreground">{item.supporting_note}</p>
+                    ) : null}
+                  </Link>
+                ))}
+              </div>
+            </TeachingCollectionSection>
+
+            <TeachingCollectionSection
+              title="Teaching Patterns"
+              icon={AlertTriangle}
+              isEmpty={reporting.issuePatternItems.length === 0}
+              emptyMessage="No recurring cross-learner issue patterns yet. Pattern reporting starts once the same issue repeats across multiple private learner histories."
+            >
+              <div className="space-y-3">
+                {reporting.issuePatternItems.map((item) => (
+                  <div key={item.issue_tag} className="rounded-xl border p-4">
+                    <div className="flex items-center justify-between gap-3">
+                      <div>
+                        <div className="flex flex-wrap items-center gap-2">
+                          <h3 className="font-semibold text-foreground">
+                            {item.issue_tag.replaceAll("_", " ")}
+                          </h3>
+                          {issuePriorityMap.has(item.issue_tag) ? (
+                            <PriorityPill level={issuePriorityMap.get(item.issue_tag)!.priority_level} />
+                          ) : null}
+                        </div>
+                        <p className="mt-1 text-sm text-muted-foreground">
+                          Affecting {item.learner_count} learner{item.learner_count === 1 ? "" : "s"}:{" "}
+                          {item.learner_names.join(", ")}
+                        </p>
+                      </div>
+                      <div className="flex flex-wrap gap-2 text-xs">
+                        <MetricPill label={`${item.learner_count} learners`} tone="amber" />
+                        {item.learners_without_support_path > 0 ? (
+                          <MetricPill
+                            label={`${item.learners_without_support_path} no support path`}
+                            tone="rose"
+                          />
+                        ) : null}
+                        {item.learners_without_strategy > 0 ? (
+                          <MetricPill
+                            label={`${item.learners_without_strategy} no strategy`}
+                            tone="amber"
+                          />
+                        ) : null}
+                        {item.learners_without_playbook > 0 ? (
+                          <MetricPill
+                            label={`${item.learners_without_playbook} no playbook`}
+                            tone="sky"
+                          />
+                        ) : null}
+                        {item.learners_without_recent_outcome > 0 ? (
+                          <MetricPill
+                            label={`${item.learners_without_recent_outcome} no recent outcome`}
+                            tone="amber"
+                          />
+                        ) : null}
+                      </div>
+                    </div>
+                    <div className="mt-3 flex flex-wrap gap-3 text-xs text-muted-foreground">
+                      <span>
+                        {item.learners_without_support_path > 0
+                          ? `${item.learners_without_support_path} learner${item.learners_without_support_path === 1 ? "" : "s"} still being handled ad hoc`
+                          : "Each affected learner has at least one support path"}
+                      </span>
+                      <span>
+                        {item.latest_history_at
+                          ? `Latest seen ${new Date(item.latest_history_at).toLocaleDateString("en-US")}`
+                          : "No recent history timestamp"}
+                      </span>
+                    </div>
+                    {item.latest_intervention_note ? (
+                      <p className="mt-2 text-sm text-muted-foreground">
+                        Latest intervention: {item.latest_intervention_note}
+                      </p>
+                    ) : null}
+                    {issuePriorityMap.has(item.issue_tag) ? (
+                      <p className="mt-2 text-sm text-[var(--cn-orange)]">
+                        Follow-through reason: {issuePriorityMap.get(item.issue_tag)!.reason}
+                      </p>
+                    ) : null}
+                  </div>
+                ))}
+              </div>
+            </TeachingCollectionSection>
+
+            <TeachingCollectionSection
+              title="Classroom Health"
+              icon={BarChart3}
+              isEmpty={reporting.classroomSummaries.length === 0}
+              emptyMessage="No classrooms yet. Reporting will appear as soon as you create at least one class."
+            >
+              <div className="space-y-3">
+                {reporting.classroomSummaries.map((summary) => (
+                  <TeachingEntityCard
+                    key={summary.classroom.id}
+                    href={`/notebook/teacher/reporting/classrooms/${summary.classroom.id}`}
+                    badges={
+                      <>
+                        <MetricPill label={`${summary.student_count} students`} tone="muted" />
+                        <MetricPill label={`${summary.assignment_count} assignments`} tone="muted" />
+                        {summary.needs_review_count > 0 ? (
+                          <MetricPill label={`${summary.needs_review_count} waiting review`} tone="sky" />
+                        ) : null}
+                        {summary.missing_submission_count > 0 ? (
+                          <MetricPill label={`${summary.missing_submission_count} missing`} tone="rose" />
+                        ) : null}
+                      </>
+                    }
+                    title={summary.classroom.name}
+                    subtitle={summary.classroom.description || "No classroom description"}
+                  />
+                ))}
+              </div>
+            </TeachingCollectionSection>
+
+            <TeachingCollectionSection
+              title="Strategy Effectiveness"
+              icon={BarChart3}
+              isEmpty={reporting.strategyItems.length === 0}
+              emptyMessage="No saved strategies yet. Effectiveness reporting will appear once teachers start using the strategy layer."
+            >
+              <div className="mb-4 flex justify-end">
                 <Link
                   href="/notebook/teacher/library"
-                  className="ml-auto text-xs font-medium text-[var(--cn-orange)] hover:underline"
+                  className="text-xs font-medium text-[var(--cn-orange)] hover:underline"
                 >
                   Open library
                 </Link>
               </div>
+              <div className="space-y-3">
+                {reporting.strategyItems.map((item) => (
+                  <TeachingEntityCard
+                    key={item.id}
+                    href={`/notebook/teacher/library/strategies/${item.id}`}
+                    badges={
+                      <>
+                        {strategyPriorityMap.has(item.id) ? (
+                          <PriorityPill level={strategyPriorityMap.get(item.id)!.priority_level} />
+                        ) : null}
+                        <MetricPill label={`Used ${item.usage_count}`} tone="muted" />
+                        <MetricPill label={`${item.learner_count} learners`} tone="sky" />
+                        <MetricPill
+                          label={
+                            item.broad_status === "helping"
+                              ? "helping broadly"
+                              : item.broad_status === "mixed"
+                                ? "mixed across learners"
+                                : item.broad_status === "weak"
+                                  ? "weak across learners"
+                                  : "insufficient data"
+                          }
+                          tone={
+                            item.broad_status === "helping"
+                              ? "emerald"
+                              : item.broad_status === "mixed"
+                                ? "amber"
+                                : item.broad_status === "weak"
+                                  ? "rose"
+                                  : "muted"
+                          }
+                        />
+                        {item.needs_refinement ? (
+                          <MetricPill label="needs refinement" tone="rose" />
+                        ) : null}
+                        {item.needs_more_outcomes ? (
+                          <MetricPill label="needs outcomes" tone="amber" />
+                        ) : null}
+                        {item.archived === 1 ? (
+                          <MetricPill label="archived" tone="muted" />
+                        ) : null}
+                      </>
+                    }
+                    title={item.title}
+                    subtitle={item.summary}
+                  >
+                    <div className="mt-3 flex flex-wrap gap-3 text-xs text-muted-foreground">
+                      <span>{item.helped_count} helped</span>
+                      <span>{item.partial_count} partial</span>
+                      <span>{item.no_change_count} no change</span>
+                      <span>{item.replace_count} replace</span>
+                      <span>{item.learner_count} learners affected</span>
+                      <span>
+                        {item.latest_outcome_status
+                          ? `Latest outcome: ${item.latest_outcome_status.replaceAll("_", " ")}`
+                          : "No outcome yet"}
+                      </span>
+                      <span>
+                        {item.last_refined_at
+                          ? `Last refined ${new Date(item.last_refined_at).toLocaleDateString("en-US")}`
+                          : "Not refined yet"}
+                      </span>
+                    </div>
+                    {item.latest_outcome_note ? (
+                      <p className="mt-2 text-sm text-muted-foreground">
+                        Latest outcome: {item.latest_outcome_note}
+                      </p>
+                    ) : null}
+                    {strategyPriorityMap.has(item.id) ? (
+                      <p className="mt-2 text-sm text-[var(--cn-orange)]">
+                        Follow-through reason: {strategyPriorityMap.get(item.id)!.reason}
+                      </p>
+                    ) : null}
+                  </TeachingEntityCard>
+                ))}
+              </div>
+            </TeachingCollectionSection>
 
-              {reporting.strategyItems.length === 0 ? (
-                <div className="rounded-xl border border-dashed p-4 text-sm text-muted-foreground">
-                  No saved strategies yet. Effectiveness reporting will appear once teachers start using the strategy layer.
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  {reporting.strategyItems.map((item) => (
-                    <Link
-                      key={item.id}
-                      href={`/notebook/teacher/library/strategies/${item.id}`}
-                      className="block rounded-xl border p-4 transition-colors hover:border-[var(--cn-orange)]/30 hover:bg-muted/20"
-                    >
-                      <div className="flex items-center justify-between gap-3">
-                        <div>
-                          <div className="flex flex-wrap items-center gap-2">
-                            <h3 className="font-semibold text-foreground">{item.title}</h3>
-                            {strategyPriorityMap.has(item.id) ? (
-                              <PriorityPill level={strategyPriorityMap.get(item.id)!.priority_level} />
-                            ) : null}
-                          </div>
-                          <p className="mt-1 text-sm text-muted-foreground">{item.summary}</p>
-                        </div>
-                        <div className="flex flex-wrap gap-2 text-xs">
-                          <MetricPill label={`Used ${item.usage_count}`} tone="muted" />
-                          <MetricPill label={`${item.learner_count} learners`} tone="sky" />
-                          <MetricPill
-                            label={
-                              item.broad_status === "helping"
-                                ? "helping broadly"
-                                : item.broad_status === "mixed"
-                                  ? "mixed across learners"
-                                  : item.broad_status === "weak"
-                                    ? "weak across learners"
-                                    : "insufficient data"
-                            }
-                            tone={
-                              item.broad_status === "helping"
-                                ? "emerald"
-                                : item.broad_status === "mixed"
-                                  ? "amber"
-                                  : item.broad_status === "weak"
-                                    ? "rose"
-                                    : "muted"
-                            }
-                          />
-                          {item.needs_refinement ? (
-                            <MetricPill label="needs refinement" tone="rose" />
-                          ) : null}
-                          {item.needs_more_outcomes ? (
-                            <MetricPill label="needs outcomes" tone="amber" />
-                          ) : null}
-                          {item.archived === 1 ? (
-                            <MetricPill label="archived" tone="muted" />
-                          ) : null}
-                        </div>
-                      </div>
-                      <div className="mt-3 flex flex-wrap gap-3 text-xs text-muted-foreground">
-                        <span>{item.helped_count} helped</span>
-                        <span>{item.partial_count} partial</span>
-                        <span>{item.no_change_count} no change</span>
-                        <span>{item.replace_count} replace</span>
-                        <span>{item.learner_count} learners affected</span>
-                        <span>
-                          {item.latest_outcome_status
-                            ? `Latest outcome: ${item.latest_outcome_status.replaceAll("_", " ")}`
-                            : "No outcome yet"}
-                        </span>
-                        <span>
-                          {item.last_refined_at
-                            ? `Last refined ${new Date(item.last_refined_at).toLocaleDateString("en-US")}`
-                            : "Not refined yet"}
-                        </span>
-                      </div>
-                      {item.latest_outcome_note ? (
-                        <p className="mt-2 text-sm text-muted-foreground">
-                          Latest outcome: {item.latest_outcome_note}
-                        </p>
-                      ) : null}
-                      {strategyPriorityMap.has(item.id) ? (
-                        <p className="mt-2 text-sm text-[var(--cn-orange)]">
-                          Follow-through reason: {strategyPriorityMap.get(item.id)!.reason}
-                        </p>
-                      ) : null}
-                    </Link>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            <div className="rounded-2xl border bg-card p-5">
-              <div className="mb-4 flex items-center gap-2">
-                <BarChart3 className="h-4 w-4 text-[var(--cn-orange)]" />
-                <h2 className="text-sm font-semibold uppercase tracking-[0.2em] text-muted-foreground">
-                  Playbook Effectiveness
-                </h2>
+            <TeachingCollectionSection
+              title="Playbook Effectiveness"
+              icon={BarChart3}
+              isEmpty={reporting.playbookItems.length === 0}
+              emptyMessage="No saved playbooks yet. Playbook effectiveness will appear once structured support paths are being reused."
+            >
+              <div className="mb-4 flex justify-end">
                 <Link
                   href="/notebook/teacher/library"
-                  className="ml-auto text-xs font-medium text-[var(--cn-orange)] hover:underline"
+                  className="text-xs font-medium text-[var(--cn-orange)] hover:underline"
                 >
                   Open library
                 </Link>
               </div>
-
-              {reporting.playbookItems.length === 0 ? (
-                <div className="rounded-xl border border-dashed p-4 text-sm text-muted-foreground">
-                  No saved playbooks yet. Playbook effectiveness will appear once structured support paths are being reused.
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  {reporting.playbookItems.map((item) => (
-                    <Link
-                      key={item.id}
-                      href={`/notebook/teacher/library/playbooks/${item.id}`}
-                      className="block rounded-xl border p-4 transition-colors hover:border-[var(--cn-orange)]/30 hover:bg-muted/20"
-                    >
-                      <div className="flex items-center justify-between gap-3">
-                        <div>
-                          <div className="flex flex-wrap items-center gap-2">
-                            <h3 className="font-semibold text-foreground">{item.title}</h3>
-                            {playbookPriorityMap.has(item.id) ? (
-                              <PriorityPill level={playbookPriorityMap.get(item.id)!.priority_level} />
-                            ) : null}
-                          </div>
-                          <p className="mt-1 text-sm text-muted-foreground">{item.summary}</p>
-                        </div>
-                        <div className="flex flex-wrap gap-2 text-xs">
-                          <MetricPill label={`Used ${item.usage_count}`} tone="muted" />
-                          <MetricPill label={`${item.learner_count} learners`} tone="sky" />
-                          <MetricPill
-                            label={
-                              item.broad_status === "helping"
-                                ? "helping broadly"
-                                : item.broad_status === "mixed"
-                                  ? "mixed across learners"
-                                  : item.broad_status === "weak"
-                                    ? "weak across learners"
-                                    : "insufficient data"
-                            }
-                            tone={
-                              item.broad_status === "helping"
-                                ? "emerald"
-                                : item.broad_status === "mixed"
-                                  ? "amber"
-                                  : item.broad_status === "weak"
-                                    ? "rose"
-                                    : "muted"
-                            }
-                          />
-                          {item.needs_refinement ? (
-                            <MetricPill label="needs refinement" tone="rose" />
-                          ) : null}
-                          {item.needs_more_outcomes ? (
-                            <MetricPill label="needs outcomes" tone="amber" />
-                          ) : null}
-                          {item.replacement_playbook_title ? (
-                            <MetricPill label={`replaced by ${item.replacement_playbook_title}`} tone="sky" />
-                          ) : null}
-                          {item.archived === 1 ? (
-                            <MetricPill label="archived" tone="muted" />
-                          ) : null}
-                        </div>
-                      </div>
-                      <div className="mt-3 flex flex-wrap gap-3 text-xs text-muted-foreground">
-                        <span>{item.helped_count} helped</span>
-                        <span>{item.partial_count} partial</span>
-                        <span>{item.no_change_count} no change</span>
-                        <span>{item.replace_count} replace</span>
-                        <span>{item.learner_count} learners affected</span>
-                        <span>
-                          {item.latest_outcome_status
-                            ? `Latest outcome: ${item.latest_outcome_status.replaceAll("_", " ")}`
-                            : "No outcome yet"}
-                        </span>
-                        <span>
-                          {item.last_refined_at
-                            ? `Last refined ${new Date(item.last_refined_at).toLocaleDateString("en-US")}`
-                            : "Not refined yet"}
-                        </span>
-                      </div>
-                      {item.latest_outcome_note ? (
-                        <p className="mt-2 text-sm text-muted-foreground">
-                          Latest outcome: {item.latest_outcome_note}
-                        </p>
-                      ) : null}
-                      {playbookPriorityMap.has(item.id) ? (
-                        <p className="mt-2 text-sm text-[var(--cn-orange)]">
-                          Follow-through reason: {playbookPriorityMap.get(item.id)!.reason}
-                        </p>
-                      ) : null}
-                    </Link>
-                  ))}
-                </div>
-              )}
-            </div>
+              <div className="space-y-3">
+                {reporting.playbookItems.map((item) => (
+                  <TeachingEntityCard
+                    key={item.id}
+                    href={`/notebook/teacher/library/playbooks/${item.id}`}
+                    badges={
+                      <>
+                        {playbookPriorityMap.has(item.id) ? (
+                          <PriorityPill level={playbookPriorityMap.get(item.id)!.priority_level} />
+                        ) : null}
+                        <MetricPill label={`Used ${item.usage_count}`} tone="muted" />
+                        <MetricPill label={`${item.learner_count} learners`} tone="sky" />
+                        <MetricPill
+                          label={
+                            item.broad_status === "helping"
+                              ? "helping broadly"
+                              : item.broad_status === "mixed"
+                                ? "mixed across learners"
+                                : item.broad_status === "weak"
+                                  ? "weak across learners"
+                                  : "insufficient data"
+                          }
+                          tone={
+                            item.broad_status === "helping"
+                              ? "emerald"
+                              : item.broad_status === "mixed"
+                                ? "amber"
+                                : item.broad_status === "weak"
+                                  ? "rose"
+                                  : "muted"
+                          }
+                        />
+                        {item.needs_refinement ? (
+                          <MetricPill label="needs refinement" tone="rose" />
+                        ) : null}
+                        {item.needs_more_outcomes ? (
+                          <MetricPill label="needs outcomes" tone="amber" />
+                        ) : null}
+                        {item.replacement_playbook_title ? (
+                          <MetricPill label={`replaced by ${item.replacement_playbook_title}`} tone="sky" />
+                        ) : null}
+                        {item.archived === 1 ? (
+                          <MetricPill label="archived" tone="muted" />
+                        ) : null}
+                      </>
+                    }
+                    title={item.title}
+                    subtitle={item.summary}
+                  >
+                    <div className="mt-3 flex flex-wrap gap-3 text-xs text-muted-foreground">
+                      <span>{item.helped_count} helped</span>
+                      <span>{item.partial_count} partial</span>
+                      <span>{item.no_change_count} no change</span>
+                      <span>{item.replace_count} replace</span>
+                      <span>{item.learner_count} learners affected</span>
+                      <span>
+                        {item.latest_outcome_status
+                          ? `Latest outcome: ${item.latest_outcome_status.replaceAll("_", " ")}`
+                          : "No outcome yet"}
+                      </span>
+                      <span>
+                        {item.last_refined_at
+                          ? `Last refined ${new Date(item.last_refined_at).toLocaleDateString("en-US")}`
+                          : "Not refined yet"}
+                      </span>
+                    </div>
+                    {item.latest_outcome_note ? (
+                      <p className="mt-2 text-sm text-muted-foreground">
+                        Latest outcome: {item.latest_outcome_note}
+                      </p>
+                    ) : null}
+                    {playbookPriorityMap.has(item.id) ? (
+                      <p className="mt-2 text-sm text-[var(--cn-orange)]">
+                        Follow-through reason: {playbookPriorityMap.get(item.id)!.reason}
+                      </p>
+                    ) : null}
+                  </TeachingEntityCard>
+                ))}
+              </div>
+            </TeachingCollectionSection>
 
             <div className="rounded-2xl border bg-card p-5">
               <div className="mb-4 flex items-center gap-2">
@@ -1042,17 +986,11 @@ export default async function TeacherReportingPage() {
               ) : (
                 <div className="space-y-3">
                   {reporting.privateLearnerItems.map((item) => (
-                    <Link
+                    <TeachingEntityCard
                       key={item.id}
                       href={`/notebook/teacher/private-students/${item.id}`}
-                      className="block rounded-xl border p-4 transition-colors hover:border-[var(--cn-orange)]/30 hover:bg-muted/20"
-                    >
-                      <div className="flex items-center justify-between gap-3">
-                        <div>
-                          <h3 className="font-semibold text-foreground">{item.student_name}</h3>
-                          <p className="mt-1 text-sm text-muted-foreground">{item.classroom_name}</p>
-                        </div>
-                        <div className="flex flex-wrap gap-2 text-xs">
+                      badges={
+                        <>
                           <MetricPill
                             label={item.status.replaceAll("_", " ")}
                             tone={
@@ -1119,21 +1057,38 @@ export default async function TeacherReportingPage() {
                           {item.awaiting_review_count > 0 ? (
                             <MetricPill label={`${item.awaiting_review_count} awaiting review`} tone="sky" />
                           ) : null}
-                        </div>
-                      </div>
+                        </>
+                      }
+                      title={item.student_name}
+                      subtitle={item.classroom_name}
+                      meta={
+                        <>
+                          <div>
+                            {item.active_goal_count > 0
+                              ? `${item.active_goal_count === 1 ? "1 active goal" : `${item.active_goal_count} active goals`}`
+                              : "No active goals"}
+                          </div>
+                          <div>
+                            {item.blocked_goal_count > 0
+                              ? `${item.blocked_goal_count} blocked goal${item.blocked_goal_count === 1 ? "" : "s"}`
+                              : item.reinforcement_goal_count > 0
+                                ? `${item.reinforcement_goal_count} reinforcement goal${item.reinforcement_goal_count === 1 ? "" : "s"}`
+                                : "No active intervention marker"}
+                          </div>
+                          <div>
+                            {item.next_assignment_title
+                              ? `Next assignment: ${item.next_assignment_title}`
+                              : "No linked assignment"}
+                          </div>
+                          <div>
+                            {item.lesson_plan_status
+                              ? `Plan: ${item.lesson_plan_status.replaceAll("_", " ")}`
+                              : "No next lesson plan"}
+                          </div>
+                        </>
+                      }
+                    >
                       <div className="mt-3 flex flex-wrap gap-3 text-xs text-muted-foreground">
-                        <span>
-                          {item.active_goal_count > 0
-                            ? `${item.active_goal_count} active goal${item.active_goal_count === 1 ? "" : "s"}`
-                            : "No active goals"}
-                        </span>
-                        <span>
-                          {item.blocked_goal_count > 0
-                            ? `${item.blocked_goal_count} blocked goal${item.blocked_goal_count === 1 ? "" : "s"}`
-                            : item.reinforcement_goal_count > 0
-                              ? `${item.reinforcement_goal_count} reinforcement goal${item.reinforcement_goal_count === 1 ? "" : "s"}`
-                              : "No active intervention marker"}
-                        </span>
                         <span>
                           {item.recurring_issue_tags.length > 0
                             ? `Recurring issues: ${item.recurring_issue_tags.join(", ").replaceAll("_", " ")}`
@@ -1246,17 +1201,17 @@ export default async function TeacherReportingPage() {
                           Adaptation: {item.latest_adaptation_note}
                         </p>
                       ) : null}
-                      {item.latest_intervention_note ? (
-                        <p className="mt-2 text-sm text-muted-foreground">
-                          Intervention: {item.latest_intervention_note}
-                        </p>
-                      ) : null}
+                        {item.latest_intervention_note ? (
+                          <p className="mt-2 text-sm text-muted-foreground">
+                            Intervention: {item.latest_intervention_note}
+                          </p>
+                        ) : null}
                       {item.lesson_plan_focus_note ? (
                         <p className="mt-3 text-sm text-muted-foreground">
                           Focus: {item.lesson_plan_focus_note}
                         </p>
                       ) : null}
-                    </Link>
+                    </TeachingEntityCard>
                   ))}
                 </div>
               )}
@@ -1283,17 +1238,11 @@ export default async function TeacherReportingPage() {
               ) : (
                 <div className="space-y-3">
                   {reporting.conversionItems.map((item) => (
-                    <Link
+                    <TeachingEntityCard
                       key={item.inquiry_id}
                       href={`/notebook/classes/${item.classroom_id}`}
-                      className="block rounded-xl border p-4 transition-colors hover:border-[var(--cn-orange)]/30 hover:bg-muted/20"
-                    >
-                      <div className="flex items-center justify-between gap-3">
-                        <div>
-                          <h3 className="font-semibold text-foreground">{item.student_name}</h3>
-                          <p className="mt-1 text-sm text-muted-foreground">{item.classroom_name}</p>
-                        </div>
-                        <div className="flex flex-wrap gap-2 text-xs">
+                      badges={
+                        <>
                           {item.onboarding_completed ? (
                             <MetricPill label="onboarding completed" tone="emerald" />
                           ) : item.onboarding_started ? (
@@ -1301,11 +1250,12 @@ export default async function TeacherReportingPage() {
                           ) : (
                             <MetricPill label="not started" tone="muted" />
                           )}
-                          {item.is_inactive ? (
-                            <MetricPill label="inactive" tone="rose" />
-                          ) : null}
-                        </div>
-                      </div>
+                          {item.is_inactive ? <MetricPill label="inactive" tone="rose" /> : null}
+                        </>
+                      }
+                      title={item.student_name}
+                      subtitle={item.classroom_name}
+                    >
                       <div className="mt-3 flex flex-wrap gap-3 text-xs text-muted-foreground">
                         <span>
                           {item.converted_at
@@ -1323,7 +1273,7 @@ export default async function TeacherReportingPage() {
                           <span>No onboarding assignment</span>
                         )}
                       </div>
-                    </Link>
+                    </TeachingEntityCard>
                   ))}
                 </div>
               )}
@@ -1344,25 +1294,22 @@ export default async function TeacherReportingPage() {
               ) : (
                 <div className="space-y-3">
                   {reporting.studentAttention.map((student) => (
-                    <Link
+                    <TeachingEntityCard
                       key={`${student.classroom_id}:${student.student_user_id}`}
                       href={`/notebook/teacher/reporting/classrooms/${student.classroom_id}/students/${student.student_user_id}`}
-                      className="block rounded-xl border p-4 transition-colors hover:border-[var(--cn-orange)]/30 hover:bg-muted/20"
-                    >
-                      <div className="flex items-center justify-between gap-3">
-                        <div>
-                          <h3 className="font-semibold text-foreground">{student.student_name}</h3>
-                          <p className="mt-1 text-sm text-muted-foreground">{student.classroom_name}</p>
-                        </div>
-                        <div className="flex flex-wrap gap-2 text-xs">
+                      badges={
+                        <>
                           {student.missing_count > 0 ? (
                             <MetricPill label={`${student.missing_count} missing`} tone="rose" />
                           ) : null}
                           {student.awaiting_review_count > 0 ? (
                             <MetricPill label={`${student.awaiting_review_count} awaiting review`} tone="sky" />
                           ) : null}
-                        </div>
-                      </div>
+                        </>
+                      }
+                      title={student.student_name}
+                      subtitle={student.classroom_name}
+                    >
                       <div className="mt-3 flex flex-wrap gap-3 text-xs text-muted-foreground">
                         <span>{student.submitted_count} submitted</span>
                         <span>{student.reviewed_count} reviewed</span>
@@ -1373,7 +1320,7 @@ export default async function TeacherReportingPage() {
                             : "No submissions yet"}
                         </span>
                       </div>
-                    </Link>
+                    </TeachingEntityCard>
                   ))}
                 </div>
               )}
@@ -1396,29 +1343,28 @@ export default async function TeacherReportingPage() {
               ) : (
                 <div className="space-y-3">
                   {reporting.attentionItems.map((item) => (
-                    <Link
+                    <TeachingEntityCard
                       key={`${item.classroom_id}:${item.assignment_id}`}
                       href={`/notebook/assignments/${item.assignment_id}`}
-                      className="block rounded-xl border border-amber-500/20 bg-amber-500/10 p-4 transition-colors hover:bg-amber-500/15"
+                      badges={
+                        <>
+                          {item.waiting_review_count > 0 ? (
+                            <MetricPill label={`${item.waiting_review_count} waiting review`} tone="sky" />
+                          ) : null}
+                          {item.missing_submission_count > 0 ? (
+                            <MetricPill label={`${item.missing_submission_count} missing`} tone="rose" />
+                          ) : null}
+                        </>
+                      }
+                      title={item.assignment_title}
+                      subtitle={item.classroom_name}
                     >
-                      <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-                        {item.classroom_name}
-                      </p>
-                      <h3 className="mt-1 font-semibold text-foreground">{item.assignment_title}</h3>
-                      <div className="mt-3 flex flex-wrap gap-2 text-xs">
-                        {item.waiting_review_count > 0 ? (
-                          <MetricPill label={`${item.waiting_review_count} waiting review`} tone="sky" />
-                        ) : null}
-                        {item.missing_submission_count > 0 ? (
-                          <MetricPill label={`${item.missing_submission_count} missing`} tone="rose" />
-                        ) : null}
-                      </div>
-                      <div className="mt-3 text-xs text-muted-foreground">
+                      <div className="mt-1 text-xs text-muted-foreground">
                         {item.due_at
                           ? `Due ${new Date(item.due_at).toLocaleDateString("en-US")}`
                           : "No due date"}
                       </div>
-                    </Link>
+                    </TeachingEntityCard>
                   ))}
                 </div>
               )}
@@ -1450,193 +1396,6 @@ export default async function TeacherReportingPage() {
   );
 }
 
-function OverviewMetric({
-  label,
-  value,
-}: {
-  label: string;
-  value: number | string;
-}) {
-  return (
-    <div>
-      <p className="text-3xl font-bold text-foreground">{value}</p>
-      <p className="mt-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-        {label}
-      </p>
-    </div>
-  );
-}
-
-function CompactStatCard({
-  label,
-  value,
-  tone,
-}: {
-  label: string;
-  value: number | string;
-  tone: "sky" | "rose" | "emerald" | "amber";
-}) {
-  const toneClass =
-    tone === "sky"
-      ? "border-sky-500/20 bg-sky-500/10"
-      : tone === "emerald"
-        ? "border-emerald-500/20 bg-emerald-500/10"
-        : tone === "amber"
-          ? "border-amber-500/20 bg-amber-500/10"
-          : "border-rose-500/20 bg-rose-500/10";
-
-  return (
-    <div className={`rounded-2xl border p-4 ${toneClass}`}>
-      <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-        {label}
-      </p>
-      <p className="mt-3 text-3xl font-bold text-foreground">{value}</p>
-    </div>
-  );
-}
-
-function ActionRow({
-  label,
-  value,
-  tone,
-}: {
-  label: string;
-  value: number | string;
-  tone: "sky" | "rose" | "emerald" | "amber";
-}) {
-  const toneClass =
-    tone === "sky"
-      ? "border-sky-500/20 bg-sky-500/10 text-sky-400"
-      : tone === "emerald"
-        ? "border-emerald-500/20 bg-emerald-500/10 text-emerald-400"
-        : tone === "amber"
-          ? "border-amber-500/20 bg-amber-500/10 text-amber-300"
-          : "border-rose-500/20 bg-rose-500/10 text-rose-300";
-
-  return (
-    <div className="flex items-center justify-between rounded-2xl border border-border/70 bg-card/70 px-4 py-3">
-      <span className={`rounded-full border px-2 py-1 text-[11px] font-semibold uppercase tracking-[0.16em] ${toneClass}`}>
-        {label}
-      </span>
-      <span className="text-sm font-semibold text-foreground">{value} pending</span>
-    </div>
-  );
-}
-
-function HealthRow({
-  label,
-  value,
-  tone,
-}: {
-  label: string;
-  value: number | string;
-  tone: "sky" | "rose" | "amber";
-}) {
-  const dotClass =
-    tone === "sky"
-      ? "bg-sky-400"
-      : tone === "amber"
-        ? "bg-amber-300"
-        : "bg-rose-300";
-
-  return (
-    <div className="flex items-center justify-between gap-4 text-sm">
-      <span className="text-foreground">{label}</span>
-      <span className="flex items-center gap-2 font-medium text-foreground">
-        <span className={`h-2 w-2 rounded-full ${dotClass}`} />
-        {value}
-      </span>
-    </div>
-  );
-}
-
-function CompactBadgeRow({
-  label,
-  value,
-  tone,
-}: {
-  label: string;
-  value: number | string;
-  tone: "muted" | "sky" | "rose" | "amber";
-}) {
-  const toneClass =
-    tone === "sky"
-      ? "border-sky-500/20 bg-sky-500/10 text-sky-400"
-      : tone === "amber"
-        ? "border-amber-500/20 bg-amber-500/10 text-amber-300"
-        : tone === "rose"
-          ? "border-rose-500/20 bg-rose-500/10 text-rose-300"
-          : "border-border bg-muted/40 text-muted-foreground";
-
-  return (
-    <div className={`flex items-center justify-between rounded-2xl border px-4 py-3 text-sm ${toneClass}`}>
-      <span className="font-medium">{label}</span>
-      <span className="font-semibold">{value}</span>
-    </div>
-  );
-}
-
-function SummaryCard({
-  label,
-  value,
-  tone = "default",
-}: {
-  label: string;
-  value: number | string;
-  tone?: "default" | "sky" | "rose" | "emerald" | "amber";
-}) {
-  const toneClass =
-    tone === "sky"
-      ? "border-sky-500/20 bg-sky-500/10"
-      : tone === "emerald"
-        ? "border-emerald-500/20 bg-emerald-500/10"
-      : tone === "amber"
-        ? "border-amber-500/20 bg-amber-500/10"
-      : tone === "rose"
-        ? "border-rose-500/20 bg-rose-500/10"
-        : "border-border bg-card";
-
-  return (
-    <div className={`rounded-2xl border p-5 ${toneClass}`}>
-      <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">{label}</p>
-      <p className="mt-3 text-3xl font-bold text-foreground">{value}</p>
-    </div>
-  );
-}
-
-function MetricPill({
-  label,
-  tone,
-}: {
-  label: string;
-  tone: "muted" | "sky" | "rose" | "emerald" | "amber";
-}) {
-  const toneClass =
-    tone === "sky"
-      ? "border-sky-500/20 bg-sky-500/10 text-sky-400"
-      : tone === "emerald"
-        ? "border-emerald-500/20 bg-emerald-500/10 text-emerald-400"
-      : tone === "amber"
-        ? "border-amber-500/20 bg-amber-500/10 text-amber-300"
-      : tone === "rose"
-        ? "border-rose-500/20 bg-rose-500/10 text-rose-300"
-        : "bg-muted text-muted-foreground";
-
-  return <span className={`rounded-full border px-2.5 py-1 text-[11px] font-medium ${toneClass}`}>{label}</span>;
-}
-
-function PriorityPill({
-  level,
-}: {
-  level: "urgent" | "high" | "watch";
-}) {
-  return (
-    <MetricPill
-      label={level}
-      tone={level === "urgent" ? "rose" : level === "high" ? "amber" : "sky"}
-    />
-  );
-}
 
 function getPatternKindLabel(kind: "issue_cluster" | "strategy" | "playbook") {
   if (kind === "issue_cluster") return "Issue cluster";

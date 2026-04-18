@@ -10,6 +10,9 @@ import {
   isTeacherUser,
   listClassroomsForUser,
 } from "@/lib/classrooms";
+import { HubFocusSection, HubPageHeader } from "@/components/patterns/hub";
+import { SummaryStatCard } from "@/components/patterns/metrics";
+import { MetricPill } from "@/components/patterns/status";
 
 export const dynamic = "force-dynamic";
 
@@ -57,28 +60,55 @@ export async function ClassesPageContent({
   const description = teacher
     ? "Create classrooms, join by code, and keep teacher-guided work inside the same notebook flow."
     : "See the classes where a teacher is guiding your work, and join a new one when you receive a classroom code.";
+  const isLearnerHub = variant === "hub" && !teacher;
+  const privateTutoringClasses = classrooms.filter((classroom) => {
+    const haystack = `${classroom.name} ${classroom.description ?? ""}`.toLowerCase();
+    return haystack.includes("private");
+  }).length;
+  const learnerHubMode =
+    classrooms.length === 0
+      ? {
+          badge: "Waiting for a class code",
+          tone: "sky" as const,
+          title: "You are not in any teacher-guided classes yet",
+          body:
+            "This space stays quiet until a teacher shares a classroom code or converts an inquiry into an active tutoring relationship.",
+        }
+      : privateTutoringClasses > 0
+        ? {
+            badge: "Private tutoring active",
+            tone: "emerald" as const,
+            title: "One class is now your private tutoring space",
+            body:
+              "Use your private classroom as the main place for tutoring follow-through, and keep other classes for broader guided support.",
+          }
+        : {
+            badge: "Guided classes active",
+            tone: "amber" as const,
+            title: "Your guided classes are active",
+            body:
+              "Use classes for teacher context and shared expectations, then move into assignments when you need to do the actual work.",
+          };
 
   return (
     <div data-testid="classes-page" className="h-full overflow-auto p-6 pb-20 md:p-10 lg:pb-10">
       <div className="mx-auto max-w-6xl space-y-8">
-        <div className="flex items-start justify-between gap-6">
-          <div>
-            {showStandaloneHeader ? (
+        {showStandaloneHeader ? (
+          <div className="flex items-start justify-between gap-6">
+            <div>
               <p className="text-xs font-semibold uppercase tracking-[0.25em] text-muted-foreground">
                 Phase 2
               </p>
-            ) : null}
-            <h1 className={`${showStandaloneHeader ? "mt-2" : ""} text-3xl font-bold text-foreground`}>{title}</h1>
-            <p className="mt-2 max-w-2xl text-sm text-muted-foreground">
-              {description}
-            </p>
-          </div>
-          {showStandaloneHeader ? (
+              <h1 className="mt-2 text-3xl font-bold text-foreground">{title}</h1>
+              <p className="mt-2 max-w-2xl text-sm text-muted-foreground">{description}</p>
+            </div>
             <div className="inline-flex items-center rounded-full border bg-card px-3 py-1.5 text-xs font-medium text-muted-foreground">
               {teacher ? "Teacher role active" : "Learner role active"}
             </div>
-          ) : null}
-        </div>
+          </div>
+        ) : (
+          <HubPageHeader title={title} description={description} badge={learnerHubMode.badge} />
+        )}
 
         {params.error && (
           <div className="rounded-xl border border-rose-500/20 bg-rose-500/10 px-4 py-3 text-sm text-rose-300">
@@ -95,6 +125,31 @@ export async function ClassesPageContent({
                 : "Success."}
           </div>
         )}
+
+        {isLearnerHub ? (
+          <>
+            <div className="grid gap-4 sm:grid-cols-3">
+              <SummaryStatCard label="Total classes" value={classrooms.length} tone="sky" />
+              <SummaryStatCard label="Active classes" value={classrooms.length} tone="amber" />
+              <SummaryStatCard label="Private tutoring" value={privateTutoringClasses} tone="emerald" />
+            </div>
+
+            <HubFocusSection
+              title="Classroom Focus"
+              icon={Users}
+              pills={
+                <>
+                <MetricPill label={`${classrooms.length} active`} tone="amber" />
+                <MetricPill label={`${privateTutoringClasses} private`} tone="sky" />
+                <MetricPill label="Join by code when invited" tone="muted" />
+                </>
+              }
+              tone={learnerHubMode.tone}
+              guidanceTitle={learnerHubMode.title}
+              guidanceBody={learnerHubMode.body}
+            />
+          </>
+        ) : null}
 
         <div className="grid gap-6 xl:grid-cols-[minmax(0,1.4fr)_minmax(320px,0.9fr)]">
           <section className="space-y-4">

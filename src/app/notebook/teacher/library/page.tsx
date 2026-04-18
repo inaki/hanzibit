@@ -20,6 +20,12 @@ import {
   listTeacherPlaybooksForTeacher,
 } from "@/lib/teacher-playbooks";
 import { PendingSubmitButton } from "@/components/notebook/pending-submit-button";
+import {
+  TeachingCollectionSection,
+  TeachingEntityCard,
+  TeachingPageHeader,
+  TeachingToneMetricCard,
+} from "@/components/patterns/teaching";
 
 export const dynamic = "force-dynamic";
 
@@ -82,56 +88,33 @@ export default async function TeacherLibraryPage({
   return (
     <div data-testid="teacher-library-page" className="h-full overflow-auto p-6 pb-20 md:p-10 lg:pb-10">
       <div className="mx-auto max-w-6xl space-y-8">
-        <div className="flex items-start justify-between gap-6">
-          <div>
-            <h1 className="text-3xl font-bold text-foreground">Library</h1>
-            <p className="mt-2 max-w-3xl text-sm text-muted-foreground">
-              Save reusable teaching resources and assignment templates so classroom setup is no longer scratch-first.
-            </p>
-          </div>
-          <div className="inline-flex items-center rounded-full border border-[var(--cn-orange)]/20 bg-[var(--cn-orange)]/10 px-3 py-1.5 text-xs font-medium text-[var(--cn-orange)]">
-            Reusable content
-          </div>
-        </div>
+        <TeachingPageHeader
+          title="Library"
+          description="Save reusable teaching resources and assignment templates so classroom setup is no longer scratch-first."
+          badge="Reusable content"
+        />
 
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
-          <div className="rounded-2xl border bg-card p-5">
-            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">Resources</p>
-            <p className="mt-3 text-3xl font-bold text-foreground">{resources.length}</p>
-          </div>
-          <div className="rounded-2xl border bg-card p-5">
-            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">Templates</p>
-            <p className="mt-3 text-3xl font-bold text-foreground">{templates.length}</p>
-          </div>
-          <div className="rounded-2xl border bg-card p-5">
-            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">Strategies</p>
-            <p className="mt-3 text-3xl font-bold text-foreground">{strategies.length}</p>
-            <p className="mt-2 text-xs text-muted-foreground">
-              {strategies.filter((strategy) => strategy.archived !== 1).length} active
-            </p>
-          </div>
-          <div className="rounded-2xl border bg-card p-5">
-            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">Playbooks</p>
-            <p className="mt-3 text-3xl font-bold text-foreground">{playbooks.length}</p>
-            <p className="mt-2 text-xs text-muted-foreground">
-              {playbooks.filter((playbook) => playbook.archived !== 1).length} active
-            </p>
-          </div>
-          <div className="rounded-2xl border bg-card p-5">
-            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">Your Classrooms</p>
-            <p className="mt-3 text-3xl font-bold text-foreground">{classrooms.length}</p>
-          </div>
+          <TeachingToneMetricCard title="Resources" value={resources.length} tone="sky" />
+          <TeachingToneMetricCard title="Templates" value={templates.length} tone="amber" />
+          <TeachingToneMetricCard
+            title="Strategies"
+            value={strategies.length}
+            tone="violet"
+            note={`${strategies.filter((strategy) => strategy.archived !== 1).length} active`}
+          />
+          <TeachingToneMetricCard
+            title="Playbooks"
+            value={playbooks.length}
+            tone="emerald"
+            note={`${playbooks.filter((playbook) => playbook.archived !== 1).length} active`}
+          />
+          <TeachingToneMetricCard title="Your Classrooms" value={classrooms.length} tone="muted" />
         </div>
 
         <div className="grid gap-6 xl:grid-cols-[minmax(0,1.15fr)_minmax(340px,0.85fr)]">
           <section className="space-y-6">
-            <div className="rounded-2xl border bg-card p-5">
-              <div className="mb-4 flex items-center gap-2">
-                <FolderKanban className="h-4 w-4 text-[var(--cn-orange)]" />
-                <h2 className="text-sm font-semibold uppercase tracking-[0.2em] text-muted-foreground">
-                  Saved Resources
-                </h2>
-              </div>
+            <TeachingCollectionSection icon={FolderKanban} title="Saved Resources">
               <div className="mb-4 flex flex-wrap gap-2">
                 {[
                   { label: "All", value: "all" },
@@ -164,43 +147,28 @@ export default async function TeacherLibraryPage({
               ) : (
                 <div className="space-y-3">
                   {resources.map((resource) => (
-                    <div key={resource.id} className="rounded-xl border p-4">
-                      <div className="flex items-center justify-between gap-3">
-                        <div>
-                          <h3 className="font-semibold text-foreground">{resource.title}</h3>
-                          <p className="mt-1 text-sm text-muted-foreground">
-                            {resource.description || "No description"}
-                          </p>
-                        </div>
+                    <TeachingEntityCard
+                      key={resource.id}
+                      href={`/notebook/teacher/library/resources/${resource.id}`}
+                      badges={
                         <span className="rounded-full border bg-muted px-2.5 py-1 text-[11px] font-medium text-muted-foreground">
                           {resource.resource_type.replaceAll("_", " ")}
                         </span>
-                      </div>
+                      }
+                      title={resource.title}
+                      subtitle={resource.description || "No description"}
+                    >
                       <div className="mt-3 flex flex-wrap gap-3 text-xs text-muted-foreground">
                         {resource.hsk_level ? <span>HSK {resource.hsk_level}</span> : null}
                         <span>Updated {new Date(resource.updated_at).toLocaleDateString("en-US")}</span>
                       </div>
-                      <div className="mt-4">
-                        <Link
-                          href={`/notebook/teacher/library/resources/${resource.id}`}
-                          className="inline-flex items-center gap-2 text-sm font-medium text-[var(--cn-orange)] hover:underline"
-                        >
-                          Edit resource
-                        </Link>
-                      </div>
-                    </div>
+                    </TeachingEntityCard>
                   ))}
                 </div>
               )}
-            </div>
+            </TeachingCollectionSection>
 
-            <div className="rounded-2xl border bg-card p-5">
-              <div className="mb-4 flex items-center gap-2">
-                <ClipboardList className="h-4 w-4 text-[var(--cn-orange)]" />
-                <h2 className="text-sm font-semibold uppercase tracking-[0.2em] text-muted-foreground">
-                  Assignment Templates
-                </h2>
-              </div>
+            <TeachingCollectionSection icon={ClipboardList} title="Assignment Templates">
               <div className="mb-4 flex flex-wrap gap-2">
                 {[
                   { label: "All", value: "all" },
@@ -245,29 +213,20 @@ export default async function TeacherLibraryPage({
                       return template.template_type === query.templateType;
                     })
                     .map((template) => (
-                    <div key={template.id} className="rounded-xl border p-4">
-                      <div className="flex items-center justify-between gap-3">
-                        <div>
-                          <h3 className="font-semibold text-foreground">{template.title}</h3>
-                          <p className="mt-1 text-sm text-muted-foreground">
-                            {template.description || template.prompt || "No template description"}
-                          </p>
-                        </div>
+                    <TeachingEntityCard
+                      key={template.id}
+                      href={`/notebook/teacher/library/templates/${template.id}`}
+                      badges={
                         <span className="rounded-full border bg-muted px-2.5 py-1 text-[11px] font-medium text-muted-foreground">
                           {template.template_type.replaceAll("_", " ")}
                         </span>
-                      </div>
+                      }
+                      title={template.title}
+                      subtitle={template.description || template.prompt || "No template description"}
+                    >
                       <div className="mt-3 flex flex-wrap gap-3 text-xs text-muted-foreground">
                         {template.hsk_level ? <span>HSK {template.hsk_level}</span> : null}
                         <span>{template.allow_resubmission ? "Resubmission allowed" : "Resubmission locked"}</span>
-                      </div>
-                      <div className="mt-4 flex flex-wrap items-center gap-3">
-                        <Link
-                          href={`/notebook/teacher/library/templates/${template.id}`}
-                          className="inline-flex items-center gap-2 text-sm font-medium text-[var(--cn-orange)] hover:underline"
-                        >
-                          Edit template
-                        </Link>
                       </div>
                       {classrooms.length > 0 ? (
                         <div className="mt-4 flex flex-wrap gap-2">
@@ -283,19 +242,13 @@ export default async function TeacherLibraryPage({
                           ))}
                         </div>
                       ) : null}
-                    </div>
+                    </TeachingEntityCard>
                   ))}
                 </div>
               )}
-            </div>
+            </TeachingCollectionSection>
 
-            <div className="rounded-2xl border bg-card p-5">
-              <div className="mb-4 flex items-center gap-2">
-                <Layers3 className="h-4 w-4 text-[var(--cn-orange)]" />
-                <h2 className="text-sm font-semibold uppercase tracking-[0.2em] text-muted-foreground">
-                  Teaching Playbooks
-                </h2>
-              </div>
+            <TeachingCollectionSection icon={Layers3} title="Teaching Playbooks">
 
               {playbooks.length === 0 ? (
                 <div className="rounded-xl border border-dashed p-4 text-sm text-muted-foreground">
@@ -304,20 +257,21 @@ export default async function TeacherLibraryPage({
               ) : (
                 <div className="space-y-3">
                   {playbooks.map((playbook) => (
-                    <div key={playbook.id} className="rounded-xl border p-4">
+                    <TeachingEntityCard
+                      key={playbook.id}
+                      href={`/notebook/teacher/library/playbooks/${playbook.id}`}
+                      badges={
+                        <span className="rounded-full border bg-muted px-2.5 py-1 text-[11px] font-medium text-muted-foreground">
+                          Used {playbook.usage_count}
+                        </span>
+                      }
+                      title={playbook.title}
+                      subtitle={playbook.summary}
+                    >
                       {(() => {
                         const pattern = playbookPatternById.get(playbook.id);
                         return (
                           <>
-                      <div className="flex items-start justify-between gap-3">
-                        <div>
-                          <h3 className="font-semibold text-foreground">{playbook.title}</h3>
-                          <p className="mt-1 text-sm text-muted-foreground">{playbook.summary}</p>
-                        </div>
-                        <span className="rounded-full border bg-muted px-2.5 py-1 text-[11px] font-medium text-muted-foreground">
-                          Used {playbook.usage_count}
-                        </span>
-                      </div>
                       <div className="mt-3 flex flex-wrap gap-3 text-xs text-muted-foreground">
                         {playbook.issue_focus ? <span>Issue: {playbook.issue_focus}</span> : null}
                         {playbook.goal_focus ? <span>Goal: {playbook.goal_focus}</span> : null}
@@ -379,30 +333,16 @@ export default async function TeacherLibraryPage({
                               ? "This playbook is active across learners, but broader results still look weak. Refine or replace it before it becomes the default escalation path."
                               : playbook.when_to_use || "No explicit escalation rule recorded yet. Add when-to-use guidance so this playbook becomes operational, not just descriptive."}
                       </p>
-                      <div className="mt-4">
-                        <Link
-                          href={`/notebook/teacher/library/playbooks/${playbook.id}`}
-                          className="inline-flex items-center gap-2 text-sm font-medium text-[var(--cn-orange)] hover:underline"
-                        >
-                          Edit playbook
-                        </Link>
-                      </div>
                           </>
                         );
                       })()}
-                    </div>
+                    </TeachingEntityCard>
                   ))}
                 </div>
               )}
-            </div>
+            </TeachingCollectionSection>
 
-            <div className="rounded-2xl border bg-card p-5">
-              <div className="mb-4 flex items-center gap-2">
-                <Repeat2 className="h-4 w-4 text-[var(--cn-orange)]" />
-                <h2 className="text-sm font-semibold uppercase tracking-[0.2em] text-muted-foreground">
-                  Tutoring Strategies
-                </h2>
-              </div>
+            <TeachingCollectionSection icon={Repeat2} title="Tutoring Strategies">
 
               {strategies.length === 0 ? (
                 <div className="rounded-xl border border-dashed p-4 text-sm text-muted-foreground">
@@ -411,20 +351,21 @@ export default async function TeacherLibraryPage({
               ) : (
                 <div className="space-y-3">
                   {strategies.map((strategy) => (
-                    <div key={strategy.id} className="rounded-xl border p-4">
+                    <TeachingEntityCard
+                      key={strategy.id}
+                      href={`/notebook/teacher/library/strategies/${strategy.id}`}
+                      badges={
+                        <span className="rounded-full border bg-muted px-2.5 py-1 text-[11px] font-medium text-muted-foreground">
+                          Used {strategy.usage_count}
+                        </span>
+                      }
+                      title={strategy.title}
+                      subtitle={strategy.summary}
+                    >
                       {(() => {
                         const pattern = strategyPatternById.get(strategy.id);
                         return (
                           <>
-                      <div className="flex items-start justify-between gap-3">
-                        <div>
-                          <h3 className="font-semibold text-foreground">{strategy.title}</h3>
-                          <p className="mt-1 text-sm text-muted-foreground">{strategy.summary}</p>
-                        </div>
-                        <span className="rounded-full border bg-muted px-2.5 py-1 text-[11px] font-medium text-muted-foreground">
-                          Used {strategy.usage_count}
-                        </span>
-                      </div>
                       <div className="mt-3 flex flex-wrap gap-3 text-xs text-muted-foreground">
                         {strategy.issue_focus ? <span>Issue: {strategy.issue_focus}</span> : null}
                         {strategy.goal_focus ? <span>Goal: {strategy.goal_focus}</span> : null}
@@ -469,32 +410,18 @@ export default async function TeacherLibraryPage({
                             ? "This strategy has already been used and refined. Keep checking outcomes before it becomes the default response."
                             : "This strategy is in use, but it still needs enough outcome evidence or refinement to prove it is genuinely helping."}
                       </p>
-                      <div className="mt-4">
-                        <Link
-                          href={`/notebook/teacher/library/strategies/${strategy.id}`}
-                          className="inline-flex items-center gap-2 text-sm font-medium text-[var(--cn-orange)] hover:underline"
-                        >
-                          Edit strategy
-                        </Link>
-                      </div>
                           </>
                         );
                       })()}
-                    </div>
+                    </TeachingEntityCard>
                   ))}
                 </div>
               )}
-            </div>
+            </TeachingCollectionSection>
           </section>
 
           <aside className="space-y-6">
-            <section className="rounded-2xl border bg-card p-5">
-              <div className="mb-4 flex items-center gap-2">
-                <Plus className="h-4 w-4 text-[var(--cn-orange)]" />
-                <h2 className="text-sm font-semibold uppercase tracking-[0.2em] text-muted-foreground">
-                  Create Resource
-                </h2>
-              </div>
+            <TeachingCollectionSection icon={Plus} title="Create Resource">
               <form action={createResourceFormAction} className="space-y-3">
                 <div>
                   <label className="mb-1 block text-sm font-medium text-foreground/80">Type</label>
@@ -543,15 +470,9 @@ export default async function TeacherLibraryPage({
                   Save Resource
                 </PendingSubmitButton>
               </form>
-            </section>
+            </TeachingCollectionSection>
 
-            <section className="rounded-2xl border bg-card p-5">
-              <div className="mb-4 flex items-center gap-2">
-                <Repeat2 className="h-4 w-4 text-[var(--cn-orange)]" />
-                <h2 className="text-sm font-semibold uppercase tracking-[0.2em] text-muted-foreground">
-                  Create Strategy
-                </h2>
-              </div>
+            <TeachingCollectionSection icon={Repeat2} title="Create Strategy">
               <form action={createStrategyFormAction} className="space-y-3">
                 <div>
                   <label className="mb-1 block text-sm font-medium text-foreground/80">Title</label>
@@ -635,15 +556,9 @@ export default async function TeacherLibraryPage({
                   Save Strategy
                 </PendingSubmitButton>
               </form>
-            </section>
+            </TeachingCollectionSection>
 
-            <section className="rounded-2xl border bg-card p-5">
-              <div className="mb-4 flex items-center gap-2">
-                <Layers3 className="h-4 w-4 text-[var(--cn-orange)]" />
-                <h2 className="text-sm font-semibold uppercase tracking-[0.2em] text-muted-foreground">
-                  Create Playbook
-                </h2>
-              </div>
+            <TeachingCollectionSection icon={Layers3} title="Create Playbook">
               <form action={createPlaybookFormAction} className="space-y-3">
                 <div>
                   <label className="mb-1 block text-sm font-medium text-foreground/80">Title</label>
@@ -754,15 +669,9 @@ export default async function TeacherLibraryPage({
                   Save Playbook
                 </PendingSubmitButton>
               </form>
-            </section>
+            </TeachingCollectionSection>
 
-            <section className="rounded-2xl border bg-card p-5">
-              <div className="mb-4 flex items-center gap-2">
-                <BookCopy className="h-4 w-4 text-[var(--cn-orange)]" />
-                <h2 className="text-sm font-semibold uppercase tracking-[0.2em] text-muted-foreground">
-                  Create Template
-                </h2>
-              </div>
+            <TeachingCollectionSection icon={BookCopy} title="Create Template">
               <form action={createTemplateFormAction} className="space-y-3">
                 <div>
                   <label className="mb-1 block text-sm font-medium text-foreground/80">Template type</label>
@@ -848,7 +757,7 @@ export default async function TeacherLibraryPage({
                   Save Template
                 </PendingSubmitButton>
               </form>
-            </section>
+            </TeachingCollectionSection>
 
           </aside>
         </div>

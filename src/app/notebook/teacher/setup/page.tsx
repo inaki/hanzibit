@@ -9,6 +9,12 @@ import {
 } from "@/lib/teacher-tutoring-settings";
 import { updateTeacherTutoringSettingsAction } from "@/lib/actions";
 import { PendingSubmitButton } from "@/components/notebook/pending-submit-button";
+import {
+  TeachingCollectionSection,
+  TeachingExplainerBlock,
+  TeachingPageHeader,
+  TeachingToneMetricCard,
+} from "@/components/patterns/teaching";
 
 export const dynamic = "force-dynamic";
 
@@ -32,27 +38,44 @@ export default async function TeacherSetupPage() {
   return (
     <div data-testid="teacher-setup-page" className="h-full overflow-auto p-6 pb-20 md:p-10 lg:pb-10">
       <div className="mx-auto max-w-5xl space-y-8">
-        <div className="flex items-start justify-between gap-6">
-          <div>
-            <h1 className="text-3xl font-bold text-foreground">Setup</h1>
-            <p className="mt-2 max-w-3xl text-sm text-muted-foreground">
-              Define the defaults that should shape private teacher-student relationships after an inquiry is converted.
-            </p>
-          </div>
-          <div className="inline-flex items-center rounded-full border border-[var(--cn-orange)]/20 bg-[var(--cn-orange)]/10 px-3 py-1.5 text-xs font-medium text-[var(--cn-orange)]">
-            Private teaching defaults
-          </div>
+        <TeachingPageHeader
+          title="Setup"
+          description="Define the defaults that should shape private teacher-student relationships after an inquiry is converted."
+          badge="Private teaching defaults"
+        />
+
+        <div className="grid gap-4 md:grid-cols-3">
+          <TeachingToneMetricCard
+            title="Cadence"
+            value={getCadenceLabel(settings.cadence_type)}
+            tone="sky"
+            note="Your current default tutoring rhythm."
+          />
+          <TeachingToneMetricCard
+            title="Session length"
+            value={
+              settings.target_session_length_minutes
+                ? `${settings.target_session_length_minutes} min`
+                : "Not set"
+            }
+            tone="amber"
+            note="Used as a lightweight lesson-planning default."
+          />
+          <TeachingToneMetricCard
+            title="Onboarding template"
+            value={
+              settings.default_template_id
+                ? templates.find((template) => template.id === settings.default_template_id)?.title ??
+                  "Saved template"
+                : "Not set"
+            }
+            tone="emerald"
+            note="Can be attached when a learner becomes a private student."
+          />
         </div>
 
         <div className="grid gap-6 xl:grid-cols-[minmax(0,1.1fr)_minmax(320px,0.9fr)]">
-          <section className="rounded-2xl border bg-card p-5">
-            <div className="mb-4 flex items-center gap-2">
-              <Settings2 className="h-4 w-4 text-[var(--cn-orange)]" />
-              <h2 className="text-sm font-semibold uppercase tracking-[0.2em] text-muted-foreground">
-                Tutoring Setup
-              </h2>
-            </div>
-
+          <TeachingCollectionSection icon={Settings2} title="Tutoring Setup">
             <form action={updateSetupFormAction} className="space-y-4">
               <div>
                 <label className="mb-1 block text-sm font-medium text-foreground/80">Intro message</label>
@@ -152,24 +175,22 @@ export default async function TeacherSetupPage() {
 
               <PendingSubmitButton idleLabel="Save tutoring setup" pendingLabel="Saving setup..." />
             </form>
-          </section>
+          </TeachingCollectionSection>
 
           <aside className="space-y-6">
-            <section className="rounded-2xl border bg-card p-5">
-              <h2 className="text-sm font-semibold uppercase tracking-[0.2em] text-muted-foreground">
-                What this controls
-              </h2>
-              <div className="mt-4 space-y-3 text-sm text-muted-foreground">
-                <p>Your setup defines the defaults you want to reuse when a learner becomes a private student.</p>
-                <p>Cadence defaults describe how private tutoring usually runs without turning HanziBit into a calendar tool.</p>
-                <p>These defaults do not schedule lessons automatically. They establish the rhythm and expectations that later private learner planning can reuse.</p>
-              </div>
-            </section>
+            <TeachingExplainerBlock
+              title="What this controls"
+              tone="muted"
+              body={
+                <>
+                  <p>Your setup defines the defaults you want to reuse when a learner becomes a private student.</p>
+                  <p>Cadence defaults describe how private tutoring usually runs without turning HanziBit into a calendar tool.</p>
+                  <p>These defaults do not schedule lessons automatically. They establish the rhythm and expectations that later private learner planning can reuse.</p>
+                </>
+              }
+            />
 
-            <section className="rounded-2xl border bg-card p-5">
-              <h2 className="text-sm font-semibold uppercase tracking-[0.2em] text-muted-foreground">
-                Current Defaults
-              </h2>
+            <TeachingCollectionSection title="Current Defaults">
               <div className="mt-4 space-y-3 text-sm text-muted-foreground">
                 <p>
                   <span className="font-medium text-foreground">Cadence:</span>{" "}
@@ -188,7 +209,7 @@ export default async function TeacherSetupPage() {
                     : "Not set"}
                 </p>
               </div>
-            </section>
+            </TeachingCollectionSection>
           </aside>
         </div>
       </div>

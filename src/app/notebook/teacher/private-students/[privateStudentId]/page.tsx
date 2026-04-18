@@ -45,6 +45,11 @@ import {
   getPrivateStudentStrategyOutcomeLabel,
 } from "@/lib/private-student-strategy-outcomes";
 import { PendingSubmitButton } from "@/components/notebook/pending-submit-button";
+import {
+  TeachingCollectionSection,
+  TeachingExplainerBlock,
+  TeachingPageHeader,
+} from "@/components/patterns/teaching";
 
 export const dynamic = "force-dynamic";
 
@@ -467,24 +472,22 @@ export default async function TeacherPrivateStudentDetailPage({
   return (
     <div data-testid="teacher-private-student-detail-page" className="h-full overflow-auto p-6 pb-20 md:p-10 lg:pb-10">
       <div className="mx-auto max-w-6xl space-y-8">
-        <div className="flex items-start justify-between gap-6">
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.25em] text-muted-foreground">Private learner</p>
-            <h1 className="mt-2 text-3xl font-bold text-foreground">{detail.student_name}</h1>
-            <p className="mt-2 text-sm text-muted-foreground">
+        <TeachingPageHeader
+          title={detail.student_name}
+          description={
+            <>
               {detail.classroom_name} · {detail.student_email}
-            </p>
-          </div>
-          <div className="flex flex-wrap items-center gap-3">
-            <StatusPill status={detail.status} />
-            <Link
-              href="/notebook/teacher/private-students"
-              className="inline-flex items-center rounded-lg border px-3 py-2 text-sm text-muted-foreground hover:bg-muted"
-            >
-              Back to Private Learners
-            </Link>
-          </div>
-        </div>
+            </>
+          }
+          badge={
+            <div className="flex flex-wrap items-center gap-2">
+              <StatusPill status={detail.status} />
+              <Link href="/notebook/teacher/private-students" className="inline-flex items-center text-xs font-medium">
+                Back to Private Learners
+              </Link>
+            </div>
+          }
+        />
 
         {query.success ? (
           <div
@@ -665,37 +668,37 @@ export default async function TeacherPrivateStudentDetailPage({
           />
         </div>
 
-        <div className="rounded-2xl border border-amber-500/20 bg-amber-500/10 p-4 text-sm text-foreground/90">
+        <TeachingExplainerBlock tone="amber">
           {getWorkflowGuidance(detail.status, detail.next_step_type, detail.next_assignment_title)}
-        </div>
+        </TeachingExplainerBlock>
 
-        <div className="rounded-2xl border border-sky-500/20 bg-sky-500/10 p-4 text-sm text-foreground/90">
+        <TeachingExplainerBlock tone="sky">
           {getPlanGuidance(
             lessonPlan.plan_status,
             lessonPlan.target_date,
             lessonPlan.next_assignment_title,
             lessonPlan.next_template_title
           )}
-        </div>
+        </TeachingExplainerBlock>
 
-        <div className="rounded-2xl border border-emerald-500/20 bg-emerald-500/10 p-4 text-sm text-foreground/90">
+        <TeachingExplainerBlock tone="emerald">
           {getContinuityGuidance({
             activeGoalCount: activeGoals.length,
             latestHistoryAt: latestHistory?.recorded_at ?? null,
             status: detail.status,
           })}
-        </div>
+        </TeachingExplainerBlock>
 
-        <div className="rounded-2xl border border-rose-500/20 bg-rose-500/10 p-4 text-sm text-foreground/90">
+        <TeachingExplainerBlock tone="rose">
           {getInterventionGuidance({
             blockedGoalCount: blockedGoals.length,
             reinforcementGoalCount: reinforcementGoals.length,
             recurringIssueTags,
             latestInterventionNote: latestHistory?.intervention_note ?? null,
           })}
-        </div>
+        </TeachingExplainerBlock>
 
-        <div className="rounded-2xl border border-violet-500/20 bg-violet-500/10 p-4 text-sm text-foreground/90">
+        <TeachingExplainerBlock tone="violet">
           {getReviewGuidance({
             latestReviewAt: latestReview?.reviewed_at ?? detail.last_review_snapshot_at,
             lastAdaptedAt: detail.last_plan_adapted_at,
@@ -703,9 +706,9 @@ export default async function TeacherPrivateStudentDetailPage({
             reinforcementGoalCount: reinforcementGoals.length,
             recurringIssueTags,
           })}
-        </div>
+        </TeachingExplainerBlock>
 
-        <div className="rounded-2xl border border-sky-500/20 bg-sky-500/10 p-4 text-sm text-foreground/90">
+        <TeachingExplainerBlock tone="sky">
           {getStrategyGuidance({
             latestStrategyTitle: detail.last_strategy_title,
             latestStrategyAppliedAt: detail.last_strategy_applied_at,
@@ -714,27 +717,20 @@ export default async function TeacherPrivateStudentDetailPage({
             recurringIssueTags,
             hasLatestReview: Boolean(latestReview?.reviewed_at),
           })}
-        </div>
+        </TeachingExplainerBlock>
 
-        <div className="rounded-2xl border border-amber-500/20 bg-amber-500/10 p-4 text-sm text-foreground/90">
+        <TeachingExplainerBlock tone="amber">
           {getPlaybookGuidance({
             latestPlaybookTitle: detail.last_playbook_title ?? null,
             blockedGoalCount: blockedGoals.length,
             reinforcementGoalCount: reinforcementGoals.length,
             recurringIssueTags,
           })}
-        </div>
+        </TeachingExplainerBlock>
 
         <div className="grid gap-6 xl:grid-cols-[minmax(0,1.05fr)_minmax(320px,0.95fr)]">
           <div className="space-y-6">
-            <section className="rounded-2xl border bg-card p-5">
-              <div className="mb-4 flex items-center gap-2">
-                <MessageSquareMore className="h-4 w-4 text-violet-400" />
-                <h2 className="text-sm font-semibold uppercase tracking-[0.2em] text-muted-foreground">
-                  Review Snapshot
-                </h2>
-              </div>
-
+            <TeachingCollectionSection title="Review Snapshot" icon={MessageSquareMore}>
               <div className="space-y-4">
                 <form action={createReviewFormAction} className="rounded-xl border border-dashed p-4 space-y-3">
                   <input type="hidden" name="private_student_id" value={detail.id} />
@@ -822,16 +818,9 @@ export default async function TeacherPrivateStudentDetailPage({
                   </div>
                 )}
               </div>
-            </section>
+            </TeachingCollectionSection>
 
-            <section className="rounded-2xl border bg-card p-5">
-              <div className="mb-4 flex items-center gap-2">
-                <Users className="h-4 w-4 text-[var(--cn-orange)]" />
-                <h2 className="text-sm font-semibold uppercase tracking-[0.2em] text-muted-foreground">
-                  Workflow State
-                </h2>
-              </div>
-
+            <TeachingCollectionSection title="Workflow State" icon={Users}>
               <form action={updateStateFormAction} className="space-y-4">
                 <input type="hidden" name="private_student_id" value={detail.id} />
 
@@ -899,16 +888,9 @@ export default async function TeacherPrivateStudentDetailPage({
 
                 <PendingSubmitButton idleLabel="Save workflow state" pendingLabel="Saving state..." />
               </form>
-            </section>
+            </TeachingCollectionSection>
 
-            <section className="rounded-2xl border bg-card p-5">
-              <div className="mb-4 flex items-center gap-2">
-                <Users className="h-4 w-4 text-amber-300" />
-                <h2 className="text-sm font-semibold uppercase tracking-[0.2em] text-muted-foreground">
-                  Apply Playbook
-                </h2>
-              </div>
-
+            <TeachingCollectionSection title="Apply Playbook" icon={Users}>
               <form action={applyPlaybookFormAction} className="space-y-4">
                 <input type="hidden" name="private_student_id" value={detail.id} />
                 <input type="hidden" name="review_id" value={latestReview?.id ?? ""} />
@@ -1094,16 +1076,9 @@ export default async function TeacherPrivateStudentDetailPage({
                   ))}
                 </div>
               ) : null}
-            </section>
+            </TeachingCollectionSection>
 
-            <section className="rounded-2xl border bg-card p-5">
-              <div className="mb-4 flex items-center gap-2">
-                <Users className="h-4 w-4 text-sky-400" />
-                <h2 className="text-sm font-semibold uppercase tracking-[0.2em] text-muted-foreground">
-                  Apply Strategy
-                </h2>
-              </div>
-
+            <TeachingCollectionSection title="Apply Strategy" icon={Users}>
               <form action={applyStrategyFormAction} className="space-y-4">
                 <input type="hidden" name="private_student_id" value={detail.id} />
                 <input type="hidden" name="review_id" value={latestReview?.id ?? ""} />
@@ -1284,16 +1259,9 @@ export default async function TeacherPrivateStudentDetailPage({
                   ))}
                 </div>
               ) : null}
-            </section>
+            </TeachingCollectionSection>
 
-            <section className="rounded-2xl border bg-card p-5">
-              <div className="mb-4 flex items-center gap-2">
-                <Users className="h-4 w-4 text-sky-400" />
-                <h2 className="text-sm font-semibold uppercase tracking-[0.2em] text-muted-foreground">
-                  Plan Adaptation
-                </h2>
-              </div>
-
+            <TeachingCollectionSection title="Plan Adaptation" icon={Users}>
               <form action={adaptPlanFormAction} className="space-y-4">
                 <input type="hidden" name="private_student_id" value={detail.id} />
                 <input type="hidden" name="review_id" value={latestReview?.id ?? ""} />
@@ -1449,16 +1417,9 @@ export default async function TeacherPrivateStudentDetailPage({
 
                 <PendingSubmitButton idleLabel="Apply plan adaptation" pendingLabel="Applying adaptation..." />
               </form>
-            </section>
+            </TeachingCollectionSection>
 
-            <section className="rounded-2xl border bg-card p-5">
-              <div className="mb-4 flex items-center gap-2">
-                <Users className="h-4 w-4 text-emerald-400" />
-                <h2 className="text-sm font-semibold uppercase tracking-[0.2em] text-muted-foreground">
-                  Learner Goals
-                </h2>
-              </div>
-
+            <TeachingCollectionSection title="Learner Goals" icon={Users}>
               <div className="space-y-4">
                 {goals.length === 0 ? (
                   <div className="rounded-xl border border-dashed p-4 text-sm text-muted-foreground">
@@ -1609,16 +1570,9 @@ export default async function TeacherPrivateStudentDetailPage({
                   <PendingSubmitButton idleLabel="Add goal" pendingLabel="Adding goal..." />
                 </form>
               </div>
-            </section>
+            </TeachingCollectionSection>
 
-            <section className="rounded-2xl border bg-card p-5">
-              <div className="mb-4 flex items-center gap-2">
-                <MessageSquareMore className="h-4 w-4 text-[var(--cn-orange)]" />
-                <h2 className="text-sm font-semibold uppercase tracking-[0.2em] text-muted-foreground">
-                  Lesson History
-                </h2>
-              </div>
-
+            <TeachingCollectionSection title="Lesson History" icon={MessageSquareMore}>
               <div className="space-y-4">
                 <form action={createHistoryFormAction} className="rounded-xl border border-dashed p-4 space-y-3">
                   <input type="hidden" name="private_student_id" value={detail.id} />
@@ -1744,14 +1698,11 @@ export default async function TeacherPrivateStudentDetailPage({
                   </div>
                 )}
               </div>
-            </section>
+            </TeachingCollectionSection>
           </div>
 
           <aside className="space-y-6">
-            <section className="rounded-2xl border bg-card p-5">
-              <h2 className="text-sm font-semibold uppercase tracking-[0.2em] text-muted-foreground">
-                Context
-              </h2>
+            <TeachingCollectionSection title="Context">
               <div className="mt-4 space-y-3 text-sm text-muted-foreground">
                 <p>
                   <span className="font-medium text-foreground">Classroom:</span>{" "}
@@ -1785,15 +1736,9 @@ export default async function TeacherPrivateStudentDetailPage({
                   {lessonPlan.target_date ? ` · ${new Date(lessonPlan.target_date).toLocaleDateString("en-US")}` : ""}
                 </p>
               </div>
-            </section>
+            </TeachingCollectionSection>
 
-            <section className="rounded-2xl border bg-card p-5">
-              <div className="mb-4 flex items-center gap-2">
-                <MessageSquareMore className="h-4 w-4 text-[var(--cn-orange)]" />
-                <h2 className="text-sm font-semibold uppercase tracking-[0.2em] text-muted-foreground">
-                  Inquiry Context
-                </h2>
-              </div>
+            <TeachingCollectionSection title="Inquiry Context" icon={MessageSquareMore}>
               <div className="space-y-3 text-sm text-muted-foreground">
                 <div className="rounded-xl border bg-muted/20 p-4">
                   {detail.inquiry_message || "No original inquiry message."}
@@ -1805,7 +1750,7 @@ export default async function TeacherPrivateStudentDetailPage({
                   <p className="mt-2">{detail.onboarding_message || "No onboarding message saved."}</p>
                 </div>
               </div>
-            </section>
+            </TeachingCollectionSection>
           </aside>
         </div>
       </div>

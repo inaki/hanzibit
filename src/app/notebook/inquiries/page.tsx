@@ -1,6 +1,10 @@
 import Link from "next/link";
+import { Inbox } from "lucide-react";
 import { getAuthUserId } from "@/lib/auth-utils";
 import { listStudentInquiries } from "@/lib/teacher-inquiries";
+import { HubFocusSection, HubPageHeader } from "@/components/patterns/hub";
+import { SummaryStatCard } from "@/components/patterns/metrics";
+import { MetricPill } from "@/components/patterns/status";
 
 export const dynamic = "force-dynamic";
 
@@ -49,20 +53,74 @@ export async function LearnerInquiriesPageContent({
   const userId = await getAuthUserId();
   const inquiries = await listStudentInquiries(userId);
   const showStandaloneHeader = variant === "default";
+  const isLearnerHub = variant === "hub";
+  const pendingInquiries = inquiries.filter((inquiry) => inquiry.status === "pending").length;
+  const convertedInquiries = inquiries.filter((inquiry) => inquiry.status === "converted").length;
+  const learnerInquiryMode =
+    isLearnerHub && convertedInquiries > 0 && pendingInquiries === 0
+      ? {
+          badge: "Private tutoring active",
+          tone: "emerald" as const,
+          title: "Your inquiries already became guided learning",
+          body: "Use this page mostly as relationship history. Your active classroom and assignments are now the main work surfaces.",
+        }
+      : isLearnerHub && convertedInquiries > 0
+        ? {
+            badge: "Inquiries and tutoring mixed",
+            tone: "amber" as const,
+            title: "One relationship is already active",
+            body: "Keep inquiries here for pending outreach and history, but use classes and assignments as the main place for active teacher-guided work.",
+          }
+        : {
+            badge: "Teacher outreach in progress",
+            tone: "sky" as const,
+            title: "Your first inquiry is still pending",
+            body: "This space is mainly for tracking outreach. Once a teacher accepts and converts the relationship, classes and assignments become the active workspace.",
+          };
 
   return (
     <div data-testid="learner-inquiries-page" className="h-full overflow-auto p-6 pb-20 md:p-10 lg:pb-10">
       <div className="mx-auto max-w-5xl space-y-8">
-        <div>
-          <h1 className="text-3xl font-bold text-foreground">
-            {showStandaloneHeader ? "My Teacher Inquiries" : "Inquiries"}
-          </h1>
-          <p className="mt-2 max-w-3xl text-sm text-muted-foreground">
-            {showStandaloneHeader
-              ? "Track the teachers you contacted before they convert into a classroom or tutoring relationship."
-              : "Track outreach to teachers before it turns into a classroom or private tutoring relationship."}
-          </p>
-        </div>
+        {showStandaloneHeader ? (
+          <div className="flex items-start justify-between gap-6">
+            <div>
+              <h1 className="text-3xl font-bold text-foreground">My Teacher Inquiries</h1>
+              <p className="mt-2 max-w-3xl text-sm text-muted-foreground">
+                Track the teachers you contacted before they convert into a classroom or tutoring relationship.
+              </p>
+            </div>
+          </div>
+        ) : (
+          <HubPageHeader
+            title="Inquiries"
+            description="Track outreach to teachers before it turns into a classroom or private tutoring relationship."
+            badge={learnerInquiryMode.badge}
+          />
+        )}
+
+        {!showStandaloneHeader ? (
+          <>
+            <div className="grid gap-4 sm:grid-cols-3">
+              <SummaryStatCard label="Total" value={inquiries.length} tone="sky" />
+              <SummaryStatCard label="Pending" value={pendingInquiries} tone="amber" />
+              <SummaryStatCard label="Converted" value={convertedInquiries} tone="emerald" />
+            </div>
+
+            <HubFocusSection
+              title="Inquiry Focus"
+              icon={Inbox}
+              pills={
+                <>
+                <MetricPill label={`${pendingInquiries} pending`} tone="amber" />
+                <MetricPill label={`${convertedInquiries} converted`} tone="emerald" />
+                </>
+              }
+              tone={learnerInquiryMode.tone}
+              guidanceTitle={learnerInquiryMode.title}
+              guidanceBody={learnerInquiryMode.body}
+            />
+          </>
+        ) : null}
 
         {inquiries.length === 0 ? (
           <div className="rounded-2xl border bg-card p-6 text-sm text-muted-foreground">

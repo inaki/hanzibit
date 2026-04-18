@@ -3,6 +3,9 @@ import { ArrowRight, ClipboardList } from "lucide-react";
 import { getAuthUserId } from "@/lib/auth-utils";
 import { isAssignmentOverdue, listAssignmentInboxForUser } from "@/lib/assignments";
 import { isTeacherUser } from "@/lib/classrooms";
+import { HubFocusSection, HubPageHeader } from "@/components/patterns/hub";
+import { SummaryStatCard } from "@/components/patterns/metrics";
+import { MetricPill } from "@/components/patterns/status";
 
 export const dynamic = "force-dynamic";
 
@@ -54,47 +57,76 @@ export async function AssignmentsPageContent({
     ),
   };
   const showStandaloneHeader = variant === "default";
+  const isLearnerHub = variant === "hub" && !teacher;
   const title = teacher ? "Assignments" : "Your Assignments";
   const description = teacher
     ? "Track classroom work without leaving the notebook system."
     : "See the work your teachers assigned without leaving the notebook.";
+  const learnerHubMode =
+    isLearnerHub && pendingCount === 0 && assignments.length <= 1
+      ? {
+          badge: "New guided work",
+          tone: "sky" as const,
+          title: "Your first teacher assignment is ready",
+          body: "Start with the open assignment, then use classes only when you need broader context from your teacher space.",
+        }
+      : isLearnerHub && assignments.some((assignment) => isAssignmentOverdue(assignment.due_at, assignment.submission_status))
+        ? {
+            badge: "Needs attention",
+            tone: "violet" as const,
+            title: "You have overdue guided work",
+            body: "Do not try to catch up everywhere at once. Start with the most overdue assignment, then return to the rest in order.",
+          }
+        : isLearnerHub
+          ? {
+              badge: "Guided work in progress",
+              tone: "amber" as const,
+              title: "Focus on the next assignments first",
+              body: "Your teacher-guided work is already active. Finish pending assignments before digging into reviewed ones again.",
+            }
+          : null;
 
   return (
     <div data-testid="assignments-page" className="h-full overflow-auto p-6 pb-20 md:p-10 lg:pb-10">
       <div className="mx-auto max-w-5xl space-y-8">
-        <div className="flex items-start justify-between gap-6">
-          <div>
-            {showStandaloneHeader ? (
+        {showStandaloneHeader ? (
+          <div className="flex items-start justify-between gap-6">
+            <div>
               <p className="text-xs font-semibold uppercase tracking-[0.25em] text-muted-foreground">
                 Phase 2
               </p>
-            ) : null}
-            <h1 className={`${showStandaloneHeader ? "mt-2" : ""} text-3xl font-bold text-foreground`}>{title}</h1>
-            <p className="mt-2 max-w-2xl text-sm text-muted-foreground">
-              {description}
-            </p>
-          </div>
-          {showStandaloneHeader ? (
+              <h1 className="mt-2 text-3xl font-bold text-foreground">{title}</h1>
+              <p className="mt-2 max-w-2xl text-sm text-muted-foreground">{description}</p>
+            </div>
             <div className="inline-flex items-center rounded-full border bg-card px-3 py-1.5 text-xs font-medium text-muted-foreground">
               {teacher ? "Teacher and student views share this inbox" : "Student assignment inbox"}
             </div>
-          ) : null}
-        </div>
+          </div>
+        ) : (
+          <HubPageHeader title={title} description={description} badge={learnerHubMode?.badge} />
+        )}
 
         <div className="grid gap-4 sm:grid-cols-3">
-          <div className="rounded-2xl border bg-card p-5">
-            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">Total</p>
-            <p className="mt-3 text-3xl font-bold text-foreground">{assignments.length}</p>
-          </div>
-          <div className="rounded-2xl border bg-card p-5">
-            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">Needs action</p>
-            <p className="mt-3 text-3xl font-bold text-foreground">{pendingCount}</p>
-          </div>
-          <div className="rounded-2xl border bg-card p-5">
-            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">Reviewed</p>
-            <p className="mt-3 text-3xl font-bold text-foreground">{reviewedCount}</p>
-          </div>
+          <SummaryStatCard label="Total" value={assignments.length} tone="sky" />
+          <SummaryStatCard label="Needs action" value={pendingCount} tone="amber" />
+          <SummaryStatCard label="Reviewed" value={reviewedCount} tone="emerald" />
         </div>
+
+        {learnerHubMode ? (
+          <HubFocusSection
+            title="Assignment Focus"
+            icon={ClipboardList}
+            pills={
+              <>
+              <MetricPill label={`${pendingCount} needs action`} tone="amber" />
+              <MetricPill label={`${reviewedCount} reviewed`} tone="emerald" />
+              </>
+            }
+            tone={learnerHubMode.tone}
+            guidanceTitle={learnerHubMode.title}
+            guidanceBody={learnerHubMode.body}
+          />
+        ) : null}
 
         {assignments.length === 0 ? (
           <div className="rounded-2xl border bg-card p-6 text-sm text-muted-foreground">

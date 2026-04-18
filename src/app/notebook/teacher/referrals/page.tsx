@@ -8,6 +8,13 @@ import {
 } from "@/lib/actions";
 import { PendingSubmitButton } from "@/components/notebook/pending-submit-button";
 import { ReferralCopyButton } from "@/components/notebook/referral-copy-button";
+import {
+  TeachingCollectionSection,
+  TeachingEntityCard,
+  TeachingExplainerBlock,
+  TeachingPageHeader,
+  TeachingToneMetricCard,
+} from "@/components/patterns/teaching";
 
 export const dynamic = "force-dynamic";
 
@@ -32,31 +39,43 @@ export default async function TeacherReferralsPage() {
   return (
     <div data-testid="teacher-referrals-page" className="h-full overflow-auto p-6 pb-20 md:p-10 lg:pb-10">
       <div className="mx-auto max-w-6xl space-y-8">
-        <div className="flex items-start justify-between gap-6">
-          <div>
-            <h1 className="text-3xl font-bold text-foreground">Referrals</h1>
-            <p className="mt-2 max-w-3xl text-sm text-muted-foreground">
-              Share your teacher code, bring students into HanziBit, and track the first referral-driven commission ledger before payouts are automated.
-            </p>
-          </div>
-          <div className="inline-flex items-center rounded-full border border-[var(--cn-orange)]/20 bg-[var(--cn-orange)]/10 px-3 py-1.5 text-xs font-medium text-[var(--cn-orange)]">
-            Referral MVP
-          </div>
-        </div>
+        <TeachingPageHeader
+          title="Referrals"
+          description="Share your teacher code, bring students into HanziBit, and track the first referral-driven commission ledger before payouts are automated."
+          badge="Referral MVP"
+        />
 
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-          <SummaryCard icon={Link2} label="Referral code" value={dashboard.code.code} />
-          <SummaryCard icon={Users} label="Referred students" value={String(dashboard.referredStudents)} />
-          <SummaryCard icon={Share2} label="Converted students" value={String(dashboard.convertedStudents)} />
-          <SummaryCard icon={Coins} label="Pending commissions" value={formatUsdFromCents(dashboard.pendingCommissionCents)} />
+          <TeachingToneMetricCard title="Referral code" value={dashboard.code.code} tone="muted" icon={Link2} />
+          <TeachingToneMetricCard
+            title="Referred students"
+            value={String(dashboard.referredStudents)}
+            tone="sky"
+            icon={Users}
+          />
+          <TeachingToneMetricCard
+            title="Converted students"
+            value={String(dashboard.convertedStudents)}
+            tone="emerald"
+            icon={Share2}
+          />
+          <TeachingToneMetricCard
+            title="Pending commissions"
+            value={formatUsdFromCents(dashboard.pendingCommissionCents)}
+            tone={dashboard.pendingCommissionCents > 0 ? "amber" : "muted"}
+            icon={Coins}
+          />
         </div>
+
+        <TeachingExplainerBlock
+          title="How referral attribution works"
+          tone="muted"
+          body="Students who visit your referral link keep your code in a first-party cookie. Their first paid upgrade is attributed back to you."
+        />
 
         <div className="grid gap-6 xl:grid-cols-[minmax(0,1.1fr)_minmax(340px,0.9fr)]">
           <section className="space-y-6">
-            <div className="rounded-2xl border bg-card p-5">
-              <h2 className="text-sm font-semibold uppercase tracking-[0.2em] text-muted-foreground">
-                Share Link
-              </h2>
+            <TeachingCollectionSection icon={Link2} title="Share Link">
               <div className="mt-4 rounded-xl border border-[var(--cn-orange)]/20 bg-[var(--cn-orange)]/10 p-4">
                 <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
                   Referral link
@@ -68,75 +87,51 @@ export default async function TeacherReferralsPage() {
                     <ReferralCopyButton value={referralLink} label="Copy link" />
                   </div>
                 </div>
-                <p className="mt-3 text-sm text-muted-foreground">
-                  Students who visit this link keep your code in a first-party cookie. Their first paid upgrade is attributed back to you.
-                </p>
               </div>
-            </div>
+            </TeachingCollectionSection>
 
-            <div className="rounded-2xl border bg-card p-5">
-              <h2 className="text-sm font-semibold uppercase tracking-[0.2em] text-muted-foreground">
-                Recent Referred Students
-              </h2>
-              {dashboard.recentAttributions.length === 0 ? (
-                <div className="mt-4 rounded-xl border border-dashed p-4 text-sm text-muted-foreground">
-                  No referred students yet. Share your link with a class or tutoring group to start attribution.
-                </div>
-              ) : (
-                <div className="mt-4 space-y-3">
-                  {dashboard.recentAttributions.map((student) => (
-                    <div key={student.attribution_id} className="rounded-xl border p-4">
-                      <div className="flex items-center justify-between gap-3">
-                        <div>
-                          <h3 className="font-semibold text-foreground">{student.student_name}</h3>
-                          <p className="mt-1 text-sm text-muted-foreground">{student.student_email}</p>
-                        </div>
-                        <span
-                          className={`rounded-full border px-2.5 py-1 text-[11px] font-medium ${
-                            student.converted_at
-                              ? "border-emerald-500/20 bg-emerald-500/10 text-emerald-400"
-                              : "bg-muted text-muted-foreground"
-                          }`}
-                        >
-                          {student.converted_at ? "Converted" : "Attributed"}
-                        </span>
-                      </div>
-                      <div className="mt-3 text-xs text-muted-foreground">
-                        {student.converted_at
-                          ? `Converted ${new Date(student.converted_at).toLocaleDateString("en-US")}`
-                          : `Attributed ${new Date(student.attributed_at).toLocaleDateString("en-US")}`}
-                      </div>
+            <TeachingCollectionSection
+              icon={Users}
+              title="Recent Referred Students"
+              empty={dashboard.recentAttributions.length === 0}
+              emptyMessage="No referred students yet. Share your link with a class or tutoring group to start attribution."
+            >
+              <div className="mt-4 space-y-3">
+                {dashboard.recentAttributions.map((student) => (
+                  <TeachingEntityCard
+                    key={student.attribution_id}
+                    href={`/notebook/teacher/referrals`}
+                    badges={
+                      <span
+                        className={`rounded-full border px-2.5 py-1 text-[11px] font-medium ${
+                          student.converted_at
+                            ? "border-emerald-500/20 bg-emerald-500/10 text-emerald-400"
+                            : "bg-muted text-muted-foreground"
+                        }`}
+                      >
+                        {student.converted_at ? "Converted" : "Attributed"}
+                      </span>
+                    }
+                    title={student.student_name}
+                    subtitle={student.student_email}
+                  >
+                    <div className="mt-1 text-xs text-muted-foreground">
+                      {student.converted_at
+                        ? `Converted ${new Date(student.converted_at).toLocaleDateString("en-US")}`
+                        : `Attributed ${new Date(student.attributed_at).toLocaleDateString("en-US")}`}
                     </div>
-                  ))}
-                </div>
-              )}
-            </div>
+                  </TeachingEntityCard>
+                ))}
+              </div>
+            </TeachingCollectionSection>
           </section>
 
           <aside className="space-y-6">
-            <section className="rounded-2xl border bg-card p-5">
-              <h2 className="text-sm font-semibold uppercase tracking-[0.2em] text-muted-foreground">
-                Commission Ledger
-              </h2>
+            <TeachingCollectionSection icon={Coins} title="Commission Ledger">
               <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-1">
-                <div className="rounded-xl border bg-muted/40 p-4">
-                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">Pending</p>
-                  <p className="mt-2 text-2xl font-bold text-foreground">
-                    {formatUsdFromCents(dashboard.pendingCommissionCents)}
-                  </p>
-                </div>
-                <div className="rounded-xl border bg-muted/40 p-4">
-                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">Approved</p>
-                  <p className="mt-2 text-2xl font-bold text-foreground">
-                    {formatUsdFromCents(dashboard.approvedCommissionCents)}
-                  </p>
-                </div>
-                <div className="rounded-xl border bg-muted/40 p-4">
-                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">Paid</p>
-                  <p className="mt-2 text-2xl font-bold text-foreground">
-                    {formatUsdFromCents(dashboard.paidCommissionCents)}
-                  </p>
-                </div>
+                <TeachingToneMetricCard title="Pending" value={formatUsdFromCents(dashboard.pendingCommissionCents)} tone="amber" />
+                <TeachingToneMetricCard title="Approved" value={formatUsdFromCents(dashboard.approvedCommissionCents)} tone="sky" />
+                <TeachingToneMetricCard title="Paid" value={formatUsdFromCents(dashboard.paidCommissionCents)} tone="emerald" />
               </div>
 
               <form action={createReferralPayoutAction} className="mt-4 space-y-3 rounded-xl border border-[var(--cn-orange)]/20 bg-[var(--cn-orange)]/10 p-4">
@@ -162,83 +157,61 @@ export default async function TeacherReferralsPage() {
               ) : (
                 <div className="mt-4 space-y-3">
                   {dashboard.recentCommissions.map((commission) => (
-                    <div key={commission.id} className="rounded-xl border p-4">
-                      <div className="flex items-center justify-between gap-3">
-                        <div>
-                          <h3 className="font-semibold text-foreground">{commission.student_name}</h3>
-                          <p className="mt-1 text-sm text-muted-foreground">{commission.student_email}</p>
-                        </div>
+                    <TeachingEntityCard
+                      key={commission.id}
+                      href="/notebook/teacher/referrals"
+                      badges={
                         <span className="rounded-full border border-sky-500/20 bg-sky-500/10 px-2.5 py-1 text-[11px] font-medium text-sky-400">
                           {commission.status}
                         </span>
-                      </div>
+                      }
+                      title={commission.student_name}
+                      subtitle={commission.student_email}
+                    >
                       <div className="mt-3 flex flex-wrap gap-3 text-xs text-muted-foreground">
                         <span>Gross {formatUsdFromCents(commission.gross_amount_cents)}</span>
                         <span>Commission {formatUsdFromCents(commission.commission_amount_cents)}</span>
                         <span>{new Date(commission.created_at).toLocaleDateString("en-US")}</span>
                       </div>
-                    </div>
+                    </TeachingEntityCard>
                   ))}
                 </div>
               )}
-            </section>
+            </TeachingCollectionSection>
 
-            <section className="rounded-2xl border bg-card p-5">
-              <h2 className="text-sm font-semibold uppercase tracking-[0.2em] text-muted-foreground">
-                Payout History
-              </h2>
-              {dashboard.payouts.length === 0 ? (
-                <div className="mt-4 rounded-xl border border-dashed p-4 text-sm text-muted-foreground">
-                  No payouts yet. Once pending commissions are paid, payout batches appear here.
-                </div>
-              ) : (
-                <div className="mt-4 space-y-3">
-                  {dashboard.payouts.map((payout) => (
-                    <div key={payout.id} className="rounded-xl border p-4">
-                      <div className="flex items-center justify-between gap-3">
-                        <div>
-                          <h3 className="font-semibold text-foreground">{payout.period_label}</h3>
-                          <p className="mt-1 text-sm text-muted-foreground">
-                            {payout.paid_at
-                              ? `Paid ${new Date(payout.paid_at).toLocaleDateString("en-US")}`
-                              : `Created ${new Date(payout.created_at).toLocaleDateString("en-US")}`}
-                          </p>
-                        </div>
-                        <span className="rounded-full border border-emerald-500/20 bg-emerald-500/10 px-2.5 py-1 text-[11px] font-medium text-emerald-400">
-                          {payout.status}
-                        </span>
-                      </div>
-                      <div className="mt-3 text-xs text-muted-foreground">
-                        Total {formatUsdFromCents(payout.total_amount_cents)}
-                      </div>
+            <TeachingCollectionSection
+              icon={Coins}
+              title="Payout History"
+              empty={dashboard.payouts.length === 0}
+              emptyMessage="No payouts yet. Once pending commissions are paid, payout batches appear here."
+            >
+              <div className="mt-4 space-y-3">
+                {dashboard.payouts.map((payout) => (
+                  <TeachingEntityCard
+                    key={payout.id}
+                    href="/notebook/teacher/referrals"
+                    badges={
+                      <span className="rounded-full border border-emerald-500/20 bg-emerald-500/10 px-2.5 py-1 text-[11px] font-medium text-emerald-400">
+                        {payout.status}
+                      </span>
+                    }
+                    title={payout.period_label}
+                    subtitle={
+                      payout.paid_at
+                        ? `Paid ${new Date(payout.paid_at).toLocaleDateString("en-US")}`
+                        : `Created ${new Date(payout.created_at).toLocaleDateString("en-US")}`
+                    }
+                  >
+                    <div className="mt-1 text-xs text-muted-foreground">
+                      Total {formatUsdFromCents(payout.total_amount_cents)}
                     </div>
-                  ))}
-                </div>
-              )}
-            </section>
+                  </TeachingEntityCard>
+                ))}
+              </div>
+            </TeachingCollectionSection>
           </aside>
         </div>
       </div>
-    </div>
-  );
-}
-
-function SummaryCard({
-  icon: Icon,
-  label,
-  value,
-}: {
-  icon: typeof Users;
-  label: string;
-  value: string;
-}) {
-  return (
-    <div className="rounded-2xl border bg-card p-5">
-      <div className="flex items-center gap-2 text-muted-foreground">
-        <Icon className="h-4 w-4 text-[var(--cn-orange)]" />
-        <p className="text-xs font-semibold uppercase tracking-[0.18em]">{label}</p>
-      </div>
-      <p className="mt-3 text-3xl font-bold text-foreground">{value}</p>
     </div>
   );
 }

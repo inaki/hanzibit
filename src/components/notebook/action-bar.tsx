@@ -27,10 +27,12 @@ import {
   DialogTitle,
   DialogDescription,
   DialogFooter,
-  DialogClose,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { ActionRailButton } from "@/components/patterns/action-rail";
+import { DialogFormActions, FormErrorNotice } from "@/components/patterns/forms";
+import { GuidanceBanner } from "@/components/patterns/guidance";
 import type { JournalEntry } from "@/lib/data";
 import { toggleBookmarkAction, createJournalEntry, updateJournalEntry, saveFlashcardsFromEntry, deleteJournalEntry } from "@/lib/actions";
 import { parseInput, extractHanziTokens, replaceTextRange, validateInlineMarkup } from "@/lib/parse-tokens";
@@ -158,43 +160,31 @@ export function NotebookActionBar({
     <>
       <div data-testid="notebook-action-bar" className="hidden w-14 flex-col items-center gap-2 border-l bg-card py-4 lg:flex">
         {/* Edit */}
-        <Tooltip>
-          <TooltipTrigger
-            data-testid="action-bar-edit"
-            onClick={() => setEditOpen(true)}
-            disabled={!entry}
-            className="rounded-lg p-2.5 text-muted-foreground/70 transition-colors hover:bg-muted hover:text-foreground disabled:opacity-30"
-          >
-            <Pencil className="h-[18px] w-[18px]" />
-          </TooltipTrigger>
-          <TooltipContent side="left">Edit entry</TooltipContent>
-        </Tooltip>
+        <ActionRailButton
+          testId="action-bar-edit"
+          label="Edit entry"
+          icon={Pencil}
+          onClick={() => setEditOpen(true)}
+          disabled={!entry}
+        />
 
         {/* Pronunciation */}
-        <Tooltip>
-          <TooltipTrigger
-            data-testid="action-bar-pronunciation"
-            onClick={() => setPronunciationOpen(true)}
-            disabled={highlights.length === 0}
-            className="rounded-lg p-2.5 text-muted-foreground/70 transition-colors hover:bg-muted hover:text-foreground disabled:opacity-30"
-          >
-            <Mic className="h-[18px] w-[18px]" />
-          </TooltipTrigger>
-          <TooltipContent side="left">Pronunciation</TooltipContent>
-        </Tooltip>
+        <ActionRailButton
+          testId="action-bar-pronunciation"
+          label="Pronunciation"
+          icon={Mic}
+          onClick={() => setPronunciationOpen(true)}
+          disabled={highlights.length === 0}
+        />
 
         {/* Flashcard mode */}
-        <Tooltip>
-          <TooltipTrigger
-            data-testid="action-bar-flashcard"
-            onClick={() => setFlashcardOpen(true)}
-            disabled={highlights.length === 0}
-            className="rounded-lg p-2.5 text-muted-foreground/70 transition-colors hover:bg-muted hover:text-foreground disabled:opacity-30"
-          >
-            <Layers className="h-[18px] w-[18px]" />
-          </TooltipTrigger>
-          <TooltipContent side="left">Flashcard mode</TooltipContent>
-        </Tooltip>
+        <ActionRailButton
+          testId="action-bar-flashcard"
+          label="Flashcard mode"
+          icon={Layers}
+          onClick={() => setFlashcardOpen(true)}
+          disabled={highlights.length === 0}
+        />
 
         {/* Interlinear Gloss */}
         <Tooltip>
@@ -220,52 +210,39 @@ export function NotebookActionBar({
         <div className="flex-1" />
 
         {/* New entry */}
-        <Tooltip>
-          <TooltipTrigger
-            data-testid="action-bar-new-entry"
-            onClick={() => setNewEntryOpen(true)}
-            className="rounded-full bg-[var(--cn-orange)] p-3 text-white shadow-lg transition-colors hover:bg-[var(--cn-orange-dark)]"
-          >
-            <Plus className="h-5 w-5" />
-          </TooltipTrigger>
-          <TooltipContent side="left">New entry</TooltipContent>
-        </Tooltip>
+        <ActionRailButton
+          testId="action-bar-new-entry"
+          label="New entry"
+          icon={Plus}
+          onClick={() => setNewEntryOpen(true)}
+          filled
+          className="rounded-full p-3 shadow-lg"
+        />
 
         {/* Bookmark */}
-        <Tooltip>
-          <TooltipTrigger
-            data-testid="action-bar-bookmark"
-            onClick={handleBookmark}
-            disabled={!entry || isPending}
-            className={`rounded-lg p-2.5 transition-colors disabled:opacity-30 ${
-              bookmarked
-                ? "bg-[var(--cn-orange)] text-white hover:bg-[var(--cn-orange-dark)]"
-                : "bg-red-500 text-white hover:bg-red-600"
-            }`}
-          >
-            {bookmarked ? (
-              <BookmarkCheck className="h-[18px] w-[18px]" />
-            ) : (
-              <Bookmark className="h-[18px] w-[18px]" />
-            )}
-          </TooltipTrigger>
-          <TooltipContent side="left">
-            {bookmarked ? "Bookmarked" : "Bookmark"}
-          </TooltipContent>
-        </Tooltip>
+        <ActionRailButton
+          testId="action-bar-bookmark"
+          label={bookmarked ? "Bookmarked" : "Bookmark"}
+          onClick={handleBookmark}
+          disabled={!entry || isPending}
+          filled
+          danger={!bookmarked}
+        >
+          {bookmarked ? (
+            <BookmarkCheck className="h-[18px] w-[18px]" />
+          ) : (
+            <Bookmark className="h-[18px] w-[18px]" />
+          )}
+        </ActionRailButton>
 
         {/* Print */}
-        <Tooltip>
-          <TooltipTrigger
-            data-testid="action-bar-print"
-            onClick={handlePrint}
-            disabled={!entry}
-            className="rounded-lg p-2.5 text-muted-foreground/70 transition-colors hover:bg-muted hover:text-foreground disabled:opacity-30"
-          >
-            <Printer className="h-[18px] w-[18px]" />
-          </TooltipTrigger>
-          <TooltipContent side="left">Print</TooltipContent>
-        </Tooltip>
+        <ActionRailButton
+          testId="action-bar-print"
+          label="Print"
+          icon={Printer}
+          onClick={handlePrint}
+          disabled={!entry}
+        />
       </div>
 
       {/* --- Dialogs --- */}
@@ -327,24 +304,22 @@ export function NotebookActionBar({
 function MarkupHelp() {
   return (
     <div data-testid="markup-help" className="space-y-2">
-      <div className="rounded-lg border border-[var(--cn-orange)]/20 bg-[var(--cn-orange)]/10 px-3 py-2 text-xs text-foreground/80">
-        <p className="font-semibold text-[var(--cn-orange)]">Vocabulary markup</p>
+      <GuidanceBanner title="Vocabulary markup" tone="orange" className="px-3 py-2 text-xs text-foreground/80">
         <p className="mt-1">
           Wrap words in <code className="rounded bg-card px-1 py-0.5 font-mono text-[var(--cn-orange)]">[汉字|pīnyīn|english]</code> to highlight them.
         </p>
         <p className="mt-1 text-muted-foreground">
           Example: <code className="font-mono">我去[餐厅|can1 ting1|restaurant]吃饭</code>
         </p>
-      </div>
-      <div className="rounded-lg border border-amber-500/20 bg-amber-500/10 px-3 py-2 text-xs text-foreground/80">
-        <p className="font-semibold text-amber-400">Tone shortcut</p>
+      </GuidanceBanner>
+      <GuidanceBanner title="Tone shortcut" tone="amber" className="px-3 py-2 text-xs text-foreground/80">
         <p className="mt-1 font-mono text-muted-foreground">
           a1→ā &nbsp; a2→á &nbsp; a3→ǎ &nbsp; a4→à &nbsp; v=ü
         </p>
         <p className="mt-0.5 text-muted-foreground">
           e.g. <code className="font-mono">ni3 hao3</code> → nǐ hǎo
         </p>
-      </div>
+      </GuidanceBanner>
     </div>
   );
 }
@@ -519,44 +494,43 @@ function EditEntryDialog({
                 />
                 <MarkupValidationPanel content={content} />
                 <JournalFeedbackPanel content={content} />
-                {submitError && (
-                  <p className="rounded-lg border border-rose-500/20 bg-rose-500/10 px-3 py-2 text-sm text-rose-300">{submitError}</p>
-                )}
+                {submitError && <FormErrorNotice>{submitError}</FormErrorNotice>}
               </div>
               {preview && <ContentPreview content={content} />}
             </div>
             <MarkupHelp />
           </div>
           <DialogFooter>
-            <Button
-              type="button"
-              variant="ghost"
-              className="mr-auto text-rose-400 hover:bg-rose-500/10 hover:text-rose-300"
-              onClick={() => setConfirmDelete((value) => !value)}
-            >
-              <Trash2 className="h-4 w-4" />
-            </Button>
-            <DialogClose render={<Button variant="outline" />}>Cancel</DialogClose>
-            {confirmDelete ? (
-              <Button
-                data-testid="edit-entry-delete-confirm"
-                type="button"
-                variant="destructive"
-                disabled={isDeleting}
-                onClick={handleDelete}
-              >
-                {isDeleting ? "Deleting..." : "Delete Entry"}
-              </Button>
-            ) : (
-              <Button
-                data-testid="edit-entry-submit"
-                type="submit"
-                disabled={isPending || hasMarkupIssues}
-                className="bg-[var(--cn-orange)] hover:bg-[var(--cn-orange-dark)]"
-              >
-                {isPending ? "Saving..." : "Save Changes"}
-              </Button>
-            )}
+            <DialogFormActions
+              submitLabel="Save Changes"
+              submitPendingLabel="Saving..."
+              submitDisabled={hasMarkupIssues}
+              isPending={isPending}
+              submitTestId="edit-entry-submit"
+              leading={
+                <Button
+                  type="button"
+                  variant="ghost"
+                  className="mr-auto text-rose-400 hover:bg-rose-500/10 hover:text-rose-300"
+                  onClick={() => setConfirmDelete((value) => !value)}
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              }
+              destructiveConfirm={
+                confirmDelete ? (
+                  <Button
+                    data-testid="edit-entry-delete-confirm"
+                    type="button"
+                    variant="destructive"
+                    disabled={isDeleting}
+                    onClick={handleDelete}
+                  >
+                    {isDeleting ? "Deleting..." : "Delete Entry"}
+                  </Button>
+                ) : undefined
+              }
+            />
           </DialogFooter>
         </form>
       </DialogContent>
@@ -753,24 +727,20 @@ function NewEntryDialog({
                   }
                 />
                 <MarkupValidationPanel content={content} />
-                {submitError && (
-                  <p className="rounded-lg border border-rose-500/20 bg-rose-500/10 px-3 py-2 text-sm text-rose-300">{submitError}</p>
-                )}
+                {submitError && <FormErrorNotice>{submitError}</FormErrorNotice>}
               </div>
               {preview && content && <ContentPreview content={content} />}
             </div>
             <MarkupHelp />
           </div>
           <DialogFooter>
-            <DialogClose render={<Button variant="outline" />}>Cancel</DialogClose>
-            <Button
-              data-testid="new-entry-submit"
-              type="submit"
-              disabled={isPending || hasMarkupIssues}
-              className="bg-[var(--cn-orange)] hover:bg-[var(--cn-orange-dark)]"
-            >
-              {isPending ? "Creating..." : "Create Entry"}
-            </Button>
+            <DialogFormActions
+              submitLabel="Create Entry"
+              submitPendingLabel="Creating..."
+              submitDisabled={hasMarkupIssues}
+              isPending={isPending}
+              submitTestId="new-entry-submit"
+            />
           </DialogFooter>
         </form>
       </DialogContent>

@@ -1,6 +1,5 @@
-import Link from "next/link";
 import { redirect } from "next/navigation";
-import { ArrowRight, Users } from "lucide-react";
+import { Users } from "lucide-react";
 import { getAuthUserId } from "@/lib/auth-utils";
 import { isTeacherUser } from "@/lib/classrooms";
 import { listPrivateLessonHistory } from "@/lib/private-lesson-history";
@@ -11,6 +10,12 @@ import {
 } from "@/lib/private-lesson-plans";
 import { listPrivateStudentGoals } from "@/lib/private-student-goals";
 import { listPrivateStudentsForTeacher, type PrivateStudentListItem } from "@/lib/private-students";
+import {
+  TeachingExplainerBlock,
+  TeachingEntityCard,
+  TeachingPageHeader,
+  TeachingToneMetricCard,
+} from "@/components/patterns/teaching";
 
 export const dynamic = "force-dynamic";
 
@@ -851,138 +856,142 @@ export default async function TeacherPrivateStudentsPage() {
   return (
     <div data-testid="teacher-private-students-page" className="h-full overflow-auto p-6 pb-20 md:p-10 lg:pb-10">
       <div className="mx-auto max-w-6xl space-y-8">
-        <div className="flex items-start justify-between gap-6">
-          <div>
-            <h1 className="text-3xl font-bold text-foreground">Private Learners</h1>
-            <p className="mt-2 max-w-3xl text-sm text-muted-foreground">
-              Manage the current lifecycle, next step, and follow-through for learners who entered through private teacher inquiries.
-            </p>
-          </div>
-          <div className="inline-flex items-center rounded-full border border-[var(--cn-orange)]/20 bg-[var(--cn-orange)]/10 px-3 py-1.5 text-xs font-medium text-[var(--cn-orange)]">
-            Operational workflow
-          </div>
-        </div>
+        <TeachingPageHeader
+          title="Private Learners"
+          description="Manage the current lifecycle, next step, and follow-through for learners who entered through private teacher inquiries."
+          badge="Operational workflow"
+        />
 
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
           {statusOrder.map((status) => (
-            <SummaryCard
+            <TeachingToneMetricCard
               key={status}
               label={statusLabels[status]}
               value={privateStudents.filter((item) => item.status === status).length}
-              tone={status}
+              tone={
+                status === "active"
+                  ? "emerald"
+                  : status === "awaiting_student"
+                    ? "sky"
+                    : status === "awaiting_teacher"
+                      ? "amber"
+                      : status === "inactive"
+                        ? "rose"
+                        : "orange"
+              }
             />
           ))}
         </div>
 
         {privateStudents.length > 0 ? (
           <div className="grid gap-4 sm:grid-cols-3">
-            <InfoCard label="Urgent priority" value={urgentPriorityCount} tone="rose" />
-            <InfoCard label="High priority" value={highPriorityCount} tone="amber" />
-            <InfoCard label="Watch list" value={watchPriorityCount} tone="sky" />
+            <TeachingToneMetricCard label="Urgent priority" value={urgentPriorityCount} tone="rose" />
+            <TeachingToneMetricCard label="High priority" value={highPriorityCount} tone="amber" />
+            <TeachingToneMetricCard label="Watch list" value={watchPriorityCount} tone="sky" />
           </div>
         ) : null}
 
         {privateStudents.length > 0 ? (
           <div className="grid gap-4 sm:grid-cols-3">
-            <InfoCard label="Review due now" value={checkpointDueNowCount} tone="amber" />
-            <InfoCard label="Review overdue" value={checkpointOverdueCount} tone="rose" />
-            <InfoCard label="Recently checked" value={checkpointRecentlyCheckedCount} tone="sky" />
+            <TeachingToneMetricCard label="Review due now" value={checkpointDueNowCount} tone="amber" />
+            <TeachingToneMetricCard label="Review overdue" value={checkpointOverdueCount} tone="rose" />
+            <TeachingToneMetricCard label="Recently checked" value={checkpointRecentlyCheckedCount} tone="sky" />
           </div>
         ) : null}
 
         {privateStudents.length > 0 ? (
-          <div className="rounded-2xl border bg-card p-5 text-sm text-muted-foreground">
+          <TeachingExplainerBlock>
             Review rhythm highlights what needs a fresh checkpoint. `Due now` means it should be revisited soon; `overdue` means the teacher has likely gone too long without a meaningful review, adaptation, or support recheck.
-          </div>
+          </TeachingExplainerBlock>
         ) : null}
 
         {privateStudents.length > 0 ? (
           <div className="grid gap-4 sm:grid-cols-3">
-            <InfoCard label="Light-touch" value={stableLearnerCount} tone="sky" />
-            <InfoCard label="Simplify support" value={simplifySupportCount} tone="amber" />
-            <InfoCard label="Handoff-ready" value={handoffReadyCount} tone="emerald" />
+            <TeachingToneMetricCard label="Light-touch" value={stableLearnerCount} tone="sky" />
+            <TeachingToneMetricCard label="Simplify support" value={simplifySupportCount} tone="amber" />
+            <TeachingToneMetricCard label="Handoff-ready" value={handoffReadyCount} tone="emerald" />
           </div>
         ) : null}
 
         {privateStudents.length > 0 ? (
-          <div className="rounded-2xl border bg-card p-5 text-sm text-muted-foreground">
+          <TeachingExplainerBlock>
             Stabilization highlights where a learner no longer needs the same level of active intervention. `Keep active` means the current pressure still needs direct teacher follow-through. `Simplify support` means the current path may be heavier than necessary. `Handoff-ready` means the learner looks stable enough for lighter-touch monitoring.
-          </div>
+          </TeachingExplainerBlock>
         ) : null}
 
         {privateStudents.length > 0 ? (
           <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-            <InfoCard label="Keep active" value={keepActivePortfolioCount} tone="rose" />
-            <InfoCard label="Simplify support" value={simplifyPortfolioCount} tone="amber" />
-            <InfoCard label="Light-touch" value={lightTouchPortfolioCount} tone="sky" />
-            <InfoCard label="Handoff-ready" value={handoffPortfolioCount} tone="emerald" />
+            <TeachingToneMetricCard label="Keep active" value={keepActivePortfolioCount} tone="rose" />
+            <TeachingToneMetricCard label="Simplify support" value={simplifyPortfolioCount} tone="amber" />
+            <TeachingToneMetricCard label="Light-touch" value={lightTouchPortfolioCount} tone="sky" />
+            <TeachingToneMetricCard label="Handoff-ready" value={handoffPortfolioCount} tone="emerald" />
           </div>
         ) : null}
 
         {privateStudents.length > 0 ? (
-          <div className="rounded-2xl border bg-card p-5 text-sm text-muted-foreground">
+          <TeachingExplainerBlock>
             Portfolio mode is the learner-level version of the broader portfolio mix. It shows whether this learner still belongs in active management or is starting to move into lighter-touch support.
-          </div>
+          </TeachingExplainerBlock>
         ) : null}
 
         {privateStudents.length > 0 ? (
           <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-            <InfoCard label="Reset now" value={resetNowCount} tone="rose" />
-            <InfoCard label="Rebalance" value={rebalanceCount} tone="amber" />
-            <InfoCard label="Simplify now" value={simplifyNowCount} tone="sky" />
-            <InfoCard label="Stable to maintain" value={stableToMaintainCount} tone="emerald" />
+            <TeachingToneMetricCard label="Reset now" value={resetNowCount} tone="rose" />
+            <TeachingToneMetricCard label="Rebalance" value={rebalanceCount} tone="amber" />
+            <TeachingToneMetricCard label="Simplify now" value={simplifyNowCount} tone="sky" />
+            <TeachingToneMetricCard label="Stable to maintain" value={stableToMaintainCount} tone="emerald" />
           </div>
         ) : null}
 
         {privateStudents.length > 0 ? (
-          <div className="rounded-2xl border bg-card p-5 text-sm text-muted-foreground">
+          <TeachingExplainerBlock>
             Operating review is stricter than portfolio mode alone. `Reset now` means this learner is carrying enough unresolved pressure that the current support path should be actively reset; `Rebalance` means support should change, but not necessarily restart.
-          </div>
+          </TeachingExplainerBlock>
         ) : null}
 
         {privateStudents.length > 0 ? (
-          <div className="rounded-2xl border bg-card p-5 text-sm text-muted-foreground">
+          <TeachingExplainerBlock>
             Use `Reset now` for learners whose current support path is no longer coherent, `Rebalance` for learners who still need active help but on a different path, and `Simplify now` for learners who may be ready for a lighter structure without losing continuity.
-          </div>
+          </TeachingExplainerBlock>
         ) : null}
 
         {privateStudents.length > 0 ? (
-          <div className="rounded-2xl border bg-card p-5 text-sm text-muted-foreground">
+          <TeachingExplainerBlock>
             Read these portfolio states operationally: `Keep active` means this learner still belongs in the high-attention side of your portfolio, while `Light-touch` and `Handoff-ready` mean the relationship may be moving toward a more sustainable maintenance mode.
-          </div>
+          </TeachingExplainerBlock>
         ) : null}
 
         {privateStudents.length > 0 ? (
           <div className="grid gap-4 sm:grid-cols-3">
-            <InfoCard label="Repeated pressure" value={repeatedPressureCount} tone="amber" />
-            <InfoCard label="No support path" value={noSupportPathPressureCount} tone="rose" />
-            <InfoCard label="Weak support load" value={weakSupportLoadCount} tone="rose" />
+            <TeachingToneMetricCard label="Repeated pressure" value={repeatedPressureCount} tone="amber" />
+            <TeachingToneMetricCard label="No support path" value={noSupportPathPressureCount} tone="rose" />
+            <TeachingToneMetricCard label="Weak support load" value={weakSupportLoadCount} tone="rose" />
           </div>
         ) : null}
 
         {privateStudents.length > 0 ? (
-          <div className="rounded-2xl border bg-card p-5 text-sm text-muted-foreground">
+          <TeachingExplainerBlock>
             Support-load concentration highlights where the same learner is carrying multiple pressure signals at once. `No support path` means the learner is under pressure without a strategy or playbook; `Weak support load` means support exists, but the latest outcome still suggests it is not working well enough.
-          </div>
+          </TeachingExplainerBlock>
         ) : null}
 
         {privateStudents.length > 0 ? (
           <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-11">
-            <InfoCard label="No next plan" value={noPlanCount} tone="rose" />
-            <InfoCard label="Overdue plans" value={overduePlanCount} tone="amber" />
-            <InfoCard label="Supported plans" value={supportedPlanCount} tone="sky" />
-            <InfoCard label="No active goals" value={noActiveGoalCount} tone="rose" />
-            <InfoCard label="No recent history" value={noRecentHistoryCount} tone="amber" />
-            <InfoCard label="Blocked goals" value={blockedGoalCount} tone="rose" />
-            <InfoCard label="Needs reinforcement" value={reinforcementCount} tone="sky" />
-            <InfoCard label="Recurring issues" value={recurringIssueCount} tone="amber" />
-            <InfoCard label="No strategy yet" value={noStrategyCount} tone="amber" />
-            <InfoCard label="Strategy gap" value={strategyGapCount} tone="rose" />
-            <InfoCard label="No playbook yet" value={noPlaybookCount} tone="amber" />
-            <InfoCard label="Playbook gap" value={playbookGapCount} tone="rose" />
-            <InfoCard label="Needs review" value={noRecentReviewCount} tone="rose" />
-            <InfoCard label="Needs adaptation" value={noRecentAdaptationCount} tone="rose" />
-            <InfoCard label="Reviewed, not adapted" value={reviewedNotAdaptedCount} tone="amber" />
+            <TeachingToneMetricCard label="No next plan" value={noPlanCount} tone="rose" />
+            <TeachingToneMetricCard label="Overdue plans" value={overduePlanCount} tone="amber" />
+            <TeachingToneMetricCard label="Supported plans" value={supportedPlanCount} tone="sky" />
+            <TeachingToneMetricCard label="No active goals" value={noActiveGoalCount} tone="rose" />
+            <TeachingToneMetricCard label="No recent history" value={noRecentHistoryCount} tone="amber" />
+            <TeachingToneMetricCard label="Blocked goals" value={blockedGoalCount} tone="rose" />
+            <TeachingToneMetricCard label="Needs reinforcement" value={reinforcementCount} tone="sky" />
+            <TeachingToneMetricCard label="Recurring issues" value={recurringIssueCount} tone="amber" />
+            <TeachingToneMetricCard label="No strategy yet" value={noStrategyCount} tone="amber" />
+            <TeachingToneMetricCard label="Strategy gap" value={strategyGapCount} tone="rose" />
+            <TeachingToneMetricCard label="No playbook yet" value={noPlaybookCount} tone="amber" />
+            <TeachingToneMetricCard label="Playbook gap" value={playbookGapCount} tone="rose" />
+            <TeachingToneMetricCard label="Needs review" value={noRecentReviewCount} tone="rose" />
+            <TeachingToneMetricCard label="Needs adaptation" value={noRecentAdaptationCount} tone="rose" />
+            <TeachingToneMetricCard label="Reviewed, not adapted" value={reviewedNotAdaptedCount} tone="amber" />
           </div>
         ) : null}
 
@@ -1002,326 +1011,319 @@ export default async function TeacherPrivateStudentsPage() {
                 </div>
                 <div className="grid gap-4">
                   {group.items.map(({ item, lessonPlan, activeGoalCount, blockedGoalCount, needsReinforcementCount, recurringIssueTags, latestHistory, latestReview, hasRecentHistory, needsReviewSnapshot, needsAdaptation, reviewWithoutAdaptation, priorityLevel, priorityReason, checkpoint, supportLoad, stabilization, portfolioMode, operatingReview }) => (
-                    <Link
+                    <TeachingEntityCard
                       key={item.id}
                       href={`/notebook/teacher/private-students/${item.id}`}
-                      className="block rounded-2xl border bg-card p-5 transition-colors hover:border-[var(--cn-orange)]/30 hover:bg-muted/20"
-                    >
-                      <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-                        <div className="space-y-3">
-                          <div className="flex flex-wrap items-center gap-3">
-                            <StatusPill status={item.status} />
-                            <NextStepLabel nextStepType={item.next_step_type} />
-                            <span
-                              className={`rounded-full border px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] ${
-                                priorityLevel === "urgent"
-                                  ? "border-rose-500/20 bg-rose-500/10 text-rose-300"
-                                  : priorityLevel === "high"
-                                    ? "border-amber-500/20 bg-amber-500/10 text-amber-300"
-                                    : "border-sky-500/20 bg-sky-500/10 text-sky-400"
-                              }`}
-                            >
-                              {priorityLevel}
-                            </span>
-                            <span
-                              className={`rounded-full border px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] ${
-                                checkpoint.dueState === "overdue"
-                                  ? "border-rose-500/20 bg-rose-500/10 text-rose-300"
-                                  : checkpoint.dueState === "due_now"
-                                    ? "border-amber-500/20 bg-amber-500/10 text-amber-300"
-                                    : "border-emerald-500/20 bg-emerald-500/10 text-emerald-400"
-                              }`}
-                            >
-                              {checkpoint.dueState === "overdue"
-                                ? "overdue"
+                      badges={
+                        <>
+                          <StatusPill status={item.status} />
+                          <NextStepLabel nextStepType={item.next_step_type} />
+                          <span
+                            className={`rounded-full border px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] ${
+                              priorityLevel === "urgent"
+                                ? "border-rose-500/20 bg-rose-500/10 text-rose-300"
+                                : priorityLevel === "high"
+                                  ? "border-amber-500/20 bg-amber-500/10 text-amber-300"
+                                  : "border-sky-500/20 bg-sky-500/10 text-sky-400"
+                            }`}
+                          >
+                            {priorityLevel}
+                          </span>
+                          <span
+                            className={`rounded-full border px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] ${
+                              checkpoint.dueState === "overdue"
+                                ? "border-rose-500/20 bg-rose-500/10 text-rose-300"
                                 : checkpoint.dueState === "due_now"
-                                  ? "due now"
-                                  : "recently checked"}
+                                  ? "border-amber-500/20 bg-amber-500/10 text-amber-300"
+                                  : "border-emerald-500/20 bg-emerald-500/10 text-emerald-400"
+                            }`}
+                          >
+                            {checkpoint.dueState === "overdue"
+                              ? "overdue"
+                              : checkpoint.dueState === "due_now"
+                                ? "due now"
+                                : "recently checked"}
+                          </span>
+                          {lessonPlan ? (
+                            <span className="rounded-full border border-sky-500/20 bg-sky-500/10 px-2.5 py-1 text-[11px] font-medium text-sky-400">
+                              {getPrivateLessonPlanStatusLabel(lessonPlan.plan_status)}
                             </span>
-                            {lessonPlan ? (
-                              <span className="rounded-full border border-sky-500/20 bg-sky-500/10 px-2.5 py-1 text-[11px] font-medium text-sky-400">
-                                {getPrivateLessonPlanStatusLabel(lessonPlan.plan_status)}
-                              </span>
-                            ) : (
-                              <span className="rounded-full border border-rose-500/20 bg-rose-500/10 px-2.5 py-1 text-[11px] font-medium text-rose-300">
-                                No next plan
-                              </span>
-                            )}
-                            {lessonPlan && isPlanOverdue(lessonPlan.target_date) ? (
-                              <span className="rounded-full border border-amber-500/20 bg-amber-500/10 px-2.5 py-1 text-[11px] font-medium text-amber-300">
-                                Plan overdue
-                              </span>
-                            ) : null}
-                            {activeGoalCount === 0 ? (
-                              <span className="rounded-full border border-rose-500/20 bg-rose-500/10 px-2.5 py-1 text-[11px] font-medium text-rose-300">
-                                No active goal
-                              </span>
-                            ) : null}
-                            {!hasRecentHistory && item.status !== "onboarding" ? (
-                              <span className="rounded-full border border-amber-500/20 bg-amber-500/10 px-2.5 py-1 text-[11px] font-medium text-amber-300">
-                                No recent history
-                              </span>
-                            ) : null}
-                            {blockedGoalCount > 0 ? (
-                              <span className="rounded-full border border-rose-500/20 bg-rose-500/10 px-2.5 py-1 text-[11px] font-medium text-rose-300">
-                                {blockedGoalCount} blocked
-                              </span>
-                            ) : null}
-                            {needsReinforcementCount > 0 ? (
-                              <span className="rounded-full border border-sky-500/20 bg-sky-500/10 px-2.5 py-1 text-[11px] font-medium text-sky-400">
-                                {needsReinforcementCount} needs reinforcement
-                              </span>
-                            ) : null}
-                            {recurringIssueTags.length > 0 ? (
-                              <span className="rounded-full border border-amber-500/20 bg-amber-500/10 px-2.5 py-1 text-[11px] font-medium text-amber-300">
-                                {recurringIssueTags.length} recurring issue{recurringIssueTags.length === 1 ? "" : "s"}
-                              </span>
-                            ) : null}
-                            {needsReviewSnapshot ? (
-                              <span className="rounded-full border border-rose-500/20 bg-rose-500/10 px-2.5 py-1 text-[11px] font-medium text-rose-300">
-                                Needs review
-                              </span>
-                            ) : null}
-                            {needsAdaptation ? (
-                              <span className="rounded-full border border-rose-500/20 bg-rose-500/10 px-2.5 py-1 text-[11px] font-medium text-rose-300">
-                                Needs adaptation
-                              </span>
-                            ) : null}
-                            {reviewWithoutAdaptation ? (
-                              <span className="rounded-full border border-amber-500/20 bg-amber-500/10 px-2.5 py-1 text-[11px] font-medium text-amber-300">
-                                Reviewed, not adapted
-                              </span>
-                            ) : null}
-                            {supportLoad.level === "high" ? (
-                              <span className="rounded-full border border-rose-500/20 bg-rose-500/10 px-2.5 py-1 text-[11px] font-medium text-rose-300">
-                                {supportLoad.label}
-                              </span>
-                            ) : supportLoad.level === "medium" ? (
-                              <span className="rounded-full border border-amber-500/20 bg-amber-500/10 px-2.5 py-1 text-[11px] font-medium text-amber-300">
-                                {supportLoad.label}
-                              </span>
-                            ) : null}
-                            {stabilization.state === "handoff_ready" ? (
-                              <span className="rounded-full border border-emerald-500/20 bg-emerald-500/10 px-2.5 py-1 text-[11px] font-medium text-emerald-400">
-                                {stabilization.label}
-                              </span>
-                            ) : stabilization.state === "simplify" ? (
-                              <span className="rounded-full border border-[var(--cn-orange)]/20 bg-[var(--cn-orange)]/10 px-2.5 py-1 text-[11px] font-medium text-[var(--cn-orange)]">
-                                {stabilization.label}
-                              </span>
-                            ) : stabilization.state === "light_touch" ? (
-                              <span className="rounded-full border border-sky-500/20 bg-sky-500/10 px-2.5 py-1 text-[11px] font-medium text-sky-400">
-                                {stabilization.label}
-                              </span>
-                            ) : null}
-                            <span
-                              className={`rounded-full border px-2.5 py-1 text-[11px] font-medium ${
-                                portfolioMode.mode === "active-heavy"
-                                  ? "border-rose-500/20 bg-rose-500/10 text-rose-300"
-                                  : portfolioMode.mode === "simplify support"
-                                    ? "border-amber-500/20 bg-amber-500/10 text-amber-300"
-                                    : portfolioMode.mode === "light-touch"
-                                      ? "border-sky-500/20 bg-sky-500/10 text-sky-400"
-                                      : "border-emerald-500/20 bg-emerald-500/10 text-emerald-400"
-                              }`}
-                            >
-                              Portfolio · {portfolioMode.mode}
+                          ) : (
+                            <span className="rounded-full border border-rose-500/20 bg-rose-500/10 px-2.5 py-1 text-[11px] font-medium text-rose-300">
+                              No next plan
                             </span>
-                            <span
-                              className={`rounded-full border px-2.5 py-1 text-[11px] font-medium ${
-                                operatingReview.state === "reset_now"
-                                  ? "border-rose-500/20 bg-rose-500/10 text-rose-300"
-                                  : operatingReview.state === "rebalance"
-                                    ? "border-amber-500/20 bg-amber-500/10 text-amber-300"
-                                    : operatingReview.state === "simplify_now"
-                                      ? "border-sky-500/20 bg-sky-500/10 text-sky-400"
-                                      : "border-emerald-500/20 bg-emerald-500/10 text-emerald-400"
-                              }`}
-                            >
-                              {operatingReview.label}
+                          )}
+                          {lessonPlan && isPlanOverdue(lessonPlan.target_date) ? (
+                            <span className="rounded-full border border-amber-500/20 bg-amber-500/10 px-2.5 py-1 text-[11px] font-medium text-amber-300">
+                              Plan overdue
                             </span>
-                            {!item.last_playbook_id ? (
-                              <span className="rounded-full border border-amber-500/20 bg-amber-500/10 px-2.5 py-1 text-[11px] font-medium text-amber-300">
-                                No playbook yet
-                              </span>
-                            ) : null}
-                            {!item.last_playbook_id &&
-                            (needsAdaptation ||
-                              blockedGoalCount > 0 ||
-                              needsReinforcementCount > 0 ||
-                              recurringIssueTags.length > 0) ? (
-                              <span className="rounded-full border border-rose-500/20 bg-rose-500/10 px-2.5 py-1 text-[11px] font-medium text-rose-300">
-                                Playbook gap
-                              </span>
-                            ) : null}
-                            {item.last_strategy_title ? (
-                              <span className="rounded-full border border-violet-500/20 bg-violet-500/10 px-2.5 py-1 text-[11px] font-medium text-violet-300">
-                                Strategy · {item.last_strategy_title}
-                              </span>
-                            ) : null}
-                            {item.last_playbook_title ? (
-                              <span className="rounded-full border border-amber-500/20 bg-amber-500/10 px-2.5 py-1 text-[11px] font-medium text-amber-300">
-                                Playbook · {item.last_playbook_title}
-                              </span>
-                            ) : null}
-                            {item.last_playbook_outcome_status ? (
-                              <span className={`rounded-full border px-2.5 py-1 text-[11px] font-medium ${
-                                item.last_playbook_outcome_status === "helped"
-                                  ? "border-emerald-500/20 bg-emerald-500/10 text-emerald-400"
-                                  : item.last_playbook_outcome_status === "partial"
+                          ) : null}
+                          {activeGoalCount === 0 ? (
+                            <span className="rounded-full border border-rose-500/20 bg-rose-500/10 px-2.5 py-1 text-[11px] font-medium text-rose-300">
+                              No active goal
+                            </span>
+                          ) : null}
+                          {!hasRecentHistory && item.status !== "onboarding" ? (
+                            <span className="rounded-full border border-amber-500/20 bg-amber-500/10 px-2.5 py-1 text-[11px] font-medium text-amber-300">
+                              No recent history
+                            </span>
+                          ) : null}
+                          {blockedGoalCount > 0 ? (
+                            <span className="rounded-full border border-rose-500/20 bg-rose-500/10 px-2.5 py-1 text-[11px] font-medium text-rose-300">
+                              {blockedGoalCount} blocked
+                            </span>
+                          ) : null}
+                          {needsReinforcementCount > 0 ? (
+                            <span className="rounded-full border border-sky-500/20 bg-sky-500/10 px-2.5 py-1 text-[11px] font-medium text-sky-400">
+                              {needsReinforcementCount} needs reinforcement
+                            </span>
+                          ) : null}
+                          {recurringIssueTags.length > 0 ? (
+                            <span className="rounded-full border border-amber-500/20 bg-amber-500/10 px-2.5 py-1 text-[11px] font-medium text-amber-300">
+                              {recurringIssueTags.length} recurring issue{recurringIssueTags.length === 1 ? "" : "s"}
+                            </span>
+                          ) : null}
+                          {needsReviewSnapshot ? (
+                            <span className="rounded-full border border-rose-500/20 bg-rose-500/10 px-2.5 py-1 text-[11px] font-medium text-rose-300">
+                              Needs review
+                            </span>
+                          ) : null}
+                          {needsAdaptation ? (
+                            <span className="rounded-full border border-rose-500/20 bg-rose-500/10 px-2.5 py-1 text-[11px] font-medium text-rose-300">
+                              Needs adaptation
+                            </span>
+                          ) : null}
+                          {reviewWithoutAdaptation ? (
+                            <span className="rounded-full border border-amber-500/20 bg-amber-500/10 px-2.5 py-1 text-[11px] font-medium text-amber-300">
+                              Reviewed, not adapted
+                            </span>
+                          ) : null}
+                          {supportLoad.level === "high" ? (
+                            <span className="rounded-full border border-rose-500/20 bg-rose-500/10 px-2.5 py-1 text-[11px] font-medium text-rose-300">
+                              {supportLoad.label}
+                            </span>
+                          ) : supportLoad.level === "medium" ? (
+                            <span className="rounded-full border border-amber-500/20 bg-amber-500/10 px-2.5 py-1 text-[11px] font-medium text-amber-300">
+                              {supportLoad.label}
+                            </span>
+                          ) : null}
+                          {stabilization.state === "handoff_ready" ? (
+                            <span className="rounded-full border border-emerald-500/20 bg-emerald-500/10 px-2.5 py-1 text-[11px] font-medium text-emerald-400">
+                              {stabilization.label}
+                            </span>
+                          ) : stabilization.state === "simplify" ? (
+                            <span className="rounded-full border border-[var(--cn-orange)]/20 bg-[var(--cn-orange)]/10 px-2.5 py-1 text-[11px] font-medium text-[var(--cn-orange)]">
+                              {stabilization.label}
+                            </span>
+                          ) : stabilization.state === "light_touch" ? (
+                            <span className="rounded-full border border-sky-500/20 bg-sky-500/10 px-2.5 py-1 text-[11px] font-medium text-sky-400">
+                              {stabilization.label}
+                            </span>
+                          ) : null}
+                          <span
+                            className={`rounded-full border px-2.5 py-1 text-[11px] font-medium ${
+                              portfolioMode.mode === "active-heavy"
+                                ? "border-rose-500/20 bg-rose-500/10 text-rose-300"
+                                : portfolioMode.mode === "simplify support"
+                                  ? "border-amber-500/20 bg-amber-500/10 text-amber-300"
+                                  : portfolioMode.mode === "light-touch"
                                     ? "border-sky-500/20 bg-sky-500/10 text-sky-400"
-                                    : item.last_playbook_outcome_status === "no_change"
-                                      ? "border-amber-500/20 bg-amber-500/10 text-amber-300"
-                                      : "border-rose-500/20 bg-rose-500/10 text-rose-300"
-                              }`}>
-                                {item.last_playbook_outcome_status === "helped"
-                                  ? "Playbook helped"
-                                  : item.last_playbook_outcome_status === "partial"
-                                    ? "Playbook partial"
-                                    : item.last_playbook_outcome_status === "no_change"
-                                      ? "Playbook unclear"
-                                      : "Playbook replace"}
-                              </span>
-                            ) : null}
-                            {item.last_strategy_outcome_status ? (
-                              <span className={`rounded-full border px-2.5 py-1 text-[11px] font-medium ${
-                                item.last_strategy_outcome_status === "helped"
-                                  ? "border-emerald-500/20 bg-emerald-500/10 text-emerald-400"
-                                  : item.last_strategy_outcome_status === "partial"
+                                    : "border-emerald-500/20 bg-emerald-500/10 text-emerald-400"
+                            }`}
+                          >
+                            Portfolio · {portfolioMode.mode}
+                          </span>
+                          <span
+                            className={`rounded-full border px-2.5 py-1 text-[11px] font-medium ${
+                              operatingReview.state === "reset_now"
+                                ? "border-rose-500/20 bg-rose-500/10 text-rose-300"
+                                : operatingReview.state === "rebalance"
+                                  ? "border-amber-500/20 bg-amber-500/10 text-amber-300"
+                                  : operatingReview.state === "simplify_now"
                                     ? "border-sky-500/20 bg-sky-500/10 text-sky-400"
-                                    : item.last_strategy_outcome_status === "no_change"
-                                      ? "border-amber-500/20 bg-amber-500/10 text-amber-300"
-                                      : "border-rose-500/20 bg-rose-500/10 text-rose-300"
-                              }`}>
-                                {item.last_strategy_outcome_status === "helped"
-                                  ? "Strategy helped"
-                                  : item.last_strategy_outcome_status === "partial"
-                                    ? "Strategy partial"
-                                    : item.last_strategy_outcome_status === "no_change"
-                                      ? "Strategy unclear"
-                                      : "Strategy replace"}
-                              </span>
-                            ) : null}
-                          </div>
+                                    : "border-emerald-500/20 bg-emerald-500/10 text-emerald-400"
+                            }`}
+                          >
+                            {operatingReview.label}
+                          </span>
+                          {!item.last_playbook_id ? (
+                            <span className="rounded-full border border-amber-500/20 bg-amber-500/10 px-2.5 py-1 text-[11px] font-medium text-amber-300">
+                              No playbook yet
+                            </span>
+                          ) : null}
+                          {!item.last_playbook_id &&
+                          (needsAdaptation ||
+                            blockedGoalCount > 0 ||
+                            needsReinforcementCount > 0 ||
+                            recurringIssueTags.length > 0) ? (
+                            <span className="rounded-full border border-rose-500/20 bg-rose-500/10 px-2.5 py-1 text-[11px] font-medium text-rose-300">
+                              Playbook gap
+                            </span>
+                          ) : null}
+                          {item.last_strategy_title ? (
+                            <span className="rounded-full border border-violet-500/20 bg-violet-500/10 px-2.5 py-1 text-[11px] font-medium text-violet-300">
+                              Strategy · {item.last_strategy_title}
+                            </span>
+                          ) : null}
+                          {item.last_playbook_title ? (
+                            <span className="rounded-full border border-amber-500/20 bg-amber-500/10 px-2.5 py-1 text-[11px] font-medium text-amber-300">
+                              Playbook · {item.last_playbook_title}
+                            </span>
+                          ) : null}
+                          {item.last_playbook_outcome_status ? (
+                            <span className={`rounded-full border px-2.5 py-1 text-[11px] font-medium ${
+                              item.last_playbook_outcome_status === "helped"
+                                ? "border-emerald-500/20 bg-emerald-500/10 text-emerald-400"
+                                : item.last_playbook_outcome_status === "partial"
+                                  ? "border-sky-500/20 bg-sky-500/10 text-sky-400"
+                                  : item.last_playbook_outcome_status === "no_change"
+                                    ? "border-amber-500/20 bg-amber-500/10 text-amber-300"
+                                    : "border-rose-500/20 bg-rose-500/10 text-rose-300"
+                            }`}>
+                              {item.last_playbook_outcome_status === "helped"
+                                ? "Playbook helped"
+                                : item.last_playbook_outcome_status === "partial"
+                                  ? "Playbook partial"
+                                  : item.last_playbook_outcome_status === "no_change"
+                                    ? "Playbook unclear"
+                                    : "Playbook replace"}
+                            </span>
+                          ) : null}
+                          {item.last_strategy_outcome_status ? (
+                            <span className={`rounded-full border px-2.5 py-1 text-[11px] font-medium ${
+                              item.last_strategy_outcome_status === "helped"
+                                ? "border-emerald-500/20 bg-emerald-500/10 text-emerald-400"
+                                : item.last_strategy_outcome_status === "partial"
+                                  ? "border-sky-500/20 bg-sky-500/10 text-sky-400"
+                                  : item.last_strategy_outcome_status === "no_change"
+                                    ? "border-amber-500/20 bg-amber-500/10 text-amber-300"
+                                    : "border-rose-500/20 bg-rose-500/10 text-rose-300"
+                            }`}>
+                              {item.last_strategy_outcome_status === "helped"
+                                ? "Strategy helped"
+                                : item.last_strategy_outcome_status === "partial"
+                                  ? "Strategy partial"
+                                  : item.last_strategy_outcome_status === "no_change"
+                                    ? "Strategy unclear"
+                                    : "Strategy replace"}
+                            </span>
+                          ) : null}
+                        </>
+                      }
+                      title={item.student_name}
+                      subtitle={
+                        <>
+                          {item.classroom_name}
+                          {item.classroom_description ? ` · ${item.classroom_description}` : ""}
+                        </>
+                      }
+                      meta={
+                        <>
                           <div>
-                            <h3 className="text-lg font-semibold text-foreground">{item.student_name}</h3>
-                            <p className="mt-1 text-sm text-muted-foreground">
-                              {item.classroom_name}
-                              {item.classroom_description ? ` · ${item.classroom_description}` : ""}
+                            <p className="font-semibold uppercase tracking-[0.16em]">Next assignment</p>
+                            <p className="mt-1 text-sm text-foreground/85">
+                              {lessonPlan?.next_assignment_title || item.next_assignment_title || "No assignment selected"}
                             </p>
                           </div>
-                        </div>
-                        <div className="flex items-center text-[var(--cn-orange)]">
-                          <ArrowRight className="h-4 w-4" />
-                        </div>
-                      </div>
-
-                      <div className="mt-4 grid gap-3 text-xs text-muted-foreground md:grid-cols-4">
-                        <div>
-                          <p className="font-semibold uppercase tracking-[0.16em]">Next assignment</p>
-                          <p className="mt-1 text-sm text-foreground/85">
-                            {lessonPlan?.next_assignment_title || item.next_assignment_title || "No assignment selected"}
-                          </p>
-                        </div>
-                        <div>
-                          <p className="font-semibold uppercase tracking-[0.16em]">Submissions</p>
-                          <p className="mt-1 text-sm text-foreground/85">{item.submission_count}</p>
-                        </div>
-                        <div>
-                          <p className="font-semibold uppercase tracking-[0.16em]">Awaiting review</p>
-                          <p className="mt-1 text-sm text-foreground/85">{item.awaiting_review_count}</p>
-                        </div>
-                        <div>
-                          <p className="font-semibold uppercase tracking-[0.16em]">Last activity</p>
-                          <p className="mt-1 text-sm text-foreground/85">
-                            {formatActivityDate(item.last_submission_activity_at || item.updated_at)}
-                          </p>
-                        </div>
-                      </div>
-                      <div className="mt-3 grid gap-3 text-xs text-muted-foreground md:grid-cols-2">
-                        <div>
-                          <p className="font-semibold uppercase tracking-[0.16em]">Next lesson</p>
-                          <p className="mt-1 text-sm text-foreground/85">
-                            {lessonPlan?.target_date
-                              ? new Date(lessonPlan.target_date).toLocaleDateString("en-US")
-                              : "No date set"}
-                          </p>
-                        </div>
-                        <div>
-                          <p className="font-semibold uppercase tracking-[0.16em]">Lesson focus</p>
-                          <p className="mt-1 text-sm text-foreground/85">
-                            {lessonPlan?.focus_note || "No focus note yet"}
-                          </p>
-                        </div>
-                        <div>
-                          <p className="font-semibold uppercase tracking-[0.16em]">Active goals</p>
-                          <p className="mt-1 text-sm text-foreground/85">{activeGoalCount}</p>
-                        </div>
-                        <div>
-                          <p className="font-semibold uppercase tracking-[0.16em]">Goal pressure</p>
-                          <p className="mt-1 text-sm text-foreground/85">
-                            {blockedGoalCount > 0
-                              ? `${blockedGoalCount} blocked`
-                              : needsReinforcementCount > 0
-                                ? `${needsReinforcementCount} needs reinforcement`
-                                : "No acute pressure"}
-                          </p>
-                        </div>
-                        <div>
-                          <p className="font-semibold uppercase tracking-[0.16em]">Recurring issues</p>
-                          <p className="mt-1 text-sm text-foreground/85">
-                            {recurringIssueTags.length > 0
-                              ? recurringIssueTags.join(", ").replaceAll("_", " ")
-                              : "No recurring issues"}
-                          </p>
-                        </div>
-                        <div>
-                          <p className="font-semibold uppercase tracking-[0.16em]">Latest check-in</p>
-                          <p className="mt-1 text-sm text-foreground/85">
-                            {latestHistory ? formatActivityDate(latestHistory.recorded_at) : "No history yet"}
-                          </p>
-                        </div>
-                        <div>
-                          <p className="font-semibold uppercase tracking-[0.16em]">Last review</p>
-                          <p className="mt-1 text-sm text-foreground/85">
-                            {getReviewDateLabel(latestReview?.reviewed_at ?? item.last_review_snapshot_at)}
-                          </p>
-                        </div>
-                        <div>
-                          <p className="font-semibold uppercase tracking-[0.16em]">Last adapted</p>
-                          <p className="mt-1 text-sm text-foreground/85">
-                            {getAdaptationDateLabel(item.last_plan_adapted_at)}
-                          </p>
-                        </div>
-                        <div>
-                          <p className="font-semibold uppercase tracking-[0.16em]">Last strategy</p>
-                          <p className="mt-1 text-sm text-foreground/85">
-                            {item.last_strategy_title || "No strategy yet"}
-                          </p>
-                        </div>
-                        <div>
-                          <p className="font-semibold uppercase tracking-[0.16em]">Last applied</p>
-                          <p className="mt-1 text-sm text-foreground/85">
-                            {item.last_strategy_applied_at
-                              ? new Date(item.last_strategy_applied_at).toLocaleDateString("en-US")
-                              : "Not applied yet"}
-                          </p>
-                        </div>
-                        <div>
-                          <p className="font-semibold uppercase tracking-[0.16em]">Last playbook</p>
-                          <p className="mt-1 text-sm text-foreground/85">
-                            {item.last_playbook_title || "No playbook yet"}
-                          </p>
-                        </div>
-                        <div>
-                          <p className="font-semibold uppercase tracking-[0.16em]">Playbook applied</p>
-                          <p className="mt-1 text-sm text-foreground/85">
-                            {item.last_playbook_applied_at
-                              ? new Date(item.last_playbook_applied_at).toLocaleDateString("en-US")
-                              : "Not applied yet"}
-                          </p>
-                        </div>
-                      </div>
+                          <div>
+                            <p className="font-semibold uppercase tracking-[0.16em]">Submissions</p>
+                            <p className="mt-1 text-sm text-foreground/85">{item.submission_count}</p>
+                          </div>
+                          <div>
+                            <p className="font-semibold uppercase tracking-[0.16em]">Awaiting review</p>
+                            <p className="mt-1 text-sm text-foreground/85">{item.awaiting_review_count}</p>
+                          </div>
+                          <div>
+                            <p className="font-semibold uppercase tracking-[0.16em]">Last activity</p>
+                            <p className="mt-1 text-sm text-foreground/85">
+                              {formatActivityDate(item.last_submission_activity_at || item.updated_at)}
+                            </p>
+                          </div>
+                          <div>
+                            <p className="font-semibold uppercase tracking-[0.16em]">Next lesson</p>
+                            <p className="mt-1 text-sm text-foreground/85">
+                              {lessonPlan?.target_date
+                                ? new Date(lessonPlan.target_date).toLocaleDateString("en-US")
+                                : "No date set"}
+                            </p>
+                          </div>
+                          <div>
+                            <p className="font-semibold uppercase tracking-[0.16em]">Lesson focus</p>
+                            <p className="mt-1 text-sm text-foreground/85">
+                              {lessonPlan?.focus_note || "No focus note yet"}
+                            </p>
+                          </div>
+                          <div>
+                            <p className="font-semibold uppercase tracking-[0.16em]">Active goals</p>
+                            <p className="mt-1 text-sm text-foreground/85">{activeGoalCount}</p>
+                          </div>
+                          <div>
+                            <p className="font-semibold uppercase tracking-[0.16em]">Goal pressure</p>
+                            <p className="mt-1 text-sm text-foreground/85">
+                              {blockedGoalCount > 0
+                                ? `${blockedGoalCount} blocked`
+                                : needsReinforcementCount > 0
+                                  ? `${needsReinforcementCount} needs reinforcement`
+                                  : "No acute pressure"}
+                            </p>
+                          </div>
+                          <div>
+                            <p className="font-semibold uppercase tracking-[0.16em]">Recurring issues</p>
+                            <p className="mt-1 text-sm text-foreground/85">
+                              {recurringIssueTags.length > 0
+                                ? recurringIssueTags.join(", ").replaceAll("_", " ")
+                                : "No recurring issues"}
+                            </p>
+                          </div>
+                          <div>
+                            <p className="font-semibold uppercase tracking-[0.16em]">Latest check-in</p>
+                            <p className="mt-1 text-sm text-foreground/85">
+                              {latestHistory ? formatActivityDate(latestHistory.recorded_at) : "No history yet"}
+                            </p>
+                          </div>
+                          <div>
+                            <p className="font-semibold uppercase tracking-[0.16em]">Last review</p>
+                            <p className="mt-1 text-sm text-foreground/85">
+                              {getReviewDateLabel(latestReview?.reviewed_at ?? item.last_review_snapshot_at)}
+                            </p>
+                          </div>
+                          <div>
+                            <p className="font-semibold uppercase tracking-[0.16em]">Last adapted</p>
+                            <p className="mt-1 text-sm text-foreground/85">
+                              {getAdaptationDateLabel(item.last_plan_adapted_at)}
+                            </p>
+                          </div>
+                          <div>
+                            <p className="font-semibold uppercase tracking-[0.16em]">Last strategy</p>
+                            <p className="mt-1 text-sm text-foreground/85">
+                              {item.last_strategy_title || "No strategy yet"}
+                            </p>
+                          </div>
+                          <div>
+                            <p className="font-semibold uppercase tracking-[0.16em]">Last applied</p>
+                            <p className="mt-1 text-sm text-foreground/85">
+                              {item.last_strategy_applied_at
+                                ? new Date(item.last_strategy_applied_at).toLocaleDateString("en-US")
+                                : "Not applied yet"}
+                            </p>
+                          </div>
+                          <div>
+                            <p className="font-semibold uppercase tracking-[0.16em]">Last playbook</p>
+                            <p className="mt-1 text-sm text-foreground/85">
+                              {item.last_playbook_title || "No playbook yet"}
+                            </p>
+                          </div>
+                          <div>
+                            <p className="font-semibold uppercase tracking-[0.16em]">Playbook applied</p>
+                            <p className="mt-1 text-sm text-foreground/85">
+                              {item.last_playbook_applied_at
+                                ? new Date(item.last_playbook_applied_at).toLocaleDateString("en-US")
+                                : "Not applied yet"}
+                            </p>
+                          </div>
+                        </>
+                      }
+                    >
                       {latestReview?.summary ? (
                         <p className="mt-3 text-sm text-muted-foreground">
                           Latest review: {latestReview.summary}
@@ -1412,7 +1414,7 @@ export default async function TeacherPrivateStudentsPage() {
                             ? "This learner should come back into the current review window soon."
                             : "This learner has been checked recently enough for now."}
                       </p>
-                    </Link>
+                    </TeachingEntityCard>
                   ))}
                 </div>
               </section>
@@ -1420,60 +1422,6 @@ export default async function TeacherPrivateStudentsPage() {
           </div>
         )}
       </div>
-    </div>
-  );
-}
-
-function InfoCard({
-  label,
-  value,
-  tone,
-}: {
-  label: string;
-  value: number;
-  tone: "sky" | "rose" | "amber" | "emerald";
-}) {
-  const toneClass =
-    tone === "sky"
-      ? "border-sky-500/20 bg-sky-500/10"
-      : tone === "emerald"
-        ? "border-emerald-500/20 bg-emerald-500/10"
-      : tone === "amber"
-        ? "border-amber-500/20 bg-amber-500/10"
-        : "border-rose-500/20 bg-rose-500/10";
-
-  return (
-    <div className={`rounded-2xl border p-5 ${toneClass}`}>
-      <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">{label}</p>
-      <p className="mt-3 text-3xl font-bold text-foreground">{value}</p>
-    </div>
-  );
-}
-
-function SummaryCard({
-  label,
-  value,
-  tone,
-}: {
-  label: string;
-  value: number;
-  tone: (typeof statusOrder)[number];
-}) {
-  const toneClass =
-    tone === "active"
-      ? "border-emerald-500/20 bg-emerald-500/10"
-      : tone === "awaiting_student"
-        ? "border-sky-500/20 bg-sky-500/10"
-        : tone === "awaiting_teacher"
-          ? "border-amber-500/20 bg-amber-500/10"
-          : tone === "inactive"
-            ? "border-rose-500/20 bg-rose-500/10"
-            : "border-[var(--cn-orange)]/20 bg-[var(--cn-orange)]/10";
-
-  return (
-    <div className={`rounded-2xl border p-5 ${toneClass}`}>
-      <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">{label}</p>
-      <p className="mt-3 text-3xl font-bold text-foreground">{value}</p>
     </div>
   );
 }
