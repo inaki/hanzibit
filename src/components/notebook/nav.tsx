@@ -40,7 +40,14 @@ export function NotebookNav() {
   const [searchResults, setSearchResults] = useState<HskWord[]>([]);
   const [showResults, setShowResults] = useState(false);
   const [isPending, startTransition] = useTransition();
-  const [isDark, setIsDark] = useState(false);
+  const [isDark, setIsDark] = useState(() => {
+    if (typeof window === "undefined") return false;
+    const stored = window.localStorage.getItem("theme");
+    return (
+      stored === "dark" ||
+      (!stored && window.matchMedia("(prefers-color-scheme: dark)").matches)
+    );
+  });
   const [signingOut, setSigningOut] = useState(false);
   const [isTeacher, setIsTeacher] = useState(false);
   const [hasLearnerTeacherHub, setHasLearnerTeacherHub] = useState(false);
@@ -51,13 +58,8 @@ export function NotebookNav() {
   const userEmail = session?.user?.email ?? "";
 
   useEffect(() => {
-    const stored = localStorage.getItem("theme");
-    const dark =
-      stored === "dark" ||
-      (!stored && window.matchMedia("(prefers-color-scheme: dark)").matches);
-    setIsDark(dark);
-    document.documentElement.classList.toggle("dark", dark);
-  }, []);
+    document.documentElement.classList.toggle("dark", isDark);
+  }, [isDark]);
 
   useEffect(() => {
     isTeacherUserAction().then(setIsTeacher);
@@ -137,7 +139,7 @@ export function NotebookNav() {
     <header data-testid="notebook-nav" className="flex h-14 shrink-0 items-center justify-between border-b bg-card px-6">
       <div className="flex items-center gap-8">
         <Link href="/" data-testid="notebook-nav-logo" className="flex items-center gap-2">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[var(--cn-orange)] text-white">
+          <div className="bg-primary text-primary-foreground flex h-8 w-8 items-center justify-center rounded-lg">
             <BookOpen className="h-5 w-5" />
           </div>
           <span className="text-base font-bold text-foreground">
@@ -161,7 +163,7 @@ export function NotebookNav() {
                 data-testid={`notebook-nav-${link.label.toLowerCase().replace(/\s+/g, "-")}-link`}
                 className={
                   active
-                    ? "border-b-2 border-[var(--cn-orange)] pb-0.5 font-medium text-foreground"
+                    ? "border-b-2 border-[var(--ui-tone-orange-border)] pb-0.5 font-medium text-foreground"
                     : "text-muted-foreground hover:text-foreground"
                 }
               >
@@ -202,7 +204,7 @@ export function NotebookNav() {
                       onClick={() => { setShowResults(false); setSearchQuery(""); }}
                       className="flex items-center gap-3 px-4 py-2 hover:bg-muted/50"
                     >
-                      <span className="text-lg font-bold text-[var(--cn-orange)]">{word.simplified}</span>
+                      <span className="ui-tone-orange-text text-lg font-bold">{word.simplified}</span>
                       <div className="min-w-0 flex-1">
                         <p className="truncate text-sm text-foreground/80">{word.pinyin}</p>
                         <p className="truncate text-xs text-muted-foreground/70">{word.english}</p>
@@ -223,9 +225,9 @@ export function NotebookNav() {
           <Settings className="h-5 w-5" />
         </button>
         <DropdownMenu>
-          <DropdownMenuTrigger data-testid="notebook-nav-avatar" className="rounded-full outline-none focus-visible:ring-2 focus-visible:ring-[var(--cn-orange)]">
+          <DropdownMenuTrigger data-testid="notebook-nav-avatar" className="rounded-full outline-none focus-visible:ring-2 focus-visible:ring-[var(--ui-tone-orange-border)]">
             <Avatar className="h-8 w-8 cursor-pointer">
-              <AvatarFallback className="bg-[var(--cn-orange)] text-xs text-white">
+              <AvatarFallback className="bg-primary text-primary-foreground text-xs">
                 {displayName ? displayName.slice(0, 2).toUpperCase() : "HB"}
               </AvatarFallback>
             </Avatar>

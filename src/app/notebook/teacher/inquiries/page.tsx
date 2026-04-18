@@ -24,12 +24,12 @@ export const dynamic = "force-dynamic";
 function StatusPill({ status }: { status: string }) {
   const styles =
     status === "pending"
-      ? "border-amber-500/20 bg-amber-500/10 text-amber-500"
+      ? "ui-tone-amber-panel ui-tone-amber-text"
       : status === "accepted"
-        ? "border-emerald-500/20 bg-emerald-500/10 text-emerald-500"
+        ? "ui-tone-emerald-panel ui-tone-emerald-text"
         : status === "converted"
-          ? "border-sky-500/20 bg-sky-500/10 text-sky-400"
-          : "border-rose-500/20 bg-rose-500/10 text-rose-500";
+          ? "ui-tone-sky-panel ui-tone-sky-text"
+          : "ui-tone-rose-panel ui-tone-rose-text";
 
   return (
     <span className={`rounded-full border px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] ${styles}`}>
@@ -133,8 +133,8 @@ export default async function TeacherInquiriesPage({
           <div
             className={`rounded-xl px-4 py-3 text-sm ${
               query.success.startsWith("error:")
-                ? "border border-rose-500/20 bg-rose-500/10 text-rose-300"
-                : "border border-emerald-500/20 bg-emerald-500/10 text-emerald-300"
+                ? "ui-tone-rose-panel ui-tone-rose-text border"
+                : "ui-tone-emerald-panel ui-tone-emerald-text border"
             }`}
           >
             {query.success.startsWith("error:")
@@ -209,7 +209,7 @@ export default async function TeacherInquiriesPage({
                 badges={
                   <>
                     <StatusPill status={inquiry.status} />
-                    <span className="rounded-full border border-sky-500/20 bg-sky-500/10 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-sky-400">
+                    <span className="ui-tone-sky-panel ui-tone-sky-text rounded-full border px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.18em]">
                       Private tutoring
                     </span>
                   </>
@@ -281,14 +281,14 @@ export default async function TeacherInquiriesPage({
                       {inquiry.initial_assignment_id ? (
                         <Link
                           href={`/notebook/assignments/${inquiry.initial_assignment_id}`}
-                          className="text-sm font-medium text-[var(--cn-orange)] hover:underline"
+                          className="ui-tone-orange-text text-sm font-medium hover:underline"
                         >
                           Open onboarding assignment
                         </Link>
                       ) : null}
                       <Link
                         href={`/notebook/classes/${inquiry.created_classroom_id}`}
-                        className="text-sm font-medium text-[var(--cn-orange)] hover:underline"
+                        className="ui-tone-orange-text text-sm font-medium hover:underline"
                       >
                         Open classroom
                       </Link>

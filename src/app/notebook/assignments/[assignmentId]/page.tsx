@@ -94,14 +94,14 @@ export async function AssignmentDetailPageContent({
             </h1>
             <p className="mt-2 text-sm text-muted-foreground">
               Classroom:{" "}
-              <Link href={`${classroomBasePath}/${classroom.id}`} className="text-[var(--cn-orange)] hover:underline">
+              <Link href={`${classroomBasePath}/${classroom.id}`} className="ui-tone-orange-text hover:underline">
                 {classroom.name}
               </Link>
             </p>
           </div>
           <div className="flex items-center gap-2">
             {assignmentIsOverdue ? (
-              <span className="rounded-full border border-rose-500/20 bg-rose-500/10 px-3 py-1.5 text-xs font-medium text-rose-300">
+              <span className="ui-tone-rose-panel ui-tone-rose-text rounded-full border px-3 py-1.5 text-xs font-medium">
                 Overdue
               </span>
             ) : null}
@@ -115,7 +115,7 @@ export async function AssignmentDetailPageContent({
           <section className="space-y-6">
             <div className="rounded-2xl border bg-card p-5">
               <div className="mb-4 flex items-center gap-2">
-                <ClipboardList className="h-4 w-4 text-[var(--cn-orange)]" />
+                <ClipboardList className="ui-tone-orange-text h-4 w-4" />
                 <h2 className="text-sm font-semibold uppercase tracking-[0.2em] text-muted-foreground">
                   Instructions
                 </h2>
@@ -126,8 +126,8 @@ export async function AssignmentDetailPageContent({
                 <p className="text-sm text-muted-foreground">No extra description provided.</p>
               )}
               {assignment.prompt && (
-                <div className="mt-4 rounded-xl border border-[var(--cn-orange)]/20 bg-[var(--cn-orange)]/10 p-4">
-                  <p className="text-sm font-medium text-[var(--cn-orange)]">Prompt</p>
+                <div className="ui-tone-orange-panel mt-4 rounded-xl border p-4">
+                  <p className="ui-tone-orange-text text-sm font-medium">Prompt</p>
                   <p className="mt-2 text-sm leading-7 text-foreground/85">{assignment.prompt}</p>
                 </div>
               )}
@@ -136,9 +136,9 @@ export async function AssignmentDetailPageContent({
             <div className="rounded-2xl border bg-card p-5">
               <div className="mb-4 flex items-center gap-2">
                 {assignment.type.startsWith("study_guide") ? (
-                  <BookOpenText className="h-4 w-4 text-[var(--cn-orange)]" />
+                  <BookOpenText className="ui-tone-orange-text h-4 w-4" />
                 ) : (
-                  <PenLine className="h-4 w-4 text-[var(--cn-orange)]" />
+                  <PenLine className="ui-tone-orange-text h-4 w-4" />
                 )}
                 <h2 className="text-sm font-semibold uppercase tracking-[0.2em] text-muted-foreground">
                   {launchHeading}
@@ -146,13 +146,13 @@ export async function AssignmentDetailPageContent({
               </div>
               <p className="text-sm text-muted-foreground">{launchDescription}</p>
               {studentCanResubmit ? (
-                <div className="mt-4 rounded-xl border border-amber-500/20 bg-amber-500/10 p-4 text-sm text-amber-300">
+                <div className="ui-tone-amber-panel ui-tone-amber-text mt-4 rounded-xl border p-4 text-sm">
                   Teacher feedback is already available on your submission. Update your response and save again to resubmit.
                 </div>
               ) : null}
               <Link
                 href={launchHref}
-                className="mt-4 inline-flex items-center gap-2 rounded-lg bg-[var(--cn-orange)] px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-[var(--cn-orange-dark)]"
+                className="mt-4 inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:opacity-90"
               >
                 {launchLabel}
                 <ArrowRight className="h-4 w-4" />
@@ -162,7 +162,7 @@ export async function AssignmentDetailPageContent({
             {canManage ? (
               <div className="rounded-2xl border bg-card p-5">
                 <div className="mb-4 flex items-center gap-2">
-                  <CopyPlus className="h-4 w-4 text-[var(--cn-orange)]" />
+                  <CopyPlus className="ui-tone-orange-text h-4 w-4" />
                   <h2 className="text-sm font-semibold uppercase tracking-[0.2em] text-muted-foreground">
                     Reuse This Assignment
                   </h2>
@@ -178,12 +178,12 @@ export async function AssignmentDetailPageContent({
                     <input
                       name="title"
                       defaultValue={assignment.title}
-                      className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-[var(--cn-orange)]"
+                      className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-[var(--ui-tone-orange-border)]"
                     />
                   </div>
                   <button
                     type="submit"
-                    className="inline-flex items-center gap-2 rounded-lg border border-[var(--cn-orange)]/20 bg-[var(--cn-orange)]/10 px-4 py-2 text-sm font-medium text-[var(--cn-orange)] transition-colors hover:bg-[var(--cn-orange)]/15"
+                    className="ui-tone-orange-panel ui-tone-orange-text inline-flex items-center gap-2 rounded-lg border px-4 py-2 text-sm font-medium transition-colors hover:opacity-85"
                   >
                     Save as template
                   </button>
@@ -204,7 +204,7 @@ export async function AssignmentDetailPageContent({
                 </div>
                 <div className="flex items-center justify-between gap-3">
                   <span className="text-muted-foreground">Due</span>
-                  <span className={`font-medium ${assignmentIsOverdue ? "text-rose-300" : "text-foreground"}`}>
+                  <span className={`font-medium ${assignmentIsOverdue ? "ui-tone-rose-text" : "text-foreground"}`}>
                     {assignment.due_at ? new Date(assignment.due_at).toLocaleDateString("en-US") : "No due date"}
                   </span>
                 </div>
@@ -279,7 +279,7 @@ export async function AssignmentDetailPageContent({
                     <div className="flex flex-wrap gap-3 pt-1">
                       <Link
                         href={`/notebook/submissions/${studentSubmission.id}`}
-                        className="inline-flex items-center gap-2 text-sm font-medium text-[var(--cn-orange)] hover:underline"
+                        className="ui-tone-orange-text inline-flex items-center gap-2 text-sm font-medium hover:underline"
                       >
                         Open submission
                         <ArrowRight className="h-4 w-4" />
@@ -287,7 +287,7 @@ export async function AssignmentDetailPageContent({
                       {studentCanResubmit ? (
                         <Link
                           href={launchHref}
-                          className="inline-flex items-center gap-2 text-sm font-medium text-amber-300 hover:underline"
+                          className="ui-tone-amber-text inline-flex items-center gap-2 text-sm font-medium hover:underline"
                         >
                           Revise now
                           <ArrowRight className="h-4 w-4" />

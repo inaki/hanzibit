@@ -11,12 +11,12 @@ export const dynamic = "force-dynamic";
 function StatusPill({ status }: { status: string }) {
   const styles =
     status === "pending"
-      ? "border-amber-500/20 bg-amber-500/10 text-amber-500"
+      ? "ui-tone-amber-panel ui-tone-amber-text"
       : status === "accepted"
-        ? "border-emerald-500/20 bg-emerald-500/10 text-emerald-500"
+        ? "ui-tone-emerald-panel ui-tone-emerald-text"
         : status === "converted"
-          ? "border-sky-500/20 bg-sky-500/10 text-sky-400"
-          : "border-rose-500/20 bg-rose-500/10 text-rose-500";
+          ? "ui-tone-sky-panel ui-tone-sky-text"
+          : "ui-tone-rose-panel ui-tone-rose-text";
 
   return (
     <span className={`rounded-full border px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] ${styles}`}>
@@ -125,7 +125,7 @@ export async function LearnerInquiriesPageContent({
         {inquiries.length === 0 ? (
           <div className="rounded-2xl border bg-card p-6 text-sm text-muted-foreground">
             You have not sent any teacher inquiries yet.{" "}
-            <Link href="/teachers" className="font-medium text-[var(--cn-orange)] hover:underline">
+            <Link href="/teachers" className="ui-tone-orange-text font-medium hover:underline">
               Browse teachers
             </Link>
             .
@@ -138,7 +138,7 @@ export async function LearnerInquiriesPageContent({
                   <div className="flex flex-wrap items-center gap-3">
                     <StatusPill status={inquiry.status} />
                     {inquiry.status === "converted" ? (
-                      <span className="rounded-full border border-sky-500/20 bg-sky-500/10 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-sky-400">
+                      <span className="ui-tone-sky-panel ui-tone-sky-text rounded-full border px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.18em]">
                         Private tutoring
                       </span>
                     ) : null}
@@ -151,7 +151,7 @@ export async function LearnerInquiriesPageContent({
                     {inquiry.message || "No message included."}
                   </div>
                   {inquiry.status === "converted" ? (
-                    <div className="rounded-xl border border-sky-500/20 bg-sky-500/10 p-4 text-sm">
+                    <div className="ui-tone-sky-panel rounded-xl border p-4 text-sm">
                       <p className="font-semibold text-foreground">Private tutoring next steps</p>
                       <p className="mt-1 text-muted-foreground">
                         {getLearnerNextStepCopy(inquiry)}
@@ -160,7 +160,7 @@ export async function LearnerInquiriesPageContent({
                         {inquiry.initial_assignment_id ? (
                           <Link
                             href={`/notebook/with-teacher/assignments/${inquiry.initial_assignment_id}`}
-                            className="font-medium text-[var(--cn-orange)] hover:underline"
+                            className="ui-tone-orange-text font-medium hover:underline"
                           >
                             Open first assignment
                             {inquiry.assignment_title ? `: ${inquiry.assignment_title}` : ""}
@@ -169,7 +169,7 @@ export async function LearnerInquiriesPageContent({
                         {inquiry.created_classroom_id ? (
                           <Link
                             href={`/notebook/with-teacher/classes/${inquiry.created_classroom_id}`}
-                            className="font-medium text-[var(--cn-orange)] hover:underline"
+                            className="ui-tone-orange-text font-medium hover:underline"
                           >
                             Open classroom
                           </Link>
@@ -180,7 +180,7 @@ export async function LearnerInquiriesPageContent({
                   {inquiry.created_classroom_id ? (
                     <Link
                       href={`/notebook/with-teacher/classes/${inquiry.created_classroom_id}`}
-                      className="inline-flex text-sm font-medium text-[var(--cn-orange)] hover:underline"
+                      className="ui-tone-orange-text inline-flex text-sm font-medium hover:underline"
                     >
                       Open classroom
                     </Link>

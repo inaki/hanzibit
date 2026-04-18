@@ -60,10 +60,10 @@ export function MobileNav() {
     dailyPractice?.loopCompleted || !dailyPractice?.stepPattern.weakestStep
       ? null
       : dailyPractice.stepPattern.weakestStep === "review"
-        ? { label: "R", className: "bg-blue-500 text-white" }
+        ? { label: "R", className: "ui-tone-sky-panel ui-tone-sky-text border" }
         : dailyPractice.stepPattern.weakestStep === "study"
-          ? { label: "S", className: "bg-emerald-500 text-white" }
-          : { label: "W", className: "bg-[var(--cn-orange)] text-white" };
+          ? { label: "S", className: "ui-tone-emerald-panel ui-tone-emerald-text border" }
+          : { label: "W", className: "bg-primary text-primary-foreground" };
 
   return (
     <nav
@@ -82,7 +82,7 @@ export function MobileNav() {
               href={tab.href}
               className={`relative flex flex-1 flex-col items-center justify-center gap-0.5 text-[10px] font-medium transition-colors ${
                 active
-                  ? "text-[var(--cn-orange)]"
+                  ? "ui-tone-orange-text"
                   : "text-muted-foreground/70"
               }`}
             >

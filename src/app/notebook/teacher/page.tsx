@@ -48,10 +48,10 @@ function SummaryCard({
   return (
     <Link
       href={href}
-      className="rounded-2xl border bg-card p-5 transition-colors hover:border-[var(--cn-orange)]/30 hover:bg-muted/20"
+      className="rounded-2xl border bg-card p-5 transition-colors hover:border-[var(--ui-tone-orange-border)] hover:bg-muted/20"
     >
       <div className="flex items-center gap-2 text-muted-foreground">
-        <Icon className="h-4 w-4 text-[var(--cn-orange)]" />
+        <Icon className="ui-tone-orange-text h-4 w-4" />
         <span className="text-xs font-semibold uppercase tracking-[0.18em]">{label}</span>
       </div>
       <p className="mt-3 text-3xl font-bold text-foreground">{value}</p>
@@ -376,7 +376,7 @@ export default async function TeacherOverviewPage() {
           <section className="space-y-6">
             <div className="rounded-2xl border bg-card p-5">
               <div className="flex items-center gap-2">
-                <AlertTriangle className="h-4 w-4 text-[var(--cn-orange)]" />
+                <AlertTriangle className="ui-tone-orange-text h-4 w-4" />
                 <h2 className="text-sm font-semibold uppercase tracking-[0.2em] text-muted-foreground">
                   Review Window
                 </h2>
@@ -391,7 +391,7 @@ export default async function TeacherOverviewPage() {
                     <Link
                       key={`${item.kind}:${item.private_student_id}:${item.days_open ?? "recent"}`}
                       href={item.href}
-                      className="block rounded-xl border p-4 transition-colors hover:border-[var(--cn-orange)]/30 hover:bg-muted/20"
+                      className="block rounded-xl border p-4 transition-colors hover:border-[var(--ui-tone-orange-border)] hover:bg-muted/20"
                     >
                       <div className="flex items-center justify-between gap-3">
                         <div>
@@ -404,10 +404,10 @@ export default async function TeacherOverviewPage() {
                         <span
                           className={`rounded-full border px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] ${
                             item.due_state === "overdue"
-                              ? "border-rose-500/20 bg-rose-500/10 text-rose-300"
+                              ? "ui-tone-rose-panel ui-tone-rose-text"
                               : item.due_state === "due_now"
-                                ? "border-amber-500/20 bg-amber-500/10 text-amber-300"
-                                : "border-emerald-500/20 bg-emerald-500/10 text-emerald-400"
+                                ? "ui-tone-amber-panel ui-tone-amber-text"
+                                : "ui-tone-emerald-panel ui-tone-emerald-text"
                           }`}
                         >
                           {item.due_state === "overdue"
@@ -429,7 +429,7 @@ export default async function TeacherOverviewPage() {
 
             <div className="rounded-2xl border bg-card p-5">
               <div className="flex items-center gap-2">
-                <AlertTriangle className="h-4 w-4 text-[var(--cn-orange)]" />
+                <AlertTriangle className="ui-tone-orange-text h-4 w-4" />
                 <h2 className="text-sm font-semibold uppercase tracking-[0.2em] text-muted-foreground">
                   Priority Queue
                 </h2>
@@ -444,7 +444,7 @@ export default async function TeacherOverviewPage() {
                     <Link
                       key={`${item.kind}:${item.id}`}
                       href={item.href}
-                      className="block rounded-xl border p-4 transition-colors hover:border-[var(--cn-orange)]/30 hover:bg-muted/20"
+                      className="block rounded-xl border p-4 transition-colors hover:border-[var(--ui-tone-orange-border)] hover:bg-muted/20"
                     >
                       <div className="flex items-center justify-between gap-3">
                         <div>
@@ -456,10 +456,10 @@ export default async function TeacherOverviewPage() {
                         <span
                           className={`rounded-full border px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] ${
                             item.priority_level === "urgent"
-                              ? "border-rose-500/20 bg-rose-500/10 text-rose-300"
+                              ? "ui-tone-rose-panel ui-tone-rose-text"
                               : item.priority_level === "high"
-                                ? "border-amber-500/20 bg-amber-500/10 text-amber-300"
-                                : "border-sky-500/20 bg-sky-500/10 text-sky-400"
+                                ? "ui-tone-amber-panel ui-tone-amber-text"
+                                : "ui-tone-sky-panel ui-tone-sky-text"
                           }`}
                         >
                           {item.priority_level}
@@ -482,7 +482,7 @@ export default async function TeacherOverviewPage() {
               <div className="mt-4 grid gap-3">
                 <Link
                   href="/notebook/teacher/profile"
-                  className="rounded-xl border p-4 transition-colors hover:border-[var(--cn-orange)]/30 hover:bg-muted/20"
+                  className="rounded-xl border p-4 transition-colors hover:border-[var(--ui-tone-orange-border)] hover:bg-muted/20"
                 >
                   <p className="text-sm font-semibold text-foreground">Profile readiness</p>
                   <p className="mt-1 text-sm text-muted-foreground">
@@ -493,7 +493,7 @@ export default async function TeacherOverviewPage() {
                 </Link>
                 <Link
                   href="/notebook/teacher/inquiries"
-                  className="rounded-xl border p-4 transition-colors hover:border-[var(--cn-orange)]/30 hover:bg-muted/20"
+                  className="rounded-xl border p-4 transition-colors hover:border-[var(--ui-tone-orange-border)] hover:bg-muted/20"
                 >
                   <p className="text-sm font-semibold text-foreground">Inquiries</p>
                   <p className="mt-1 text-sm text-muted-foreground">
@@ -504,7 +504,7 @@ export default async function TeacherOverviewPage() {
                 </Link>
                 <Link
                   href="/notebook/teacher/reporting"
-                  className="rounded-xl border p-4 transition-colors hover:border-[var(--cn-orange)]/30 hover:bg-muted/20"
+                  className="rounded-xl border p-4 transition-colors hover:border-[var(--ui-tone-orange-border)] hover:bg-muted/20"
                 >
                   <p className="text-sm font-semibold text-foreground">Classroom reporting</p>
                   <p className="mt-1 text-sm text-muted-foreground">
@@ -515,7 +515,7 @@ export default async function TeacherOverviewPage() {
                 </Link>
                 <Link
                   href="/notebook/teacher/setup"
-                  className="rounded-xl border p-4 transition-colors hover:border-[var(--cn-orange)]/30 hover:bg-muted/20"
+                  className="rounded-xl border p-4 transition-colors hover:border-[var(--ui-tone-orange-border)] hover:bg-muted/20"
                 >
                   <p className="text-sm font-semibold text-foreground">Tutoring setup</p>
                   <p className="mt-1 text-sm text-muted-foreground">
@@ -532,7 +532,7 @@ export default async function TeacherOverviewPage() {
                 </Link>
                 <Link
                   href="/notebook/teacher/private-students"
-                  className="rounded-xl border p-4 transition-colors hover:border-[var(--cn-orange)]/30 hover:bg-muted/20"
+                  className="rounded-xl border p-4 transition-colors hover:border-[var(--ui-tone-orange-border)] hover:bg-muted/20"
                 >
                   <p className="text-sm font-semibold text-foreground">Private learners</p>
                   <p className="mt-1 text-sm text-muted-foreground">
@@ -558,7 +558,7 @@ export default async function TeacherOverviewPage() {
                 </Link>
                 <Link
                   href="/notebook/teacher/library"
-                  className="rounded-xl border p-4 transition-colors hover:border-[var(--cn-orange)]/30 hover:bg-muted/20"
+                  className="rounded-xl border p-4 transition-colors hover:border-[var(--ui-tone-orange-border)] hover:bg-muted/20"
                 >
                   <p className="text-sm font-semibold text-foreground">Strategy and playbook reuse</p>
                   <p className="mt-1 text-sm text-muted-foreground">
@@ -587,7 +587,7 @@ export default async function TeacherOverviewPage() {
                 </Link>
                 <Link
                   href="/notebook/teacher/reporting"
-                  className="rounded-xl border p-4 transition-colors hover:border-[var(--cn-orange)]/30 hover:bg-muted/20"
+                  className="rounded-xl border p-4 transition-colors hover:border-[var(--ui-tone-orange-border)] hover:bg-muted/20"
                 >
                   <p className="text-sm font-semibold text-foreground">Teaching patterns</p>
                   <p className="mt-1 text-sm text-muted-foreground">
@@ -605,7 +605,7 @@ export default async function TeacherOverviewPage() {
                 </Link>
                 <Link
                   href="/notebook/teacher/referrals"
-                  className="rounded-xl border p-4 transition-colors hover:border-[var(--cn-orange)]/30 hover:bg-muted/20"
+                  className="rounded-xl border p-4 transition-colors hover:border-[var(--ui-tone-orange-border)] hover:bg-muted/20"
                 >
                   <p className="text-sm font-semibold text-foreground">Referral performance</p>
                   <p className="mt-1 text-sm text-muted-foreground">
@@ -624,25 +624,25 @@ export default async function TeacherOverviewPage() {
                 Quick Access
               </h2>
               <div className="mt-4 grid gap-3 text-sm">
-                <Link href="/notebook/teacher/profile" className="font-medium text-[var(--cn-orange)] hover:underline">
+                <Link href="/notebook/teacher/profile" className="ui-tone-orange-text font-medium hover:underline">
                   Edit public profile
                 </Link>
-                <Link href="/notebook/teacher/setup" className="font-medium text-[var(--cn-orange)] hover:underline">
+                <Link href="/notebook/teacher/setup" className="ui-tone-orange-text font-medium hover:underline">
                   Configure tutoring setup
                 </Link>
-                <Link href="/notebook/teacher/inquiries" className="font-medium text-[var(--cn-orange)] hover:underline">
+                <Link href="/notebook/teacher/inquiries" className="ui-tone-orange-text font-medium hover:underline">
                   Open inquiry inbox
                 </Link>
-                <Link href="/notebook/teacher/private-students" className="font-medium text-[var(--cn-orange)] hover:underline">
+                <Link href="/notebook/teacher/private-students" className="ui-tone-orange-text font-medium hover:underline">
                   Open private learners
                 </Link>
-                <Link href="/notebook/teacher/library" className="font-medium text-[var(--cn-orange)] hover:underline">
+                <Link href="/notebook/teacher/library" className="ui-tone-orange-text font-medium hover:underline">
                   Manage library and templates
                 </Link>
-                <Link href="/notebook/teacher/reporting" className="font-medium text-[var(--cn-orange)] hover:underline">
+                <Link href="/notebook/teacher/reporting" className="ui-tone-orange-text font-medium hover:underline">
                   Open reporting
                 </Link>
-                <Link href="/notebook/teacher/referrals" className="font-medium text-[var(--cn-orange)] hover:underline">
+                <Link href="/notebook/teacher/referrals" className="ui-tone-orange-text font-medium hover:underline">
                   Open referrals
                 </Link>
               </div>

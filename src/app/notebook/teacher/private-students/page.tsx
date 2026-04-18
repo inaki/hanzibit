@@ -38,14 +38,14 @@ const statusLabels: Record<(typeof statusOrder)[number], string> = {
 function StatusPill({ status }: { status: PrivateStudentListItem["status"] }) {
   const styles =
     status === "active"
-      ? "border-emerald-500/20 bg-emerald-500/10 text-emerald-400"
+      ? "ui-tone-emerald-panel ui-tone-emerald-text"
       : status === "awaiting_student"
-        ? "border-sky-500/20 bg-sky-500/10 text-sky-400"
+        ? "ui-tone-sky-panel ui-tone-sky-text"
         : status === "awaiting_teacher"
-          ? "border-amber-500/20 bg-amber-500/10 text-amber-300"
+          ? "ui-tone-amber-panel ui-tone-amber-text"
           : status === "inactive"
-            ? "border-rose-500/20 bg-rose-500/10 text-rose-300"
-            : "border-[var(--cn-orange)]/20 bg-[var(--cn-orange)]/10 text-[var(--cn-orange)]";
+            ? "ui-tone-rose-panel ui-tone-rose-text"
+            : "ui-tone-orange-panel ui-tone-orange-text";
 
   return (
     <span className={`rounded-full border px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] ${styles}`}>
@@ -1004,7 +1004,7 @@ export default async function TeacherPrivateStudentsPage() {
             {grouped.map((group) => (
               <section key={group.status} className="space-y-4">
                 <div className="flex items-center gap-2">
-                  <Users className="h-4 w-4 text-[var(--cn-orange)]" />
+                  <Users className="ui-tone-orange-text h-4 w-4" />
                   <h2 className="text-sm font-semibold uppercase tracking-[0.2em] text-muted-foreground">
                     {statusLabels[group.status]}
                   </h2>

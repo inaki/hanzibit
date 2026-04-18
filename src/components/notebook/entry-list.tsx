@@ -32,11 +32,11 @@ function EntryListContent({ entries, activeEntryId, onSelect }: EntryListProps) 
               data-testid={`journal-entry-list-item-${entry.id}`}
               className={`block rounded-lg px-3 py-2.5 transition-colors ${
                 isActive
-                  ? "bg-[var(--cn-orange-light)] border border-[var(--cn-orange)]/20"
+                  ? "ui-tone-orange-panel border"
                   : "hover:bg-muted/50"
               }`}
             >
-              <p className={`text-sm font-medium ${isActive ? "text-[var(--cn-orange)]" : "text-foreground"}`}>
+              <p className={`text-sm font-medium ${isActive ? "ui-tone-orange-text" : "text-foreground"}`}>
                 {entry.title_zh}
               </p>
               <p className="text-xs text-muted-foreground">

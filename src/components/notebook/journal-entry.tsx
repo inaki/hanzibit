@@ -38,15 +38,15 @@ function HanziToken({ hanzi, pinyin, english }: { hanzi: string; pinyin: string;
       <span
         className={`rounded px-0.5 font-bold transition-all ${
           show
-            ? "bg-[var(--cn-orange)] text-white"
-            : "text-[var(--cn-orange)] border-b-2 border-dotted border-[var(--cn-orange)]/40"
+            ? "bg-primary text-primary-foreground"
+            : "ui-tone-orange-text border-b-2 border-dotted border-[var(--ui-tone-orange-border)]"
         }`}
       >
         {hanzi}
       </span>
       {show && (
         <span
-          className={`absolute bottom-[calc(100%+8px)] z-50 min-w-[100px] rounded-lg bg-gray-900 px-3 py-2 text-center shadow-lg pointer-events-none ${
+          className={`absolute bottom-[calc(100%+8px)] z-50 min-w-[100px] rounded-lg border border-border bg-popover px-3 py-2 text-center text-popover-foreground shadow-lg pointer-events-none ${
             pos === "center"
               ? "left-1/2 -translate-x-1/2"
               : pos === "left"
@@ -54,11 +54,11 @@ function HanziToken({ hanzi, pinyin, english }: { hanzi: string; pinyin: string;
                 : "right-0"
           }`}
         >
-          <span className="block text-sm font-bold text-[var(--cn-orange-light)]">{pinyin}</span>
-          <span className="block text-xs text-gray-300">{english}</span>
+          <span className="ui-tone-orange-text block text-sm font-bold">{pinyin}</span>
+          <span className="block text-xs text-muted-foreground">{english}</span>
           {/* Arrow */}
           <span
-            className={`absolute top-full border-[6px] border-transparent border-t-gray-900 ${
+            className={`absolute top-full border-[6px] border-transparent border-t-popover ${
               pos === "center"
                 ? "left-1/2 -translate-x-1/2"
                 : pos === "left"
@@ -141,20 +141,20 @@ export function JournalEntryView({
         {/* Entry Header */}
         <div data-testid="journal-entry-header" className="mb-8 flex items-start justify-between">
           <div>
-            <p data-testid="journal-entry-unit" className="text-xs font-semibold tracking-wider text-[var(--cn-orange)] uppercase">
+            <p data-testid="journal-entry-unit" className="ui-tone-orange-text text-xs font-semibold tracking-wider uppercase">
               {entry.unit || "Journal Entry"}{" "}
               <span className="font-normal text-muted-foreground">
                 · {entry.hsk_level > 0 ? `HSK ${entry.hsk_level}` : "General"}
               </span>
             </p>
             {entry.source_type === "study_guide" && (
-              <p className="mt-2 text-xs font-medium text-sky-600 dark:text-sky-400">
+              <p className="ui-tone-sky-text mt-2 text-xs font-medium">
                 Guided response from Study Guide
               </p>
             )}
           </div>
           <div className="text-right text-xs">
-            <p data-testid="journal-entry-date" className="font-medium text-[var(--cn-orange)]">
+            <p data-testid="journal-entry-date" className="ui-tone-orange-text font-medium">
               {date}
             </p>
             <p data-testid="journal-entry-id" className="text-muted-foreground">
@@ -204,9 +204,9 @@ export function JournalEntryView({
 
         {/* Self-Notes & Annotations */}
         {annotations.length > 0 && (
-          <div data-testid="journal-entry-annotations" className="mt-12 rounded-xl border-l-4 border-[var(--cn-orange)] bg-[var(--cn-orange-light)] p-6">
-            <p data-testid="journal-entry-annotations-title" className="mb-4 flex items-center gap-2 text-sm font-semibold text-[var(--cn-orange)]">
-              <span className="inline-block h-4 w-4 rounded bg-[var(--cn-orange)] text-center text-[10px] leading-4 text-white">
+          <div data-testid="journal-entry-annotations" className="ui-tone-orange-panel mt-12 rounded-xl border-l-4 p-6">
+            <p data-testid="journal-entry-annotations-title" className="ui-tone-orange-text mb-4 flex items-center gap-2 text-sm font-semibold">
+              <span className="inline-block h-4 w-4 rounded bg-primary text-center text-[10px] leading-4 text-primary-foreground">
                 !
               </span>
               Self-Notes &amp; Annotations
@@ -216,7 +216,7 @@ export function JournalEntryView({
                 <div
                   key={annotation.id}
                   data-testid={`journal-entry-annotation-${annotation.type}`}
-                  className="rounded-lg border border-[var(--cn-orange)]/20 bg-card p-5"
+                  className="rounded-lg border border-[var(--ui-tone-orange-border)] bg-card p-5"
                 >
                   <p className="mb-2 text-sm font-semibold text-foreground">
                     {annotation.title}

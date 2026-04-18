@@ -113,7 +113,7 @@ export default async function TeacherPlaybookDetailPage({
                   name="title"
                   required
                   defaultValue={playbook.title}
-                  className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-[var(--cn-orange)]"
+                  className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-[var(--ui-tone-orange-border)]"
                 />
               </div>
               <div>
@@ -123,7 +123,7 @@ export default async function TeacherPlaybookDetailPage({
                   rows={3}
                   required
                   defaultValue={playbook.summary}
-                  className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-[var(--cn-orange)]"
+                  className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-[var(--ui-tone-orange-border)]"
                 />
               </div>
               <div className="grid gap-3 sm:grid-cols-2">
@@ -132,7 +132,7 @@ export default async function TeacherPlaybookDetailPage({
                   <input
                     name="issue_focus"
                     defaultValue={playbook.issue_focus || ""}
-                    className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-[var(--cn-orange)]"
+                    className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-[var(--ui-tone-orange-border)]"
                   />
                 </div>
                 <div>
@@ -140,7 +140,7 @@ export default async function TeacherPlaybookDetailPage({
                   <input
                     name="goal_focus"
                     defaultValue={playbook.goal_focus || ""}
-                    className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-[var(--cn-orange)]"
+                    className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-[var(--ui-tone-orange-border)]"
                   />
                 </div>
               </div>
@@ -151,7 +151,7 @@ export default async function TeacherPlaybookDetailPage({
                   rows={3}
                   defaultValue={playbook.when_to_use || ""}
                   placeholder="What recurring pattern or escalation signal should trigger this playbook?"
-                  className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-[var(--cn-orange)]"
+                  className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-[var(--ui-tone-orange-border)]"
                 />
               </div>
               <div>
@@ -160,7 +160,7 @@ export default async function TeacherPlaybookDetailPage({
                   name="guidance"
                   rows={5}
                   defaultValue={playbook.guidance || ""}
-                  className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-[var(--cn-orange)]"
+                  className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-[var(--ui-tone-orange-border)]"
                 />
               </div>
               <TeachingExplainerBlock tone="sky">
@@ -179,7 +179,7 @@ export default async function TeacherPlaybookDetailPage({
                   rows={3}
                   defaultValue={playbook.refinement_note || ""}
                   placeholder="What changed in this playbook after seeing outcome evidence?"
-                  className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-[var(--cn-orange)]"
+                  className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-[var(--ui-tone-orange-border)]"
                 />
               </div>
               <div className="grid gap-3 sm:grid-cols-2">
@@ -188,7 +188,7 @@ export default async function TeacherPlaybookDetailPage({
                   <select
                     name="replacement_playbook_id"
                     defaultValue={playbook.replacement_playbook_id || ""}
-                    className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-[var(--cn-orange)]"
+                    className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-[var(--ui-tone-orange-border)]"
                   >
                     <option value="">No replacement</option>
                     {playbookOptions
@@ -208,9 +208,9 @@ export default async function TeacherPlaybookDetailPage({
               <div>
                 <label className="mb-1 block text-sm font-medium text-foreground/80">Linked template</label>
                 <select
-                  name="linked_template_id"
+                    name="linked_template_id"
                     defaultValue={playbook.linked_template_id || ""}
-                    className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-[var(--cn-orange)]"
+                    className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-[var(--ui-tone-orange-border)]"
                   >
                     <option value="">No linked template</option>
                     {templates.map((template) => (
@@ -225,7 +225,7 @@ export default async function TeacherPlaybookDetailPage({
                   <select
                     name="linked_resource_id"
                     defaultValue={playbook.linked_resource_id || ""}
-                    className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-[var(--cn-orange)]"
+                    className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-[var(--ui-tone-orange-border)]"
                   >
                     <option value="">No linked resource</option>
                     {resources.map((resource) => (
@@ -264,7 +264,7 @@ export default async function TeacherPlaybookDetailPage({
                 <input type="checkbox" name="archived" defaultChecked={playbook.archived === 1} className="h-4 w-4" />
                 Archive playbook
               </label>
-              <PendingSubmitButton pendingLabel="Updating playbook..." className="w-full justify-center rounded-lg bg-[var(--cn-orange)] px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-[var(--cn-orange-dark)]">
+              <PendingSubmitButton pendingLabel="Updating playbook..." className="bg-primary text-primary-foreground hover:opacity-90 w-full justify-center rounded-lg px-4 py-2 text-sm font-medium transition-colors">
                 Update Playbook
               </PendingSubmitButton>
             </form>
@@ -273,37 +273,37 @@ export default async function TeacherPlaybookDetailPage({
           <TeachingCollectionSection title="Metadata">
               <div className="mt-4 flex flex-wrap gap-2 text-xs">
               {playbook.usage_count === 0 ? (
-                <span className="rounded-full border border-sky-500/20 bg-sky-500/10 px-2.5 py-1 font-medium text-sky-400">
+                <span className="ui-tone-sky-panel ui-tone-sky-text rounded-full border px-2.5 py-1 font-medium">
                   Not used yet
                 </span>
               ) : (
-                <span className="rounded-full border border-emerald-500/20 bg-emerald-500/10 px-2.5 py-1 font-medium text-emerald-400">
+                <span className="ui-tone-emerald-panel ui-tone-emerald-text rounded-full border px-2.5 py-1 font-medium">
                   In use
                 </span>
               )}
               {linkedStrategies.length === 0 ? (
-                <span className="rounded-full border border-amber-500/20 bg-amber-500/10 px-2.5 py-1 font-medium text-amber-300">
+                <span className="ui-tone-amber-panel ui-tone-amber-text rounded-full border px-2.5 py-1 font-medium">
                   Needs linked strategies
                 </span>
               ) : null}
               {!playbook.when_to_use ? (
-                <span className="rounded-full border border-amber-500/20 bg-amber-500/10 px-2.5 py-1 font-medium text-amber-300">
+                <span className="ui-tone-amber-panel ui-tone-amber-text rounded-full border px-2.5 py-1 font-medium">
                   Needs escalation rule
                 </span>
               ) : null}
               {playbook.usage_count > 0 && outcomeSummary.total === 0 ? (
-                <span className="rounded-full border border-amber-500/20 bg-amber-500/10 px-2.5 py-1 font-medium text-amber-300">
+                <span className="ui-tone-amber-panel ui-tone-amber-text rounded-full border px-2.5 py-1 font-medium">
                   Needs outcomes
                 </span>
               ) : null}
               {outcomeSummary.replace > 0 ||
               (outcomeSummary.total > 0 && outcomeSummary.no_change >= outcomeSummary.helped) ? (
-                <span className="rounded-full border border-rose-500/20 bg-rose-500/10 px-2.5 py-1 font-medium text-rose-300">
+                <span className="ui-tone-rose-panel ui-tone-rose-text rounded-full border px-2.5 py-1 font-medium">
                   Needs refinement
                 </span>
               ) : null}
               {playbook.replacement_playbook_title ? (
-                <span className="rounded-full border border-violet-500/20 bg-violet-500/10 px-2.5 py-1 font-medium text-violet-300">
+                <span className="ui-tone-violet-panel ui-tone-violet-text rounded-full border px-2.5 py-1 font-medium">
                   Replaced by {playbook.replacement_playbook_title}
                 </span>
               ) : null}
@@ -315,11 +315,11 @@ export default async function TeacherPlaybookDetailPage({
               <span
                 className={`rounded-full border px-2.5 py-1 font-medium ${
                   patternSummary.broad_status === "helping"
-                    ? "border-emerald-500/20 bg-emerald-500/10 text-emerald-400"
+                    ? "ui-tone-emerald-panel ui-tone-emerald-text"
                     : patternSummary.broad_status === "mixed"
-                      ? "border-amber-500/20 bg-amber-500/10 text-amber-300"
+                      ? "ui-tone-amber-panel ui-tone-amber-text"
                       : patternSummary.broad_status === "weak"
-                        ? "border-rose-500/20 bg-rose-500/10 text-rose-300"
+                        ? "ui-tone-rose-panel ui-tone-rose-text"
                         : "border-border bg-muted text-muted-foreground"
                 }`}
               >
@@ -405,7 +405,7 @@ export default async function TeacherPlaybookDetailPage({
               </div>
             </div>
             {outcomeSummary.total > 0 ? (
-              <div className="mt-5 rounded-xl border border-sky-500/20 bg-sky-500/10 p-3 text-sm text-foreground/90">
+              <div className="ui-tone-sky-panel mt-5 rounded-xl border p-3 text-sm text-foreground/90">
                 <p>
                   Outcomes: {outcomeSummary.helped} helped, {outcomeSummary.partial} partial,{" "}
                   {outcomeSummary.no_change} no change, {outcomeSummary.replace} replace.
@@ -427,7 +427,7 @@ export default async function TeacherPlaybookDetailPage({
                     : "This playbook does not yet have enough cross-learner evidence to judge it broadly."}
             </p>
             {playbook.refinement_note ? (
-              <div className="mt-5 rounded-xl border border-violet-500/20 bg-violet-500/10 p-3 text-sm text-foreground/90">
+              <div className="ui-tone-violet-panel mt-5 rounded-xl border p-3 text-sm text-foreground/90">
                 Refinement note: {playbook.refinement_note}
               </div>
             ) : null}

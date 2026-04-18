@@ -94,14 +94,14 @@ const goalProgressOptions = [
 function StatusPill({ status }: { status: string }) {
   const styles =
     status === "active"
-      ? "border-emerald-500/20 bg-emerald-500/10 text-emerald-400"
+      ? "ui-tone-emerald-panel ui-tone-emerald-text"
       : status === "awaiting_student"
-        ? "border-sky-500/20 bg-sky-500/10 text-sky-400"
+        ? "ui-tone-sky-panel ui-tone-sky-text"
         : status === "awaiting_teacher"
-          ? "border-amber-500/20 bg-amber-500/10 text-amber-300"
+          ? "ui-tone-amber-panel ui-tone-amber-text"
           : status === "inactive"
-            ? "border-rose-500/20 bg-rose-500/10 text-rose-300"
-            : "border-[var(--cn-orange)]/20 bg-[var(--cn-orange)]/10 text-[var(--cn-orange)]";
+            ? "ui-tone-rose-panel ui-tone-rose-text"
+            : "ui-tone-orange-panel ui-tone-orange-text";
 
   const label = statusOptions.find((option) => option.value === status)?.label ?? status;
 
@@ -493,8 +493,8 @@ export default async function TeacherPrivateStudentDetailPage({
           <div
             className={`rounded-xl px-4 py-3 text-sm ${
               query.success.startsWith("error:")
-                ? "border border-rose-500/20 bg-rose-500/10 text-rose-300"
-                : "border border-emerald-500/20 bg-emerald-500/10 text-emerald-300"
+                ? "ui-tone-rose-panel ui-tone-rose-text border"
+                : "ui-tone-emerald-panel ui-tone-emerald-text border"
             }`}
           >
             {query.success.startsWith("error:")
@@ -895,7 +895,7 @@ export default async function TeacherPrivateStudentDetailPage({
                 <input type="hidden" name="private_student_id" value={detail.id} />
                 <input type="hidden" name="review_id" value={latestReview?.id ?? ""} />
 
-                <div className="rounded-xl border border-amber-500/20 bg-amber-500/10 p-3 text-sm text-foreground/90">
+                <div className="ui-tone-amber-panel rounded-xl border p-3 text-sm text-foreground/90">
                   {detail.last_playbook_title
                     ? `Latest playbook: ${detail.last_playbook_title}. Apply a new playbook when this learner needs a broader structured response than a single strategy.`
                     : "Apply a playbook when this learner needs a broader structured support path across multiple repeating issues."}
@@ -1083,7 +1083,7 @@ export default async function TeacherPrivateStudentDetailPage({
                 <input type="hidden" name="private_student_id" value={detail.id} />
                 <input type="hidden" name="review_id" value={latestReview?.id ?? ""} />
 
-                <div className="rounded-xl border border-sky-500/20 bg-sky-500/10 p-3 text-sm text-foreground/90">
+                <div className="ui-tone-sky-panel rounded-xl border p-3 text-sm text-foreground/90">
                   {detail.last_strategy_title
                     ? `Latest strategy: ${detail.last_strategy_title}. Apply a new strategy when the learner needs a clearer reusable response pattern.`
                     : "Apply a tutoring strategy to reuse a known response pattern in this learner's live plan."}
@@ -1266,7 +1266,7 @@ export default async function TeacherPrivateStudentDetailPage({
                 <input type="hidden" name="private_student_id" value={detail.id} />
                 <input type="hidden" name="review_id" value={latestReview?.id ?? ""} />
 
-                <div className="rounded-xl border border-violet-500/20 bg-violet-500/10 p-3 text-sm text-foreground/90">
+                <div className="ui-tone-violet-panel rounded-xl border p-3 text-sm text-foreground/90">
                   {latestReview?.summary
                     ? `Adapting from latest review: ${latestReview.summary}`
                     : "No review snapshot selected yet. You can still adapt the plan, but the adaptation note will not be tied to a review snapshot."}
@@ -1430,11 +1430,11 @@ export default async function TeacherPrivateStudentDetailPage({
                     <form key={goal.id} action={updateGoalFormAction} className="rounded-xl border p-4 space-y-3">
                       <input type="hidden" name="goal_id" value={goal.id} />
                       <div className="flex flex-wrap items-center gap-2 text-xs">
-                        <span className="rounded-full border border-emerald-500/20 bg-emerald-500/10 px-2.5 py-1 font-medium text-emerald-400">
+                        <span className="ui-tone-emerald-panel ui-tone-emerald-text rounded-full border px-2.5 py-1 font-medium">
                           {getPrivateStudentGoalStatusLabel(goal.status)}
                         </span>
                         {goal.progress_status ? (
-                          <span className="rounded-full border border-sky-500/20 bg-sky-500/10 px-2.5 py-1 font-medium text-sky-400">
+                          <span className="ui-tone-sky-panel ui-tone-sky-text rounded-full border px-2.5 py-1 font-medium">
                             {getPrivateStudentGoalProgressStatusLabel(goal.progress_status)}
                           </span>
                         ) : null}
@@ -1681,7 +1681,7 @@ export default async function TeacherPrivateStudentDetailPage({
                             {entry.issue_tags.map((tag) => (
                               <span
                                 key={tag}
-                                className="rounded-full border border-amber-500/20 bg-amber-500/10 px-2.5 py-1 text-amber-300"
+                                className="ui-tone-amber-panel ui-tone-amber-text rounded-full border px-2.5 py-1"
                               >
                                 {getPrivateLessonIssueTagLabel(tag)}
                               </span>
@@ -1706,14 +1706,14 @@ export default async function TeacherPrivateStudentDetailPage({
               <div className="mt-4 space-y-3 text-sm text-muted-foreground">
                 <p>
                   <span className="font-medium text-foreground">Classroom:</span>{" "}
-                  <Link href={`/notebook/classes/${detail.classroom_id}`} className="text-[var(--cn-orange)] hover:underline">
+                  <Link href={`/notebook/classes/${detail.classroom_id}`} className="ui-tone-orange-text hover:underline">
                     {detail.classroom_name}
                   </Link>
                 </p>
                 <p>
                   <span className="font-medium text-foreground">Current assignment:</span>{" "}
                   {detail.next_assignment_id ? (
-                    <Link href={`/notebook/assignments/${detail.next_assignment_id}`} className="text-[var(--cn-orange)] hover:underline">
+                    <Link href={`/notebook/assignments/${detail.next_assignment_id}`} className="ui-tone-orange-text hover:underline">
                       {detail.next_assignment_title}
                     </Link>
                   ) : (
@@ -1767,7 +1767,7 @@ function SummaryCard({
   value: string | number;
   tone?: "default" | "sky";
 }) {
-  const toneClass = tone === "sky" ? "border-sky-500/20 bg-sky-500/10" : "border-border bg-card";
+  const toneClass = tone === "sky" ? "ui-tone-sky-panel" : "border-border bg-card";
 
   return (
     <div className={`rounded-2xl border p-5 ${toneClass}`}>

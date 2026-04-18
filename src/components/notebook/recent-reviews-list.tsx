@@ -22,11 +22,11 @@ const typeLabels = {
 const scoreLabels = ["", "Again", "Hard", "Good", "Easy", "Perfect"];
 const scoreColors = [
   "",
-  "bg-red-100 text-red-700",
-  "bg-orange-100 text-orange-700",
-  "bg-yellow-100 text-yellow-700",
-  "bg-green-100 text-green-700",
-  "bg-emerald-100 text-emerald-700",
+  "ui-tone-rose-panel ui-tone-rose-text",
+  "ui-tone-orange-panel ui-tone-orange-text",
+  "ui-tone-amber-panel ui-tone-amber-text",
+  "ui-tone-emerald-panel ui-tone-emerald-text",
+  "ui-tone-emerald-panel ui-tone-emerald-text",
 ];
 
 export function RecentReviewsList({ items }: RecentReviewsListProps) {
@@ -72,7 +72,7 @@ export function RecentReviewsList({ items }: RecentReviewsListProps) {
                   >
                     <td className="px-5 py-3">
                       <div className="flex items-center gap-2">
-                        <Icon className="h-4 w-4 text-[var(--cn-orange)]" />
+                        <Icon className="ui-tone-orange-text h-4 w-4" />
                         <span className="text-xs text-muted-foreground">
                           {typeLabels[item.item_type]}
                         </span>

@@ -6,14 +6,14 @@ interface UpgradePromptProps {
 
 export function UpgradePrompt({ reason }: UpgradePromptProps) {
   return (
-    <div className="rounded-lg border border-amber-200 bg-amber-50 p-4">
+    <div className="ui-tone-amber-panel rounded-lg border p-4">
       <div className="flex items-start gap-3">
-        <Lock className="mt-0.5 h-4 w-4 shrink-0 text-amber-600" />
+        <Lock className="ui-tone-amber-text mt-0.5 h-4 w-4 shrink-0" />
         <div>
-          <p className="text-sm text-amber-800">{reason}</p>
+          <p className="text-sm text-foreground/90">{reason}</p>
           <a
             href="/pricing"
-            className="mt-2 inline-block text-sm font-medium text-amber-700 underline underline-offset-2 hover:text-amber-900"
+            className="ui-tone-amber-text mt-2 inline-block text-sm font-medium underline underline-offset-2 hover:opacity-80"
           >
             Upgrade to Pro
           </a>

@@ -19,6 +19,7 @@ import { useSettings } from "./settings-context";
 import {
   getCharacterOfTheDayAction,
   getDueCountAction,
+  getUserStatsAction,
   hasLearnerTeacherHubAction,
   isTeacherUserAction,
 } from "@/lib/actions";
@@ -31,10 +32,10 @@ const sections = [
   { label: "Teacher", icon: UserRoundSearch, href: "/notebook/with-teacher", learnerTeacherOnly: true },
   { label: "Teaching", icon: BriefcaseBusiness, href: "/notebook/teacher", teacherOnly: true },
   { label: "Flashcards", icon: Layers, href: "/notebook/flashcards" },
-  { label: "Vocabulary List", icon: BookOpen, href: "/notebook/vocabulary" },
-  { label: "Numbers Guide", icon: Hash, href: "/notebook/numbers" },
-  { label: "Grammar Points", icon: Languages, href: "/notebook/grammar" },
-  { label: "Recent Reviews", icon: RotateCcw, href: "/notebook/reviews" },
+  { label: "Vocabulary List", icon: BookOpen, href: "/notebook/vocabulary", advancedOnly: true },
+  { label: "Numbers Guide", icon: Hash, href: "/notebook/numbers", advancedOnly: true },
+  { label: "Grammar Points", icon: Languages, href: "/notebook/grammar", advancedOnly: true },
+  { label: "Recent Reviews", icon: RotateCcw, href: "/notebook/reviews", advancedOnly: true },
 ];
 
 export function NotebookSidebar() {
@@ -45,13 +46,29 @@ export function NotebookSidebar() {
   const [dueCount, setDueCount] = useState(0);
   const [isTeacher, setIsTeacher] = useState(false);
   const [hasLearnerTeacherHub, setHasLearnerTeacherHub] = useState(false);
+  const [stats, setStats] = useState({ entryCount: 0, vocabCount: 0, reviewCount: 0 });
 
   useEffect(() => {
     getCharacterOfTheDayAction(settings.hskLevel).then(setCharOfDay);
     getDueCountAction().then(setDueCount);
     isTeacherUserAction().then(setIsTeacher);
     hasLearnerTeacherHubAction().then(setHasLearnerTeacherHub);
+    getUserStatsAction().then((value) =>
+      setStats({
+        entryCount: value.entryCount,
+        vocabCount: value.vocabCount,
+        reviewCount: value.reviewCount,
+      })
+    );
   }, [settings.hskLevel]);
+
+  const isBeginnerSoloLearner =
+    !isTeacher &&
+    !hasLearnerTeacherHub &&
+    settings.hskLevel === 1 &&
+    stats.entryCount <= 1 &&
+    stats.reviewCount <= 5 &&
+    stats.vocabCount <= 10;
 
   function isActive(href: string) {
     if (href === "/notebook") return pathname === "/notebook";
@@ -70,7 +87,8 @@ export function NotebookSidebar() {
             .filter(
               (section) =>
                 (!section.teacherOnly || isTeacher) &&
-                (!section.learnerTeacherOnly || hasLearnerTeacherHub)
+                (!section.learnerTeacherOnly || hasLearnerTeacherHub) &&
+                (!section.advancedOnly || !isBeginnerSoloLearner)
             )
             .map((section) => {
             const active = isActive(section.href);
@@ -81,14 +99,14 @@ export function NotebookSidebar() {
                 data-testid={`notebook-sidebar-section-${section.label.toLowerCase().replace(/\s+/g, "-")}`}
                 className={`flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition-colors ${
                   active
-                    ? "bg-[var(--cn-orange)] font-medium text-white"
+                    ? "bg-primary font-medium text-primary-foreground"
                     : "text-muted-foreground hover:bg-muted"
                 }`}
               >
                 <section.icon className="h-4 w-4" />
                 {section.label}
                 {section.label === "Flashcards" && dueCount > 0 && (
-                  <span className="ml-auto rounded-full bg-red-500 px-1.5 py-0.5 text-[10px] font-bold leading-none text-white">
+                  <span className="ui-tone-rose-panel ui-tone-rose-text ml-auto rounded-full border px-1.5 py-0.5 text-[10px] font-bold leading-none">
                     {dueCount}
                   </span>
                 )}
@@ -96,6 +114,11 @@ export function NotebookSidebar() {
             );
             })}
         </div>
+        {isBeginnerSoloLearner && (
+          <p className="mt-3 px-3 text-xs leading-5 text-muted-foreground">
+            More study tools will appear here after you complete a few entries and reviews.
+          </p>
+        )}
       </div>
 
       {/* Character of the day */}
@@ -103,7 +126,7 @@ export function NotebookSidebar() {
         <p className="mb-2 text-[10px] text-muted-foreground/70">Character of the day</p>
         <div className="flex items-center gap-3">
           <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-lg bg-card shadow-sm">
-            <span data-testid="notebook-sidebar-character" className="text-3xl font-bold leading-none text-[var(--cn-orange)]">
+            <span data-testid="notebook-sidebar-character" className="ui-tone-orange-text text-3xl font-bold leading-none">
               {charOfDay ? charOfDay.simplified[0] : "…"}
             </span>
           </div>

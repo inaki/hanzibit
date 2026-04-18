@@ -40,13 +40,13 @@ export function LearnerTeacherTabs({
             href={tab.href}
             className={`inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-sm transition-colors ${
               active
-                ? "border-[var(--cn-orange)]/20 bg-[var(--cn-orange)]/10 font-medium text-[var(--cn-orange)]"
-                : "border-border bg-card text-muted-foreground hover:border-[var(--cn-orange)]/20 hover:text-foreground"
+                ? "ui-tone-orange-panel ui-tone-orange-text font-medium"
+                : "border-border bg-card text-muted-foreground hover:border-[var(--ui-tone-orange-border)] hover:text-foreground"
             }`}
           >
             {tab.label}
             {badge > 0 ? (
-              <span className="rounded-full bg-[var(--cn-orange)] px-1.5 py-0.5 text-[10px] font-semibold leading-none text-white">
+              <span className="bg-primary text-primary-foreground rounded-full px-1.5 py-0.5 text-[10px] font-semibold leading-none">
                 {badge}
               </span>
             ) : null}

@@ -27,7 +27,7 @@ function GlossWord({
       <span
         className={`text-[22px] font-bold leading-tight ${
           token.userAnnotated
-            ? "text-[var(--cn-orange)]"
+            ? "ui-tone-orange-text"
             : "text-foreground"
         }`}
       >
@@ -38,7 +38,7 @@ function GlossWord({
       {journalHref && (
         <Link
           href={journalHref}
-          className="mt-1 text-[10px] font-medium text-[var(--cn-orange)] hover:underline"
+          className="ui-tone-orange-text mt-1 text-[10px] font-medium hover:underline"
         >
           Use in journal
         </Link>
@@ -82,7 +82,7 @@ export function InterlinearGlossView({
                 <Link
                   key={`${pi}-${phrase.hanzi}`}
                   href={buildPhraseJournalHref(phrase)}
-                  className="inline-flex items-center rounded-full border border-[var(--cn-orange)]/20 bg-[var(--cn-orange)]/10 px-3 py-1 text-[11px] font-medium text-[var(--cn-orange)] transition-colors hover:bg-[var(--cn-orange)]/15"
+                  className="ui-tone-orange-panel ui-tone-orange-text inline-flex items-center rounded-full border px-3 py-1 text-[11px] font-medium transition-colors hover:opacity-90"
                   title={phrase.english}
                 >
                   {phrase.hanzi}

@@ -45,14 +45,21 @@ export function DashboardView() {
   const [dailyPractice, setDailyPractice] = useState<DailyPracticePlan | null>(null);
   const [loadedLevel, setLoadedLevel] = useState<number | null>(null);
   const loading = loadedLevel !== settings.hskLevel;
+  const dashboardMode = !loading && dailyPractice ? getDashboardMode(dailyPractice, stats) : null;
+  const isBeginnerFirstRun = !loading && dashboardMode?.badge === "New learner";
+  const beginnerCompletion = !loading && dailyPractice ? getBeginnerCompletionState(dailyPractice, stats) : null;
+  const isBeginnerFirstCompletion = !!beginnerCompletion;
+  const beginnerStudyHref = "/notebook/lessons?level=1&beginner=1";
   const latestStudyHref =
-    !loading && dailyPractice?.recommendedStudyWord?.id
+    !loading && isBeginnerFirstRun
+      ? beginnerStudyHref
+      : !loading && dailyPractice?.recommendedStudyWord?.id
       ? `/notebook/lessons?level=${settings.hskLevel}&wordId=${encodeURIComponent(String(dailyPractice.recommendedStudyWord.id))}`
       : `/notebook/lessons?level=${settings.hskLevel}`;
   const dueFlashcardsHref =
     !loading && dailyPractice?.recommendedStudyWord?.simplified
-      ? `/notebook/flashcards?mode=due&focus=${encodeURIComponent(dailyPractice.recommendedStudyWord.simplified)}&wordId=${encodeURIComponent(String(dailyPractice.recommendedStudyWord.id))}&level=${settings.hskLevel}`
-      : "/notebook/flashcards?mode=due";
+      ? `/notebook/flashcards?mode=due&focus=${encodeURIComponent(dailyPractice.recommendedStudyWord.simplified)}&wordId=${encodeURIComponent(String(dailyPractice.recommendedStudyWord.id))}&level=${settings.hskLevel}${isBeginnerFirstRun ? "&beginner=1" : ""}`
+      : `/notebook/flashcards?mode=due${isBeginnerFirstRun ? "&beginner=1" : ""}`;
   const journalDraftHref =
     !loading && dailyPractice
       ? `/notebook?new=1&draftTitleZh=${encodeURIComponent("今日练习")}&draftTitleEn=${encodeURIComponent("Daily practice")}&draftUnit=${encodeURIComponent(`HSK ${settings.hskLevel} Daily Practice`)}&draftLevel=${settings.hskLevel}&draftContentZh=${encodeURIComponent(
@@ -113,8 +120,6 @@ export function DashboardView() {
             : "Focus on writing"
     : null;
   const practiceStepOrder = getPracticeStepOrder(dailyPractice);
-  const dashboardMode = !loading && dailyPractice ? getDashboardMode(dailyPractice, stats) : null;
-  const isBeginnerFirstRun = !loading && dashboardMode?.badge === "New learner";
 
   useEffect(() => {
     let cancelled = false;
@@ -164,20 +169,20 @@ export function DashboardView() {
             <div className="max-w-xl">
               <p className="ui-tone-sky-text text-xs font-semibold uppercase tracking-wider">Welcome</p>
               <h2 className="mt-2 text-2xl font-bold text-foreground">Start learning Chinese one small step at a time.</h2>
-              <p className="mt-2 text-sm leading-6 text-muted-foreground">
-                HanziBit works best when you do one tiny loop: study one word, write one short response,
-                and review a few cards. You do not need to configure anything else first.
-              </p>
+                <p className="mt-2 text-sm leading-6 text-muted-foreground">
+                  HanziBit works best when you do one tiny loop: study one word, write one short response,
+                  and review a few cards. You do not need to configure anything else first.
+                </p>
             </div>
             <div className="flex shrink-0 flex-col gap-2">
               <Link
-                href={latestStudyHref}
+                href={beginnerStudyHref}
                 className="inline-flex items-center justify-center rounded-full bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-opacity hover:opacity-90"
               >
                 Start with one word →
               </Link>
               <Link
-                href="/notebook/lessons?level=1"
+                href={beginnerStudyHref}
                 className="ui-tone-sky-panel ui-tone-sky-text inline-flex items-center justify-center rounded-full border bg-background/80 px-4 py-2 text-sm font-medium transition-colors hover:bg-[var(--ui-tone-sky-surface)]/80"
               >
                 Open Study Guide
@@ -204,6 +209,49 @@ export function DashboardView() {
         </div>
       )}
 
+      {!loading && isBeginnerFirstCompletion && beginnerCompletion && (
+        <div className="ui-tone-emerald-panel mb-6 rounded-xl border p-6">
+          <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+            <div className="max-w-2xl">
+              <p className="ui-tone-emerald-text text-xs font-semibold uppercase tracking-wider">Day one complete</p>
+              <h2 className="mt-2 text-2xl font-bold text-foreground">You finished your first Chinese practice loop.</h2>
+              <p className="mt-2 text-sm leading-6 text-muted-foreground">
+                You studied <span className="font-medium text-foreground">{beginnerCompletion.word}</span>, wrote a short response,
+                and completed your first review. That is enough for today. The goal now is to come back tomorrow and repeat one small loop.
+              </p>
+            </div>
+            <div className="flex shrink-0 flex-col gap-2">
+              <Link
+                href={beginnerStudyHref}
+                className="inline-flex items-center justify-center rounded-full bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-opacity hover:opacity-90"
+              >
+                Study one more word →
+              </Link>
+              <p className="text-center text-xs text-muted-foreground">
+                Or stop here and come back tomorrow.
+              </p>
+            </div>
+          </div>
+          <div className="mt-5 grid gap-3 md:grid-cols-3">
+            <BeginnerPreviewCard
+              icon={<BookText className="ui-tone-emerald-text h-4 w-4" />}
+              title="1 word studied"
+              body={`You used ${beginnerCompletion.word} in context and saw its first example.`}
+            />
+            <BeginnerPreviewCard
+              icon={<PenLine className="ui-tone-emerald-text h-4 w-4" />}
+              title="1 short response"
+              body="You finished your first guided sentence instead of staring at a blank notebook."
+            />
+            <BeginnerPreviewCard
+              icon={<RotateCcw className="ui-tone-emerald-text h-4 w-4" />}
+              title="1 review complete"
+              body="You closed the loop, which is what helps the word stick."
+            />
+          </div>
+        </div>
+      )}
+
       <div className="mb-6 rounded-xl border bg-card p-6">
         <div className="mb-4 flex items-center gap-2">
           <CheckCircle2 className="ui-tone-orange-text h-4 w-4" />
@@ -223,6 +271,8 @@ export function DashboardView() {
                   ? "Checking your daily loop..."
                   : isBeginnerFirstRun
                     ? "Your first practice starts here"
+                    : isBeginnerFirstCompletion
+                      ? "You finished your first practice loop"
                     : dailyPractice.loopCompleted
                     ? "Daily loop completed"
                     : `${dailyPractice.completedSteps} of ${dailyPractice.totalSteps} steps completed`}
@@ -232,6 +282,8 @@ export function DashboardView() {
                   ? "Loading today's progress..."
                   : isBeginnerFirstRun
                     ? "Start with one word. Then write one short response and finish with a tiny review."
+                    : isBeginnerFirstCompletion
+                      ? "You already did enough for day one. Keep it light, or stop here and come back tomorrow."
                     : dailyPractice.loopCompleted
                     ? `You reviewed, studied, and wrote today. ${dailyPractice.weeklyCompletedLoops} loop${dailyPractice.weeklyCompletedLoops === 1 ? "" : "s"} completed this week.`
                     : `${dailyPractice.weeklyCompletedLoops} of the last 7 days completed. Finish the remaining steps to complete today’s practice.`}
@@ -279,7 +331,7 @@ export function DashboardView() {
                       <MetricPill label={dashboardMode.pillLabel} tone={dashboardMode.pillTone} />
                     </div>
                   )}
-                  {!isBeginnerFirstRun && (
+                  {!isBeginnerFirstRun && !isBeginnerFirstCompletion && (
                     <>
                       <p className="text-xs text-muted-foreground">
                         7-day pattern: review {dailyPractice.stepPattern.reviewCompletedDays}/7, study {dailyPractice.stepPattern.studyCompletedDays}/7, write {dailyPractice.stepPattern.writeCompletedDays}/7.
@@ -537,6 +589,27 @@ export function DashboardView() {
             />
           </div>
         </div>
+      ) : isBeginnerFirstCompletion ? (
+        <div className="mb-6 rounded-xl border border-border bg-card p-5">
+          <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground/70">What changes tomorrow</p>
+          <div className="mt-3 grid gap-3 md:grid-cols-3">
+            <BeginnerPreviewCard
+              icon={<Flame className="ui-tone-orange-text h-4 w-4" />}
+              title="Your streak starts"
+              body="If you come back tomorrow, your streak will begin."
+            />
+            <BeginnerPreviewCard
+              icon={<TrendingUp className="ui-tone-orange-text h-4 w-4" />}
+              title="Progress begins to grow"
+              body="Each new word and review will start building your HSK progress."
+            />
+            <BeginnerPreviewCard
+              icon={<Layers className="ui-tone-sky-text h-4 w-4" />}
+              title="Your review deck grows"
+              body="More studied words will slowly turn into a real flashcard routine."
+            />
+          </div>
+        </div>
       ) : (
         <div className="mb-6 grid grid-cols-3 gap-4">
           {/* Streak */}
@@ -676,6 +749,19 @@ export function DashboardView() {
       )}
     </div>
   );
+}
+
+function getBeginnerCompletionState(
+  dailyPractice: DailyPracticePlan,
+  stats: Stats
+): { word: string } | null {
+  if (!dailyPractice.loopCompleted) return null;
+  if (!dailyPractice.recommendedStudyWord?.simplified) return null;
+  if (stats.entryCount > 1) return null;
+  if (stats.reviewCount > 5) return null;
+  return {
+    word: dailyPractice.recommendedStudyWord.simplified,
+  };
 }
 
 function getDashboardMode(dailyPractice: DailyPracticePlan, stats: Stats): {

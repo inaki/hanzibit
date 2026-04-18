@@ -61,6 +61,7 @@ interface NotebookActionBarProps {
     sourceType?: string;
     sourceRef?: string;
     assignmentId?: string;
+    beginner?: boolean;
   };
 }
 
@@ -562,6 +563,8 @@ function NewEntryDialog({
     targetEnglish?: string;
     sourceType?: string;
     sourceRef?: string;
+    assignmentId?: string;
+    beginner?: boolean;
   };
 }) {
   const [isPending, startTransition] = useTransition();
@@ -621,9 +624,11 @@ function NewEntryDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent data-testid="new-entry-dialog" className="flex max-h-[90vh] flex-col overflow-hidden sm:max-w-lg">
         <DialogHeader>
-          <DialogTitle>New Journal Entry</DialogTitle>
+          <DialogTitle>{draft?.beginner ? "First Guided Response" : "New Journal Entry"}</DialogTitle>
           <DialogDescription>
-            Write a new journal entry in Mandarin.
+            {draft?.beginner
+              ? "Write one short sentence using the study word. Keep it small and simple."
+              : "Write a new journal entry in Mandarin."}
           </DialogDescription>
         </DialogHeader>
         <form action={handleSubmit} className="flex min-h-0 flex-1 flex-col">
@@ -639,40 +644,54 @@ function NewEntryDialog({
               targetWord={draft?.targetWord}
               content={content}
             />
-            <div>
-              <label className="mb-1 block text-sm font-medium text-foreground/80">
-                Chinese Title
-              </label>
-              <Input
-                data-testid="new-entry-title-zh"
-                name="title_zh"
-                placeholder="e.g. 我的周末"
-                defaultValue={draft?.titleZh ?? ""}
-                required
-              />
-            </div>
-            <div>
-              <label className="mb-1 block text-sm font-medium text-foreground/80">
-                English Title
-              </label>
-              <Input
-                data-testid="new-entry-title-en"
-                name="title_en"
-                placeholder="e.g. My Weekend"
-                defaultValue={draft?.titleEn ?? ""}
-                required
-              />
-            </div>
-            <div className="flex gap-3">
-              <div className="flex-1">
-                <label className="mb-1 block text-sm font-medium text-foreground/80">Unit</label>
-                <Input data-testid="new-entry-unit" name="unit" placeholder="e.g. Unit 8: Hobbies" defaultValue={draft?.unit ?? ""} />
-              </div>
-              <div className="w-24">
-                <label className="mb-1 block text-sm font-medium text-foreground/80">HSK</label>
-                <Input data-testid="new-entry-hsk-level" name="hsk_level" type="number" min={1} max={6} defaultValue={draft?.hskLevel ?? 1} />
-              </div>
-            </div>
+            {draft?.beginner ? (
+              <>
+                <input type="hidden" name="title_zh" value={draft?.titleZh ?? ""} />
+                <input type="hidden" name="title_en" value={draft?.titleEn ?? ""} />
+                <input type="hidden" name="unit" value={draft?.unit ?? ""} />
+                <input type="hidden" name="hsk_level" value={draft?.hskLevel ?? 1} />
+                <GuidanceBanner title="Start small" tone="sky" className="px-4 py-3 text-sm">
+                  You only need one short sentence. Use the study word once and keep going even if it feels imperfect.
+                </GuidanceBanner>
+              </>
+            ) : (
+              <>
+                <div>
+                  <label className="mb-1 block text-sm font-medium text-foreground/80">
+                    Chinese Title
+                  </label>
+                  <Input
+                    data-testid="new-entry-title-zh"
+                    name="title_zh"
+                    placeholder="e.g. 我的周末"
+                    defaultValue={draft?.titleZh ?? ""}
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="mb-1 block text-sm font-medium text-foreground/80">
+                    English Title
+                  </label>
+                  <Input
+                    data-testid="new-entry-title-en"
+                    name="title_en"
+                    placeholder="e.g. My Weekend"
+                    defaultValue={draft?.titleEn ?? ""}
+                    required
+                  />
+                </div>
+                <div className="flex gap-3">
+                  <div className="flex-1">
+                    <label className="mb-1 block text-sm font-medium text-foreground/80">Unit</label>
+                    <Input data-testid="new-entry-unit" name="unit" placeholder="e.g. Unit 8: Hobbies" defaultValue={draft?.unit ?? ""} />
+                  </div>
+                  <div className="w-24">
+                    <label className="mb-1 block text-sm font-medium text-foreground/80">HSK</label>
+                    <Input data-testid="new-entry-hsk-level" name="hsk_level" type="number" min={1} max={6} defaultValue={draft?.hskLevel ?? 1} />
+                  </div>
+                </div>
+              </>
+            )}
             <div>
               <div className="mb-1 flex items-center justify-between">
                 <label className="block text-sm font-medium text-foreground/80">
@@ -702,12 +721,14 @@ function NewEntryDialog({
                 onMouseUp={captureSelection}
                 placeholder={`我去[餐厅|can1 ting1|restaurant]吃饭。\n[服务员|fu2 wu4 yuan2|waiter]很热情。`}
                 required
-                rows={6}
+                rows={draft?.beginner ? 4 : 6}
                 className="w-full rounded-lg border border-border bg-card px-3 py-2 font-mono text-sm text-foreground outline-none focus:border-[var(--ui-tone-orange-border)] focus:ring-1 focus:ring-[var(--ui-tone-orange-border)]"
               />
               {!!draft?.prompt && (
                 <p className="mt-2 text-xs text-muted-foreground">
-                  Use the prompt above, then write your own response below.
+                  {draft?.beginner
+                    ? "Keep the seeded word and add one short sentence of your own."
+                    : "Use the prompt above, then write your own response below."}
                 </p>
               )}
               <div className="mt-3 space-y-3">

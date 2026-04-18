@@ -37,9 +37,10 @@ type Filter = "all" | "encountered" | "not-yet" | "flashcard";
 interface StudyGuideProps {
   initialData: StudyGuideData;
   assignmentId?: string;
+  beginnerMode?: boolean;
 }
 
-export function StudyGuide({ initialData, assignmentId }: StudyGuideProps) {
+export function StudyGuide({ initialData, assignmentId, beginnerMode = false }: StudyGuideProps) {
   const { settings } = useSettings();
   const searchParams = useSearchParams();
   const [data, setData] = useState(initialData);
@@ -120,6 +121,7 @@ export function StudyGuide({ initialData, assignmentId }: StudyGuideProps) {
   const effectiveSelectedWordId = requestedWordId ?? selectedWordId;
   const selected =
     filteredWords.find((item) => item.word.id === effectiveSelectedWordId) ?? filteredWords[0] ?? null;
+  const isBeginnerMode = beginnerMode && data.level === 1;
 
   return (
     <div
@@ -155,6 +157,11 @@ export function StudyGuide({ initialData, assignmentId }: StudyGuideProps) {
 
           {!data.locked && (
             <>
+              {isBeginnerMode && (
+                <EmptyStateNotice className="ui-tone-sky-panel mb-4 px-4 py-3">
+                  Start with one HSK 1 word. You do not need to search yet. Open the first word, read the tiny example, and use it in one short journal response.
+                </EmptyStateNotice>
+              )}
               <div className="relative mb-3">
                 <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground/70" />
                 <Input
@@ -254,44 +261,53 @@ export function StudyGuide({ initialData, assignmentId }: StudyGuideProps) {
             </div>
           ) : (
             <>
-              <SectionCard
-                title={`HSK ${data.level} Progress`}
-                description="Track how much of this level you have already encountered and reviewed."
-                action={
-                  <span className="ui-tone-orange-text text-sm font-bold">
-                    {data.summary.total > 0
-                      ? Math.round((data.summary.encountered / data.summary.total) * 100)
-                      : 0}%
-                  </span>
-                }
-              >
-                <Progress
-                  value={data.summary.total > 0 ? (data.summary.encountered / data.summary.total) * 100 : 0}
-                  className="mb-4 h-2 [&_[data-slot=progress-indicator]]:bg-primary"
-                />
-                <div className="grid grid-cols-2 gap-4 text-center sm:grid-cols-4">
-                  <div>
-                    <p className="text-2xl font-bold text-foreground">{data.summary.total}</p>
-                    <p className="text-xs text-muted-foreground">Total words</p>
+              {!isBeginnerMode && (
+                <SectionCard
+                  title={`HSK ${data.level} Progress`}
+                  description="Track how much of this level you have already encountered and reviewed."
+                  action={
+                    <span className="ui-tone-orange-text text-sm font-bold">
+                      {data.summary.total > 0
+                        ? Math.round((data.summary.encountered / data.summary.total) * 100)
+                        : 0}%
+                    </span>
+                  }
+                >
+                  <Progress
+                    value={data.summary.total > 0 ? (data.summary.encountered / data.summary.total) * 100 : 0}
+                    className="mb-4 h-2 [&_[data-slot=progress-indicator]]:bg-primary"
+                  />
+                  <div className="grid grid-cols-2 gap-4 text-center sm:grid-cols-4">
+                    <div>
+                      <p className="text-2xl font-bold text-foreground">{data.summary.total}</p>
+                      <p className="text-xs text-muted-foreground">Total words</p>
+                    </div>
+                    <div>
+                      <p className="ui-tone-emerald-text text-2xl font-bold">{data.summary.encountered}</p>
+                      <p className="text-xs text-muted-foreground">Encountered</p>
+                    </div>
+                    <div>
+                      <p className="ui-tone-sky-text text-2xl font-bold">{data.summary.withFlashcard}</p>
+                      <p className="text-xs text-muted-foreground">Flashcards</p>
+                    </div>
+                    <div>
+                      <p className="ui-tone-amber-text text-2xl font-bold">{data.summary.dueForReview}</p>
+                      <p className="text-xs text-muted-foreground">Due for review</p>
+                    </div>
                   </div>
-                  <div>
-                    <p className="ui-tone-emerald-text text-2xl font-bold">{data.summary.encountered}</p>
-                    <p className="text-xs text-muted-foreground">Encountered</p>
-                  </div>
-                  <div>
-                    <p className="ui-tone-sky-text text-2xl font-bold">{data.summary.withFlashcard}</p>
-                    <p className="text-xs text-muted-foreground">Flashcards</p>
-                  </div>
-                  <div>
-                    <p className="ui-tone-amber-text text-2xl font-bold">{data.summary.dueForReview}</p>
-                    <p className="text-xs text-muted-foreground">Due for review</p>
-                  </div>
-                </div>
-              </SectionCard>
+                </SectionCard>
+              )}
 
               <div className="mt-6">
                 {selected ? (
-                  <WordDetail item={selected} level={data.level} dailyPractice={dailyPractice} assignmentId={assignmentId} />
+                  <WordDetail
+                    key={`${selected.word.id}-${isBeginnerMode ? "beginner" : "full"}`}
+                    item={selected}
+                    level={data.level}
+                    dailyPractice={dailyPractice}
+                    assignmentId={assignmentId}
+                    beginnerMode={isBeginnerMode}
+                  />
                 ) : (
                   <EmptyStateNotice
                     data-testid="study-guide-empty"
@@ -302,7 +318,7 @@ export function StudyGuide({ initialData, assignmentId }: StudyGuideProps) {
                 )}
               </div>
 
-              {data.grammarPoints.length > 0 && (
+              {!isBeginnerMode && data.grammarPoints.length > 0 && (
                 <SectionCard
                   className="mt-6 p-6"
                   title={`Grammar Points — HSK ${data.level}`}
@@ -336,14 +352,17 @@ function WordDetail({
   level,
   dailyPractice,
   assignmentId,
+  beginnerMode = false,
 }: {
   item: StudyGuideWord;
   level: number;
   dailyPractice: DailyPracticePlan | null;
   assignmentId?: string;
+  beginnerMode?: boolean;
 }) {
   const [creating, setCreating] = useState(false);
   const [createdWordId, setCreatedWordId] = useState<number | null>(null);
+  const [showFullDetails, setShowFullDetails] = useState(!beginnerMode);
   const reading = buildStudyGuideReading(item, level);
   const draftTitleZh = `练习：${item.word.simplified}`;
   const draftTitleEn = `Practice: ${item.word.english}`;
@@ -359,7 +378,7 @@ function WordDetail({
     ...candidate,
     href: `/notebook?new=1&draftTitleZh=${encodeURIComponent(draftTitleZh)}&draftTitleEn=${encodeURIComponent(draftTitleEn)}&draftUnit=${encodeURIComponent(draftUnit)}&draftLevel=${level}&draftContentZh=${encodeURIComponent(`${draftContentZh} ${candidate.zh}`)}&draftSelectedText=${encodeURIComponent(candidate.zh)}&draftPrompt=${encodeURIComponent(`Use the phrase "${candidate.zh}" in your own response and keep ${item.word.simplified} annotated.`)}&draftSourceZh=${encodeURIComponent(reading.passageZh)}&draftSourceEn=${encodeURIComponent(reading.passageEn)}&draftTargetWord=${encodeURIComponent(item.word.simplified)}&draftTargetPinyin=${encodeURIComponent(item.word.pinyin)}&draftTargetEnglish=${encodeURIComponent(item.word.english)}&draftSourceType=study_guide&draftSourceRef=${encodeURIComponent(String(item.word.id))}${assignmentParam}`,
   }));
-  const reviewHref = `/notebook/flashcards?mode=due&focus=${encodeURIComponent(item.word.simplified)}&wordId=${encodeURIComponent(String(item.word.id))}&level=${encodeURIComponent(String(level))}`;
+  const reviewHref = `/notebook/flashcards?mode=due&focus=${encodeURIComponent(item.word.simplified)}&wordId=${encodeURIComponent(String(item.word.id))}&level=${encodeURIComponent(String(level))}${beginnerMode ? "&beginner=1" : ""}`;
   const isFocusWord = dailyPractice?.recommendedStudyWord?.id === item.word.id;
   const latestFocusResponseHref =
     dailyPractice?.latestGuidedResponseToday?.sourceRef === String(item.word.id)
@@ -384,6 +403,51 @@ function WordDetail({
 
   const created = createdWordId === item.word.id;
   const hasFlashcard = item.flashcard !== null || created;
+
+  if (beginnerMode && !showFullDetails) {
+    return (
+      <div data-testid="study-guide-detail" className="rounded-xl border bg-card p-8">
+        <div className="mb-6 text-center">
+          <p className="ui-tone-orange-text text-7xl font-bold">{item.word.simplified}</p>
+          <p className="mt-3 text-xl font-medium text-foreground/80">{item.word.pinyin}</p>
+          <p className="mt-1 text-muted-foreground">{item.word.english}</p>
+        </div>
+
+        <SectionCard
+          className="ui-tone-sky-panel border p-5"
+          title="Start here"
+          description="You only need to learn one small thing right now."
+          icon={Sparkles}
+        >
+          <div className="rounded-lg border border-border bg-card p-4">
+            <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground/70">
+              Tiny example
+            </p>
+            <p className="mt-2 text-lg leading-8 text-foreground">{reading.focusPhraseZh}</p>
+            <p className="mt-2 text-sm text-muted-foreground">{reading.focusPhraseEn}</p>
+          </div>
+          <p className="mt-4 text-sm text-foreground/85">
+            Read the word, glance at the example, then use it once in your journal. That is enough for your first study step.
+          </p>
+          <div className="mt-4 flex flex-wrap gap-3">
+            <Link
+              href={journalHref}
+              className="inline-flex items-center rounded-full bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-opacity hover:opacity-90"
+            >
+              Use this in journal →
+            </Link>
+            <button
+              type="button"
+              onClick={() => setShowFullDetails(true)}
+              className="ui-tone-sky-panel ui-tone-sky-text inline-flex items-center rounded-full border bg-card px-4 py-2 text-sm font-medium transition-colors hover:bg-muted/60"
+            >
+              See full study details
+            </button>
+          </div>
+        </SectionCard>
+      </div>
+    );
+  }
 
   return (
     <div data-testid="study-guide-detail" className="rounded-xl border bg-card p-8">

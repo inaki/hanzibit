@@ -39,11 +39,11 @@ export async function AssignmentsPageContent({
 
     switch (assignment.submission_status) {
       case "reviewed":
-        return { label: "Reviewed", tone: "border-emerald-500/20 bg-emerald-500/10 text-emerald-400" };
+        return { label: "Reviewed", tone: "ui-tone-emerald-panel ui-tone-emerald-text" };
       case "submitted":
-        return { label: "Awaiting review", tone: "border-sky-500/20 bg-sky-500/10 text-sky-400" };
+        return { label: "Awaiting review", tone: "ui-tone-sky-panel ui-tone-sky-text" };
       case "draft":
-        return { label: "Draft started", tone: "border-amber-500/20 bg-amber-500/10 text-amber-400" };
+        return { label: "Draft started", tone: "ui-tone-amber-panel ui-tone-amber-text" };
       default:
         return { label: "Not started", tone: "border-border bg-muted text-muted-foreground" };
     }
@@ -202,12 +202,12 @@ function AssignmentInboxCard({
   return (
     <Link
       href={`/notebook/assignments/${assignment.id}`}
-      className="block rounded-2xl border bg-card p-5 transition-colors hover:border-[var(--cn-orange)]/30 hover:bg-muted/20"
+      className="block rounded-2xl border bg-card p-5 transition-colors hover:border-[var(--ui-tone-orange-border)] hover:bg-muted/20"
     >
       <div className="flex items-center justify-between gap-4">
         <div className="min-w-0">
           <div className="flex items-center gap-2">
-            <ClipboardList className="h-4 w-4 text-[var(--cn-orange)]" />
+            <ClipboardList className="ui-tone-orange-text h-4 w-4" />
             <h2 className="truncate text-lg font-semibold text-foreground">{assignment.title}</h2>
           </div>
           <p className="mt-1 text-sm text-muted-foreground">{assignment.classroom_name}</p>
@@ -217,7 +217,7 @@ function AssignmentInboxCard({
             {assignment.type.replaceAll("_", " ")}
           </span>
           {isOverdue ? (
-            <span className="rounded-full border border-rose-500/20 bg-rose-500/10 px-2.5 py-1 text-[11px] font-medium text-rose-300">
+            <span className="ui-tone-rose-panel ui-tone-rose-text rounded-full border px-2.5 py-1 text-[11px] font-medium">
               Overdue
             </span>
           ) : null}
@@ -234,7 +234,7 @@ function AssignmentInboxCard({
       <div className="mt-4 flex flex-wrap gap-3 text-xs text-muted-foreground">
         {assignment.hsk_level ? <span>HSK {assignment.hsk_level}</span> : null}
         {assignment.due_at ? (
-          <span className={isOverdue ? "text-rose-300" : undefined}>
+          <span className={isOverdue ? "ui-tone-rose-text" : undefined}>
             Due {new Date(assignment.due_at).toLocaleDateString("en-US")}
           </span>
         ) : (
@@ -244,7 +244,7 @@ function AssignmentInboxCard({
           <span>Submitted {new Date(assignment.submitted_at).toLocaleDateString("en-US")}</span>
         ) : null}
       </div>
-      <div className="mt-4 inline-flex items-center gap-2 text-sm font-medium text-[var(--cn-orange)]">
+      <div className="ui-tone-orange-text mt-4 inline-flex items-center gap-2 text-sm font-medium">
         Open assignment
         <ArrowRight className="h-4 w-4" />
       </div>

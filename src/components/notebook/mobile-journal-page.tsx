@@ -20,6 +20,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Volume2, Layers, Eye, RotateCcw } from "lucide-react";
+import { GuidanceBanner } from "@/components/patterns/guidance";
 import type { JournalEntry } from "@/lib/data";
 import { parseInput, extractHanziTokens, replaceTextRange, validateInlineMarkup } from "@/lib/parse-tokens";
 import {
@@ -51,6 +52,7 @@ interface MobileJournalPageProps {
     sourceType?: string;
     sourceRef?: string;
     assignmentId?: string;
+    beginner?: boolean;
   };
 }
 
@@ -241,7 +243,7 @@ function MobileEditDialog({
               onMouseUp={captureSelection}
               required
               rows={6}
-              className="w-full rounded-lg border border-border bg-card px-3 py-2 font-mono text-sm text-foreground outline-none focus:border-[var(--cn-orange)] focus:ring-1 focus:ring-[var(--cn-orange)]"
+              className="w-full rounded-lg border border-border bg-card px-3 py-2 font-mono text-sm text-foreground outline-none focus:border-[var(--ui-tone-orange-border)] focus:ring-1 focus:ring-[var(--ui-tone-orange-border)]"
             />
             <AnnotationBuilder
               onInsert={handleInsertAnnotation}
@@ -251,14 +253,14 @@ function MobileEditDialog({
             />
             <MarkupValidationPanel content={content} />
             {submitError && (
-              <p className="rounded-lg border border-rose-500/20 bg-rose-500/10 px-3 py-2 text-sm text-rose-300">
+              <p className="ui-tone-rose-panel ui-tone-rose-text rounded-lg border px-3 py-2 text-sm">
                 {submitError}
               </p>
             )}
           </div>
           <DialogFooter>
             <DialogClose render={<Button variant="outline" />}>Cancel</DialogClose>
-            <Button type="submit" disabled={isPending || hasMarkupIssues} className="bg-[var(--cn-orange)] hover:bg-[var(--cn-orange-dark)]">
+            <Button type="submit" disabled={isPending || hasMarkupIssues} className="bg-primary text-primary-foreground hover:opacity-90">
               {isPending ? "Saving..." : "Save"}
             </Button>
           </DialogFooter>
@@ -290,6 +292,8 @@ function MobileNewEntryDialog({
     targetEnglish?: string;
     sourceType?: string;
     sourceRef?: string;
+    assignmentId?: string;
+    beginner?: boolean;
   };
 }) {
   const [isPending, startTransition] = useTransition();
@@ -347,8 +351,10 @@ function MobileNewEntryDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="flex max-h-[90vh] flex-col overflow-hidden sm:max-w-lg">
         <DialogHeader>
-          <DialogTitle>New Entry</DialogTitle>
-          <DialogDescription>Write a new journal entry.</DialogDescription>
+          <DialogTitle>{draft?.beginner ? "First Guided Response" : "New Entry"}</DialogTitle>
+          <DialogDescription>
+            {draft?.beginner ? "Write one short sentence using the study word." : "Write a new journal entry."}
+          </DialogDescription>
         </DialogHeader>
         <form action={handleSubmit} className="flex min-h-0 flex-1 flex-col">
           <input type="hidden" name="source_type" value={draft?.sourceType ?? ""} />
@@ -363,12 +369,26 @@ function MobileNewEntryDialog({
               targetWord={draft?.targetWord}
               content={content}
             />
-            <Input name="title_zh" placeholder="Chinese Title (e.g. 我的周末)" defaultValue={draft?.titleZh ?? ""} required />
-            <Input name="title_en" placeholder="English Title (e.g. My Weekend)" defaultValue={draft?.titleEn ?? ""} required />
-            <div className="flex gap-2">
-              <Input name="unit" placeholder="Unit" defaultValue={draft?.unit ?? ""} className="flex-1" />
-              <Input name="hsk_level" type="number" min={1} max={6} defaultValue={draft?.hskLevel ?? 1} className="w-20" />
-            </div>
+            {draft?.beginner ? (
+              <>
+                <input type="hidden" name="title_zh" value={draft?.titleZh ?? ""} />
+                <input type="hidden" name="title_en" value={draft?.titleEn ?? ""} />
+                <input type="hidden" name="unit" value={draft?.unit ?? ""} />
+                <input type="hidden" name="hsk_level" value={draft?.hskLevel ?? 1} />
+                <GuidanceBanner title="Start small" tone="sky" className="px-3 py-3 text-sm">
+                  You only need one short sentence. Use the study word once and do not worry about writing a long entry yet.
+                </GuidanceBanner>
+              </>
+            ) : (
+              <>
+                <Input name="title_zh" placeholder="Chinese Title (e.g. 我的周末)" defaultValue={draft?.titleZh ?? ""} required />
+                <Input name="title_en" placeholder="English Title (e.g. My Weekend)" defaultValue={draft?.titleEn ?? ""} required />
+                <div className="flex gap-2">
+                  <Input name="unit" placeholder="Unit" defaultValue={draft?.unit ?? ""} className="flex-1" />
+                  <Input name="hsk_level" type="number" min={1} max={6} defaultValue={draft?.hskLevel ?? 1} className="w-20" />
+                </div>
+              </>
+            )}
             <textarea
               name="content_zh"
               ref={textareaRef}
@@ -379,12 +399,14 @@ function MobileNewEntryDialog({
               onMouseUp={captureSelection}
               placeholder={`我去[餐厅|can1 ting1|restaurant]吃饭。`}
               required
-              rows={6}
-              className="w-full rounded-lg border border-border bg-card px-3 py-2 font-mono text-sm text-foreground outline-none focus:border-[var(--cn-orange)] focus:ring-1 focus:ring-[var(--cn-orange)]"
+              rows={draft?.beginner ? 4 : 6}
+              className="w-full rounded-lg border border-border bg-card px-3 py-2 font-mono text-sm text-foreground outline-none focus:border-[var(--ui-tone-orange-border)] focus:ring-1 focus:ring-[var(--ui-tone-orange-border)]"
             />
             {!!draft?.prompt && (
               <p className="text-xs text-muted-foreground">
-                Read the prompt above, then write your own answer here.
+                {draft?.beginner
+                  ? "Keep the seeded word and add one short sentence of your own."
+                  : "Read the prompt above, then write your own answer here."}
               </p>
             )}
             <AnnotationBuilder
@@ -405,14 +427,14 @@ function MobileNewEntryDialog({
             <MarkupValidationPanel content={content} />
             <JournalFeedbackPanel content={content} targetWord={draft?.targetWord} />
             {submitError && (
-              <p className="rounded-lg border border-rose-500/20 bg-rose-500/10 px-3 py-2 text-sm text-rose-300">
+              <p className="ui-tone-rose-panel ui-tone-rose-text rounded-lg border px-3 py-2 text-sm">
                 {submitError}
               </p>
             )}
           </div>
           <DialogFooter>
             <DialogClose render={<Button variant="outline" />}>Cancel</DialogClose>
-            <Button type="submit" disabled={isPending || hasMarkupIssues} className="bg-[var(--cn-orange)] hover:bg-[var(--cn-orange-dark)]">
+            <Button type="submit" disabled={isPending || hasMarkupIssues} className="bg-primary text-primary-foreground hover:opacity-90">
               {isPending ? "Creating..." : "Create"}
             </Button>
           </DialogFooter>
@@ -436,7 +458,7 @@ function MobilePronunciationDialog({
       <DialogContent className="max-h-[85vh] sm:max-w-md">
         <DialogHeader>
           <DialogTitle>
-            <Volume2 className="mr-2 inline h-5 w-5 text-[var(--cn-orange)]" />
+            <Volume2 className="ui-tone-orange-text mr-2 inline h-5 w-5" />
             Pronunciation
           </DialogTitle>
           <DialogDescription className="sr-only">Pronunciation guide</DialogDescription>
@@ -448,7 +470,7 @@ function MobilePronunciationDialog({
             highlights.map((h) => (
               <div key={h.hanzi} className="flex items-center justify-between rounded-lg border px-4 py-3">
                 <div className="flex items-center gap-4">
-                  <span className="text-2xl font-bold text-[var(--cn-orange)]">{h.hanzi}</span>
+                  <span className="ui-tone-orange-text text-2xl font-bold">{h.hanzi}</span>
                   <div>
                     <p className="text-sm font-medium text-foreground">{h.pinyin}</p>
                     <p className="text-xs text-muted-foreground">{h.english}</p>
@@ -458,7 +480,7 @@ function MobilePronunciationDialog({
                   onClick={() => {
                     new Audio(`/api/tts?text=${encodeURIComponent(h.hanzi)}`).play();
                   }}
-                  className="rounded-full border border-[var(--cn-orange)]/30 bg-[var(--cn-orange)]/12 p-2 text-[var(--cn-orange)] transition-colors hover:bg-[var(--cn-orange)] hover:text-white"
+                  className="ui-tone-orange-panel ui-tone-orange-text rounded-full border p-2 transition-colors hover:opacity-85"
                 >
                   <Volume2 className="h-4 w-4" />
                 </button>
@@ -547,7 +569,7 @@ function MobileFlashcardDialog({
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>
-            <Layers className="mr-2 inline h-5 w-5 text-[var(--cn-orange)]" />
+            <Layers className="ui-tone-orange-text mr-2 inline h-5 w-5" />
             Flashcards
           </DialogTitle>
           <DialogDescription>{total} cards from this entry.</DialogDescription>
@@ -569,7 +591,7 @@ function MobileFlashcardDialog({
                         type="checkbox"
                         checked={selectedCards.has(i)}
                         onChange={() => toggleCard(i)}
-                        className="accent-[var(--cn-orange)]"
+                        className="accent-primary"
                       />
                       <span className="font-medium">{h.hanzi}</span>
                       <span className="text-xs text-muted-foreground/70">{h.pinyin}</span>
@@ -579,7 +601,7 @@ function MobileFlashcardDialog({
                 <Button
                   onClick={handleSave}
                   disabled={isSaving || selectedCards.size === 0}
-                  className="mt-2 w-full bg-[var(--cn-orange)] hover:bg-[var(--cn-orange-dark)]"
+                  className="mt-2 w-full bg-primary text-primary-foreground hover:opacity-90"
                   size="sm"
                 >
                   {isSaving ? "Saving..." : `Save ${selectedCards.size} Cards`}
@@ -587,7 +609,7 @@ function MobileFlashcardDialog({
               </div>
             )}
             {saveStatus && (
-              <p className="mb-4 rounded-lg border border-emerald-500/20 bg-emerald-500/10 px-3 py-2 text-sm font-medium text-emerald-400">
+              <p className="ui-tone-emerald-panel ui-tone-emerald-text mb-4 rounded-lg border px-3 py-2 text-sm font-medium">
                 {saveStatus}
               </p>
             )}
@@ -625,7 +647,7 @@ function MobileFlashcardDialog({
               <Button
                 onClick={next}
                 size="sm"
-                className="bg-[var(--cn-orange)] hover:bg-[var(--cn-orange-dark)]"
+                className="bg-primary text-primary-foreground hover:opacity-90"
               >
                 {currentIndex + 1 >= total ? "Finish" : "Next"}
               </Button>

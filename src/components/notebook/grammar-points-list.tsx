@@ -43,7 +43,7 @@ export function GrammarPointsList({ items }: GrammarPointsListProps) {
                 <div>
                   <h3 className="font-semibold text-foreground">{point.title}</h3>
                   {point.pattern && (
-                    <p className="mt-0.5 text-sm font-mono text-[var(--cn-orange)]">
+                    <p className="ui-tone-orange-text mt-0.5 text-sm font-mono">
                       {point.pattern}
                     </p>
                   )}
@@ -78,7 +78,7 @@ export function GrammarPointsList({ items }: GrammarPointsListProps) {
                         {examples.map((ex, i) => (
                           <div
                             key={i}
-                            className="rounded-lg bg-[var(--cn-orange-light)] px-4 py-2.5 text-sm text-foreground/90"
+                            className="ui-tone-orange-panel rounded-lg px-4 py-2.5 text-sm text-foreground/90"
                           >
                             {ex}
                           </div>

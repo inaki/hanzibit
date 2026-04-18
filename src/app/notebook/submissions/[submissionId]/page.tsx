@@ -11,9 +11,9 @@ export const dynamic = "force-dynamic";
 function StatusBadge({ status }: { status: string }) {
   const palette =
     status === "reviewed"
-      ? "border-emerald-500/20 bg-emerald-500/10 text-emerald-400"
+      ? "ui-tone-emerald-panel ui-tone-emerald-text"
       : status === "submitted"
-        ? "border-sky-500/20 bg-sky-500/10 text-sky-400"
+        ? "ui-tone-sky-panel ui-tone-sky-text"
         : "border-border bg-muted text-muted-foreground";
 
   return (
@@ -60,7 +60,7 @@ export default async function SubmissionDetailPage({
             <div className="mt-2 flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
               <span>
                 Classroom:{" "}
-                <Link href={`/notebook/classes/${submission.classroom_id}`} className="text-[var(--cn-orange)] hover:underline">
+                <Link href={`/notebook/classes/${submission.classroom_id}`} className="ui-tone-orange-text hover:underline">
                   {submission.classroom_name}
                 </Link>
               </span>
@@ -71,7 +71,7 @@ export default async function SubmissionDetailPage({
         </div>
 
         {(resolvedSearchParams.feedback || resolvedSearchParams.reviewed) && (
-          <div className="rounded-2xl border border-emerald-500/20 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-400">
+          <div className="ui-tone-emerald-panel ui-tone-emerald-text rounded-2xl border px-4 py-3 text-sm">
             {resolvedSearchParams.feedback ? "Feedback added." : "Submission marked as reviewed."}
           </div>
         )}
@@ -80,7 +80,7 @@ export default async function SubmissionDetailPage({
           <section className="space-y-6">
             <div className="rounded-2xl border bg-card p-5">
               <div className="mb-4 flex items-center gap-2">
-                <School className="h-4 w-4 text-[var(--cn-orange)]" />
+                <School className="ui-tone-orange-text h-4 w-4" />
                 <h2 className="text-sm font-semibold uppercase tracking-[0.2em] text-muted-foreground">
                   Assignment Context
                 </h2>
@@ -91,8 +91,8 @@ export default async function SubmissionDetailPage({
                 <p className="text-sm text-muted-foreground">No extra assignment description.</p>
               )}
               {submission.assignment_prompt ? (
-                <div className="mt-4 rounded-xl border border-[var(--cn-orange)]/20 bg-[var(--cn-orange)]/10 p-4">
-                  <p className="text-sm font-medium text-[var(--cn-orange)]">Prompt</p>
+                <div className="ui-tone-orange-panel mt-4 rounded-xl border p-4">
+                  <p className="ui-tone-orange-text text-sm font-medium">Prompt</p>
                   <p className="mt-2 text-sm leading-7 text-foreground/85">{submission.assignment_prompt}</p>
                 </div>
               ) : null}
@@ -100,7 +100,7 @@ export default async function SubmissionDetailPage({
 
             <div className="rounded-2xl border bg-card p-5">
               <div className="mb-4 flex items-center gap-2">
-                <NotebookText className="h-4 w-4 text-[var(--cn-orange)]" />
+                <NotebookText className="ui-tone-orange-text h-4 w-4" />
                 <h2 className="text-sm font-semibold uppercase tracking-[0.2em] text-muted-foreground">
                   Submitted Work
                 </h2>
@@ -129,7 +129,7 @@ export default async function SubmissionDetailPage({
 
             <div className="rounded-2xl border bg-card p-5">
               <div className="mb-4 flex items-center gap-2">
-                <MessageSquare className="h-4 w-4 text-[var(--cn-orange)]" />
+                <MessageSquare className="ui-tone-orange-text h-4 w-4" />
                 <h2 className="text-sm font-semibold uppercase tracking-[0.2em] text-muted-foreground">
                   Feedback
                 </h2>
@@ -139,7 +139,7 @@ export default async function SubmissionDetailPage({
                   {feedback.map((item) => (
                     <div
                       key={item.id}
-                      className="rounded-xl border border-violet-500/20 bg-violet-500/10 p-4"
+                      className="ui-tone-violet-panel rounded-xl border p-4"
                     >
                       <div className="flex items-center justify-between gap-3">
                         <p className="text-sm font-medium text-foreground">{item.teacher_name}</p>
@@ -201,11 +201,11 @@ export default async function SubmissionDetailPage({
                       rows={6}
                       required
                       placeholder="Add teacher feedback for this submission..."
-                      className="w-full rounded-xl border border-border bg-card px-3 py-2 text-sm text-foreground outline-none transition-colors placeholder:text-muted-foreground focus:border-[var(--cn-orange)]"
+                      className="w-full rounded-xl border border-border bg-card px-3 py-2 text-sm text-foreground outline-none transition-colors placeholder:text-muted-foreground focus:border-[var(--ui-tone-orange-border)]"
                     />
                     <button
                       type="submit"
-                      className="inline-flex items-center justify-center rounded-lg bg-[var(--cn-orange)] px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-[var(--cn-orange-dark)]"
+                      className="inline-flex items-center justify-center rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:opacity-90"
                     >
                       Save feedback
                     </button>
@@ -225,7 +225,7 @@ export default async function SubmissionDetailPage({
                     <button
                       type="submit"
                       disabled={submission.status === "reviewed"}
-                      className="inline-flex items-center justify-center rounded-lg border border-emerald-500/20 bg-emerald-500/10 px-4 py-2 text-sm font-medium text-emerald-400 transition-colors hover:bg-emerald-500/15 disabled:cursor-not-allowed disabled:opacity-60"
+                      className="ui-tone-emerald-panel ui-tone-emerald-text inline-flex items-center justify-center rounded-lg border px-4 py-2 text-sm font-medium transition-colors hover:opacity-85 disabled:cursor-not-allowed disabled:opacity-60"
                     >
                       {submission.status === "reviewed" ? "Already reviewed" : "Mark as reviewed"}
                     </button>
@@ -235,7 +235,7 @@ export default async function SubmissionDetailPage({
             ) : (
               <section className="rounded-2xl border bg-card p-5 text-sm text-muted-foreground">
                 <div className="flex items-center gap-2">
-                  <UserRound className="h-4 w-4 text-[var(--cn-orange)]" />
+                  <UserRound className="ui-tone-orange-text h-4 w-4" />
                   <p className="font-medium text-foreground">Student view</p>
                 </div>
                 <p className="mt-3">

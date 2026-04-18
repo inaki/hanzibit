@@ -50,7 +50,7 @@ export function HskVocabularyList({ words, summaries }: HskVocabularyListProps) 
             onClick={() => { setActiveLevel(s.hsk_level); setSearch(""); }}
             className={`flex items-center gap-2 rounded-lg px-4 py-2.5 text-sm font-medium transition-colors ${
               activeLevel === s.hsk_level
-                ? "bg-[var(--cn-orange)] text-white shadow-sm"
+                ? "bg-primary text-primary-foreground shadow-sm"
                 : "bg-card text-muted-foreground border border-border hover:bg-muted/50"
             }`}
           >
@@ -58,7 +58,7 @@ export function HskVocabularyList({ words, summaries }: HskVocabularyListProps) 
             <span
               className={`rounded-full px-2 py-0.5 text-xs ${
                 activeLevel === s.hsk_level
-                  ? "bg-white/20 text-white"
+                  ? "bg-primary-foreground/15 text-primary-foreground"
                   : "bg-muted text-muted-foreground"
               }`}
             >
@@ -77,7 +77,7 @@ export function HskVocabularyList({ words, summaries }: HskVocabularyListProps) 
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder="Search by character, pinyin, or meaning..."
-          className="w-full rounded-lg border border-border bg-card py-2.5 pl-10 pr-4 text-sm outline-none focus:border-[var(--cn-orange)] focus:ring-1 focus:ring-[var(--cn-orange)]"
+          className="w-full rounded-lg border border-border bg-card py-2.5 pl-10 pr-4 text-sm outline-none focus:border-[var(--ui-tone-orange-border)] focus:ring-1 focus:ring-[var(--ui-tone-orange-border)]"
         />
       </div>
 
@@ -106,7 +106,7 @@ export function HskVocabularyList({ words, summaries }: HskVocabularyListProps) 
                 className="transition-colors hover:bg-muted/50"
               >
                 <td className="px-5 py-3">
-                  <span className="text-lg font-bold text-[var(--cn-orange)]">
+                  <span className="ui-tone-orange-text text-lg font-bold">
                     {word.simplified}
                   </span>
                   {word.traditional && word.traditional !== word.simplified && (

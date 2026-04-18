@@ -365,14 +365,14 @@ export async function ClassroomDetailPageContent({
             <div
               className={`inline-flex rounded-full px-3 py-1 text-xs font-medium ${
                 isTeacher
-                  ? "border border-[var(--cn-orange)]/20 bg-[var(--cn-orange)]/10 text-[var(--cn-orange)]"
-                  : "border border-sky-500/20 bg-sky-500/10 text-sky-400"
+                  ? "ui-tone-orange-panel ui-tone-orange-text border"
+                  : "ui-tone-sky-panel ui-tone-sky-text border"
               }`}
             >
               {isTeacher ? "Teacher view" : "Student view"}
             </div>
             {classroom.is_private_tutoring === 1 ? (
-              <div className="inline-flex rounded-full border border-sky-500/20 bg-sky-500/10 px-3 py-1 text-xs font-medium text-sky-400">
+              <div className="ui-tone-sky-panel ui-tone-sky-text inline-flex rounded-full border px-3 py-1 text-xs font-medium">
                 Private tutoring
               </div>
             ) : null}
@@ -383,8 +383,8 @@ export async function ClassroomDetailPageContent({
         {query.success && (
           <div className={`rounded-xl px-4 py-3 text-sm ${
             query.success.startsWith("error:")
-              ? "border border-rose-500/20 bg-rose-500/10 text-rose-300"
-              : "border border-emerald-500/20 bg-emerald-500/10 text-emerald-300"
+              ? "ui-tone-rose-panel ui-tone-rose-text border"
+              : "ui-tone-emerald-panel ui-tone-emerald-text border"
           }`}>
             {query.success === "created"
               ? "Classroom created and ready for students to join."
@@ -420,7 +420,7 @@ export async function ClassroomDetailPageContent({
             {isTeacher && assignmentsNeedingAttention.length > 0 ? (
               <div className="rounded-2xl border bg-card p-5">
                 <div className="mb-4 flex items-center gap-2">
-                  <ClipboardList className="h-4 w-4 text-[var(--cn-orange)]" />
+                  <ClipboardList className="ui-tone-orange-text h-4 w-4" />
                   <h2 className="text-sm font-semibold uppercase tracking-[0.2em] text-muted-foreground">
                     Needs Attention
                   </h2>
@@ -430,7 +430,7 @@ export async function ClassroomDetailPageContent({
                     <Link
                       key={assignment.id}
                       href={`${baseAssignmentPath}/${assignment.id}`}
-                      className="block rounded-xl border border-amber-500/20 bg-amber-500/10 p-4 transition-colors hover:bg-amber-500/15"
+                      className="ui-tone-amber-panel block rounded-xl border p-4 transition-colors hover:opacity-90"
                     >
                       <div className="flex items-center justify-between gap-3">
                         <h3 className="font-semibold text-foreground">{assignment.title}</h3>
@@ -440,17 +440,17 @@ export async function ClassroomDetailPageContent({
                       </div>
                       <div className="mt-3 flex flex-wrap gap-2 text-xs">
                         {overdue ? (
-                          <span className="rounded-full border border-rose-500/20 bg-rose-500/10 px-2.5 py-1 text-rose-300">
+                          <span className="ui-tone-rose-panel ui-tone-rose-text rounded-full border px-2.5 py-1">
                             overdue
                           </span>
                         ) : null}
                         {submitted > reviewed ? (
-                          <span className="rounded-full border border-sky-500/20 bg-sky-500/10 px-2.5 py-1 text-sky-400">
+                          <span className="ui-tone-sky-panel ui-tone-sky-text rounded-full border px-2.5 py-1">
                             {submitted - reviewed} waiting for review
                           </span>
                         ) : null}
                         {missing > 0 ? (
-                          <span className="rounded-full border border-rose-500/20 bg-rose-500/10 px-2.5 py-1 text-rose-300">
+                          <span className="ui-tone-rose-panel ui-tone-rose-text rounded-full border px-2.5 py-1">
                             {missing} missing submission
                           </span>
                         ) : null}
@@ -464,7 +464,7 @@ export async function ClassroomDetailPageContent({
             {classroom.is_private_tutoring === 1 && privateStudent ? (
               <div className="rounded-2xl border bg-card p-5">
                 <div className="mb-4 flex items-center gap-2">
-                  <BookOpenText className="h-4 w-4 text-[var(--cn-orange)]" />
+                  <BookOpenText className="ui-tone-orange-text h-4 w-4" />
                   <h2 className="text-sm font-semibold uppercase tracking-[0.2em] text-muted-foreground">
                     {isTeacher ? "Private Learner Workflow" : "Private Tutoring Status"}
                   </h2>
@@ -472,7 +472,7 @@ export async function ClassroomDetailPageContent({
                 <div className="grid gap-4 md:grid-cols-[minmax(0,1fr)_auto] md:items-center">
                   <div className="space-y-3">
                     <div className="flex flex-wrap items-center gap-2 text-xs">
-                      <span className="rounded-full border border-sky-500/20 bg-sky-500/10 px-2.5 py-1 text-sky-400">
+                      <span className="ui-tone-sky-panel ui-tone-sky-text rounded-full border px-2.5 py-1">
                         {privateStudent.status.replaceAll("_", " ")}
                       </span>
                       {privateStudent.next_step_type ? (
@@ -491,9 +491,9 @@ export async function ClassroomDetailPageContent({
                           })}
                     </p>
                     {lessonPlan ? (
-                      <div className="rounded-xl border border-sky-500/20 bg-sky-500/10 p-3 text-sm text-foreground/90">
+                      <div className="ui-tone-sky-panel rounded-xl border p-3 text-sm text-foreground/90">
                         <div className="flex flex-wrap items-center gap-2 text-xs">
-                          <span className="rounded-full border border-sky-500/20 bg-sky-500/10 px-2.5 py-1 text-sky-400">
+                          <span className="ui-tone-sky-panel ui-tone-sky-text rounded-full border px-2.5 py-1">
                             Next lesson · {getPrivateLessonPlanStatusLabel(lessonPlan.plan_status)}
                           </span>
                           {lessonPlan.target_date ? (
@@ -517,9 +517,9 @@ export async function ClassroomDetailPageContent({
                       </div>
                     ) : null}
                     {activeGoals.length > 0 ? (
-                      <div className="rounded-xl border border-emerald-500/20 bg-emerald-500/10 p-3 text-sm text-foreground/90">
+                      <div className="ui-tone-emerald-panel rounded-xl border p-3 text-sm text-foreground/90">
                         <div className="flex flex-wrap items-center gap-2 text-xs">
-                          <span className="rounded-full border border-emerald-500/20 bg-emerald-500/10 px-2.5 py-1 text-emerald-400">
+                          <span className="ui-tone-emerald-panel ui-tone-emerald-text rounded-full border px-2.5 py-1">
                             Current goals
                           </span>
                         </div>
@@ -528,7 +528,7 @@ export async function ClassroomDetailPageContent({
                             <li key={goal.id}>
                               <span className="font-medium text-foreground">{goal.title}</span>
                               {goal.progress_status ? (
-                                <span className="ml-2 rounded-full border border-sky-500/20 bg-sky-500/10 px-2 py-0.5 text-[11px] text-sky-400">
+                                <span className="ui-tone-sky-panel ui-tone-sky-text ml-2 rounded-full border px-2 py-0.5 text-[11px]">
                                   {goal.progress_status.replaceAll("_", " ")}
                                 </span>
                               ) : null}
@@ -539,9 +539,9 @@ export async function ClassroomDetailPageContent({
                         </ul>
                       </div>
                     ) : null}
-                    <div className="rounded-xl border border-emerald-500/20 bg-emerald-500/10 p-3 text-sm text-foreground/90">
+                    <div className="ui-tone-emerald-panel rounded-xl border p-3 text-sm text-foreground/90">
                       <div className="flex flex-wrap items-center gap-2 text-xs">
-                        <span className="rounded-full border border-emerald-500/20 bg-emerald-500/10 px-2.5 py-1 text-emerald-400">
+                        <span className="ui-tone-emerald-panel ui-tone-emerald-text rounded-full border px-2.5 py-1">
                           Continuity
                         </span>
                         <span className="rounded-full border bg-muted px-2.5 py-1 text-muted-foreground">
@@ -561,9 +561,9 @@ export async function ClassroomDetailPageContent({
                         })}
                       </p>
                     </div>
-                    <div className="rounded-xl border border-rose-500/20 bg-rose-500/10 p-3 text-sm text-foreground/90">
+                    <div className="ui-tone-rose-panel rounded-xl border p-3 text-sm text-foreground/90">
                       <div className="flex flex-wrap items-center gap-2 text-xs">
-                        <span className="rounded-full border border-rose-500/20 bg-rose-500/10 px-2.5 py-1 text-rose-300">
+                        <span className="ui-tone-rose-panel ui-tone-rose-text rounded-full border px-2.5 py-1">
                           Support
                         </span>
                       </div>
@@ -576,9 +576,9 @@ export async function ClassroomDetailPageContent({
                         })}
                       </p>
                     </div>
-                    <div className="rounded-xl border border-violet-500/20 bg-violet-500/10 p-3 text-sm text-foreground/90">
+                    <div className="ui-tone-violet-panel rounded-xl border p-3 text-sm text-foreground/90">
                       <div className="flex flex-wrap items-center gap-2 text-xs">
-                        <span className="rounded-full border border-violet-500/20 bg-violet-500/10 px-2.5 py-1 text-violet-300">
+                        <span className="ui-tone-violet-panel ui-tone-violet-text rounded-full border px-2.5 py-1">
                           Adaptation
                         </span>
                         {latestReview?.reviewed_at ? (
@@ -602,9 +602,9 @@ export async function ClassroomDetailPageContent({
                             : "No adapted plan is visible yet. The teacher should translate recent review and intervention signals into the next lesson direction."}
                       </p>
                     </div>
-                    <div className="rounded-xl border border-sky-500/20 bg-sky-500/10 p-3 text-sm text-foreground/90">
+                    <div className="ui-tone-sky-panel rounded-xl border p-3 text-sm text-foreground/90">
                       <div className="flex flex-wrap items-center gap-2 text-xs">
-                        <span className="rounded-full border border-sky-500/20 bg-sky-500/10 px-2.5 py-1 text-sky-400">
+                        <span className="ui-tone-sky-panel ui-tone-sky-text rounded-full border px-2.5 py-1">
                           Strategy
                         </span>
                         {privateStudent.last_strategy_title ? (
@@ -644,9 +644,9 @@ export async function ClassroomDetailPageContent({
                         </p>
                       ) : null}
                     </div>
-                    <div className="rounded-xl border border-amber-500/20 bg-amber-500/10 p-3 text-sm text-foreground/90">
+                    <div className="ui-tone-amber-panel rounded-xl border p-3 text-sm text-foreground/90">
                       <div className="flex flex-wrap items-center gap-2 text-xs">
-                        <span className="rounded-full border border-amber-500/20 bg-amber-500/10 px-2.5 py-1 text-amber-300">
+                        <span className="ui-tone-amber-panel ui-tone-amber-text rounded-full border px-2.5 py-1">
                           Playbook
                         </span>
                         {privateStudent.last_playbook_title ? (
@@ -687,9 +687,9 @@ export async function ClassroomDetailPageContent({
                       ) : null}
                     </div>
                     {latestLessonHistory ? (
-                      <div className="rounded-xl border border-amber-500/20 bg-amber-500/10 p-3 text-sm text-foreground/90">
+                      <div className="ui-tone-amber-panel rounded-xl border p-3 text-sm text-foreground/90">
                         <div className="flex flex-wrap items-center gap-2 text-xs">
-                          <span className="rounded-full border border-amber-500/20 bg-amber-500/10 px-2.5 py-1 text-amber-300">
+                          <span className="ui-tone-amber-panel ui-tone-amber-text rounded-full border px-2.5 py-1">
                             Latest check-in
                           </span>
                           <span className="text-muted-foreground">
@@ -707,7 +707,7 @@ export async function ClassroomDetailPageContent({
                             {latestLessonHistory.issue_tags.map((tag) => (
                               <span
                                 key={tag}
-                                className="rounded-full border border-amber-500/20 bg-amber-500/10 px-2.5 py-1 text-amber-300"
+                                className="ui-tone-amber-panel ui-tone-amber-text rounded-full border px-2.5 py-1"
                               >
                                 {getPrivateLessonIssueTagLabel(tag)}
                               </span>
@@ -725,21 +725,21 @@ export async function ClassroomDetailPageContent({
                   {isTeacher ? (
                     <Link
                       href={`/notebook/teacher/private-students/${privateStudent.id}`}
-                      className="inline-flex items-center rounded-lg border px-3 py-2 text-sm font-medium text-[var(--cn-orange)] transition-colors hover:border-[var(--cn-orange)]/30 hover:bg-[var(--cn-orange)]/10"
+                      className="ui-tone-orange-text inline-flex items-center rounded-lg border px-3 py-2 text-sm font-medium transition-colors hover:border-[var(--ui-tone-orange-border)] hover:bg-[var(--ui-tone-orange-panel)]"
                     >
                       {lessonPlan ? "Manage learner plan" : "Open workflow"}
                     </Link>
                   ) : lessonPlan?.next_assignment_id ? (
                     <Link
                       href={`${baseAssignmentPath}/${lessonPlan.next_assignment_id}`}
-                      className="inline-flex items-center rounded-lg border px-3 py-2 text-sm font-medium text-[var(--cn-orange)] transition-colors hover:border-[var(--cn-orange)]/30 hover:bg-[var(--cn-orange)]/10"
+                      className="ui-tone-orange-text inline-flex items-center rounded-lg border px-3 py-2 text-sm font-medium transition-colors hover:border-[var(--ui-tone-orange-border)] hover:bg-[var(--ui-tone-orange-panel)]"
                     >
                       Open next lesson work
                     </Link>
                   ) : privateStudent.next_assignment_id ? (
                     <Link
                       href={`${baseAssignmentPath}/${privateStudent.next_assignment_id}`}
-                      className="inline-flex items-center rounded-lg border px-3 py-2 text-sm font-medium text-[var(--cn-orange)] transition-colors hover:border-[var(--cn-orange)]/30 hover:bg-[var(--cn-orange)]/10"
+                      className="ui-tone-orange-text inline-flex items-center rounded-lg border px-3 py-2 text-sm font-medium transition-colors hover:border-[var(--ui-tone-orange-border)] hover:bg-[var(--ui-tone-orange-panel)]"
                     >
                       Open current assignment
                     </Link>
@@ -750,7 +750,7 @@ export async function ClassroomDetailPageContent({
 
             <div className="rounded-2xl border bg-card p-5">
               <div className="mb-4 flex items-center gap-2">
-                <ClipboardList className="h-4 w-4 text-[var(--cn-orange)]" />
+                <ClipboardList className="ui-tone-orange-text h-4 w-4" />
                 <h2 className="text-sm font-semibold uppercase tracking-[0.2em] text-muted-foreground">
                   Assignments
                 </h2>
@@ -765,12 +765,12 @@ export async function ClassroomDetailPageContent({
               ) : (
                 <div className="space-y-3">
                   {assignments.map((assignment) => (
-                    <Link key={assignment.id} href={`${baseAssignmentPath}/${assignment.id}`} className="block rounded-xl border p-4 transition-colors hover:border-[var(--cn-orange)]/30 hover:bg-muted/20">
+                    <Link key={assignment.id} href={`${baseAssignmentPath}/${assignment.id}`} className="block rounded-xl border p-4 transition-colors hover:border-[var(--ui-tone-orange-border)] hover:bg-muted/20">
                       <div className="flex items-center justify-between gap-3">
                         <h3 className="font-semibold text-foreground">{assignment.title}</h3>
                         <div className="flex items-center gap-2">
                           {isAssignmentOverdue(assignment.due_at) ? (
-                            <span className="rounded-full border border-rose-500/20 bg-rose-500/10 px-2.5 py-1 text-[11px] font-medium text-rose-300">
+                            <span className="ui-tone-rose-panel ui-tone-rose-text rounded-full border px-2.5 py-1 text-[11px] font-medium">
                               overdue
                             </span>
                           ) : null}
@@ -788,14 +788,14 @@ export async function ClassroomDetailPageContent({
 
                         return (
                           <div className="mt-3 flex flex-wrap gap-2 text-xs">
-                            <span className="rounded-full border border-sky-500/20 bg-sky-500/10 px-2.5 py-1 text-sky-400">
+                            <span className="ui-tone-sky-panel ui-tone-sky-text rounded-full border px-2.5 py-1">
                               {summary.submitted_count} submitted
                             </span>
-                            <span className="rounded-full border border-emerald-500/20 bg-emerald-500/10 px-2.5 py-1 text-emerald-400">
+                            <span className="ui-tone-emerald-panel ui-tone-emerald-text rounded-full border px-2.5 py-1">
                               {summary.reviewed_count} reviewed
                             </span>
                             {totalStudents > 0 ? (
-                              <span className="rounded-full border border-rose-500/20 bg-rose-500/10 px-2.5 py-1 text-rose-300">
+                              <span className="ui-tone-rose-panel ui-tone-rose-text rounded-full border px-2.5 py-1">
                                 {Math.max(totalStudents - summary.total_submissions, 0)} missing
                               </span>
                             ) : null}
@@ -805,7 +805,7 @@ export async function ClassroomDetailPageContent({
                       <div className="mt-3 flex flex-wrap gap-3 text-xs text-muted-foreground">
                         {assignment.hsk_level ? <span>HSK {assignment.hsk_level}</span> : null}
                         {assignment.due_at ? (
-                          <span className={isAssignmentOverdue(assignment.due_at) ? "text-rose-300" : undefined}>
+                          <span className={isAssignmentOverdue(assignment.due_at) ? "ui-tone-rose-text" : undefined}>
                             Due {new Date(assignment.due_at).toLocaleDateString("en-US")}
                           </span>
                         ) : (
@@ -819,10 +819,10 @@ export async function ClassroomDetailPageContent({
             </div>
 
             {classroom.is_private_tutoring === 1 && inquiry ? (
-              <div className="rounded-2xl border border-sky-500/20 bg-sky-500/10 p-5">
+              <div className="ui-tone-sky-panel rounded-2xl border p-5">
                 <div className="mb-4 flex items-center gap-2">
-                  <BookOpenText className="h-4 w-4 text-sky-400" />
-                  <h2 className="text-sm font-semibold uppercase tracking-[0.2em] text-sky-300">
+                  <BookOpenText className="ui-tone-sky-text h-4 w-4" />
+                  <h2 className="ui-tone-sky-text text-sm font-semibold uppercase tracking-[0.2em]">
                     Private Classroom Onboarding
                   </h2>
                 </div>
@@ -835,7 +835,7 @@ export async function ClassroomDetailPageContent({
                     {inquiry.initial_assignment_id ? (
                       <Link
                         href={`${baseAssignmentPath}/${inquiry.initial_assignment_id}`}
-                        className="font-medium text-[var(--cn-orange)] hover:underline"
+                        className="ui-tone-orange-text font-medium hover:underline"
                       >
                         {isTeacher ? "Open onboarding assignment" : "Start first assignment"}
                         {inquiry.assignment_title ? `: ${inquiry.assignment_title}` : ""}
@@ -844,7 +844,7 @@ export async function ClassroomDetailPageContent({
                     {isTeacher ? (
                       <Link
                         href="/notebook/teacher/setup"
-                        className="font-medium text-[var(--cn-orange)] hover:underline"
+                        className="ui-tone-orange-text font-medium hover:underline"
                       >
                         Edit tutoring setup
                       </Link>
@@ -861,7 +861,7 @@ export async function ClassroomDetailPageContent({
 
             <div className="rounded-2xl border bg-card p-5">
               <div className="mb-4 flex items-center gap-2">
-                <BookOpenText className="h-4 w-4 text-[var(--cn-orange)]" />
+                <BookOpenText className="ui-tone-orange-text h-4 w-4" />
                 <h2 className="text-sm font-semibold uppercase tracking-[0.2em] text-muted-foreground">
                   Classroom Flow
                 </h2>
@@ -877,7 +877,7 @@ export async function ClassroomDetailPageContent({
             {isTeacher && (
               <section className="rounded-2xl border bg-card p-5">
                 <div className="mb-4 flex items-center gap-2">
-                  <ClipboardList className="h-4 w-4 text-[var(--cn-orange)]" />
+                  <ClipboardList className="ui-tone-orange-text h-4 w-4" />
                   <h2 className="text-sm font-semibold uppercase tracking-[0.2em] text-muted-foreground">
                     Create Assignment
                   </h2>
@@ -889,7 +889,7 @@ export async function ClassroomDetailPageContent({
                     <select
                       name="type"
                       defaultValue="journal_prompt"
-                      className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-[var(--cn-orange)]"
+                      className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-[var(--ui-tone-orange-border)]"
                     >
                       <option value="journal_prompt">Journal prompt</option>
                       <option value="study_guide_word">Study guide word</option>
@@ -903,7 +903,7 @@ export async function ClassroomDetailPageContent({
                       name="title"
                       required
                       placeholder="e.g. Use 爱 in 3 sentences"
-                      className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-[var(--cn-orange)]"
+                      className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-[var(--ui-tone-orange-border)]"
                     />
                   </div>
                   <div>
@@ -912,7 +912,7 @@ export async function ClassroomDetailPageContent({
                       name="description"
                       rows={3}
                       placeholder="Optional context for students"
-                      className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-[var(--cn-orange)]"
+                      className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-[var(--ui-tone-orange-border)]"
                     />
                   </div>
                   <div>
@@ -921,7 +921,7 @@ export async function ClassroomDetailPageContent({
                       name="prompt"
                       rows={3}
                       placeholder="What should students do?"
-                      className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-[var(--cn-orange)]"
+                      className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-[var(--ui-tone-orange-border)]"
                     />
                   </div>
                   <div className="grid gap-3 sm:grid-cols-2">
@@ -933,7 +933,7 @@ export async function ClassroomDetailPageContent({
                         min={1}
                         max={6}
                         placeholder="1"
-                        className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-[var(--cn-orange)]"
+                        className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-[var(--ui-tone-orange-border)]"
                       />
                     </div>
                     <div>
@@ -941,7 +941,7 @@ export async function ClassroomDetailPageContent({
                       <input
                         name="source_ref"
                         placeholder="Optional word id"
-                        className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-[var(--cn-orange)]"
+                        className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-[var(--ui-tone-orange-border)]"
                       />
                     </div>
                   </div>
@@ -951,7 +951,7 @@ export async function ClassroomDetailPageContent({
                       <input
                         name="due_date"
                         type="date"
-                        className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-[var(--cn-orange)]"
+                        className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-[var(--ui-tone-orange-border)]"
                       />
                     </div>
                     <div>
@@ -960,14 +960,14 @@ export async function ClassroomDetailPageContent({
                         name="due_time"
                         type="time"
                         step={60}
-                        className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-[var(--cn-orange)]"
+                        className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-[var(--ui-tone-orange-border)]"
                       />
                     </div>
                   </div>
                   <PendingSubmitButton
                     idleLabel="Create assignment"
                     pendingLabel="Creating assignment..."
-                    className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-[var(--cn-orange)] px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-[var(--cn-orange-dark)] disabled:cursor-not-allowed disabled:opacity-70"
+                    className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-70"
                   />
                 </form>
               </section>
@@ -976,7 +976,7 @@ export async function ClassroomDetailPageContent({
             {isTeacher && templates.length > 0 ? (
               <section className="rounded-2xl border bg-card p-5">
                 <div className="mb-4 flex items-center gap-2">
-                  <BookOpenText className="h-4 w-4 text-[var(--cn-orange)]" />
+                  <BookOpenText className="ui-tone-orange-text h-4 w-4" />
                   <h2 className="text-sm font-semibold uppercase tracking-[0.2em] text-muted-foreground">
                     Create From Template
                   </h2>
@@ -988,7 +988,7 @@ export async function ClassroomDetailPageContent({
                     <select
                       name="template_id"
                       defaultValue={selectedTemplate?.id || templates[0]?.id || ""}
-                      className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-[var(--cn-orange)]"
+                      className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-[var(--ui-tone-orange-border)]"
                     >
                       {templates.map((template) => (
                         <option key={template.id} value={template.id}>
@@ -1003,7 +1003,7 @@ export async function ClassroomDetailPageContent({
                       name="title"
                       defaultValue={selectedTemplate?.title || ""}
                       placeholder="Optional override"
-                      className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-[var(--cn-orange)]"
+                      className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-[var(--ui-tone-orange-border)]"
                     />
                   </div>
                   <div>
@@ -1013,7 +1013,7 @@ export async function ClassroomDetailPageContent({
                       rows={2}
                       defaultValue={selectedTemplate?.description || ""}
                       placeholder="Optional override"
-                      className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-[var(--cn-orange)]"
+                      className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-[var(--ui-tone-orange-border)]"
                     />
                   </div>
                   <div>
@@ -1023,7 +1023,7 @@ export async function ClassroomDetailPageContent({
                       rows={3}
                       defaultValue={selectedTemplate?.prompt || ""}
                       placeholder="Optional override"
-                      className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-[var(--cn-orange)]"
+                      className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-[var(--ui-tone-orange-border)]"
                     />
                   </div>
                   <div className="grid gap-3 sm:grid-cols-2">
@@ -1032,7 +1032,7 @@ export async function ClassroomDetailPageContent({
                       <input
                         name="due_date"
                         type="date"
-                        className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-[var(--cn-orange)]"
+                        className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-[var(--ui-tone-orange-border)]"
                       />
                     </div>
                     <div>
@@ -1040,11 +1040,11 @@ export async function ClassroomDetailPageContent({
                       <input
                         name="due_time"
                         type="time"
-                        className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-[var(--cn-orange)]"
+                        className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-[var(--ui-tone-orange-border)]"
                       />
                     </div>
                   </div>
-                  <PendingSubmitButton pendingLabel="Creating from template..." className="w-full justify-center rounded-lg border border-[var(--cn-orange)]/20 bg-[var(--cn-orange)]/10 px-4 py-2 text-sm font-medium text-[var(--cn-orange)] transition-colors hover:bg-[var(--cn-orange)]/15">
+                  <PendingSubmitButton pendingLabel="Creating from template..." className="ui-tone-orange-panel ui-tone-orange-text w-full justify-center rounded-lg border px-4 py-2 text-sm font-medium transition-colors hover:opacity-85">
                     Create From Template
                   </PendingSubmitButton>
                 </form>
@@ -1053,7 +1053,7 @@ export async function ClassroomDetailPageContent({
 
             <section className="rounded-2xl border bg-card p-5">
               <div className="mb-4 flex items-center gap-2">
-                <Users className="h-4 w-4 text-[var(--cn-orange)]" />
+                <Users className="ui-tone-orange-text h-4 w-4" />
                 <h2 className="text-sm font-semibold uppercase tracking-[0.2em] text-muted-foreground">
                   Roster
                 </h2>
@@ -1069,8 +1069,8 @@ export async function ClassroomDetailPageContent({
                       <span
                         className={`rounded-full px-2 py-0.5 text-[11px] font-medium ${
                           person.role === "teacher"
-                            ? "border border-[var(--cn-orange)]/20 bg-[var(--cn-orange)]/10 text-[var(--cn-orange)]"
-                            : "border border-sky-500/20 bg-sky-500/10 text-sky-400"
+                            ? "ui-tone-orange-panel ui-tone-orange-text border"
+                            : "ui-tone-sky-panel ui-tone-sky-text border"
                         }`}
                       >
                         {person.role}
@@ -1086,7 +1086,7 @@ export async function ClassroomDetailPageContent({
               <p className="mt-2">
                 Classroom activity is now visible here. Next up is stronger resubmission and deeper teacher review tools.
               </p>
-              <Link href={baseClassroomPath} className="mt-4 inline-flex text-[var(--cn-orange)] hover:underline">
+              <Link href={baseClassroomPath} className="ui-tone-orange-text mt-4 inline-flex hover:underline">
                 Back to classes
               </Link>
             </section>

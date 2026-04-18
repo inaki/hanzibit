@@ -112,7 +112,7 @@ export default async function TeacherStrategyDetailPage({
                   name="title"
                   required
                   defaultValue={strategy.title}
-                  className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-[var(--cn-orange)]"
+                  className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-[var(--ui-tone-orange-border)]"
                 />
               </div>
               <div>
@@ -122,7 +122,7 @@ export default async function TeacherStrategyDetailPage({
                   rows={3}
                   required
                   defaultValue={strategy.summary}
-                  className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-[var(--cn-orange)]"
+                  className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-[var(--ui-tone-orange-border)]"
                 />
               </div>
               <div className="grid gap-3 sm:grid-cols-2">
@@ -131,7 +131,7 @@ export default async function TeacherStrategyDetailPage({
                   <input
                     name="issue_focus"
                     defaultValue={strategy.issue_focus || ""}
-                    className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-[var(--cn-orange)]"
+                    className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-[var(--ui-tone-orange-border)]"
                   />
                 </div>
                 <div>
@@ -139,7 +139,7 @@ export default async function TeacherStrategyDetailPage({
                   <input
                     name="goal_focus"
                     defaultValue={strategy.goal_focus || ""}
-                    className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-[var(--cn-orange)]"
+                    className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-[var(--ui-tone-orange-border)]"
                   />
                 </div>
               </div>
@@ -149,7 +149,7 @@ export default async function TeacherStrategyDetailPage({
                   name="guidance"
                   rows={5}
                   defaultValue={strategy.guidance || ""}
-                  className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-[var(--cn-orange)]"
+                  className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-[var(--ui-tone-orange-border)]"
                 />
               </div>
               <TeachingExplainerBlock tone="sky">
@@ -169,7 +169,7 @@ export default async function TeacherStrategyDetailPage({
                   rows={4}
                   defaultValue={strategy.refinement_note || ""}
                   placeholder="What should future-you keep, tighten, or replace when using this strategy?"
-                  className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-[var(--cn-orange)]"
+                  className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-[var(--ui-tone-orange-border)]"
                 />
                 <p className="mt-1 text-xs text-muted-foreground">
                   Save a short note when outcomes suggest how this strategy should evolve.
@@ -181,7 +181,7 @@ export default async function TeacherStrategyDetailPage({
                   <select
                     name="linked_template_id"
                     defaultValue={strategy.linked_template_id || ""}
-                    className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-[var(--cn-orange)]"
+                    className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-[var(--ui-tone-orange-border)]"
                   >
                     <option value="">No linked template</option>
                     {templates.map((template) => (
@@ -196,7 +196,7 @@ export default async function TeacherStrategyDetailPage({
                   <select
                     name="linked_resource_id"
                     defaultValue={strategy.linked_resource_id || ""}
-                    className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-[var(--cn-orange)]"
+                    className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-[var(--ui-tone-orange-border)]"
                   >
                     <option value="">No linked resource</option>
                     {resources.map((resource) => (
@@ -211,7 +211,7 @@ export default async function TeacherStrategyDetailPage({
                 <input type="checkbox" name="archived" defaultChecked={strategy.archived === 1} className="h-4 w-4" />
                 Archive strategy
               </label>
-              <PendingSubmitButton pendingLabel="Updating strategy..." className="w-full justify-center rounded-lg bg-[var(--cn-orange)] px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-[var(--cn-orange-dark)]">
+              <PendingSubmitButton pendingLabel="Updating strategy..." className="bg-primary text-primary-foreground hover:opacity-90 w-full justify-center rounded-lg px-4 py-2 text-sm font-medium transition-colors">
                 Update Strategy
               </PendingSubmitButton>
             </form>
@@ -220,14 +220,14 @@ export default async function TeacherStrategyDetailPage({
           <TeachingCollectionSection title="Metadata">
             <div className="mt-4 flex flex-wrap gap-2 text-xs">
               {outcomeSummary.total === 0 ? (
-                <span className="rounded-full border border-amber-500/20 bg-amber-500/10 px-2.5 py-1 font-medium text-amber-300">
+                <span className="ui-tone-amber-panel ui-tone-amber-text rounded-full border px-2.5 py-1 font-medium">
                   Needs outcomes
                 </span>
               ) : null}
               {outcomeSummary.replace > 0 ||
               (outcomeSummary.total > 0 && outcomeSummary.no_change >= outcomeSummary.helped) ||
               (outcomeSummary.total > 0 && outcomeSummary.partial > outcomeSummary.helped && outcomeSummary.helped === 0) ? (
-                <span className="rounded-full border border-rose-500/20 bg-rose-500/10 px-2.5 py-1 font-medium text-rose-300">
+                <span className="ui-tone-rose-panel ui-tone-rose-text rounded-full border px-2.5 py-1 font-medium">
                   Needs refinement
                 </span>
               ) : null}
@@ -239,11 +239,11 @@ export default async function TeacherStrategyDetailPage({
               <span
                 className={`rounded-full border px-2.5 py-1 font-medium ${
                   patternSummary.broad_status === "helping"
-                    ? "border-emerald-500/20 bg-emerald-500/10 text-emerald-400"
+                    ? "ui-tone-emerald-panel ui-tone-emerald-text"
                     : patternSummary.broad_status === "mixed"
-                      ? "border-amber-500/20 bg-amber-500/10 text-amber-300"
+                      ? "ui-tone-amber-panel ui-tone-amber-text"
                       : patternSummary.broad_status === "weak"
-                        ? "border-rose-500/20 bg-rose-500/10 text-rose-300"
+                        ? "ui-tone-rose-panel ui-tone-rose-text"
                         : "border-border bg-muted text-muted-foreground"
                 }`}
               >
