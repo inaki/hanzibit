@@ -23,6 +23,7 @@ import {
   getPrivateLessonPlanByClassroomId,
   getPrivateLessonPlanStatusLabel,
 } from "@/lib/private-lesson-plans";
+import { SectionCard } from "@/components/patterns/surfaces";
 
 export const dynamic = "force-dynamic";
 
@@ -397,34 +398,17 @@ export async function ClassroomDetailPageContent({
         <div className="grid gap-6 xl:grid-cols-[minmax(0,1.2fr)_minmax(320px,0.8fr)]">
           <section className="space-y-6">
             <div className="grid gap-4 sm:grid-cols-3">
-              <div className="rounded-2xl border bg-card p-5">
-                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-                  Students
-                </p>
-                <p className="mt-3 text-3xl font-bold text-foreground">{totalStudents}</p>
-              </div>
-              <div className="rounded-2xl border bg-card p-5">
-                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-                  Submitted
-                </p>
-                <p className="mt-3 text-3xl font-bold text-foreground">{totalSubmitted}</p>
-              </div>
-              <div className="rounded-2xl border bg-card p-5">
-                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-                  Needs Review
-                </p>
-                <p className="mt-3 text-3xl font-bold text-foreground">{totalNeedsReview}</p>
-              </div>
+              <ClassroomSummaryCard label="Students" value={totalStudents} />
+              <ClassroomSummaryCard label="Submitted" value={totalSubmitted} />
+              <ClassroomSummaryCard label="Needs Review" value={totalNeedsReview} />
             </div>
 
             {isTeacher && assignmentsNeedingAttention.length > 0 ? (
-              <div className="rounded-2xl border bg-card p-5">
-                <div className="mb-4 flex items-center gap-2">
-                  <ClipboardList className="ui-tone-orange-text h-4 w-4" />
-                  <h2 className="text-sm font-semibold uppercase tracking-[0.2em] text-muted-foreground">
-                    Needs Attention
-                  </h2>
-                </div>
+              <SectionCard
+                title={<span className="uppercase tracking-[0.2em] text-muted-foreground">Needs Attention</span>}
+                icon={ClipboardList}
+                className="rounded-2xl"
+              >
                 <div className="space-y-3">
                   {assignmentsNeedingAttention.map(({ assignment, submitted, reviewed, missing, overdue }) => (
                     <Link
@@ -458,17 +442,19 @@ export async function ClassroomDetailPageContent({
                     </Link>
                   ))}
                 </div>
-              </div>
+              </SectionCard>
             ) : null}
 
             {classroom.is_private_tutoring === 1 && privateStudent ? (
-              <div className="rounded-2xl border bg-card p-5">
-                <div className="mb-4 flex items-center gap-2">
-                  <BookOpenText className="ui-tone-orange-text h-4 w-4" />
-                  <h2 className="text-sm font-semibold uppercase tracking-[0.2em] text-muted-foreground">
+              <SectionCard
+                title={
+                  <span className="uppercase tracking-[0.2em] text-muted-foreground">
                     {isTeacher ? "Private Learner Workflow" : "Private Tutoring Status"}
-                  </h2>
-                </div>
+                  </span>
+                }
+                icon={BookOpenText}
+                className="rounded-2xl"
+              >
                 <div className="grid gap-4 md:grid-cols-[minmax(0,1fr)_auto] md:items-center">
                   <div className="space-y-3">
                     <div className="flex flex-wrap items-center gap-2 text-xs">
@@ -745,16 +731,14 @@ export async function ClassroomDetailPageContent({
                     </Link>
                   ) : null}
                 </div>
-              </div>
+              </SectionCard>
             ) : null}
 
-            <div className="rounded-2xl border bg-card p-5">
-              <div className="mb-4 flex items-center gap-2">
-                <ClipboardList className="ui-tone-orange-text h-4 w-4" />
-                <h2 className="text-sm font-semibold uppercase tracking-[0.2em] text-muted-foreground">
-                  Assignments
-                </h2>
-              </div>
+            <SectionCard
+              title={<span className="uppercase tracking-[0.2em] text-muted-foreground">Assignments</span>}
+              icon={ClipboardList}
+              className="rounded-2xl"
+            >
 
               {assignments.length === 0 ? (
                 <div className="rounded-xl border border-dashed p-4 text-sm text-muted-foreground">
@@ -816,16 +800,14 @@ export async function ClassroomDetailPageContent({
                   ))}
                 </div>
               )}
-            </div>
+            </SectionCard>
 
             {classroom.is_private_tutoring === 1 && inquiry ? (
-              <div className="ui-tone-sky-panel rounded-2xl border p-5">
-                <div className="mb-4 flex items-center gap-2">
-                  <BookOpenText className="ui-tone-sky-text h-4 w-4" />
-                  <h2 className="ui-tone-sky-text text-sm font-semibold uppercase tracking-[0.2em]">
-                    Private Classroom Onboarding
-                  </h2>
-                </div>
+              <SectionCard
+                title={<span className="ui-tone-sky-text uppercase tracking-[0.2em]">Private Classroom Onboarding</span>}
+                icon={BookOpenText}
+                className="ui-tone-sky-panel rounded-2xl"
+              >
                 <div className="space-y-3 text-sm">
                   <p className="text-foreground/90">
                     {inquiry.onboarding_message ||
@@ -856,32 +838,28 @@ export async function ClassroomDetailPageContent({
                       : `This classroom was created after your inquiry to ${inquiry.teacher_name}.`}
                   </p>
                 </div>
-              </div>
+              </SectionCard>
             ) : null}
 
-            <div className="rounded-2xl border bg-card p-5">
-              <div className="mb-4 flex items-center gap-2">
-                <BookOpenText className="ui-tone-orange-text h-4 w-4" />
-                <h2 className="text-sm font-semibold uppercase tracking-[0.2em] text-muted-foreground">
-                  Classroom Flow
-                </h2>
-              </div>
+            <SectionCard
+              title={<span className="uppercase tracking-[0.2em] text-muted-foreground">Classroom Flow</span>}
+              icon={BookOpenText}
+              className="rounded-2xl"
+            >
               <div className="space-y-3 text-sm text-muted-foreground">
                 <p>Phase 2 keeps the notebook primary. Assignments should resolve into guided journal drafts or Study Guide detail, not separate classroom-only learning surfaces.</p>
                 <p>Submissions and teacher feedback now attach directly to assignment context through notebook work.</p>
               </div>
-            </div>
+            </SectionCard>
           </section>
 
           <aside className="space-y-6">
             {isTeacher && (
-              <section className="rounded-2xl border bg-card p-5">
-                <div className="mb-4 flex items-center gap-2">
-                  <ClipboardList className="ui-tone-orange-text h-4 w-4" />
-                  <h2 className="text-sm font-semibold uppercase tracking-[0.2em] text-muted-foreground">
-                    Create Assignment
-                  </h2>
-                </div>
+              <SectionCard
+                title={<span className="uppercase tracking-[0.2em] text-muted-foreground">Create Assignment</span>}
+                icon={ClipboardList}
+                className="rounded-2xl"
+              >
                 <form action={createAssignmentFormAction} className="space-y-3">
                   <input type="hidden" name="classroom_id" value={classroom.id} />
                   <div>
@@ -970,17 +948,15 @@ export async function ClassroomDetailPageContent({
                     className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-70"
                   />
                 </form>
-              </section>
+              </SectionCard>
             )}
 
             {isTeacher && templates.length > 0 ? (
-              <section className="rounded-2xl border bg-card p-5">
-                <div className="mb-4 flex items-center gap-2">
-                  <BookOpenText className="ui-tone-orange-text h-4 w-4" />
-                  <h2 className="text-sm font-semibold uppercase tracking-[0.2em] text-muted-foreground">
-                    Create From Template
-                  </h2>
-                </div>
+              <SectionCard
+                title={<span className="uppercase tracking-[0.2em] text-muted-foreground">Create From Template</span>}
+                icon={BookOpenText}
+                className="rounded-2xl"
+              >
                 <form action={createAssignmentFromTemplateFormAction} className="space-y-3">
                   <input type="hidden" name="classroom_id" value={classroom.id} />
                   <div>
@@ -1048,16 +1024,14 @@ export async function ClassroomDetailPageContent({
                     Create From Template
                   </PendingSubmitButton>
                 </form>
-              </section>
+              </SectionCard>
             ) : null}
 
-            <section className="rounded-2xl border bg-card p-5">
-              <div className="mb-4 flex items-center gap-2">
-                <Users className="ui-tone-orange-text h-4 w-4" />
-                <h2 className="text-sm font-semibold uppercase tracking-[0.2em] text-muted-foreground">
-                  Roster
-                </h2>
-              </div>
+            <SectionCard
+              title={<span className="uppercase tracking-[0.2em] text-muted-foreground">Roster</span>}
+              icon={Users}
+              className="rounded-2xl"
+            >
               <div className="space-y-3">
                 {roster.map((person) => (
                   <div key={person.id} className="rounded-xl border px-4 py-3">
@@ -1079,9 +1053,9 @@ export async function ClassroomDetailPageContent({
                   </div>
                 ))}
               </div>
-            </section>
+            </SectionCard>
 
-            <section className="rounded-2xl border bg-card p-5 text-sm text-muted-foreground">
+            <SectionCard className="rounded-2xl text-sm text-muted-foreground">
               <p className="font-medium text-foreground">Next classroom milestone</p>
               <p className="mt-2">
                 Classroom activity is now visible here. Next up is stronger resubmission and deeper teacher review tools.
@@ -1089,7 +1063,7 @@ export async function ClassroomDetailPageContent({
               <Link href={baseClassroomPath} className="ui-tone-orange-text mt-4 inline-flex hover:underline">
                 Back to classes
               </Link>
-            </section>
+            </SectionCard>
           </aside>
         </div>
       </div>
@@ -1099,4 +1073,21 @@ export async function ClassroomDetailPageContent({
 
 export default async function ClassroomDetailPage(props: ClassroomDetailPageProps) {
   return <ClassroomDetailPageContent {...props} />;
+}
+
+function ClassroomSummaryCard({
+  label,
+  value,
+}: {
+  label: string;
+  value: number;
+}) {
+  return (
+    <SectionCard className="rounded-2xl">
+      <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+        {label}
+      </p>
+      <p className="mt-3 text-3xl font-bold text-foreground">{value}</p>
+    </SectionCard>
+  );
 }

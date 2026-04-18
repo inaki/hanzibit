@@ -7,6 +7,14 @@ import { RotateCcw, ChevronLeft, ChevronRight, Eye, Volume2, Target, BookText } 
 import { getDailyPracticeAction, reviewFlashcard } from "@/lib/actions";
 import { UpgradePrompt } from "@/components/upgrade-prompt";
 import type { DailyPracticePlan } from "@/lib/daily-practice";
+import {
+  FlashcardActionPanel,
+  FlashcardBrowseCard,
+  FlashcardControlButton,
+  FlashcardNoticePanel,
+  FlashcardPanel,
+  FlashcardProgressBar,
+} from "@/components/patterns/flashcards";
 
 interface FlashcardPracticeProps {
   cards: Flashcard[];
@@ -138,9 +146,12 @@ export function FlashcardPractice({
 
   if (cards.length === 0) {
     return (
-      <div data-testid="flashcards-empty" className="mx-auto max-w-2xl rounded-xl border bg-card py-16 text-center text-sm text-muted-foreground/70">
+      <FlashcardPanel
+        data-testid="flashcards-empty"
+        className="mx-auto max-w-2xl py-16 text-center text-sm text-muted-foreground/70"
+      >
         No flashcards yet. Add vocabulary to create flashcards!
-      </div>
+      </FlashcardPanel>
     );
   }
 
@@ -219,23 +230,23 @@ export function FlashcardPractice({
 
       {mode === "practice" ? (
         total === 0 ? (
-          <div className="rounded-xl border bg-card py-16 text-center text-sm text-muted-foreground/70">
+          <FlashcardPanel className="py-16 text-center text-sm text-muted-foreground/70">
             {filter === "due" ? "No cards due for review!" : "No cards to practice."}
-          </div>
+          </FlashcardPanel>
         ) : (
           <>
             {isBeginnerFocusedSession && (
-              <div className="ui-tone-orange-panel mb-4 rounded-xl border px-4 py-3">
+              <FlashcardNoticePanel tone="orange" className="mb-4">
                 <p className="ui-tone-orange-text text-xs font-semibold uppercase tracking-wide">
                   Start with one review
                 </p>
                 <p className="mt-1 text-sm text-foreground">
                   Flip this card, listen once, and choose how it felt. You only need to review one word right now.
                 </p>
-              </div>
+              </FlashcardNoticePanel>
             )}
             {focusFront && currentCard?.front === focusFront && (
-              <div className="ui-tone-orange-panel mb-4 rounded-xl border px-4 py-3">
+              <FlashcardNoticePanel tone="orange" className="mb-4">
                 <p className="ui-tone-orange-text text-xs font-semibold uppercase tracking-wide">
                   {isBeginnerFocusedSession ? "Next step" : "Today&apos;s Focus"}
                 </p>
@@ -273,7 +284,7 @@ export function FlashcardPractice({
                     </Link>
                   )}
                 </div>
-              </div>
+              </FlashcardNoticePanel>
             )}
 
             {/* Flashcard */}
@@ -304,13 +315,13 @@ export function FlashcardPractice({
             {/* Speak button — shown on front face only */}
             {!flipped && (
               <div className="mb-4 flex justify-center">
-                <button
+                <FlashcardControlButton
                   onClick={() => new Audio(`/api/tts?text=${encodeURIComponent(currentCard.front)}`).play()}
-                  className="flex items-center gap-1.5 rounded-full border bg-card px-3 py-1.5 text-xs text-muted-foreground transition-colors hover:bg-muted/50"
+                  className="flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs"
                 >
                   <Volume2 className="h-3.5 w-3.5" />
                   Pronounce
-                </button>
+                </FlashcardControlButton>
               </div>
             )}
 
@@ -330,7 +341,7 @@ export function FlashcardPractice({
 
             {/* SM-2 scoring buttons (shown after flip) */}
             {flipped && !reviewFeedback && !limitReached && (
-              <div data-testid="flashcard-scoring" className="mb-6 rounded-2xl border border-border bg-card/70 p-4">
+              <FlashcardActionPanel data-testid="flashcard-scoring" className="mb-6 rounded-2xl bg-card/70">
                 <p className="mb-3 text-center text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground/70">
                   {isBeginnerFocusedSession ? "How did this one word feel?" : "How did this feel?"}
                 </p>
@@ -347,67 +358,62 @@ export function FlashcardPractice({
                     </button>
                   ))}
                 </div>
-              </div>
+              </FlashcardActionPanel>
             )}
 
             {/* Navigation */}
             {isBeginnerFocusedSession ? (
               <div data-testid="flashcard-navigation" className="flex items-center justify-center gap-3">
-                <button
+                <FlashcardControlButton
                   data-testid="flashcard-flip"
                   onClick={() => { setFlipped(!flipped); setReviewFeedback(null); }}
-                  className="rounded-lg border bg-card px-4 py-2.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted/50"
                 >
                   <RotateCcw className="mr-1.5 inline h-4 w-4" />
                   {flipped ? "Hide meaning" : "Reveal meaning"}
-                </button>
+                </FlashcardControlButton>
               </div>
             ) : (
               <div data-testid="flashcard-navigation" className="flex items-center justify-center gap-3">
-                <button
+                <FlashcardControlButton
                   data-testid="flashcard-prev"
                   onClick={prev}
                   disabled={currentIndex === 0}
-                  className="rounded-lg border bg-card p-2.5 text-muted-foreground transition-colors hover:bg-muted/50 disabled:opacity-30"
+                  className="p-2.5"
                 >
                   <ChevronLeft className="h-5 w-5" />
-                </button>
-                <button
+                </FlashcardControlButton>
+                <FlashcardControlButton
                   data-testid="flashcard-flip"
                   onClick={() => { setFlipped(!flipped); setReviewFeedback(null); }}
-                  className="rounded-lg border bg-card px-4 py-2.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted/50"
                 >
                   <RotateCcw className="mr-1.5 inline h-4 w-4" />
                   Flip
-                </button>
-                <button
+                </FlashcardControlButton>
+                <FlashcardControlButton
                   data-testid="flashcard-next"
                   onClick={next}
                   disabled={currentIndex === total - 1}
-                  className="rounded-lg border bg-card p-2.5 text-muted-foreground transition-colors hover:bg-muted/50 disabled:opacity-30"
+                  className="p-2.5"
                 >
                   <ChevronRight className="h-5 w-5" />
-                </button>
+                </FlashcardControlButton>
               </div>
             )}
 
             {/* Progress bar */}
-            <div data-testid="flashcard-progress" className="mt-6 h-1.5 rounded-full bg-muted">
-              <div
-                className="ui-tone-orange-dot h-full rounded-full transition-all"
-                style={{ width: `${((currentIndex + 1) / total) * 100}%` }}
-              />
-            </div>
+            <FlashcardProgressBar
+              value={((currentIndex + 1) / total) * 100}
+              className="mt-6"
+            />
           </>
         )
       ) : (
         /* Browse mode */
         <div data-testid="flashcards-browse" className="grid gap-3 sm:grid-cols-2">
           {cards.map((card) => (
-            <div
+            <FlashcardBrowseCard
               key={card.id}
               data-testid={`flashcard-browse-${card.front}`}
-              className="rounded-xl border bg-card p-5 transition-colors hover:border-[var(--ui-tone-orange-border)]"
             >
               <p className="text-2xl font-bold text-foreground">{card.front}</p>
               <p className="mt-1 text-sm text-muted-foreground">{card.back}</p>
@@ -415,7 +421,7 @@ export function FlashcardPractice({
                 <span>{card.deck}</span>
                 <span>{card.review_count} reviews</span>
               </div>
-            </div>
+            </FlashcardBrowseCard>
           ))}
         </div>
       )}

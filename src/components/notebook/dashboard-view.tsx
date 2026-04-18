@@ -6,6 +6,11 @@ import { Flame, Layers, PenLine, RotateCcw, TrendingUp, AlertCircle, CheckCircle
 import { Progress } from "@/components/ui/progress";
 import { MetricPill } from "@/components/patterns/status";
 import { FocusWordStepBadge, PriorityBadge } from "@/components/patterns/status";
+import {
+  DashboardPanel,
+  DashboardSection,
+  DashboardStatCard,
+} from "@/components/patterns/dashboard";
 import { useSettings } from "./settings-context";
 import {
   getDailyPracticeAction,
@@ -164,7 +169,7 @@ export function DashboardView() {
       </div>
 
       {!loading && isBeginnerFirstRun && (
-        <div className="ui-tone-sky-panel mb-6 rounded-xl border p-6">
+        <DashboardPanel tone="sky" className="mb-6 p-6">
           <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
             <div className="max-w-xl">
               <p className="ui-tone-sky-text text-xs font-semibold uppercase tracking-wider">Welcome</p>
@@ -206,11 +211,11 @@ export function DashboardView() {
               body="Finish with a tiny review so the app remembers what you just studied."
             />
           </div>
-        </div>
+        </DashboardPanel>
       )}
 
       {!loading && isBeginnerFirstCompletion && beginnerCompletion && (
-        <div className="ui-tone-emerald-panel mb-6 rounded-xl border p-6">
+        <DashboardPanel tone="emerald" className="mb-6 p-6">
           <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
             <div className="max-w-2xl">
               <p className="ui-tone-emerald-text text-xs font-semibold uppercase tracking-wider">Day one complete</p>
@@ -249,21 +254,22 @@ export function DashboardView() {
               body="You closed the loop, which is what helps the word stick."
             />
           </div>
-        </div>
+        </DashboardPanel>
       )}
 
-      <div className="mb-6 rounded-xl border bg-card p-6">
-        <div className="mb-4 flex items-center gap-2">
-          <CheckCircle2 className="ui-tone-orange-text h-4 w-4" />
-          <h2 className="text-sm font-semibold text-foreground/80">Today&apos;s Practice</h2>
-          <span className="ml-auto text-xs text-muted-foreground/70">
+      <DashboardSection
+        title="Today&apos;s Practice"
+        icon={CheckCircle2}
+        className="mb-6"
+        action={
+          <span className="text-xs text-muted-foreground/70">
             {loading || !dailyPractice
               ? "Loading practice..."
               : `${dailyPractice.reviewsCompletedToday} reviews · ${dailyPractice.entriesCreatedToday} entries · ${dailyPractice.guidedResponsesToday} guided responses`}
           </span>
-        </div>
-
-        <div className="mb-4 rounded-lg border border-border bg-muted/30 px-4 py-3">
+        }
+      >
+        <DashboardPanel className="mb-4 px-4 py-3">
           <div className="flex items-center justify-between gap-3">
             <div>
               <p className="text-sm font-medium text-foreground">
@@ -402,8 +408,8 @@ export function DashboardView() {
             </div>
           )}
           {!loading && dailyPractice && !dailyPractice.loopCompleted && dailyPractice.missingSteps.length > 0 && (
-            <div
-              className={`mt-4 rounded-lg border px-3 py-3 ${
+            <DashboardPanel
+              className={`mt-4 px-3 py-3 ${
                 dashboardMode?.guidanceTone === "sky"
                   ? "ui-tone-sky-panel"
                   : dashboardMode?.guidanceTone === "violet"
@@ -430,9 +436,9 @@ export function DashboardView() {
                   </div>
                 ))}
               </div>
-            </div>
+            </DashboardPanel>
           )}
-        </div>
+        </DashboardPanel>
 
         <div className="grid gap-4 md:grid-cols-3">
           {practiceStepOrder.map((stepKey, index) => (
@@ -565,11 +571,11 @@ export function DashboardView() {
             </PracticeCard>
           ))}
         </div>
-      </div>
+      </DashboardSection>
 
       {/* Top stat cards */}
       {isBeginnerFirstRun ? (
-        <div className="mb-6 rounded-xl border border-border bg-card p-5">
+        <DashboardPanel className="mb-6">
           <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground/70">What will appear here</p>
           <div className="mt-3 grid gap-3 md:grid-cols-3">
             <BeginnerPreviewCard
@@ -588,9 +594,9 @@ export function DashboardView() {
               body="Your tiny review sessions will start filling this in."
             />
           </div>
-        </div>
+        </DashboardPanel>
       ) : isBeginnerFirstCompletion ? (
-        <div className="mb-6 rounded-xl border border-border bg-card p-5">
+        <DashboardPanel className="mb-6">
           <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground/70">What changes tomorrow</p>
           <div className="mt-3 grid gap-3 md:grid-cols-3">
             <BeginnerPreviewCard
@@ -609,52 +615,42 @@ export function DashboardView() {
               body="More studied words will slowly turn into a real flashcard routine."
             />
           </div>
-        </div>
+        </DashboardPanel>
       ) : (
         <div className="mb-6 grid grid-cols-3 gap-4">
           {/* Streak */}
-          <div className="rounded-xl border bg-card p-5">
-            <div className="mb-3 flex items-center gap-2">
-              <Flame className="ui-tone-orange-text h-4 w-4" />
-              <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground/70">Streak</span>
-            </div>
+          <DashboardStatCard icon={Flame} label="Streak" className="[&_svg]:ui-tone-orange-text">
             <p className="text-4xl font-bold text-foreground">{loading ? <LoadingStatWithIcon className="h-10 w-12" /> : streak}</p>
             <p className="mt-1 text-xs text-muted-foreground">
               {streak === 0 ? "Start your streak today" : streak === 1 ? "day in a row" : "days in a row"}
             </p>
-          </div>
+          </DashboardStatCard>
 
           {/* Journal entries */}
-          <div className="rounded-xl border bg-card p-5">
-            <div className="mb-3 flex items-center gap-2">
-              <PenLine className="ui-tone-sky-text h-4 w-4" />
-              <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground/70">Entries</span>
-            </div>
+          <DashboardStatCard icon={PenLine} label="Entries" className="[&_svg]:ui-tone-sky-text">
             <p className="text-4xl font-bold text-foreground">{loading ? <LoadingStatWithIcon className="h-10 w-12" /> : stats.entryCount}</p>
             <p className="mt-1 text-xs text-muted-foreground">journal entries written</p>
-          </div>
+          </DashboardStatCard>
 
           {/* Reviews */}
-          <div className="rounded-xl border bg-card p-5">
-            <div className="mb-3 flex items-center gap-2">
-              <RotateCcw className="ui-tone-emerald-text h-4 w-4" />
-              <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground/70">Reviews</span>
-            </div>
+          <DashboardStatCard icon={RotateCcw} label="Reviews" className="[&_svg]:ui-tone-emerald-text">
             <p className="text-4xl font-bold text-foreground">{loading ? <LoadingStatWithIcon className="h-10 w-12" /> : stats.reviewCount}</p>
             <p className="mt-1 text-xs text-muted-foreground">total reviews completed</p>
-          </div>
+          </DashboardStatCard>
         </div>
       )}
 
       {/* HSK Progress */}
-      <div className="mb-6 rounded-xl border bg-card p-6">
-        <div className="mb-4 flex items-center gap-2">
-          <TrendingUp className="ui-tone-orange-text h-4 w-4" />
-          <h2 className="text-sm font-semibold text-foreground/80">HSK {settings.hskLevel} Progress</h2>
-          <span className="ui-tone-orange-text ml-auto text-sm font-bold">
+      <DashboardSection
+        title={`HSK ${settings.hskLevel} Progress`}
+        icon={TrendingUp}
+        className="mb-6"
+        action={
+          <span className="ui-tone-orange-text text-sm font-bold">
             {loading ? <LoadingStatWithIcon className="h-5 w-12" compact /> : `${progress.percent}%`}
           </span>
-        </div>
+        }
+      >
         <Progress
           value={progress.percent}
           className="mb-3 h-2.5 [&_[data-slot=progress-indicator]]:bg-primary"
@@ -665,24 +661,20 @@ export function DashboardView() {
             Open study guide →
           </Link>
         </div>
-      </div>
+      </DashboardSection>
 
       {/* Flashcard stats + weak cards */}
       <div className="mb-6 grid grid-cols-2 gap-4">
-        <div className="rounded-xl border bg-card p-5">
-          <div className="mb-3 flex items-center gap-2">
-            <Layers className="ui-tone-sky-text h-4 w-4" />
-            <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground/70">Flashcards</span>
-          </div>
+        <DashboardStatCard icon={Layers} label="Flashcards" className="[&_svg]:ui-tone-sky-text">
           <p className="text-4xl font-bold text-foreground">{loading ? <LoadingStatWithIcon className="h-10 w-14" /> : stats.vocabCount}</p>
           <p className="mt-1 text-xs text-muted-foreground">cards in your deck</p>
           <Link href={dueFlashcardsHref} className="ui-tone-orange-text mt-3 block text-xs hover:underline">
             Review due cards →
           </Link>
-        </div>
+        </DashboardStatCard>
 
         {/* Character of the day */}
-        <div className="rounded-xl border bg-card p-5">
+        <DashboardPanel>
           <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground/70">Character of the day</p>
           <div className="flex items-center gap-4">
             {loading ? (
@@ -711,20 +703,20 @@ export function DashboardView() {
               </>
             )}
           </div>
-        </div>
+        </DashboardPanel>
       </div>
 
       {/* Needs attention */}
       {!loading && weakCards.length > 0 && (
-        <div className="rounded-xl border bg-card p-6">
-          <div className="mb-4 flex items-center gap-2">
-            <AlertCircle className="ui-tone-rose-text h-4 w-4" />
-            <h2 className="text-sm font-semibold text-foreground/80">Needs Attention</h2>
-            <span className="ml-auto text-xs text-muted-foreground/70">Low ease factor — review these soon</span>
-          </div>
+        <DashboardSection
+          title="Needs Attention"
+          icon={AlertCircle}
+          className="[&_svg]:ui-tone-rose-text"
+          action={<span className="text-xs text-muted-foreground/70">Low ease factor — review these soon</span>}
+        >
           <div className="space-y-2">
             {weakCards.map((card) => (
-              <div key={card.id} className="flex items-center justify-between rounded-lg border border-border bg-muted/50 px-4 py-3">
+              <DashboardPanel key={card.id} className="flex items-center justify-between px-4 py-3">
                 <div>
                   <span className="text-lg font-bold text-foreground">{card.front}</span>
                   <span className="ml-3 text-sm text-muted-foreground">{card.back}</span>
@@ -733,19 +725,19 @@ export function DashboardView() {
                   <span>{card.review_count} reviews</span>
                   <span className="ui-tone-rose-text font-medium">ease {card.ease_factor.toFixed(1)}</span>
                 </div>
-              </div>
+              </DashboardPanel>
             ))}
           </div>
           <Link href={dueFlashcardsHref} className="ui-tone-orange-text mt-4 block text-center text-sm font-medium hover:underline">
             Review due flashcards →
           </Link>
-        </div>
+        </DashboardSection>
       )}
 
       {!loading && weakCards.length === 0 && (
-        <div className="ui-tone-emerald-panel rounded-xl border p-6 text-center">
+        <DashboardPanel tone="emerald" className="p-6 text-center">
           <p className="ui-tone-emerald-text text-sm font-medium">All caught up — no struggling cards right now.</p>
-        </div>
+        </DashboardPanel>
       )}
     </div>
   );
@@ -913,13 +905,13 @@ function BeginnerStepCard({
   body: string;
 }) {
   return (
-    <div className="ui-tone-sky-panel rounded-xl border bg-background/80 p-4">
+    <DashboardPanel tone="sky" className="bg-background/80 p-4">
       <div className="ui-tone-sky-panel ui-tone-sky-text mb-2 inline-flex h-7 w-7 items-center justify-center rounded-full border text-xs font-semibold">
         {step}
       </div>
       <p className="text-sm font-semibold text-foreground">{title}</p>
       <p className="mt-1 text-xs leading-5 text-muted-foreground">{body}</p>
-    </div>
+    </DashboardPanel>
   );
 }
 
@@ -933,13 +925,13 @@ function BeginnerPreviewCard({
   body: string;
 }) {
   return (
-    <div className="rounded-xl border border-border bg-muted/30 p-4">
+    <DashboardPanel className="p-4">
       <div className="mb-2 flex items-center gap-2">
         {icon}
         <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground/70">{title}</span>
       </div>
       <p className="text-xs leading-5 text-muted-foreground">{body}</p>
-    </div>
+    </DashboardPanel>
   );
 }
 

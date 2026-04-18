@@ -7,6 +7,7 @@ import { canManageClassroom, canViewAssignment } from "@/lib/classroom-permissio
 import { getAssignment, isAssignmentOverdue } from "@/lib/assignments";
 import { getClassroom } from "@/lib/classrooms";
 import { getSubmissionForStudent, listSubmissionsForAssignmentWithStudents } from "@/lib/submissions";
+import { SectionCard } from "@/components/patterns/surfaces";
 
 export const dynamic = "force-dynamic";
 
@@ -113,13 +114,11 @@ export async function AssignmentDetailPageContent({
 
         <div className="grid gap-6 lg:grid-cols-[minmax(0,1.2fr)_minmax(260px,0.8fr)]">
           <section className="space-y-6">
-            <div className="rounded-2xl border bg-card p-5">
-              <div className="mb-4 flex items-center gap-2">
-                <ClipboardList className="ui-tone-orange-text h-4 w-4" />
-                <h2 className="text-sm font-semibold uppercase tracking-[0.2em] text-muted-foreground">
-                  Instructions
-                </h2>
-              </div>
+            <SectionCard
+              title={<span className="uppercase tracking-[0.2em] text-muted-foreground">Instructions</span>}
+              icon={ClipboardList}
+              className="rounded-2xl"
+            >
               {assignment.description ? (
                 <p className="text-sm leading-7 text-muted-foreground">{assignment.description}</p>
               ) : (
@@ -131,19 +130,13 @@ export async function AssignmentDetailPageContent({
                   <p className="mt-2 text-sm leading-7 text-foreground/85">{assignment.prompt}</p>
                 </div>
               )}
-            </div>
+            </SectionCard>
 
-            <div className="rounded-2xl border bg-card p-5">
-              <div className="mb-4 flex items-center gap-2">
-                {assignment.type.startsWith("study_guide") ? (
-                  <BookOpenText className="ui-tone-orange-text h-4 w-4" />
-                ) : (
-                  <PenLine className="ui-tone-orange-text h-4 w-4" />
-                )}
-                <h2 className="text-sm font-semibold uppercase tracking-[0.2em] text-muted-foreground">
-                  {launchHeading}
-                </h2>
-              </div>
+            <SectionCard
+              title={<span className="uppercase tracking-[0.2em] text-muted-foreground">{launchHeading}</span>}
+              icon={assignment.type.startsWith("study_guide") ? BookOpenText : PenLine}
+              className="rounded-2xl"
+            >
               <p className="text-sm text-muted-foreground">{launchDescription}</p>
               {studentCanResubmit ? (
                 <div className="ui-tone-amber-panel ui-tone-amber-text mt-4 rounded-xl border p-4 text-sm">
@@ -157,16 +150,14 @@ export async function AssignmentDetailPageContent({
                 {launchLabel}
                 <ArrowRight className="h-4 w-4" />
               </Link>
-            </div>
+            </SectionCard>
 
             {canManage ? (
-              <div className="rounded-2xl border bg-card p-5">
-                <div className="mb-4 flex items-center gap-2">
-                  <CopyPlus className="ui-tone-orange-text h-4 w-4" />
-                  <h2 className="text-sm font-semibold uppercase tracking-[0.2em] text-muted-foreground">
-                    Reuse This Assignment
-                  </h2>
-                </div>
+              <SectionCard
+                title={<span className="uppercase tracking-[0.2em] text-muted-foreground">Reuse This Assignment</span>}
+                icon={CopyPlus}
+                className="rounded-2xl"
+              >
                 <p className="text-sm text-muted-foreground">
                   Save this assignment as a reusable template so you can launch similar work in future classrooms.
                 </p>
@@ -188,15 +179,15 @@ export async function AssignmentDetailPageContent({
                     Save as template
                   </button>
                 </form>
-              </div>
+              </SectionCard>
             ) : null}
           </section>
 
           <aside className="space-y-6">
-            <section className="rounded-2xl border bg-card p-5">
-              <h2 className="text-sm font-semibold uppercase tracking-[0.2em] text-muted-foreground">
-                Details
-              </h2>
+            <SectionCard
+              title={<span className="uppercase tracking-[0.2em] text-muted-foreground">Details</span>}
+              className="rounded-2xl"
+            >
               <div className="mt-4 space-y-3 text-sm">
                 <div className="flex items-center justify-between gap-3">
                   <span className="text-muted-foreground">HSK</span>
@@ -213,12 +204,12 @@ export async function AssignmentDetailPageContent({
                   <span className="font-medium text-foreground">{assignment.allow_resubmission ? "Allowed" : "Locked"}</span>
                 </div>
               </div>
-            </section>
+            </SectionCard>
 
-            <section className="rounded-2xl border bg-card p-5">
-              <h2 className="text-sm font-semibold uppercase tracking-[0.2em] text-muted-foreground">
-                Submission Status
-              </h2>
+            <SectionCard
+              title={<span className="uppercase tracking-[0.2em] text-muted-foreground">Submission Status</span>}
+              className="rounded-2xl"
+            >
               {canManage ? (
                 <div className="mt-4 space-y-4 text-sm">
                   <div className="space-y-3">
@@ -297,14 +288,14 @@ export async function AssignmentDetailPageContent({
                   ) : null}
                 </div>
               )}
-            </section>
+            </SectionCard>
 
-            <section className="rounded-2xl border bg-card p-5 text-sm text-muted-foreground">
+            <SectionCard className="rounded-2xl text-sm text-muted-foreground">
               <p className="font-medium text-foreground">Phase 2 status</p>
               <p className="mt-2">
                 Assignment submissions now support teacher review, feedback, and reviewed status tracking.
               </p>
-            </section>
+            </SectionCard>
           </aside>
         </div>
       </div>

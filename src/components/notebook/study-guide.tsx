@@ -129,7 +129,7 @@ export function StudyGuide({ initialData, assignmentId, beginnerMode = false }: 
       className="flex h-full flex-col overflow-auto p-6 pb-20 md:p-10 lg:overflow-hidden lg:p-0"
     >
       <div className="flex min-h-0 flex-1 flex-col gap-6 lg:flex-row lg:gap-0">
-        <aside className="rounded-xl border bg-card p-5 lg:h-full lg:w-[320px] lg:shrink-0 lg:overflow-y-auto lg:rounded-none lg:border-0 lg:border-r lg:bg-card lg:p-4">
+        <SectionCard className="lg:h-full lg:w-[320px] lg:shrink-0 lg:overflow-y-auto lg:rounded-none lg:border-0 lg:border-r lg:bg-card lg:p-4">
           <div className="mb-4 flex items-center justify-between gap-3">
             <h2
               data-testid="study-guide-list-heading"
@@ -245,11 +245,11 @@ export function StudyGuide({ initialData, assignmentId, beginnerMode = false }: 
               </div>
             </>
           )}
-        </aside>
+        </SectionCard>
 
         <div className="min-h-0 flex-1 lg:overflow-y-auto lg:px-6 lg:py-6">
           {data.locked ? (
-            <div className="mx-6 mt-6 flex flex-col items-center justify-center rounded-xl border bg-card py-16 text-center lg:mx-0 lg:mt-0">
+            <EmptyStateNotice className="mx-6 mt-6 flex flex-col items-center justify-center rounded-xl py-16 text-center lg:mx-0 lg:mt-0">
               <Lock className="mb-3 h-8 w-8 text-muted-foreground/50" />
               <h3 className="text-base font-semibold text-foreground/80">
                 HSK {data.level} is for Pro members
@@ -258,7 +258,7 @@ export function StudyGuide({ initialData, assignmentId, beginnerMode = false }: 
                 Upgrade to access all 6 HSK levels
               </p>
               <UpgradePrompt reason="Get unlimited access to all HSK levels and vocabulary with Pro." />
-            </div>
+            </EmptyStateNotice>
           ) : (
             <>
               {!isBeginnerMode && (
@@ -406,7 +406,7 @@ function WordDetail({
 
   if (beginnerMode && !showFullDetails) {
     return (
-      <div data-testid="study-guide-detail" className="rounded-xl border bg-card p-8">
+      <SectionCard data-testid="study-guide-detail" className="rounded-xl p-8">
         <div className="mb-6 text-center">
           <p className="ui-tone-orange-text text-7xl font-bold">{item.word.simplified}</p>
           <p className="mt-3 text-xl font-medium text-foreground/80">{item.word.pinyin}</p>
@@ -419,13 +419,10 @@ function WordDetail({
           description="You only need to learn one small thing right now."
           icon={Sparkles}
         >
-          <div className="rounded-lg border border-border bg-card p-4">
-            <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground/70">
-              Tiny example
-            </p>
+          <InfoPanel title="Tiny example">
             <p className="mt-2 text-lg leading-8 text-foreground">{reading.focusPhraseZh}</p>
             <p className="mt-2 text-sm text-muted-foreground">{reading.focusPhraseEn}</p>
-          </div>
+          </InfoPanel>
           <p className="mt-4 text-sm text-foreground/85">
             Read the word, glance at the example, then use it once in your journal. That is enough for your first study step.
           </p>
@@ -445,12 +442,12 @@ function WordDetail({
             </button>
           </div>
         </SectionCard>
-      </div>
+      </SectionCard>
     );
   }
 
   return (
-    <div data-testid="study-guide-detail" className="rounded-xl border bg-card p-8">
+    <SectionCard data-testid="study-guide-detail" className="rounded-xl p-8">
       {/* Character display */}
       <div className="mb-6 text-center">
         <p className="ui-tone-orange-text text-7xl font-bold">{item.word.simplified}</p>
@@ -541,12 +538,12 @@ function WordDetail({
             <BookOpen className="h-3.5 w-3.5" />
             Appeared in
           </h4>
-          <div className="space-y-1">
-            {item.journalEntries.map((entry) => (
+        <div className="space-y-1">
+          {item.journalEntries.map((entry) => (
               <Link
                 key={entry.id}
                 href={`/notebook?entry=${entry.id}`}
-                className="flex items-center gap-2 rounded-lg border border-border px-3 py-2 text-sm transition-colors hover:border-[var(--ui-tone-orange-border)] hover:bg-[var(--ui-tone-orange-surface)]"
+                className="flex items-center gap-2 rounded-lg border border-border bg-card px-3 py-2 text-sm transition-colors hover:border-[var(--ui-tone-orange-border)] hover:bg-[var(--ui-tone-orange-surface)]"
               >
                 <BookOpen className="ui-tone-orange-text h-3.5 w-3.5" />
                 <span className="font-medium text-foreground">{entry.title_zh}</span>
@@ -651,11 +648,12 @@ function WordDetail({
 
       {/* Flashcard status */}
       {item.flashcard ? (
-        <div className="ui-tone-sky-panel mb-6 rounded-lg border p-4">
-          <h4 className="ui-tone-sky-text mb-2 flex items-center gap-1.5 text-xs font-semibold">
-            <Layers className="h-3.5 w-3.5" />
-            Flashcard
-          </h4>
+        <InfoPanel
+          title="Flashcard"
+          icon={Layers}
+          className="ui-tone-sky-panel mb-6"
+          titleClassName="ui-tone-sky-text"
+        >
           <div className="flex gap-4 text-sm">
             <div>
               <p className="ui-tone-sky-soft-text text-xs">Reviews</p>
@@ -678,7 +676,7 @@ function WordDetail({
               </p>
             </div>
           </div>
-        </div>
+        </InfoPanel>
       ) : !created ? (
         <div className="text-center">
           <button
@@ -696,7 +694,7 @@ function WordDetail({
           Flashcard created!
         </p>
       )}
-    </div>
+    </SectionCard>
   );
 }
 

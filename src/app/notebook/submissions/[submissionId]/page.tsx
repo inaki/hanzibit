@@ -5,6 +5,7 @@ import { getAuthUserId } from "@/lib/auth-utils";
 import { canReviewSubmission, canViewSubmission } from "@/lib/classroom-permissions";
 import { addSubmissionFeedbackAction, markSubmissionReviewedAction } from "@/lib/actions";
 import { getSubmissionDetail, listSubmissionFeedback } from "@/lib/submissions";
+import { SectionCard } from "@/components/patterns/surfaces";
 
 export const dynamic = "force-dynamic";
 
@@ -78,13 +79,11 @@ export default async function SubmissionDetailPage({
 
         <div className="grid gap-6 lg:grid-cols-[minmax(0,1.15fr)_minmax(300px,0.85fr)]">
           <section className="space-y-6">
-            <div className="rounded-2xl border bg-card p-5">
-              <div className="mb-4 flex items-center gap-2">
-                <School className="ui-tone-orange-text h-4 w-4" />
-                <h2 className="text-sm font-semibold uppercase tracking-[0.2em] text-muted-foreground">
-                  Assignment Context
-                </h2>
-              </div>
+            <SectionCard
+              title={<span className="uppercase tracking-[0.2em] text-muted-foreground">Assignment Context</span>}
+              icon={School}
+              className="rounded-2xl"
+            >
               {submission.assignment_description ? (
                 <p className="text-sm leading-7 text-muted-foreground">{submission.assignment_description}</p>
               ) : (
@@ -96,15 +95,13 @@ export default async function SubmissionDetailPage({
                   <p className="mt-2 text-sm leading-7 text-foreground/85">{submission.assignment_prompt}</p>
                 </div>
               ) : null}
-            </div>
+            </SectionCard>
 
-            <div className="rounded-2xl border bg-card p-5">
-              <div className="mb-4 flex items-center gap-2">
-                <NotebookText className="ui-tone-orange-text h-4 w-4" />
-                <h2 className="text-sm font-semibold uppercase tracking-[0.2em] text-muted-foreground">
-                  Submitted Work
-                </h2>
-              </div>
+            <SectionCard
+              title={<span className="uppercase tracking-[0.2em] text-muted-foreground">Submitted Work</span>}
+              icon={NotebookText}
+              className="rounded-2xl"
+            >
               {submission.journal_entry_id ? (
                 <div className="space-y-3">
                   <p className="text-sm text-muted-foreground">
@@ -125,15 +122,13 @@ export default async function SubmissionDetailPage({
               ) : (
                 <p className="text-sm text-muted-foreground">No notebook entry linked yet.</p>
               )}
-            </div>
+            </SectionCard>
 
-            <div className="rounded-2xl border bg-card p-5">
-              <div className="mb-4 flex items-center gap-2">
-                <MessageSquare className="ui-tone-orange-text h-4 w-4" />
-                <h2 className="text-sm font-semibold uppercase tracking-[0.2em] text-muted-foreground">
-                  Feedback
-                </h2>
-              </div>
+            <SectionCard
+              title={<span className="uppercase tracking-[0.2em] text-muted-foreground">Feedback</span>}
+              icon={MessageSquare}
+              className="rounded-2xl"
+            >
               {feedback.length > 0 ? (
                 <div className="space-y-4">
                   {feedback.map((item) => (
@@ -156,14 +151,14 @@ export default async function SubmissionDetailPage({
                   {canReview ? "No feedback yet. Add the first review below." : "No teacher feedback yet."}
                 </p>
               )}
-            </div>
+            </SectionCard>
           </section>
 
           <aside className="space-y-6">
-            <section className="rounded-2xl border bg-card p-5">
-              <h2 className="text-sm font-semibold uppercase tracking-[0.2em] text-muted-foreground">
-                Submission Details
-              </h2>
+            <SectionCard
+              title={<span className="uppercase tracking-[0.2em] text-muted-foreground">Submission Details</span>}
+              className="rounded-2xl"
+            >
               <div className="mt-4 space-y-3 text-sm">
                 <div className="flex items-center justify-between gap-3">
                   <span className="text-muted-foreground">Student</span>
@@ -186,14 +181,14 @@ export default async function SubmissionDetailPage({
                   </span>
                 </div>
               </div>
-            </section>
+            </SectionCard>
 
             {canReview ? (
               <>
-                <section className="rounded-2xl border bg-card p-5">
-                  <h2 className="text-sm font-semibold uppercase tracking-[0.2em] text-muted-foreground">
-                    Leave Feedback
-                  </h2>
+                <SectionCard
+                  title={<span className="uppercase tracking-[0.2em] text-muted-foreground">Leave Feedback</span>}
+                  className="rounded-2xl"
+                >
                   <form action={addSubmissionFeedbackAction} className="mt-4 space-y-4">
                     <input type="hidden" name="submission_id" value={submission.id} />
                     <textarea
@@ -210,12 +205,12 @@ export default async function SubmissionDetailPage({
                       Save feedback
                     </button>
                   </form>
-                </section>
+                </SectionCard>
 
-                <section className="rounded-2xl border bg-card p-5">
-                  <h2 className="text-sm font-semibold uppercase tracking-[0.2em] text-muted-foreground">
-                    Review Status
-                  </h2>
+                <SectionCard
+                  title={<span className="uppercase tracking-[0.2em] text-muted-foreground">Review Status</span>}
+                  className="rounded-2xl"
+                >
                   <p className="mt-3 text-sm text-muted-foreground">
                     Mark this submission as reviewed once the learner has enough feedback to move forward.
                   </p>
@@ -230,10 +225,10 @@ export default async function SubmissionDetailPage({
                       {submission.status === "reviewed" ? "Already reviewed" : "Mark as reviewed"}
                     </button>
                   </form>
-                </section>
+                </SectionCard>
               </>
             ) : (
-              <section className="rounded-2xl border bg-card p-5 text-sm text-muted-foreground">
+              <SectionCard className="rounded-2xl text-sm text-muted-foreground">
                 <div className="flex items-center gap-2">
                   <UserRound className="ui-tone-orange-text h-4 w-4" />
                   <p className="font-medium text-foreground">Student view</p>
@@ -241,7 +236,7 @@ export default async function SubmissionDetailPage({
                 <p className="mt-3">
                   This page shows the current submission status and any teacher feedback for this assignment.
                 </p>
-              </section>
+              </SectionCard>
             )}
           </aside>
         </div>
