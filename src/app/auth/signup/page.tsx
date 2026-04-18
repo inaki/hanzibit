@@ -4,6 +4,8 @@ import Link from "next/link";
 import { useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { BookOpen, Github } from "lucide-react";
+import { FormErrorNotice } from "@/components/patterns/forms";
+import { GuidanceBanner } from "@/components/patterns/guidance";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { signUp, signIn, useSession } from "@/lib/auth-client";
@@ -44,42 +46,40 @@ export default function SignUpPage() {
   };
 
   return (
-    <div data-testid="signup-page" className="flex min-h-screen items-center justify-center bg-[#f5f3f0] px-4">
+    <div data-testid="signup-page" className="flex min-h-screen items-center justify-center bg-background px-4">
       <div className="w-full max-w-md">
         <div className="mb-8 text-center">
           <Link href="/" data-testid="signup-logo-link" className="inline-flex items-center gap-2">
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[var(--cn-orange)] text-white">
+            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary text-primary-foreground">
               <BookOpen className="h-6 w-6" />
             </div>
-            <span className="text-xl font-bold text-gray-900">
+            <span className="text-xl font-bold text-foreground">
               HanziBit
             </span>
           </Link>
         </div>
 
-        <div data-testid="signup-card" className="rounded-xl border bg-white p-8 shadow-sm">
-          <h1 data-testid="signup-heading" className="mb-2 text-2xl font-bold text-gray-900">
+        <div data-testid="signup-card" className="rounded-xl border bg-card p-8 shadow-sm">
+          <h1 data-testid="signup-heading" className="mb-2 text-2xl font-bold text-foreground">
             Create your account
           </h1>
-          <p className="mb-6 text-sm text-gray-500">
+          <p className="mb-6 text-sm text-muted-foreground">
             Start your Chinese learning journey today
           </p>
 
           {referralCode ? (
-            <div className="mb-4 rounded-lg border border-[var(--cn-orange)]/20 bg-[var(--cn-orange)]/10 p-3 text-sm text-[var(--cn-orange)]">
+            <GuidanceBanner tone="orange" className="mb-4 px-3 py-3 text-sm">
               Referral code applied: <span className="font-semibold">{referralCode}</span>
-            </div>
+            </GuidanceBanner>
           ) : null}
 
           {error && (
-            <div data-testid="signup-error" className="mb-4 rounded-lg bg-red-50 p-3 text-sm text-red-600">
-              {error}
-            </div>
+            <FormErrorNotice>{error}</FormErrorNotice>
           )}
 
           <form data-testid="signup-form" onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="mb-1 block text-sm font-medium text-gray-700">
+              <label className="mb-1 block text-sm font-medium text-foreground/80">
                 Name
               </label>
               <Input
@@ -92,7 +92,7 @@ export default function SignUpPage() {
               />
             </div>
             <div>
-              <label className="mb-1 block text-sm font-medium text-gray-700">
+              <label className="mb-1 block text-sm font-medium text-foreground/80">
                 Email
               </label>
               <Input
@@ -105,7 +105,7 @@ export default function SignUpPage() {
               />
             </div>
             <div>
-              <label className="mb-1 block text-sm font-medium text-gray-700">
+              <label className="mb-1 block text-sm font-medium text-foreground/80">
                 Password
               </label>
               <Input
@@ -122,7 +122,7 @@ export default function SignUpPage() {
               data-testid="signup-submit-button"
               type="submit"
               disabled={loading}
-              className="w-full bg-[var(--cn-orange)] hover:bg-[var(--cn-orange-dark)]"
+              className="w-full bg-primary hover:opacity-90"
             >
               {loading ? "Creating account..." : "Create Account"}
             </Button>
@@ -133,7 +133,7 @@ export default function SignUpPage() {
               <div className="w-full border-t" />
             </div>
             <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-white px-2 text-gray-400">or continue with</span>
+              <span className="bg-card px-2 text-muted-foreground">or continue with</span>
             </div>
           </div>
 
@@ -173,11 +173,11 @@ export default function SignUpPage() {
             </Button>
           </div>
 
-          <p data-testid="signup-signin-link" className="mt-6 text-center text-sm text-gray-500">
+          <p data-testid="signup-signin-link" className="mt-6 text-center text-sm text-muted-foreground">
             Already have an account?{" "}
             <Link
               href="/auth/signin"
-              className="font-medium text-[var(--cn-orange)] hover:underline"
+              className="ui-tone-orange-text font-medium hover:underline"
             >
               Sign in
             </Link>

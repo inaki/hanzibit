@@ -17,11 +17,11 @@ export function TeachingExplainerBlock({
 }) {
   const toneClasses = {
     muted: "border bg-card",
-    sky: "border-sky-500/20 bg-sky-500/10",
-    amber: "border-amber-500/20 bg-amber-500/10",
-    rose: "border-rose-500/20 bg-rose-500/10",
-    emerald: "border-emerald-500/20 bg-emerald-500/10",
-    violet: "border-violet-500/20 bg-violet-500/10",
+    sky: "ui-tone-sky-panel",
+    amber: "ui-tone-amber-panel",
+    rose: "ui-tone-rose-panel",
+    emerald: "ui-tone-emerald-panel",
+    violet: "ui-tone-violet-panel",
   } as const;
 
   const content = body ?? children;

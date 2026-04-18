@@ -4,6 +4,8 @@ import Link from "next/link";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { BookOpen, Github } from "lucide-react";
+import { FormErrorNotice } from "@/components/patterns/forms";
+import { GuidanceBanner } from "@/components/patterns/guidance";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { requestPasswordReset, signIn, useSession } from "@/lib/auth-client";
@@ -74,36 +76,34 @@ export default function SignInPage() {
   };
 
   return (
-    <div data-testid="signin-page" className="flex min-h-screen items-center justify-center bg-[#f5f3f0] px-4">
+    <div data-testid="signin-page" className="flex min-h-screen items-center justify-center bg-background px-4">
       <div className="w-full max-w-md">
         <div className="mb-8 text-center">
           <Link href="/" data-testid="signin-logo-link" className="inline-flex items-center gap-2">
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[var(--cn-orange)] text-white">
+            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary text-primary-foreground">
               <BookOpen className="h-6 w-6" />
             </div>
-            <span className="text-xl font-bold text-gray-900">
+            <span className="text-xl font-bold text-foreground">
               HanziBit
             </span>
           </Link>
         </div>
 
-        <div data-testid="signin-card" className="rounded-xl border bg-white p-8 shadow-sm">
-          <h1 data-testid="signin-heading" className="mb-2 text-2xl font-bold text-gray-900">
+        <div data-testid="signin-card" className="rounded-xl border bg-card p-8 shadow-sm">
+          <h1 data-testid="signin-heading" className="mb-2 text-2xl font-bold text-foreground">
             Welcome back
           </h1>
-          <p className="mb-6 text-sm text-gray-500">
+          <p className="mb-6 text-sm text-muted-foreground">
             Sign in to continue your learning journey
           </p>
 
           {error && (
-            <div data-testid="signin-error" className="mb-4 rounded-lg bg-red-50 p-3 text-sm text-red-600">
-              {error}
-            </div>
+            <FormErrorNotice>{error}</FormErrorNotice>
           )}
 
           <form data-testid="signin-form" onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="mb-1 block text-sm font-medium text-gray-700">
+              <label className="mb-1 block text-sm font-medium text-foreground/80">
                 Email
               </label>
               <Input
@@ -117,12 +117,12 @@ export default function SignInPage() {
             </div>
             <div>
               <div className="mb-1 flex items-center justify-between">
-                <label className="block text-sm font-medium text-gray-700">
+                <label className="block text-sm font-medium text-foreground/80">
                   Password
                 </label>
                 <button
                   type="button"
-                  className="text-sm font-medium text-[var(--cn-orange)] hover:underline"
+                  className="ui-tone-orange-text text-sm font-medium hover:underline"
                   onClick={() => {
                     setShowForgotPassword((value) => !value);
                     setResetError("");
@@ -146,31 +146,29 @@ export default function SignInPage() {
               data-testid="signin-submit-button"
               type="submit"
               disabled={loading}
-              className="w-full bg-[var(--cn-orange)] hover:bg-[var(--cn-orange-dark)]"
+              className="w-full bg-primary hover:opacity-90"
             >
               {loading ? "Signing in..." : "Sign In"}
             </Button>
           </form>
 
           {showForgotPassword && (
-            <div className="mt-4 rounded-lg border border-amber-200 bg-amber-50 p-4">
-              <h2 className="text-sm font-semibold text-gray-900">
+            <GuidanceBanner tone="amber" className="mt-4">
+              <h2 className="text-sm font-semibold text-foreground">
                 Reset your password
               </h2>
-              <p className="mt-1 text-sm text-gray-600">
+              <p className="mt-1 text-sm text-muted-foreground">
                 Enter your email and we&apos;ll send you a reset link.
               </p>
 
               {resetError && (
-                <div className="mt-3 rounded-lg bg-red-50 p-3 text-sm text-red-600">
-                  {resetError}
-                </div>
+                <FormErrorNotice>{resetError}</FormErrorNotice>
               )}
 
               {resetMessage && (
-                <div className="mt-3 rounded-lg bg-green-50 p-3 text-sm text-green-700">
+                <GuidanceBanner tone="emerald" className="mt-3 px-3 py-3 text-sm">
                   {resetMessage}
-                </div>
+                </GuidanceBanner>
               )}
 
               <form onSubmit={handleForgotPassword} className="mt-3 space-y-3">
@@ -190,7 +188,7 @@ export default function SignInPage() {
                   {resetLoading ? "Sending reset link..." : "Send reset link"}
                 </Button>
               </form>
-            </div>
+            </GuidanceBanner>
           )}
 
           <div className="relative my-6">
@@ -198,7 +196,7 @@ export default function SignInPage() {
               <div className="w-full border-t" />
             </div>
             <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-white px-2 text-gray-400">or continue with</span>
+              <span className="bg-card px-2 text-muted-foreground">or continue with</span>
             </div>
           </div>
 
@@ -238,11 +236,11 @@ export default function SignInPage() {
             </Button>
           </div>
 
-          <p data-testid="signin-signup-link" className="mt-6 text-center text-sm text-gray-500">
+          <p data-testid="signin-signup-link" className="mt-6 text-center text-sm text-muted-foreground">
             Don&apos;t have an account?{" "}
             <Link
               href="/auth/signup"
-              className="font-medium text-[var(--cn-orange)] hover:underline"
+              className="ui-tone-orange-text font-medium hover:underline"
             >
               Sign up
             </Link>

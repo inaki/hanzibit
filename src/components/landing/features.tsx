@@ -48,13 +48,13 @@ const features = [
 
 export function LandingFeatures() {
   return (
-    <section data-testid="landing-features" id="features" className="border-t bg-white px-6 py-24">
+    <section data-testid="landing-features" id="features" className="border-t bg-background px-6 py-24">
       <div className="mx-auto max-w-7xl">
         <div className="mb-16 text-center">
-          <h2 data-testid="landing-features-heading" className="mb-4 text-3xl font-bold text-gray-900 sm:text-4xl">
+          <h2 data-testid="landing-features-heading" className="mb-4 text-3xl font-bold text-foreground sm:text-4xl">
             Everything you need to learn Chinese
           </h2>
-          <p data-testid="landing-features-description" className="mx-auto max-w-2xl text-lg text-gray-600">
+          <p data-testid="landing-features-description" className="mx-auto max-w-2xl text-lg text-muted-foreground">
             A complete toolkit designed around how people actually learn
             languages — structured, personal, and effective.
           </p>
@@ -65,15 +65,15 @@ export function LandingFeatures() {
             <div
               key={feature.title}
               data-testid={`landing-feature-card-${feature.title.toLowerCase().replace(/\s+/g, "-")}`}
-              className="group rounded-xl border p-6 transition-all hover:border-[var(--cn-orange)]/30 hover:shadow-md"
+              className="group rounded-xl border bg-card p-6 transition-all hover:border-foreground/20 hover:shadow-md"
             >
-              <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-lg bg-[var(--cn-orange-light)] text-[var(--cn-orange)] transition-colors group-hover:bg-[var(--cn-orange)] group-hover:text-white">
+              <div className="ui-tone-orange-panel ui-tone-orange-text group-hover:bg-primary group-hover:text-primary-foreground mb-4 flex h-12 w-12 items-center justify-center rounded-lg transition-colors">
                 <feature.icon className="h-6 w-6" />
               </div>
-              <h3 className="mb-2 text-lg font-semibold text-gray-900">
+              <h3 className="mb-2 text-lg font-semibold text-foreground">
                 {feature.title}
               </h3>
-              <p className="text-sm leading-relaxed text-gray-600">
+              <p className="text-sm leading-relaxed text-muted-foreground">
                 {feature.description}
               </p>
             </div>

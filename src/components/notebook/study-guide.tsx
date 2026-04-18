@@ -141,7 +141,7 @@ export function StudyGuide({ initialData, assignmentId }: StudyGuideProps) {
                 value={data.level}
                 onChange={(e) => handleLevelChange(Number.parseInt(e.target.value, 10))}
                 disabled={isPending}
-                className="appearance-none rounded-lg border border-border bg-card py-1.5 pl-3 pr-8 text-xs font-medium text-foreground outline-none transition-colors focus:border-[var(--cn-orange)]"
+                className="appearance-none rounded-lg border border-border bg-card py-1.5 pl-3 pr-8 text-xs font-medium text-foreground outline-none transition-colors focus:border-[var(--ui-tone-orange-border)]"
               >
                 {[1, 2, 3, 4, 5, 6].map((level) => (
                   <option key={level} value={level}>
@@ -205,18 +205,18 @@ export function StudyGuide({ initialData, assignmentId }: StudyGuideProps) {
                         onClick={() => setSelectedWordId(item.word.id)}
                         className={`flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left transition-colors ${
                           isSelected
-                            ? "border border-[var(--cn-orange)]/20 bg-[var(--cn-orange-light)]"
+                            ? "ui-tone-orange-panel border"
                             : "border border-border bg-card hover:border-border"
                         }`}
                       >
                         {item.encountered ? (
-                          <CheckCircle2 className="h-4 w-4 shrink-0 text-green-500" />
+                          <CheckCircle2 className="ui-tone-emerald-text h-4 w-4 shrink-0" />
                         ) : (
                           <Circle className="h-4 w-4 shrink-0 text-muted-foreground/50" />
                         )}
                         <div className="min-w-0 flex-1">
                           <div className="flex items-center gap-2">
-                            <span className={`text-lg font-bold ${isSelected ? "text-[var(--cn-orange)]" : "text-foreground"}`}>
+                            <span className={`text-lg font-bold ${isSelected ? "ui-tone-orange-text" : "text-foreground"}`}>
                               {item.word.simplified}
                             </span>
                             <span className="truncate text-xs text-muted-foreground/70">{item.word.pinyin}</span>
@@ -225,10 +225,10 @@ export function StudyGuide({ initialData, assignmentId }: StudyGuideProps) {
                         </div>
                         <div className="flex shrink-0 items-center gap-1">
                           {item.flashcard && item.flashcard.easeFactor < 2.0 && item.flashcard.reviewCount > 1 && (
-                            <span className="rounded bg-red-100 px-1 text-[10px] text-red-600">struggling</span>
+                            <span className="ui-tone-rose-panel ui-tone-rose-text rounded border px-1 text-[10px]">struggling</span>
                           )}
                           {item.flashcard && (
-                            <Layers className="h-3.5 w-3.5 text-blue-400" />
+                            <Layers className="ui-tone-sky-text h-3.5 w-3.5" />
                           )}
                         </div>
                       </button>
@@ -258,7 +258,7 @@ export function StudyGuide({ initialData, assignmentId }: StudyGuideProps) {
                 title={`HSK ${data.level} Progress`}
                 description="Track how much of this level you have already encountered and reviewed."
                 action={
-                  <span className="text-sm font-bold text-[var(--cn-orange)]">
+                  <span className="ui-tone-orange-text text-sm font-bold">
                     {data.summary.total > 0
                       ? Math.round((data.summary.encountered / data.summary.total) * 100)
                       : 0}%
@@ -267,7 +267,7 @@ export function StudyGuide({ initialData, assignmentId }: StudyGuideProps) {
               >
                 <Progress
                   value={data.summary.total > 0 ? (data.summary.encountered / data.summary.total) * 100 : 0}
-                  className="mb-4 h-2 [&_[data-slot=progress-indicator]]:bg-[var(--cn-orange)]"
+                  className="mb-4 h-2 [&_[data-slot=progress-indicator]]:bg-primary"
                 />
                 <div className="grid grid-cols-2 gap-4 text-center sm:grid-cols-4">
                   <div>
@@ -275,15 +275,15 @@ export function StudyGuide({ initialData, assignmentId }: StudyGuideProps) {
                     <p className="text-xs text-muted-foreground">Total words</p>
                   </div>
                   <div>
-                    <p className="text-2xl font-bold text-green-600">{data.summary.encountered}</p>
+                    <p className="ui-tone-emerald-text text-2xl font-bold">{data.summary.encountered}</p>
                     <p className="text-xs text-muted-foreground">Encountered</p>
                   </div>
                   <div>
-                    <p className="text-2xl font-bold text-blue-600">{data.summary.withFlashcard}</p>
+                    <p className="ui-tone-sky-text text-2xl font-bold">{data.summary.withFlashcard}</p>
                     <p className="text-xs text-muted-foreground">Flashcards</p>
                   </div>
                   <div>
-                    <p className="text-2xl font-bold text-amber-600">{data.summary.dueForReview}</p>
+                    <p className="ui-tone-amber-text text-2xl font-bold">{data.summary.dueForReview}</p>
                     <p className="text-xs text-muted-foreground">Due for review</p>
                   </div>
                 </div>
@@ -313,7 +313,7 @@ export function StudyGuide({ initialData, assignmentId }: StudyGuideProps) {
                       <div key={gp.id} className="rounded-lg border border-border bg-muted/50 p-4">
                         <p className="text-sm font-semibold text-foreground">{gp.title}</p>
                         {gp.pattern && (
-                          <p className="mt-0.5 font-mono text-xs text-[var(--cn-orange)]">{gp.pattern}</p>
+                          <p className="ui-tone-orange-text mt-0.5 font-mono text-xs">{gp.pattern}</p>
                         )}
                         <p className="mt-1 text-xs text-muted-foreground">{gp.explanation}</p>
                       </div>
@@ -389,7 +389,7 @@ function WordDetail({
     <div data-testid="study-guide-detail" className="rounded-xl border bg-card p-8">
       {/* Character display */}
       <div className="mb-6 text-center">
-        <p className="text-7xl font-bold text-[var(--cn-orange)]">{item.word.simplified}</p>
+        <p className="ui-tone-orange-text text-7xl font-bold">{item.word.simplified}</p>
         {item.word.traditional && (
           <p className="mt-1 text-lg text-muted-foreground/70">{item.word.traditional}</p>
         )}
@@ -400,7 +400,7 @@ function WordDetail({
       {/* Status badges */}
       <div className="mb-6 flex flex-wrap justify-center gap-2">
         {item.encountered ? (
-          <span className="inline-flex items-center gap-1 rounded-full border border-emerald-500/20 bg-emerald-500/10 px-3 py-1 text-xs font-medium text-emerald-400">
+          <span className="ui-tone-emerald-panel ui-tone-emerald-text inline-flex items-center gap-1 rounded-full border px-3 py-1 text-xs font-medium">
             <CheckCircle2 className="h-3.5 w-3.5" />
             Encountered
           </span>
@@ -411,13 +411,13 @@ function WordDetail({
           </span>
         )}
         {hasFlashcard ? (
-          <span className="inline-flex items-center gap-1 rounded-full border border-sky-500/20 bg-sky-500/10 px-3 py-1 text-xs font-medium text-sky-400">
+          <span className="ui-tone-sky-panel ui-tone-sky-text inline-flex items-center gap-1 rounded-full border px-3 py-1 text-xs font-medium">
             <Layers className="h-3.5 w-3.5" />
             In flashcards
           </span>
         ) : null}
         {isFocusWord ? (
-          <span className="inline-flex items-center gap-1 rounded-full bg-[var(--cn-orange-light)] px-3 py-1 text-xs font-medium text-[var(--cn-orange)]">
+          <span className="ui-tone-orange-panel ui-tone-orange-text inline-flex items-center gap-1 rounded-full border px-3 py-1 text-xs font-medium">
             <CheckCircle2 className="h-3.5 w-3.5" />
             Today&apos;s focus
           </span>
@@ -425,8 +425,8 @@ function WordDetail({
       </div>
 
       {isFocusWord && dailyPractice?.focusWordProgress ? (
-        <div className="mb-6 rounded-lg border border-[var(--cn-orange)]/20 bg-[var(--cn-orange-light)]/60 p-4">
-          <p className="text-xs font-semibold uppercase tracking-wider text-[var(--cn-orange)]">
+        <div className="ui-tone-orange-panel mb-6 rounded-lg border p-4">
+          <p className="ui-tone-orange-text text-xs font-semibold uppercase tracking-wider">
             Today&apos;s Loop
           </p>
           <p className="mt-1 text-sm text-foreground/85">
@@ -442,7 +442,7 @@ function WordDetail({
               {!dailyPractice.focusWordProgress.reviewedToday && (
                 <Link
                   href={reviewHref}
-                  className="inline-flex items-center rounded-full bg-[var(--cn-orange)] px-3 py-1 text-xs font-medium text-white transition-colors hover:bg-[var(--cn-orange-dark)]"
+                  className="inline-flex items-center rounded-full bg-primary px-3 py-1 text-xs font-medium text-primary-foreground transition-opacity hover:opacity-90"
                 >
                   Review now →
                 </Link>
@@ -450,7 +450,7 @@ function WordDetail({
               {!dailyPractice.focusWordProgress.wroteToday && (
                 <Link
                   href={journalHref}
-                  className="inline-flex items-center rounded-full border border-[var(--cn-orange)]/30 bg-card px-3 py-1 text-xs font-medium text-[var(--cn-orange)] transition-colors hover:bg-muted/60"
+                  className="ui-tone-orange-panel ui-tone-orange-text inline-flex items-center rounded-full border bg-card px-3 py-1 text-xs font-medium transition-colors hover:bg-muted/60"
                 >
                   Write now →
                 </Link>
@@ -461,7 +461,7 @@ function WordDetail({
             <div className="mt-4">
               <Link
                 href={latestFocusResponseHref}
-                className="inline-flex items-center text-xs font-medium text-[var(--cn-orange)] hover:underline"
+                className="ui-tone-orange-text inline-flex items-center text-xs font-medium hover:underline"
               >
                 Open latest response →
               </Link>
@@ -482,9 +482,9 @@ function WordDetail({
               <Link
                 key={entry.id}
                 href={`/notebook?entry=${entry.id}`}
-                className="flex items-center gap-2 rounded-lg border border-border px-3 py-2 text-sm transition-colors hover:border-[var(--cn-orange)]/30 hover:bg-[var(--cn-orange-light)]"
+                className="flex items-center gap-2 rounded-lg border border-border px-3 py-2 text-sm transition-colors hover:border-[var(--ui-tone-orange-border)] hover:bg-[var(--ui-tone-orange-surface)]"
               >
-                <BookOpen className="h-3.5 w-3.5 text-[var(--cn-orange)]" />
+                <BookOpen className="ui-tone-orange-text h-3.5 w-3.5" />
                 <span className="font-medium text-foreground">{entry.title_zh}</span>
                 <span className="text-xs text-muted-foreground/70">{entry.title_en}</span>
               </Link>
@@ -508,13 +508,13 @@ function WordDetail({
               <Link
                 key={response.id}
                 href={`/notebook?entry=${response.id}`}
-                className="flex items-center justify-between rounded-lg border border-sky-500/20 bg-sky-500/10 px-3 py-3 text-sm transition-colors hover:border-sky-500/30 hover:bg-sky-500/15"
+                className="ui-tone-sky-panel flex items-center justify-between rounded-lg border px-3 py-3 text-sm transition-colors hover:opacity-90"
               >
                 <div className="min-w-0">
                   <p className="font-medium text-foreground">{response.title_zh}</p>
                   <p className="truncate text-xs text-muted-foreground">{response.title_en}</p>
                 </div>
-                <span className="shrink-0 text-xs text-sky-400">
+                <span className="ui-tone-sky-text shrink-0 text-xs">
                   {new Date(response.created_at).toLocaleDateString()}
                 </span>
               </Link>
@@ -524,7 +524,7 @@ function WordDetail({
       </div>
 
       <SectionCard
-        className="mb-6 border-[var(--cn-orange)]/20 bg-[var(--cn-orange-light)] p-5"
+        className="ui-tone-orange-panel mb-6 border p-5"
         title="Input Practice"
         icon={BookText}
       >
@@ -540,7 +540,7 @@ function WordDetail({
               <Link
                 key={candidate.zh}
                 href={candidate.href}
-                className="inline-flex items-center rounded-full border border-[var(--cn-orange)]/20 bg-card px-3 py-1.5 text-xs font-medium text-[var(--cn-orange)] transition-colors hover:bg-muted/60"
+                className="ui-tone-orange-panel ui-tone-orange-text inline-flex items-center rounded-full border bg-card px-3 py-1.5 text-xs font-medium transition-colors hover:bg-muted/60"
                 title={candidate.en}
               >
                 {candidate.zh}
@@ -554,7 +554,7 @@ function WordDetail({
             <p className="mt-1 text-sm text-muted-foreground">{reading.focusPhraseEn}</p>
             <Link
               href={phraseJournalHref}
-              className="mt-3 inline-flex items-center text-xs font-medium text-[var(--cn-orange)] hover:underline"
+              className="ui-tone-orange-text mt-3 inline-flex items-center text-xs font-medium hover:underline"
             >
               Use this phrase in journal →
             </Link>
@@ -569,7 +569,7 @@ function WordDetail({
           <p className="mt-2 text-sm text-foreground">{reading.listeningPrompt}</p>
           <Link
             href={listeningJournalHref}
-            className="mt-3 inline-flex items-center text-xs font-medium text-[var(--cn-orange)] hover:underline"
+            className="ui-tone-orange-text mt-3 inline-flex items-center text-xs font-medium hover:underline"
           >
             Respond to listening →
           </Link>
@@ -578,7 +578,7 @@ function WordDetail({
           <p className="mt-2 text-sm text-foreground">{reading.responsePrompt}</p>
           <Link
             href={journalHref}
-            className="mt-3 inline-flex items-center text-xs font-medium text-[var(--cn-orange)] hover:underline"
+            className="ui-tone-orange-text mt-3 inline-flex items-center text-xs font-medium hover:underline"
           >
             Respond in journal →
           </Link>
@@ -587,25 +587,25 @@ function WordDetail({
 
       {/* Flashcard status */}
       {item.flashcard ? (
-        <div className="mb-6 rounded-lg border border-sky-500/20 bg-sky-500/10 p-4">
-          <h4 className="mb-2 flex items-center gap-1.5 text-xs font-semibold text-sky-400">
+        <div className="ui-tone-sky-panel mb-6 rounded-lg border p-4">
+          <h4 className="ui-tone-sky-text mb-2 flex items-center gap-1.5 text-xs font-semibold">
             <Layers className="h-3.5 w-3.5" />
             Flashcard
           </h4>
           <div className="flex gap-4 text-sm">
             <div>
-              <p className="text-xs text-sky-300/80">Reviews</p>
-              <p className="font-bold text-sky-400">{item.flashcard.reviewCount}</p>
+              <p className="ui-tone-sky-soft-text text-xs">Reviews</p>
+              <p className="ui-tone-sky-text font-bold">{item.flashcard.reviewCount}</p>
             </div>
             <div>
-              <p className="text-xs text-sky-300/80">Interval</p>
-              <p className="font-bold text-sky-400">{item.flashcard.intervalDays}d</p>
+              <p className="ui-tone-sky-soft-text text-xs">Interval</p>
+              <p className="ui-tone-sky-text font-bold">{item.flashcard.intervalDays}d</p>
             </div>
             <div>
-              <p className="text-xs text-sky-300/80">Next review</p>
-              <p className="font-bold text-sky-400">
+              <p className="ui-tone-sky-soft-text text-xs">Next review</p>
+              <p className="ui-tone-sky-text font-bold">
                 {new Date(item.flashcard.nextReview) <= new Date() ? (
-                  <span className="flex items-center gap-1 text-amber-600">
+                  <span className="ui-tone-amber-text flex items-center gap-1">
                     <Clock className="h-3.5 w-3.5" /> Due now
                   </span>
                 ) : (
@@ -621,14 +621,14 @@ function WordDetail({
             data-testid="study-guide-create-flashcard"
             onClick={handleCreateFlashcard}
             disabled={creating}
-            className="inline-flex items-center gap-1.5 rounded-lg bg-[var(--cn-orange)] px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-[var(--cn-orange-dark)] disabled:opacity-50"
+            className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-opacity hover:opacity-90 disabled:opacity-50"
           >
             <Plus className="h-4 w-4" />
             {creating ? "Creating..." : "Create Flashcard"}
           </button>
         </div>
       ) : (
-        <p className="text-center text-sm font-medium text-emerald-400">
+        <p className="ui-tone-emerald-text text-center text-sm font-medium">
           Flashcard created!
         </p>
       )}
@@ -641,7 +641,7 @@ function FocusStatusPill({ done, label }: { done: boolean; label: string }) {
     <span
       className={`inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-medium ${
         done
-          ? "border border-emerald-500/20 bg-emerald-500/10 text-emerald-400"
+          ? "border ui-tone-emerald-panel ui-tone-emerald-text"
           : "bg-background text-muted-foreground"
       }`}
     >

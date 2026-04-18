@@ -3,19 +3,19 @@ import { cn } from "@/lib/utils";
 type Tone = "default" | "muted" | "sky" | "rose" | "emerald" | "amber";
 
 function getSurfaceToneClass(tone: Tone) {
-  if (tone === "sky") return "border-sky-500/20 bg-sky-500/10";
-  if (tone === "emerald") return "border-emerald-500/20 bg-emerald-500/10";
-  if (tone === "amber") return "border-amber-500/20 bg-amber-500/10";
-  if (tone === "rose") return "border-rose-500/20 bg-rose-500/10";
-  if (tone === "muted") return "border-border bg-muted/40";
+  if (tone === "sky") return "ui-tone-sky-panel";
+  if (tone === "emerald") return "ui-tone-emerald-panel";
+  if (tone === "amber") return "ui-tone-amber-panel";
+  if (tone === "rose") return "ui-tone-rose-panel";
+  if (tone === "muted") return "ui-tone-muted-panel";
   return "border-border bg-card";
 }
 
 function getTextToneClass(tone: Exclude<Tone, "default">) {
-  if (tone === "sky") return "text-sky-400";
-  if (tone === "emerald") return "text-emerald-400";
-  if (tone === "amber") return "text-amber-300";
-  if (tone === "rose") return "text-rose-300";
+  if (tone === "sky") return "ui-tone-sky-text";
+  if (tone === "emerald") return "ui-tone-emerald-text";
+  if (tone === "amber") return "ui-tone-amber-text";
+  if (tone === "rose") return "ui-tone-rose-text";
   return "text-muted-foreground";
 }
 
@@ -126,7 +126,7 @@ export function HealthRow({
   className?: string;
 }) {
   const dotClass =
-    tone === "sky" ? "bg-sky-400" : tone === "amber" ? "bg-amber-300" : "bg-rose-300";
+    tone === "sky" ? "ui-tone-sky-dot" : tone === "amber" ? "ui-tone-amber-dot" : "ui-tone-rose-dot";
 
   return (
     <div className={cn("flex items-center justify-between gap-4 text-sm", className)}>

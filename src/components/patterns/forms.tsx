@@ -4,7 +4,7 @@ import { DialogClose } from "@/components/ui/dialog";
 
 export function FormErrorNotice({ children }: { children: ReactNode }) {
   return (
-    <p className="rounded-lg border border-rose-500/20 bg-rose-500/10 px-3 py-2 text-sm text-rose-300">
+    <p className="ui-tone-rose-panel ui-tone-rose-soft-text rounded-lg border px-3 py-2 text-sm">
       {children}
     </p>
   );

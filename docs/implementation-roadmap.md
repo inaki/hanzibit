@@ -34,13 +34,14 @@ This means the immediate implementation focus is transitioning from **Phase 1 cl
 Current status:
 
 - web Phase 1 is stable
-- the web Phase 2 classroom MVP is now implemented
-- the web Phase 3 teacher layer and referral MVP are now implemented
-- the web Phase 4 discovery/inquiry/conversion layer is now implemented
-- the web Phase 5 onboarding/reporting layer is now implemented
-- the web Phase 6 private tutoring operations layer is now implemented
-- the web Phase 7 cadence/session-planning layer is now implemented
-- the current roadmap task is transitioning from Phase 21 closeout into Phase 22 planning
+- the web Phase 2 classroom MVP is implemented
+- the deeper teacher/tutoring phases are implemented far enough to stop expanding them for now
+- the roadmap should now pivot from phase expansion to **production readiness and pilot preparation**
+
+Current roadmap task:
+
+- prepare HanziBit for real learner use
+- use the founder as the first customer / Chinese-from-zero pilot learner
 
 ---
 

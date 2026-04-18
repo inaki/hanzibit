@@ -465,7 +465,7 @@ function EditEntryDialog({
                   onClick={() => setPreview((p) => !p)}
                   className={`rounded-md px-2 py-0.5 text-xs font-medium transition-colors ${
                     preview
-                      ? "bg-[var(--cn-orange)] text-white"
+                      ? "bg-primary text-primary-foreground"
                       : "bg-muted text-muted-foreground hover:bg-muted"
                   }`}
                 >
@@ -483,7 +483,7 @@ function EditEntryDialog({
                 onMouseUp={captureSelection}
                 required
                 rows={6}
-                className="w-full rounded-lg border border-border bg-card px-3 py-2 font-mono text-sm text-foreground outline-none focus:border-[var(--cn-orange)] focus:ring-1 focus:ring-[var(--cn-orange)]"
+                className="w-full rounded-lg border border-border bg-card px-3 py-2 font-mono text-sm text-foreground outline-none focus:border-[var(--ui-tone-orange-border)] focus:ring-1 focus:ring-[var(--ui-tone-orange-border)]"
               />
               <div className="mt-3 space-y-3">
                 <AnnotationBuilder
@@ -511,7 +511,7 @@ function EditEntryDialog({
                 <Button
                   type="button"
                   variant="ghost"
-                  className="mr-auto text-rose-400 hover:bg-rose-500/10 hover:text-rose-300"
+                  className="ui-tone-rose-text mr-auto hover:bg-[var(--ui-tone-rose-surface)] hover:ui-tone-rose-soft-text"
                   onClick={() => setConfirmDelete((value) => !value)}
                 >
                   <Trash2 className="h-4 w-4" />
@@ -684,7 +684,7 @@ function NewEntryDialog({
                   onClick={() => setPreview((p) => !p)}
                   className={`rounded-md px-2 py-0.5 text-xs font-medium transition-colors ${
                     preview
-                      ? "bg-[var(--cn-orange)] text-white"
+                      ? "bg-primary text-primary-foreground"
                       : "bg-muted text-muted-foreground hover:bg-muted"
                   }`}
                 >
@@ -703,7 +703,7 @@ function NewEntryDialog({
                 placeholder={`我去[餐厅|can1 ting1|restaurant]吃饭。\n[服务员|fu2 wu4 yuan2|waiter]很热情。`}
                 required
                 rows={6}
-                className="w-full rounded-lg border border-border bg-card px-3 py-2 font-mono text-sm text-foreground outline-none focus:border-[var(--cn-orange)] focus:ring-1 focus:ring-[var(--cn-orange)]"
+                className="w-full rounded-lg border border-border bg-card px-3 py-2 font-mono text-sm text-foreground outline-none focus:border-[var(--ui-tone-orange-border)] focus:ring-1 focus:ring-[var(--ui-tone-orange-border)]"
               />
               {!!draft?.prompt && (
                 <p className="mt-2 text-xs text-muted-foreground">
@@ -770,7 +770,7 @@ function PronunciationDialog({
       <DialogContent data-testid="pronunciation-dialog" className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>
-            <Volume2 className="mr-2 inline h-5 w-5 text-[var(--cn-orange)]" />
+            <Volume2 className="ui-tone-orange-text mr-2 inline h-5 w-5" />
             Pronunciation Guide
           </DialogTitle>
           <DialogDescription>
@@ -790,7 +790,7 @@ function PronunciationDialog({
                 className="flex items-center justify-between rounded-lg border px-4 py-3"
               >
                 <div className="flex items-center gap-4">
-                  <span className="text-2xl font-bold text-[var(--cn-orange)]">
+                  <span className="ui-tone-orange-text text-2xl font-bold">
                     {h.hanzi}
                   </span>
                   <div>
@@ -803,7 +803,7 @@ function PronunciationDialog({
                   onClick={() => {
                     new Audio(`/api/tts?text=${encodeURIComponent(h.hanzi)}`).play();
                   }}
-                  className="rounded-full border border-[var(--cn-orange)]/30 bg-[var(--cn-orange)]/12 p-2 text-[var(--cn-orange)] transition-colors hover:bg-[var(--cn-orange)] hover:text-white"
+                  className="ui-tone-orange-panel ui-tone-orange-text rounded-full border p-2 transition-colors hover:bg-primary hover:text-primary-foreground"
                 >
                   <Volume2 className="h-4 w-4" />
                 </button>
@@ -903,7 +903,7 @@ function FlashcardModeDialog({
       <DialogContent data-testid="flashcard-mode-dialog" className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>
-            <Layers className="mr-2 inline h-5 w-5 text-[var(--cn-orange)]" />
+            <Layers className="ui-tone-orange-text mr-2 inline h-5 w-5" />
             Flashcard Mode
           </DialogTitle>
           <DialogDescription>
@@ -936,7 +936,7 @@ function FlashcardModeDialog({
                         type="checkbox"
                         checked={selectedCards.has(i)}
                         onChange={() => toggleCard(i)}
-                        className="accent-[var(--cn-orange)]"
+                        className="accent-primary"
                       />
                       <span className="font-medium text-foreground">{h.hanzi}</span>
                       <span className="text-xs text-muted-foreground">{h.pinyin}</span>
@@ -947,7 +947,7 @@ function FlashcardModeDialog({
                   data-testid="flashcard-mode-save"
                   onClick={handleSaveFlashcards}
                   disabled={isSaving || selectedCards.size === 0}
-                  className="mt-3 w-full bg-[var(--cn-orange)] hover:bg-[var(--cn-orange-dark)] text-sm"
+                  className="mt-3 w-full bg-primary text-sm hover:opacity-90"
                   size="sm"
                 >
                   {isSaving ? "Saving..." : `Save ${selectedCards.size} to Flashcards`}
@@ -956,7 +956,7 @@ function FlashcardModeDialog({
             )}
 
             {saveStatus && (
-              <p className="mb-4 rounded-lg border border-emerald-500/20 bg-emerald-500/10 px-3 py-2 text-sm font-medium text-emerald-400">{saveStatus}</p>
+              <p className="ui-tone-emerald-panel ui-tone-emerald-text mb-4 rounded-lg border px-3 py-2 text-sm font-medium">{saveStatus}</p>
             )}
 
             <Button
@@ -975,7 +975,7 @@ function FlashcardModeDialog({
               <span>Card {currentIndex + 1} of {total}</span>
               <div className="h-1 flex-1 rounded-full bg-muted">
                 <div
-                  className="h-full rounded-full bg-[var(--cn-orange)] transition-all"
+                  className="h-full rounded-full bg-primary transition-all"
                   style={{ width: `${((currentIndex + 1) / total) * 100}%` }}
                 />
               </div>
@@ -1016,7 +1016,7 @@ function FlashcardModeDialog({
               <Button
                 data-testid="flashcard-mode-next"
                 onClick={next}
-                className="bg-[var(--cn-orange)] hover:bg-[var(--cn-orange-dark)]"
+                className="bg-primary hover:opacity-90"
               >
                 {currentIndex + 1 >= total ? "Finish" : "Next"}
               </Button>

@@ -10,12 +10,12 @@ type TeachingMetricTone =
   | "muted";
 
 const toneClasses: Record<TeachingMetricTone, string> = {
-  orange: "border-[var(--cn-orange)]/20 bg-[var(--cn-orange)]/10",
-  rose: "border-rose-500/20 bg-rose-500/10",
-  amber: "border-amber-500/20 bg-amber-500/10",
-  sky: "border-sky-500/20 bg-sky-500/10",
-  violet: "border-violet-500/20 bg-violet-500/10",
-  emerald: "border-emerald-500/20 bg-emerald-500/10",
+  orange: "ui-tone-orange-panel",
+  rose: "ui-tone-rose-panel",
+  amber: "ui-tone-amber-panel",
+  sky: "ui-tone-sky-panel",
+  violet: "ui-tone-violet-panel",
+  emerald: "ui-tone-emerald-panel",
   muted: "border-border bg-card",
 };
 
@@ -39,7 +39,7 @@ export function TeachingToneMetricCard({
   return (
     <div className={`rounded-xl border p-4 ${toneClasses[tone]}`}>
       <div className="flex items-center gap-2 text-muted-foreground">
-        {Icon ? <Icon className="h-4 w-4 text-[var(--cn-orange)]" /> : null}
+        {Icon ? <Icon className="ui-tone-orange-text h-4 w-4" /> : null}
         <p className="text-xs font-semibold uppercase tracking-[0.18em]">{resolvedLabel}</p>
       </div>
       <p className="mt-2 text-xl font-bold text-foreground">{value}</p>

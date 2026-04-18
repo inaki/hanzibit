@@ -16,7 +16,7 @@ export function TeachingPageHeader({
         <div className="mt-2 max-w-3xl text-sm text-muted-foreground">{description}</div>
       </div>
       {badge ? (
-        <div className="inline-flex items-center rounded-full border border-[var(--cn-orange)]/20 bg-[var(--cn-orange)]/10 px-3 py-1.5 text-xs font-medium text-[var(--cn-orange)]">
+        <div className="ui-tone-orange-panel ui-tone-orange-text inline-flex items-center rounded-full border px-3 py-1.5 text-xs font-medium">
           {badge}
         </div>
       ) : null}

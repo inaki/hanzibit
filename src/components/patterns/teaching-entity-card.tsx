@@ -20,7 +20,7 @@ export function TeachingEntityCard({
   return (
     <Link
       href={href}
-      className="block rounded-2xl border bg-card p-5 transition-colors hover:border-[var(--cn-orange)]/30 hover:bg-muted/20"
+      className="block rounded-2xl border bg-card p-5 transition-colors hover:border-[var(--ui-tone-orange-border)] hover:bg-muted/20"
     >
       <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
         <div className="space-y-3">
@@ -30,7 +30,7 @@ export function TeachingEntityCard({
             {subtitle ? <p className="mt-1 text-sm text-muted-foreground">{subtitle}</p> : null}
           </div>
         </div>
-        <div className="flex items-center text-[var(--cn-orange)]">
+        <div className="ui-tone-orange-text flex items-center">
           <ArrowRight className="h-4 w-4" />
         </div>
       </div>

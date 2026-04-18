@@ -5,10 +5,10 @@ import { cn } from "@/lib/utils";
 type PillTone = "muted" | "sky" | "rose" | "emerald" | "amber";
 
 function getPillToneClass(tone: PillTone) {
-  if (tone === "sky") return "border-sky-500/20 bg-sky-500/10 text-sky-400";
-  if (tone === "emerald") return "border-emerald-500/20 bg-emerald-500/10 text-emerald-400";
-  if (tone === "amber") return "border-amber-500/20 bg-amber-500/10 text-amber-300";
-  if (tone === "rose") return "border-rose-500/20 bg-rose-500/10 text-rose-300";
+  if (tone === "sky") return "ui-tone-sky-panel ui-tone-sky-text";
+  if (tone === "emerald") return "ui-tone-emerald-panel ui-tone-emerald-text";
+  if (tone === "amber") return "ui-tone-amber-panel ui-tone-amber-text";
+  if (tone === "rose") return "ui-tone-rose-panel ui-tone-rose-text";
   return "bg-muted text-muted-foreground";
 }
 
@@ -54,7 +54,7 @@ export function PriorityBadge({ className }: { className?: string }) {
   return (
     <span
       className={cn(
-        "mb-2 inline-flex items-center rounded-full bg-[var(--cn-orange)] px-2 py-0.5 text-[11px] font-medium text-white",
+        "mb-2 inline-flex items-center rounded-full bg-primary px-2 py-0.5 text-[11px] font-medium text-primary-foreground",
         className
       )}
     >
@@ -77,7 +77,7 @@ export function FocusWordStepBadge({
       className={cn(
         "inline-flex items-center gap-1 rounded-full px-2 py-0.5",
         done
-          ? "border border-emerald-500/20 bg-emerald-500/10 text-emerald-400"
+          ? "border ui-tone-emerald-panel ui-tone-emerald-text"
           : "bg-background text-muted-foreground",
         className
       )}

@@ -29,7 +29,7 @@ export function ContentPreview({ content }: { content: string }) {
           if (t.type === "break") return <br key={i} />;
           if (t.type === "text") return <span key={i}>{t.text}</span>;
           return (
-            <span key={i} className="font-bold text-[var(--cn-orange)]" title={`${t.pinyin} — ${t.english}`}>
+            <span key={i} className="ui-tone-orange-text font-bold" title={`${t.pinyin} — ${t.english}`}>
               {t.hanzi}
             </span>
           );
@@ -60,7 +60,7 @@ export function MarkupValidationPanel({ content }: { content: string }) {
         {issues.slice(0, 3).map((issue, index) => (
           <div key={`${issue.index}-${index}`}>
             <p>{issue.message}</p>
-            <p className="font-mono text-[11px] text-amber-200/80">{issue.snippet}</p>
+            <p className="ui-tone-amber-soft-text font-mono text-[11px]">{issue.snippet}</p>
           </div>
         ))}
       </div>
@@ -102,11 +102,11 @@ export function GuidedDraftPanel({
         </p>
         <div className="mt-2 space-y-1 text-sm">
           {targetWord && (
-            <p className={checklist.hasTargetWord ? "text-emerald-400" : "text-amber-300"}>
+            <p className={checklist.hasTargetWord ? "ui-tone-emerald-text" : "ui-tone-amber-text"}>
               {checklist.hasTargetWord ? "✓" : "•"} Use the target word: {targetWord}
             </p>
           )}
-          <p className={checklist.hasEnoughSentences ? "text-emerald-400" : "text-amber-300"}>
+          <p className={checklist.hasEnoughSentences ? "ui-tone-emerald-text" : "ui-tone-amber-text"}>
             {checklist.hasEnoughSentences ? "✓" : "•"} Write at least 2 sentences
             {checklist.sentenceCount > 0 ? ` (${checklist.sentenceCount} so far)` : ""}
           </p>
@@ -129,14 +129,14 @@ export function JournalFeedbackPanel({
   return (
     <GuidanceBanner title="Revision Feedback" tone="violet">
       {feedback.strengths.length > 0 && (
-        <div className="mt-2 space-y-1 text-sm text-emerald-400">
+        <div className="ui-tone-emerald-text mt-2 space-y-1 text-sm">
           {feedback.strengths.map((message) => (
             <p key={message}>✓ {message}</p>
           ))}
         </div>
       )}
       {feedback.messages.length > 0 && (
-        <div className="mt-3 space-y-1 text-sm text-violet-100">
+        <div className="ui-tone-violet-soft-text mt-3 space-y-1 text-sm">
           {feedback.messages.map((message) => (
             <p key={message}>• {message}</p>
           ))}
@@ -292,8 +292,8 @@ export function AnnotationBuilder({
     !(suggestions.length === 1 && suggestions[0]?.exact);
 
   return (
-    <div className="rounded-lg border border-[var(--cn-orange)]/20 bg-[var(--cn-orange)]/10 px-4 py-4">
-      <p className="text-xs font-semibold uppercase tracking-wider text-[var(--cn-orange)]">
+    <div className="ui-tone-orange-panel rounded-lg border px-4 py-4">
+      <p className="ui-tone-orange-text text-xs font-semibold uppercase tracking-wider">
         Quick Annotation
       </p>
       <p className="mt-1 text-xs text-muted-foreground">
@@ -302,7 +302,7 @@ export function AnnotationBuilder({
       {trimmedSelection && (
         <div className="mt-3 flex items-center justify-between gap-3 rounded-lg border border-border/80 bg-card/90 px-3 py-2 shadow-sm">
           <div className="min-w-0">
-            <p className="text-[11px] font-semibold uppercase tracking-wider text-[var(--cn-orange)]">
+            <p className="ui-tone-orange-text text-[11px] font-semibold uppercase tracking-wider">
               Current selection
             </p>
             <p className="truncate text-sm text-foreground">{trimmedSelection}</p>
@@ -310,7 +310,7 @@ export function AnnotationBuilder({
           <button
             type="button"
             onClick={handleUseSelection}
-            className="shrink-0 rounded-full border border-[var(--cn-orange)]/30 bg-card px-3 py-1 text-xs font-medium text-[var(--cn-orange)] transition-colors hover:bg-muted/60"
+            className="ui-tone-orange-panel ui-tone-orange-text shrink-0 rounded-full border bg-card px-3 py-1 text-xs font-medium transition-colors hover:bg-muted/60"
           >
             Use selection
           </button>
@@ -326,7 +326,7 @@ export function AnnotationBuilder({
             if (!nextValue.trim()) clearLookupState();
           }}
           placeholder="汉字"
-          className="rounded-lg border border-border bg-card px-3 py-2 text-sm text-foreground outline-none focus:border-[var(--cn-orange)]"
+          className="rounded-lg border border-border bg-card px-3 py-2 text-sm text-foreground outline-none focus:border-[var(--ui-tone-orange-border)]"
         />
         <input
           value={pinyin}
@@ -337,7 +337,7 @@ export function AnnotationBuilder({
             if (!nextValue.trim()) clearLookupState();
           }}
           placeholder="pin1 yin1"
-          className="rounded-lg border border-border bg-card px-3 py-2 text-sm text-foreground outline-none focus:border-[var(--cn-orange)]"
+          className="rounded-lg border border-border bg-card px-3 py-2 text-sm text-foreground outline-none focus:border-[var(--ui-tone-orange-border)]"
         />
         <input
           value={english}
@@ -348,12 +348,12 @@ export function AnnotationBuilder({
             if (!nextValue.trim()) clearLookupState();
           }}
           placeholder="meaning"
-          className="rounded-lg border border-border bg-card px-3 py-2 text-sm text-foreground outline-none focus:border-[var(--cn-orange)]"
+          className="rounded-lg border border-border bg-card px-3 py-2 text-sm text-foreground outline-none focus:border-[var(--ui-tone-orange-border)]"
         />
       </div>
       {(lookupBusy || suggestions.length > 1 || (lookupAttempted && suggestions.length === 0)) && (
         <div className="mt-3 rounded-lg border border-border/80 bg-card/90 px-3 py-3 shadow-sm">
-          <p className="text-[11px] font-semibold uppercase tracking-wider text-[var(--cn-orange)]">
+          <p className="ui-tone-orange-text text-[11px] font-semibold uppercase tracking-wider">
             {lookupBusy ? "Looking up..." : suggestions.length > 0 ? "Suggestions" : "No matches"}
           </p>
           {suggestions.length > 1 && (
@@ -363,7 +363,7 @@ export function AnnotationBuilder({
                   key={`${suggestion.hanzi}-${suggestion.pinyin}-${suggestion.english}-${suggestion.source}`}
                   type="button"
                   onClick={() => applySuggestion(suggestion)}
-                  className="flex w-full items-center justify-between rounded-lg border border-border bg-card px-3 py-2 text-left text-xs transition-colors hover:border-[var(--cn-orange)]/30 hover:bg-[var(--cn-orange)]/10"
+                  className="flex w-full items-center justify-between rounded-lg border border-border bg-card px-3 py-2 text-left text-xs transition-colors hover:border-[var(--ui-tone-orange-border)] hover:bg-[var(--ui-tone-orange-surface)]"
                 >
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-2">
@@ -411,7 +411,7 @@ export function AnnotationBuilder({
             <button
               type="button"
               onClick={() => applySuggestion(topSuggestion)}
-              className="rounded-full border border-[var(--cn-orange)]/30 bg-card px-3 py-1 text-xs font-medium text-[var(--cn-orange)] transition-colors hover:bg-muted/60"
+              className="ui-tone-orange-panel ui-tone-orange-text rounded-full border bg-card px-3 py-1 text-xs font-medium transition-colors hover:bg-muted/60"
             >
               Use top match
             </button>
@@ -420,7 +420,7 @@ export function AnnotationBuilder({
             <button
               type="button"
               onClick={handleInsertSuggested}
-              className="rounded-full border border-[var(--cn-orange)]/30 bg-card px-3 py-1 text-xs font-medium text-[var(--cn-orange)] transition-colors hover:bg-muted/60"
+              className="ui-tone-orange-panel ui-tone-orange-text rounded-full border bg-card px-3 py-1 text-xs font-medium transition-colors hover:bg-muted/60"
             >
               Insert target word
             </button>
@@ -429,7 +429,7 @@ export function AnnotationBuilder({
             type="button"
             onClick={handleInsert}
             disabled={!canInsert}
-            className="rounded-full bg-[var(--cn-orange)] px-3 py-1 text-xs font-medium text-white transition-colors hover:bg-[var(--cn-orange-dark)] disabled:opacity-50"
+            className="rounded-full bg-primary px-3 py-1 text-xs font-medium text-primary-foreground transition-opacity hover:opacity-90 disabled:opacity-50"
           >
             Insert
           </button>

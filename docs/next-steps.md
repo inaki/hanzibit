@@ -4,6 +4,47 @@ A living doc. Update this whenever stopping work so the next session starts with
 
 ---
 
+## Roadmap Reset (Pilot Prep — 2026-04-17)
+
+Current planning decision:
+
+- stop expanding deeper phase layers for now
+- treat the product as feature-rich enough for an alpha / pilot
+- shift focus to **production readiness and real learner usability**
+
+Reference user:
+
+- the founder as first real customer
+- learning Chinese from zero
+
+Primary docs for this reset:
+
+- `docs/production-readiness-plan.md`
+- `docs/first-user-journey.md`
+- `docs/pilot-readiness-checklist.md`
+- `docs/learner-navigation-audit.md`
+- `docs/beginner-onboarding-plan.md`
+
+Immediate priority is now:
+
+1. beginner-first usability
+2. navigation simplification
+3. first-session and first-week learner journey
+4. auth/billing/core-loop reliability
+5. bug and empty-state cleanup
+
+Completed on this branch so far:
+
+- [x] learner navigation simplification audit
+- [x] beginner onboarding plan
+
+References:
+
+- `docs/learner-navigation-audit.md`
+- `docs/beginner-onboarding-plan.md`
+
+---
+
 ## Last Session Summary (Phase 5 Milestone 3 Checkpoint — 2026-04-14)
 
 Completed:
@@ -138,6 +179,11 @@ Completed:
 - [ ] **Phase 2 and Phase 3 mobile parity planning** — once the Flutter team catches up, document the teacher/classroom/reporting/referral flows that should come over first
 - [ ] **Phase 4 mobile parity planning** — once discovery/inquiry stabilizes on web, define what should come over to mobile first
 - [ ] **Phase 1 learner-loop improvements can continue later** — annotation/content/audio depth remains valuable, but it is no longer the current main branch
+- [ ] **Pilot readiness branch**
+  - beginner onboarding
+  - first-user dashboard clarity
+  - first 7-day learner journey
+  - production reliability audit
 
 ---
 
@@ -152,7 +198,7 @@ Completed:
 
 ## Status Call
 
-As of April 14, 2026:
+As of April 17, 2026:
 
 - **Web Phase 1**: stable enough to treat as the baseline
 - **Web Phase 2**: classroom MVP is now working end-to-end
@@ -161,6 +207,7 @@ As of April 14, 2026:
 - **Mobile Phase 1**: continue parity work against current docs and endpoints
 - **Remaining work**: selective Phase 4 polish, mobile catch-up later, and later teacher-layer parity work
 - **Remaining work**: optional Phase 7/8/9/10/11/12/13/14/15/16 mobile catch-up later, and Phase 17 continuation
+- **Current roadmap reset**: stop phase expansion for now and prepare the app for real-user pilot use
 
 ---
 

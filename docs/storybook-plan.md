@@ -1,5 +1,9 @@
 ## Storybook Plan
 
+Current state summary:
+
+- see `docs/storybook-closeout.md` for the current Storybook inventory, runtime notes, and remaining gaps
+
 This repo now has a Storybook workspace that covers both:
 
 - the reusable component library
@@ -56,14 +60,17 @@ This repo now has a Storybook workspace that covers both:
 
 ### Important note
 
-The Storybook config and stories are committed, but the environment here did not complete the package install cleanly. The matching dev dependency entries were added to `package.json`, so the next step on a normal machine is:
+The Storybook config and stories are committed, and the local package state now includes the Storybook binary. Runtime should still be verified in a normal dev session with:
 
 ```bash
-npm install
 npm run storybook
 ```
 
-If the team prefers `pnpm`, install the same package set with `pnpm` and regenerate the lockfile in a normal networked environment.
+If the team prefers `pnpm`, use:
+
+```bash
+pnpm storybook
+```
 
 ### Recommended next stories
 

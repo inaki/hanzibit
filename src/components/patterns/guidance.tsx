@@ -6,39 +6,39 @@ function getToneClasses(tone: GuidanceTone) {
   switch (tone) {
     case "emerald":
       return {
-        panel: "border-emerald-500/20 bg-emerald-500/10",
-        title: "text-emerald-400",
-        text: "text-emerald-100",
+        panel: "ui-tone-emerald-panel",
+        title: "ui-tone-emerald-text",
+        text: "ui-tone-emerald-soft-text",
       };
     case "amber":
       return {
-        panel: "border-amber-500/20 bg-amber-500/10",
-        title: "text-amber-300",
-        text: "text-amber-100",
+        panel: "ui-tone-amber-panel",
+        title: "ui-tone-amber-text",
+        text: "ui-tone-amber-soft-text",
       };
     case "rose":
       return {
-        panel: "border-rose-500/20 bg-rose-500/10",
-        title: "text-rose-300",
-        text: "text-rose-100",
+        panel: "ui-tone-rose-panel",
+        title: "ui-tone-rose-text",
+        text: "ui-tone-rose-soft-text",
       };
     case "sky":
       return {
-        panel: "border-sky-500/20 bg-sky-500/10",
-        title: "text-sky-400",
-        text: "text-foreground",
+        panel: "ui-tone-sky-panel",
+        title: "ui-tone-sky-text",
+        text: "ui-tone-sky-soft-text",
       };
     case "violet":
       return {
-        panel: "border-violet-500/20 bg-violet-500/10",
-        title: "text-violet-300",
-        text: "text-violet-100",
+        panel: "ui-tone-violet-panel",
+        title: "ui-tone-violet-text",
+        text: "ui-tone-violet-soft-text",
       };
     case "orange":
       return {
-        panel: "border-[var(--cn-orange)]/20 bg-[var(--cn-orange)]/10",
-        title: "text-[var(--cn-orange)]",
-        text: "text-foreground",
+        panel: "ui-tone-orange-panel",
+        title: "ui-tone-orange-text",
+        text: "ui-tone-orange-soft-text",
       };
     case "muted":
     default:

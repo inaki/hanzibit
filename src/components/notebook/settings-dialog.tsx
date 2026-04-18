@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { Settings, User, Type, GraduationCap, Lock, CreditCard, Crown, ExternalLink } from "lucide-react";
+import { GuidanceBanner } from "@/components/patterns/guidance";
 import {
   Dialog,
   DialogContent,
@@ -47,7 +48,8 @@ const HSK_OPTIONS: { value: HskVersion; label: string; description: string; avai
 export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
   const { settings, update, updateProfile } = useSettings();
   const { data: session } = useSession();
-  const [name, setName] = useState(settings.profile.name);
+  const [draftName, setDraftName] = useState("");
+  const [isEditingName, setIsEditingName] = useState(false);
   const [subInfo, setSubInfo] = useState<SubscriptionInfo | null>(null);
   const [billingLoading, setBillingLoading] = useState(false);
   const [billingCycle, setBillingCycle] = useState<BillingCycle>("yearly");
@@ -55,16 +57,20 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
   // Pre-populate name from session if settings name is empty
   const sessionName = session?.user?.name ?? "";
   const sessionEmail = session?.user?.email ?? "";
+  const profileName = settings.profile.name || sessionName;
+  const name = isEditingName ? draftName : profileName;
 
   useEffect(() => {
     if (open) {
-      setName(settings.profile.name || sessionName);
       getSubscriptionInfo().then(setSubInfo);
     }
-  }, [open, settings.profile.name, sessionName]);
+  }, [open]);
 
   function handleNameBlur() {
-    updateProfile({ name: name.trim() });
+    const trimmedName = name.trim();
+    updateProfile({ name: trimmedName });
+    setDraftName(trimmedName);
+    setIsEditingName(false);
   }
 
   async function handleUpgrade(cycle: BillingCycle) {
@@ -110,7 +116,7 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
       <DialogContent data-testid="settings-dialog" className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>
-            <Settings className="mr-2 inline h-5 w-5 text-[var(--cn-orange)]" />
+            <Settings className="ui-tone-orange-text mr-2 inline h-5 w-5" />
             Settings
           </DialogTitle>
           <DialogDescription>Customize your learning experience.</DialogDescription>
@@ -119,36 +125,39 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
         <div className="space-y-6 py-2">
           {/* --- Profile --- */}
           <section data-testid="settings-profile">
-            <h3 className="mb-3 flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-gray-500">
+            <h3 className="mb-3 flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
               <User className="h-3.5 w-3.5" />
               Profile
             </h3>
             <div className="space-y-3">
               <div>
-                <label className="mb-1 block text-sm font-medium text-gray-700">
+                <label className="mb-1 block text-sm font-medium text-foreground/80">
                   Display Name
                 </label>
                 <Input
                   data-testid="settings-profile-name"
                   value={name}
-                  onChange={(e) => setName(e.target.value)}
+                  onChange={(e) => {
+                    setDraftName(e.target.value);
+                    setIsEditingName(true);
+                  }}
                   onBlur={handleNameBlur}
                   placeholder="Your name"
                 />
               </div>
               <div>
-                <label className="mb-1 flex items-center gap-1.5 text-sm font-medium text-gray-700">
+                <label className="mb-1 flex items-center gap-1.5 text-sm font-medium text-foreground/80">
                   Email
-                  <Lock className="h-3 w-3 text-gray-400" />
+                  <Lock className="h-3 w-3 text-muted-foreground" />
                 </label>
                 <Input
                   data-testid="settings-profile-email"
                   type="email"
                   value={sessionEmail}
                   disabled
-                  className="bg-gray-50 text-gray-500"
+                  className="bg-muted text-muted-foreground"
                 />
-                <p className="mt-1 text-xs text-gray-400">
+                <p className="mt-1 text-xs text-muted-foreground">
                   Email is linked to your account and cannot be changed here.
                 </p>
               </div>
@@ -157,7 +166,7 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
 
           {/* --- Subscription --- */}
           <section data-testid="settings-subscription">
-            <h3 className="mb-3 flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-gray-500">
+            <h3 className="mb-3 flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
               <CreditCard className="h-3.5 w-3.5" />
               Subscription
             </h3>
@@ -165,18 +174,18 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   {subInfo?.plan === "pro" ? (
-                    <Crown className="h-4 w-4 text-[var(--cn-orange)]" />
+                    <Crown className="ui-tone-orange-text h-4 w-4" />
                   ) : null}
-                  <span className="text-sm font-semibold text-gray-900">
+                  <span className="text-sm font-semibold text-foreground">
                     {subInfo?.plan === "pro" ? "Pro Plan" : "Free Plan"}
                   </span>
                   {subInfo?.plan === "pro" && (
-                    <span className="rounded-full bg-[var(--cn-orange-light)] px-2 py-0.5 text-[10px] font-medium text-[var(--cn-orange)]">
+                    <span className="ui-tone-orange-panel ui-tone-orange-text rounded-full border px-2 py-0.5 text-[10px] font-medium">
                       Active
                     </span>
                   )}
                 </div>
-                <span className="text-sm font-bold text-gray-900">
+                <span className="text-sm font-bold text-foreground">
                   {subInfo?.plan === "pro"
                     ? `From $${formatUsd(PLANS.pro.priceYearlyMonthlyEquivalent)}/mo`
                     : "$0"}
@@ -184,7 +193,7 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
               </div>
 
               {subInfo?.cancelAtPeriodEnd && subInfo.currentPeriodEnd && (
-                <p className="mt-2 text-xs text-amber-600">
+                <p className="ui-tone-amber-text mt-2 text-xs">
                   Cancels on{" "}
                   {new Date(subInfo.currentPeriodEnd).toLocaleDateString()}
                 </p>
@@ -205,14 +214,14 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
                   </Button>
                 ) : (
                   <>
-                    <div className="mb-3 inline-flex rounded-full border bg-gray-50 p-1">
+                    <div className="mb-3 inline-flex rounded-full border bg-muted p-1">
                       <button
                         type="button"
                         onClick={() => setBillingCycle("monthly")}
                         className={`rounded-full px-3 py-1 text-xs transition-colors ${
                           billingCycle === "monthly"
-                            ? "bg-white font-medium text-gray-900 shadow-sm"
-                            : "text-gray-500"
+                            ? "bg-card font-medium text-foreground shadow-sm"
+                            : "text-muted-foreground"
                         }`}
                       >
                         Monthly
@@ -222,14 +231,14 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
                         onClick={() => setBillingCycle("yearly")}
                         className={`rounded-full px-3 py-1 text-xs transition-colors ${
                           billingCycle === "yearly"
-                            ? "bg-white font-medium text-gray-900 shadow-sm"
-                            : "text-gray-500"
+                            ? "bg-card font-medium text-foreground shadow-sm"
+                            : "text-muted-foreground"
                         }`}
                       >
                         Yearly
                       </button>
                     </div>
-                    <p className="mb-3 text-xs text-gray-500">
+                    <p className="mb-3 text-xs text-muted-foreground">
                       {billingCycle === "monthly"
                         ? `$${formatUsd(PLANS.pro.priceMonthly)}/month billed monthly.`
                         : `$${formatUsd(PLANS.pro.priceYearlyMonthlyEquivalent)}/month billed yearly at $${formatUsd(PLANS.pro.priceYearly)}/year.`}
@@ -239,7 +248,7 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
                       size="sm"
                       onClick={() => handleUpgrade(billingCycle)}
                       disabled={billingLoading}
-                      className="w-full bg-[var(--cn-orange)] hover:bg-[var(--cn-orange-dark)] text-xs"
+                      className="w-full bg-primary text-xs hover:opacity-90"
                     >
                       <Crown className="mr-1.5 h-3 w-3" />
                       {billingLoading
@@ -256,7 +265,7 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
 
           {/* --- HSK Version --- */}
           <section data-testid="settings-hsk-version">
-            <h3 className="mb-3 flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-gray-500">
+            <h3 className="mb-3 flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
               <GraduationCap className="h-3.5 w-3.5" />
               HSK Standard
             </h3>
@@ -271,23 +280,23 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
                     onClick={() => update({ hskVersion: opt.value })}
                     className={`relative rounded-lg border p-3 text-left transition-colors ${
                       selected
-                        ? "border-[var(--cn-orange)] bg-[var(--cn-orange-light)]"
+                        ? "ui-tone-orange-panel border-[var(--ui-tone-orange-border)]"
                         : opt.available
-                          ? "border-gray-200 bg-white hover:border-gray-300"
-                          : "border-gray-100 bg-gray-50 opacity-60"
+                          ? "border-border bg-card hover:border-muted-foreground/30"
+                          : "border-border bg-muted opacity-60"
                     }`}
                   >
-                    <p className={`text-sm font-semibold ${selected ? "text-[var(--cn-orange)]" : "text-gray-900"}`}>
+                    <p className={`text-sm font-semibold ${selected ? "ui-tone-orange-text" : "text-foreground"}`}>
                       {opt.label}
                     </p>
-                    <p className="mt-0.5 text-xs text-gray-500">{opt.description}</p>
+                    <p className="mt-0.5 text-xs text-muted-foreground">{opt.description}</p>
                     {!opt.available && (
-                      <span className="mt-1.5 inline-block rounded-full bg-gray-200 px-2 py-0.5 text-[10px] font-medium text-gray-500">
+                      <span className="mt-1.5 inline-block rounded-full bg-muted px-2 py-0.5 text-[10px] font-medium text-muted-foreground">
                         Coming soon
                       </span>
                     )}
                     {selected && opt.available && (
-                      <span className="absolute top-2 right-2 h-2 w-2 rounded-full bg-[var(--cn-orange)]" />
+                      <span className="ui-tone-orange-dot absolute right-2 top-2 h-2 w-2 rounded-full" />
                     )}
                   </button>
                 );
@@ -297,7 +306,7 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
 
           {/* --- HSK Level --- */}
           <section data-testid="settings-hsk-level">
-            <h3 className="mb-3 flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-gray-500">
+            <h3 className="mb-3 flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
               <GraduationCap className="h-3.5 w-3.5" />
               Target HSK Level
             </h3>
@@ -311,25 +320,25 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
                     onClick={() => update({ hskLevel: level })}
                     className={`flex flex-col items-center gap-0.5 rounded-lg border p-3 transition-colors ${
                       selected
-                        ? "border-[var(--cn-orange)] bg-[var(--cn-orange-light)]"
-                        : "border-gray-200 bg-white hover:border-gray-300"
+                        ? "ui-tone-orange-panel border-[var(--ui-tone-orange-border)]"
+                        : "border-border bg-card hover:border-muted-foreground/30"
                     }`}
                   >
-                    <span className={`text-lg font-bold ${selected ? "text-[var(--cn-orange)]" : "text-gray-700"}`}>
+                    <span className={`text-lg font-bold ${selected ? "ui-tone-orange-text" : "text-foreground/80"}`}>
                       {level}
                     </span>
                   </button>
                 );
               })}
             </div>
-            <p className="mt-2 text-xs text-gray-400">
+            <p className="mt-2 text-xs text-muted-foreground">
               Progress is tracked against words at your target level.
             </p>
           </section>
 
           {/* --- Font Size --- */}
           <section data-testid="settings-font-size">
-            <h3 className="mb-3 flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-gray-500">
+            <h3 className="mb-3 flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
               <Type className="h-3.5 w-3.5" />
               Font Size
             </h3>
@@ -343,14 +352,14 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
                     onClick={() => update({ fontSize: opt.value })}
                     className={`flex flex-col items-center gap-1.5 rounded-lg border p-3 transition-colors ${
                       selected
-                        ? "border-[var(--cn-orange)] bg-[var(--cn-orange-light)]"
-                        : "border-gray-200 bg-white hover:border-gray-300"
+                        ? "ui-tone-orange-panel border-[var(--ui-tone-orange-border)]"
+                        : "border-border bg-card hover:border-muted-foreground/30"
                     }`}
                   >
-                    <span className={`font-bold ${FONT_PREVIEW_SIZE[opt.value]} ${selected ? "text-[var(--cn-orange)]" : "text-gray-700"}`}>
+                    <span className={`font-bold ${FONT_PREVIEW_SIZE[opt.value]} ${selected ? "ui-tone-orange-text" : "text-foreground/80"}`}>
                       {opt.preview}
                     </span>
-                    <span className={`text-xs ${selected ? "text-[var(--cn-orange)] font-medium" : "text-gray-500"}`}>
+                    <span className={`text-xs ${selected ? "ui-tone-orange-text font-medium" : "text-muted-foreground"}`}>
                       {opt.label}
                     </span>
                   </button>
@@ -358,10 +367,10 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
               })}
             </div>
             {/* Live preview */}
-            <div className="mt-3 rounded-lg border border-dashed border-gray-200 bg-gray-50 px-4 py-3">
-              <p className="text-xs text-gray-400 mb-1">Preview</p>
+            <GuidanceBanner tone="muted" className="mt-3 border-dashed px-4 py-3">
+              <p className="mb-1 text-xs text-muted-foreground">Preview</p>
               <p
-                className={`text-gray-800 leading-relaxed ${
+                className={`leading-relaxed text-foreground ${
                   settings.fontSize === "normal"
                     ? "text-base"
                     : settings.fontSize === "large"
@@ -371,7 +380,7 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
               >
                 我喜欢学习中文。
               </p>
-            </div>
+            </GuidanceBanner>
           </section>
         </div>
       </DialogContent>

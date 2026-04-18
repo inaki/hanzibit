@@ -48,6 +48,30 @@
   --color-cn-orange: var(--cn-orange);
   --color-cn-orange-light: var(--cn-orange-light);
   --color-cn-orange-dark: var(--cn-orange-dark);
+  --color-ui-tone-orange-surface: var(--ui-tone-orange-surface);
+  --color-ui-tone-orange-border: var(--ui-tone-orange-border);
+  --color-ui-tone-orange-text: var(--ui-tone-orange-text);
+  --color-ui-tone-orange-soft-text: var(--ui-tone-orange-soft-text);
+  --color-ui-tone-sky-surface: var(--ui-tone-sky-surface);
+  --color-ui-tone-sky-border: var(--ui-tone-sky-border);
+  --color-ui-tone-sky-text: var(--ui-tone-sky-text);
+  --color-ui-tone-sky-soft-text: var(--ui-tone-sky-soft-text);
+  --color-ui-tone-emerald-surface: var(--ui-tone-emerald-surface);
+  --color-ui-tone-emerald-border: var(--ui-tone-emerald-border);
+  --color-ui-tone-emerald-text: var(--ui-tone-emerald-text);
+  --color-ui-tone-emerald-soft-text: var(--ui-tone-emerald-soft-text);
+  --color-ui-tone-amber-surface: var(--ui-tone-amber-surface);
+  --color-ui-tone-amber-border: var(--ui-tone-amber-border);
+  --color-ui-tone-amber-text: var(--ui-tone-amber-text);
+  --color-ui-tone-amber-soft-text: var(--ui-tone-amber-soft-text);
+  --color-ui-tone-rose-surface: var(--ui-tone-rose-surface);
+  --color-ui-tone-rose-border: var(--ui-tone-rose-border);
+  --color-ui-tone-rose-text: var(--ui-tone-rose-text);
+  --color-ui-tone-rose-soft-text: var(--ui-tone-rose-soft-text);
+  --color-ui-tone-violet-surface: var(--ui-tone-violet-surface);
+  --color-ui-tone-violet-border: var(--ui-tone-violet-border);
+  --color-ui-tone-violet-text: var(--ui-tone-violet-text);
+  --color-ui-tone-violet-soft-text: var(--ui-tone-violet-soft-text);
 }
 
 :root {
@@ -90,6 +114,30 @@
   --cn-orange: #e8601c;
   --cn-orange-light: #fef3ed;
   --cn-orange-dark: #c44d14;
+  --ui-tone-orange-surface: oklch(0.965 0.02 45);
+  --ui-tone-orange-border: oklch(0.88 0.05 45);
+  --ui-tone-orange-text: oklch(0.6 0.18 45);
+  --ui-tone-orange-soft-text: oklch(0.36 0.07 45);
+  --ui-tone-sky-surface: oklch(0.965 0.02 240);
+  --ui-tone-sky-border: oklch(0.88 0.04 240);
+  --ui-tone-sky-text: oklch(0.62 0.14 240);
+  --ui-tone-sky-soft-text: oklch(0.37 0.05 240);
+  --ui-tone-emerald-surface: oklch(0.965 0.02 165);
+  --ui-tone-emerald-border: oklch(0.88 0.04 165);
+  --ui-tone-emerald-text: oklch(0.61 0.15 165);
+  --ui-tone-emerald-soft-text: oklch(0.36 0.05 165);
+  --ui-tone-amber-surface: oklch(0.97 0.02 85);
+  --ui-tone-amber-border: oklch(0.89 0.04 85);
+  --ui-tone-amber-text: oklch(0.69 0.12 85);
+  --ui-tone-amber-soft-text: oklch(0.39 0.05 85);
+  --ui-tone-rose-surface: oklch(0.965 0.02 15);
+  --ui-tone-rose-border: oklch(0.88 0.04 15);
+  --ui-tone-rose-text: oklch(0.63 0.15 15);
+  --ui-tone-rose-soft-text: oklch(0.39 0.06 15);
+  --ui-tone-violet-surface: oklch(0.965 0.02 315);
+  --ui-tone-violet-border: oklch(0.88 0.04 315);
+  --ui-tone-violet-text: oklch(0.6 0.14 315);
+  --ui-tone-violet-soft-text: oklch(0.38 0.05 315);
 }
 
 .dark {
@@ -127,6 +175,30 @@
   --cn-orange: #f07030;
   --cn-orange-light: #2a1a10;
   --cn-orange-dark: #ff8844;
+  --ui-tone-orange-surface: oklch(0.24 0.035 45);
+  --ui-tone-orange-border: oklch(0.43 0.08 45);
+  --ui-tone-orange-text: oklch(0.76 0.14 45);
+  --ui-tone-orange-soft-text: oklch(0.89 0.04 45);
+  --ui-tone-sky-surface: oklch(0.25 0.03 240);
+  --ui-tone-sky-border: oklch(0.42 0.06 240);
+  --ui-tone-sky-text: oklch(0.78 0.11 240);
+  --ui-tone-sky-soft-text: oklch(0.92 0.02 240);
+  --ui-tone-emerald-surface: oklch(0.25 0.03 165);
+  --ui-tone-emerald-border: oklch(0.41 0.06 165);
+  --ui-tone-emerald-text: oklch(0.79 0.11 165);
+  --ui-tone-emerald-soft-text: oklch(0.91 0.03 165);
+  --ui-tone-amber-surface: oklch(0.25 0.03 85);
+  --ui-tone-amber-border: oklch(0.43 0.06 85);
+  --ui-tone-amber-text: oklch(0.82 0.09 85);
+  --ui-tone-amber-soft-text: oklch(0.92 0.02 85);
+  --ui-tone-rose-surface: oklch(0.25 0.03 15);
+  --ui-tone-rose-border: oklch(0.43 0.06 15);
+  --ui-tone-rose-text: oklch(0.8 0.11 15);
+  --ui-tone-rose-soft-text: oklch(0.92 0.03 15);
+  --ui-tone-violet-surface: oklch(0.25 0.03 315);
+  --ui-tone-violet-border: oklch(0.41 0.06 315);
+  --ui-tone-violet-text: oklch(0.79 0.11 315);
+  --ui-tone-violet-soft-text: oklch(0.92 0.02 315);
 }
 
 @layer base {
@@ -149,6 +221,119 @@
 }
 
 @layer utilities {
+  .ui-tone-orange-panel {
+    border-color: var(--ui-tone-orange-border);
+    background-color: var(--ui-tone-orange-surface);
+  }
+
+  .ui-tone-orange-text {
+    color: var(--ui-tone-orange-text);
+  }
+
+  .ui-tone-orange-soft-text {
+    color: var(--ui-tone-orange-soft-text);
+  }
+
+  .ui-tone-orange-dot {
+    background-color: var(--ui-tone-orange-text);
+  }
+
+  .ui-tone-sky-panel {
+    border-color: var(--ui-tone-sky-border);
+    background-color: var(--ui-tone-sky-surface);
+  }
+
+  .ui-tone-sky-text {
+    color: var(--ui-tone-sky-text);
+  }
+
+  .ui-tone-sky-soft-text {
+    color: var(--ui-tone-sky-soft-text);
+  }
+
+  .ui-tone-sky-dot {
+    background-color: var(--ui-tone-sky-text);
+  }
+
+  .ui-tone-emerald-panel {
+    border-color: var(--ui-tone-emerald-border);
+    background-color: var(--ui-tone-emerald-surface);
+  }
+
+  .ui-tone-emerald-text {
+    color: var(--ui-tone-emerald-text);
+  }
+
+  .ui-tone-emerald-soft-text {
+    color: var(--ui-tone-emerald-soft-text);
+  }
+
+  .ui-tone-emerald-dot {
+    background-color: var(--ui-tone-emerald-text);
+  }
+
+  .ui-tone-amber-panel {
+    border-color: var(--ui-tone-amber-border);
+    background-color: var(--ui-tone-amber-surface);
+  }
+
+  .ui-tone-amber-text {
+    color: var(--ui-tone-amber-text);
+  }
+
+  .ui-tone-amber-soft-text {
+    color: var(--ui-tone-amber-soft-text);
+  }
+
+  .ui-tone-amber-dot {
+    background-color: var(--ui-tone-amber-text);
+  }
+
+  .ui-tone-rose-panel {
+    border-color: var(--ui-tone-rose-border);
+    background-color: var(--ui-tone-rose-surface);
+  }
+
+  .ui-tone-rose-text {
+    color: var(--ui-tone-rose-text);
+  }
+
+  .ui-tone-rose-soft-text {
+    color: var(--ui-tone-rose-soft-text);
+  }
+
+  .ui-tone-rose-dot {
+    background-color: var(--ui-tone-rose-text);
+  }
+
+  .ui-tone-violet-panel {
+    border-color: var(--ui-tone-violet-border);
+    background-color: var(--ui-tone-violet-surface);
+  }
+
+  .ui-tone-violet-text {
+    color: var(--ui-tone-violet-text);
+  }
+
+  .ui-tone-violet-soft-text {
+    color: var(--ui-tone-violet-soft-text);
+  }
+
+  .ui-tone-violet-dot {
+    background-color: var(--ui-tone-violet-text);
+  }
+
+  .ui-tone-muted-panel {
+    border-color: var(--border);
+    background-color: color-mix(in oklab, var(--muted) 40%, transparent);
+  }
+
+  .ui-tone-accent-chip {
+    border-color: var(--ui-tone-orange-border);
+    background-color: var(--ui-tone-orange-surface);
+    color: var(--ui-tone-orange-text);
+  }
+
   .themed-scrollbar {
     scrollbar-width: thin;
     scrollbar-color: color-mix(in oklab, var(--border) 88%, transparent) transparent;

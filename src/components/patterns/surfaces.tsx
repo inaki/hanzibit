@@ -23,7 +23,7 @@ export function SectionCard({
           <div className="min-w-0">
             {title ? (
               <div className="flex items-center gap-2">
-                {Icon ? <Icon className="h-4 w-4 text-[var(--cn-orange)]" /> : null}
+                {Icon ? <Icon className="ui-tone-orange-text h-4 w-4" /> : null}
                 <h3 className="text-sm font-semibold text-foreground/80">{title}</h3>
               </div>
             ) : null}

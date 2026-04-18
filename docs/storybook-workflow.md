@@ -1,5 +1,9 @@
 ## Storybook Workflow
 
+Current state summary:
+
+- see `docs/storybook-closeout.md` for the current inventory, runtime notes, and remaining gaps
+
 Use Storybook as a UI dev environment, not only as a component catalog.
 
 ### Story layers
@@ -38,6 +42,7 @@ Examples:
 - `Product / Teaching Overview Blocks`
 - `Product / Reporting Sections`
 - `Product / Teaching Library Sections`
+- `Product / Teaching Private Learner Detail`
 - `Product / Product Screens Overview`
 - `Product / Learner Teacher Hub`
 - `Product / Learner Teacher Assignments`
@@ -79,6 +84,9 @@ This keeps feature pages from becoming the first place where layout experiments 
   - `Overloaded`
 
 - `Teaching Library Sections`
+  - `Default`
+
+- `Teaching Private Learner Detail`
   - `Default`
 
 - `Learner Teacher Hub`
