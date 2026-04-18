@@ -26,7 +26,7 @@ export function ReferralCopyButton({
     <button
       type="button"
       onClick={handleCopy}
-      className="inline-flex items-center gap-2 rounded-lg border border-[var(--cn-orange)]/20 bg-[var(--cn-orange)]/10 px-3 py-2 text-xs font-medium text-[var(--cn-orange)] transition-colors hover:bg-[var(--cn-orange)]/15"
+      className="ui-tone-orange-panel ui-tone-orange-text inline-flex items-center gap-2 rounded-lg border px-3 py-2 text-xs font-medium transition-colors hover:opacity-90"
     >
       {copied ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
       {copied ? "Copied" : label}

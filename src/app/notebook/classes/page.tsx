@@ -111,13 +111,13 @@ export async function ClassesPageContent({
         )}
 
         {params.error && (
-          <div className="rounded-xl border border-rose-500/20 bg-rose-500/10 px-4 py-3 text-sm text-rose-300">
+          <div className="ui-tone-rose-panel ui-tone-rose-text rounded-xl border px-4 py-3 text-sm">
             {params.error}
           </div>
         )}
 
         {params.success && (
-          <div className="rounded-xl border border-emerald-500/20 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-300">
+          <div className="ui-tone-emerald-panel ui-tone-emerald-text rounded-xl border px-4 py-3 text-sm">
             {params.success === "created"
               ? "Classroom created."
               : params.success === "joined"
@@ -154,7 +154,7 @@ export async function ClassesPageContent({
         <div className="grid gap-6 xl:grid-cols-[minmax(0,1.4fr)_minmax(320px,0.9fr)]">
           <section className="space-y-4">
             <div className="flex items-center gap-2">
-              <Users className="h-4 w-4 text-[var(--cn-orange)]" />
+              <Users className="ui-tone-orange-text h-4 w-4" />
               <h2 className="text-sm font-semibold uppercase tracking-[0.2em] text-muted-foreground">
                 Your Classrooms
               </h2>
@@ -172,15 +172,15 @@ export async function ClassesPageContent({
                   <Link
                     key={classroom.id}
                     href={`${basePath}/${classroom.id}`}
-                    className="rounded-2xl border bg-card p-5 transition-colors hover:border-[var(--cn-orange)]/30 hover:bg-muted/20"
+                    className="rounded-2xl border bg-card p-5 transition-colors hover:border-[var(--ui-tone-orange-border)] hover:bg-muted/20"
                   >
                     <div className="flex items-center justify-between gap-3">
                       <h3 className="text-lg font-semibold text-foreground">{classroom.name}</h3>
                       <span
                         className={`rounded-full px-2.5 py-1 text-[11px] font-medium ${
                           classroom.membership_role === "teacher"
-                            ? "border border-[var(--cn-orange)]/20 bg-[var(--cn-orange)]/10 text-[var(--cn-orange)]"
-                            : "border border-sky-500/20 bg-sky-500/10 text-sky-400"
+                            ? "ui-tone-orange-panel ui-tone-orange-text border"
+                            : "ui-tone-sky-panel ui-tone-sky-text border"
                         }`}
                       >
                         {classroom.membership_role}
@@ -202,7 +202,7 @@ export async function ClassesPageContent({
           <aside className="space-y-6">
             <section className="rounded-2xl border bg-card p-5">
               <div className="mb-4 flex items-center gap-2">
-                <PlusCircle className="h-4 w-4 text-[var(--cn-orange)]" />
+                <PlusCircle className="ui-tone-orange-text h-4 w-4" />
                 <h2 className="text-sm font-semibold uppercase tracking-[0.2em] text-muted-foreground">
                   Create Classroom
                 </h2>
@@ -214,7 +214,7 @@ export async function ClassesPageContent({
                     name="name"
                     required
                     placeholder="e.g. Tuesday HSK 1 Group"
-                    className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-[var(--cn-orange)]"
+                    className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-[var(--ui-tone-orange-border)]"
                   />
                 </div>
                 <div>
@@ -223,12 +223,12 @@ export async function ClassesPageContent({
                     name="description"
                     rows={3}
                     placeholder="Short classroom note"
-                    className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-[var(--cn-orange)]"
+                    className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-[var(--ui-tone-orange-border)]"
                   />
                 </div>
                 <button
                   type="submit"
-                  className="inline-flex w-full items-center justify-center rounded-lg bg-[var(--cn-orange)] px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-[var(--cn-orange-dark)]"
+                  className="bg-primary text-primary-foreground inline-flex w-full items-center justify-center rounded-lg px-4 py-2 text-sm font-medium transition-colors hover:opacity-90"
                 >
                   Create classroom
                 </button>
@@ -241,7 +241,7 @@ export async function ClassesPageContent({
 
             <section className="rounded-2xl border bg-card p-5">
               <div className="mb-4 flex items-center gap-2">
-                <LogIn className="h-4 w-4 text-[var(--cn-orange)]" />
+                <LogIn className="ui-tone-orange-text h-4 w-4" />
                 <h2 className="text-sm font-semibold uppercase tracking-[0.2em] text-muted-foreground">
                   Join Classroom
                 </h2>
@@ -253,12 +253,12 @@ export async function ClassesPageContent({
                     name="join_code"
                     required
                     placeholder="e.g. AB12CD"
-                    className="w-full rounded-lg border border-border bg-background px-3 py-2 font-mono text-sm uppercase tracking-[0.2em] text-foreground outline-none focus:border-[var(--cn-orange)]"
+                    className="w-full rounded-lg border border-border bg-background px-3 py-2 font-mono text-sm uppercase tracking-[0.2em] text-foreground outline-none focus:border-[var(--ui-tone-orange-border)]"
                   />
                 </div>
                 <button
                   type="submit"
-                  className="inline-flex w-full items-center justify-center rounded-lg border border-[var(--cn-orange)]/25 bg-[var(--cn-orange)]/10 px-4 py-2 text-sm font-medium text-[var(--cn-orange)] transition-colors hover:bg-[var(--cn-orange)]/15"
+                  className="ui-tone-orange-panel ui-tone-orange-text inline-flex w-full items-center justify-center rounded-lg border px-4 py-2 text-sm font-medium transition-colors hover:opacity-90"
                 >
                   Join with code
                 </button>

@@ -36,14 +36,14 @@ export function TeacherTabs({
           href={tab.href}
           className={`rounded-full border px-3 py-1.5 text-sm font-medium transition-colors ${
             isActive(tab.href)
-              ? "border-[var(--cn-orange)]/20 bg-[var(--cn-orange)]/10 text-[var(--cn-orange)]"
+              ? "ui-tone-orange-panel ui-tone-orange-text"
               : "bg-muted text-muted-foreground hover:bg-muted/80 hover:text-foreground"
           }`}
         >
           <span className="inline-flex items-center gap-2">
             {tab.label}
             {(badges?.[tab.href] ?? 0) > 0 ? (
-              <span className="inline-flex min-w-5 items-center justify-center rounded-full bg-[var(--cn-orange)] px-1.5 py-0.5 text-[10px] font-bold leading-none text-white">
+              <span className="inline-flex min-w-5 items-center justify-center rounded-full bg-primary px-1.5 py-0.5 text-[10px] font-bold leading-none text-primary-foreground">
                 {badges?.[tab.href]}
               </span>
             ) : null}

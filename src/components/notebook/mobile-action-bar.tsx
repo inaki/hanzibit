@@ -135,7 +135,7 @@ export function MobileActionBar({
       <Sheet open={open} onOpenChange={setOpen}>
         <SheetTrigger
           data-testid="mobile-action-fab"
-          className="fixed right-4 bottom-20 z-30 flex h-12 w-12 items-center justify-center rounded-full bg-[var(--cn-orange)] text-white shadow-lg transition-transform active:scale-95"
+          className="fixed right-4 bottom-20 z-30 flex h-12 w-12 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg transition-transform active:scale-95"
         >
           <MoreHorizontal className="h-5 w-5" />
         </SheetTrigger>

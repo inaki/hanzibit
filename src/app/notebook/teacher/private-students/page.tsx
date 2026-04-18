@@ -1021,10 +1021,10 @@ export default async function TeacherPrivateStudentsPage() {
                           <span
                             className={`rounded-full border px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] ${
                               priorityLevel === "urgent"
-                                ? "border-rose-500/20 bg-rose-500/10 text-rose-300"
+                                ? "ui-tone-rose-panel ui-tone-rose-text"
                                 : priorityLevel === "high"
-                                  ? "border-amber-500/20 bg-amber-500/10 text-amber-300"
-                                  : "border-sky-500/20 bg-sky-500/10 text-sky-400"
+                                  ? "ui-tone-amber-panel ui-tone-amber-text"
+                                  : "ui-tone-sky-panel ui-tone-sky-text"
                             }`}
                           >
                             {priorityLevel}
@@ -1032,10 +1032,10 @@ export default async function TeacherPrivateStudentsPage() {
                           <span
                             className={`rounded-full border px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] ${
                               checkpoint.dueState === "overdue"
-                                ? "border-rose-500/20 bg-rose-500/10 text-rose-300"
+                                ? "ui-tone-rose-panel ui-tone-rose-text"
                                 : checkpoint.dueState === "due_now"
-                                  ? "border-amber-500/20 bg-amber-500/10 text-amber-300"
-                                  : "border-emerald-500/20 bg-emerald-500/10 text-emerald-400"
+                                  ? "ui-tone-amber-panel ui-tone-amber-text"
+                                  : "ui-tone-emerald-panel ui-tone-emerald-text"
                             }`}
                           >
                             {checkpoint.dueState === "overdue"
@@ -1045,90 +1045,90 @@ export default async function TeacherPrivateStudentsPage() {
                                 : "recently checked"}
                           </span>
                           {lessonPlan ? (
-                            <span className="rounded-full border border-sky-500/20 bg-sky-500/10 px-2.5 py-1 text-[11px] font-medium text-sky-400">
+                            <span className="ui-tone-sky-panel ui-tone-sky-text rounded-full border px-2.5 py-1 text-[11px] font-medium">
                               {getPrivateLessonPlanStatusLabel(lessonPlan.plan_status)}
                             </span>
                           ) : (
-                            <span className="rounded-full border border-rose-500/20 bg-rose-500/10 px-2.5 py-1 text-[11px] font-medium text-rose-300">
+                            <span className="ui-tone-rose-panel ui-tone-rose-text rounded-full border px-2.5 py-1 text-[11px] font-medium">
                               No next plan
                             </span>
                           )}
                           {lessonPlan && isPlanOverdue(lessonPlan.target_date) ? (
-                            <span className="rounded-full border border-amber-500/20 bg-amber-500/10 px-2.5 py-1 text-[11px] font-medium text-amber-300">
+                            <span className="ui-tone-amber-panel ui-tone-amber-text rounded-full border px-2.5 py-1 text-[11px] font-medium">
                               Plan overdue
                             </span>
                           ) : null}
                           {activeGoalCount === 0 ? (
-                            <span className="rounded-full border border-rose-500/20 bg-rose-500/10 px-2.5 py-1 text-[11px] font-medium text-rose-300">
+                            <span className="ui-tone-rose-panel ui-tone-rose-text rounded-full border px-2.5 py-1 text-[11px] font-medium">
                               No active goal
                             </span>
                           ) : null}
                           {!hasRecentHistory && item.status !== "onboarding" ? (
-                            <span className="rounded-full border border-amber-500/20 bg-amber-500/10 px-2.5 py-1 text-[11px] font-medium text-amber-300">
+                            <span className="ui-tone-amber-panel ui-tone-amber-text rounded-full border px-2.5 py-1 text-[11px] font-medium">
                               No recent history
                             </span>
                           ) : null}
                           {blockedGoalCount > 0 ? (
-                            <span className="rounded-full border border-rose-500/20 bg-rose-500/10 px-2.5 py-1 text-[11px] font-medium text-rose-300">
+                            <span className="ui-tone-rose-panel ui-tone-rose-text rounded-full border px-2.5 py-1 text-[11px] font-medium">
                               {blockedGoalCount} blocked
                             </span>
                           ) : null}
                           {needsReinforcementCount > 0 ? (
-                            <span className="rounded-full border border-sky-500/20 bg-sky-500/10 px-2.5 py-1 text-[11px] font-medium text-sky-400">
+                            <span className="ui-tone-sky-panel ui-tone-sky-text rounded-full border px-2.5 py-1 text-[11px] font-medium">
                               {needsReinforcementCount} needs reinforcement
                             </span>
                           ) : null}
                           {recurringIssueTags.length > 0 ? (
-                            <span className="rounded-full border border-amber-500/20 bg-amber-500/10 px-2.5 py-1 text-[11px] font-medium text-amber-300">
+                            <span className="ui-tone-amber-panel ui-tone-amber-text rounded-full border px-2.5 py-1 text-[11px] font-medium">
                               {recurringIssueTags.length} recurring issue{recurringIssueTags.length === 1 ? "" : "s"}
                             </span>
                           ) : null}
                           {needsReviewSnapshot ? (
-                            <span className="rounded-full border border-rose-500/20 bg-rose-500/10 px-2.5 py-1 text-[11px] font-medium text-rose-300">
+                            <span className="ui-tone-rose-panel ui-tone-rose-text rounded-full border px-2.5 py-1 text-[11px] font-medium">
                               Needs review
                             </span>
                           ) : null}
                           {needsAdaptation ? (
-                            <span className="rounded-full border border-rose-500/20 bg-rose-500/10 px-2.5 py-1 text-[11px] font-medium text-rose-300">
+                            <span className="ui-tone-rose-panel ui-tone-rose-text rounded-full border px-2.5 py-1 text-[11px] font-medium">
                               Needs adaptation
                             </span>
                           ) : null}
                           {reviewWithoutAdaptation ? (
-                            <span className="rounded-full border border-amber-500/20 bg-amber-500/10 px-2.5 py-1 text-[11px] font-medium text-amber-300">
+                            <span className="ui-tone-amber-panel ui-tone-amber-text rounded-full border px-2.5 py-1 text-[11px] font-medium">
                               Reviewed, not adapted
                             </span>
                           ) : null}
                           {supportLoad.level === "high" ? (
-                            <span className="rounded-full border border-rose-500/20 bg-rose-500/10 px-2.5 py-1 text-[11px] font-medium text-rose-300">
+                            <span className="ui-tone-rose-panel ui-tone-rose-text rounded-full border px-2.5 py-1 text-[11px] font-medium">
                               {supportLoad.label}
                             </span>
                           ) : supportLoad.level === "medium" ? (
-                            <span className="rounded-full border border-amber-500/20 bg-amber-500/10 px-2.5 py-1 text-[11px] font-medium text-amber-300">
+                            <span className="ui-tone-amber-panel ui-tone-amber-text rounded-full border px-2.5 py-1 text-[11px] font-medium">
                               {supportLoad.label}
                             </span>
                           ) : null}
                           {stabilization.state === "handoff_ready" ? (
-                            <span className="rounded-full border border-emerald-500/20 bg-emerald-500/10 px-2.5 py-1 text-[11px] font-medium text-emerald-400">
+                            <span className="ui-tone-emerald-panel ui-tone-emerald-text rounded-full border px-2.5 py-1 text-[11px] font-medium">
                               {stabilization.label}
                             </span>
                           ) : stabilization.state === "simplify" ? (
-                            <span className="rounded-full border border-[var(--cn-orange)]/20 bg-[var(--cn-orange)]/10 px-2.5 py-1 text-[11px] font-medium text-[var(--cn-orange)]">
+                            <span className="ui-tone-orange-panel ui-tone-orange-text rounded-full border px-2.5 py-1 text-[11px] font-medium">
                               {stabilization.label}
                             </span>
                           ) : stabilization.state === "light_touch" ? (
-                            <span className="rounded-full border border-sky-500/20 bg-sky-500/10 px-2.5 py-1 text-[11px] font-medium text-sky-400">
+                            <span className="ui-tone-sky-panel ui-tone-sky-text rounded-full border px-2.5 py-1 text-[11px] font-medium">
                               {stabilization.label}
                             </span>
                           ) : null}
                           <span
                             className={`rounded-full border px-2.5 py-1 text-[11px] font-medium ${
                               portfolioMode.mode === "active-heavy"
-                                ? "border-rose-500/20 bg-rose-500/10 text-rose-300"
+                                ? "ui-tone-rose-panel ui-tone-rose-text"
                                 : portfolioMode.mode === "simplify support"
-                                  ? "border-amber-500/20 bg-amber-500/10 text-amber-300"
+                                  ? "ui-tone-amber-panel ui-tone-amber-text"
                                   : portfolioMode.mode === "light-touch"
-                                    ? "border-sky-500/20 bg-sky-500/10 text-sky-400"
-                                    : "border-emerald-500/20 bg-emerald-500/10 text-emerald-400"
+                                    ? "ui-tone-sky-panel ui-tone-sky-text"
+                                    : "ui-tone-emerald-panel ui-tone-emerald-text"
                             }`}
                           >
                             Portfolio · {portfolioMode.mode}
@@ -1136,18 +1136,18 @@ export default async function TeacherPrivateStudentsPage() {
                           <span
                             className={`rounded-full border px-2.5 py-1 text-[11px] font-medium ${
                               operatingReview.state === "reset_now"
-                                ? "border-rose-500/20 bg-rose-500/10 text-rose-300"
+                                ? "ui-tone-rose-panel ui-tone-rose-text"
                                 : operatingReview.state === "rebalance"
-                                  ? "border-amber-500/20 bg-amber-500/10 text-amber-300"
+                                  ? "ui-tone-amber-panel ui-tone-amber-text"
                                   : operatingReview.state === "simplify_now"
-                                    ? "border-sky-500/20 bg-sky-500/10 text-sky-400"
-                                    : "border-emerald-500/20 bg-emerald-500/10 text-emerald-400"
+                                    ? "ui-tone-sky-panel ui-tone-sky-text"
+                                    : "ui-tone-emerald-panel ui-tone-emerald-text"
                             }`}
                           >
                             {operatingReview.label}
                           </span>
                           {!item.last_playbook_id ? (
-                            <span className="rounded-full border border-amber-500/20 bg-amber-500/10 px-2.5 py-1 text-[11px] font-medium text-amber-300">
+                            <span className="ui-tone-amber-panel ui-tone-amber-text rounded-full border px-2.5 py-1 text-[11px] font-medium">
                               No playbook yet
                             </span>
                           ) : null}
@@ -1156,29 +1156,29 @@ export default async function TeacherPrivateStudentsPage() {
                             blockedGoalCount > 0 ||
                             needsReinforcementCount > 0 ||
                             recurringIssueTags.length > 0) ? (
-                            <span className="rounded-full border border-rose-500/20 bg-rose-500/10 px-2.5 py-1 text-[11px] font-medium text-rose-300">
+                            <span className="ui-tone-rose-panel ui-tone-rose-text rounded-full border px-2.5 py-1 text-[11px] font-medium">
                               Playbook gap
                             </span>
                           ) : null}
                           {item.last_strategy_title ? (
-                            <span className="rounded-full border border-violet-500/20 bg-violet-500/10 px-2.5 py-1 text-[11px] font-medium text-violet-300">
+                            <span className="ui-tone-violet-panel ui-tone-violet-text rounded-full border px-2.5 py-1 text-[11px] font-medium">
                               Strategy · {item.last_strategy_title}
                             </span>
                           ) : null}
                           {item.last_playbook_title ? (
-                            <span className="rounded-full border border-amber-500/20 bg-amber-500/10 px-2.5 py-1 text-[11px] font-medium text-amber-300">
+                            <span className="ui-tone-amber-panel ui-tone-amber-text rounded-full border px-2.5 py-1 text-[11px] font-medium">
                               Playbook · {item.last_playbook_title}
                             </span>
                           ) : null}
                           {item.last_playbook_outcome_status ? (
                             <span className={`rounded-full border px-2.5 py-1 text-[11px] font-medium ${
                               item.last_playbook_outcome_status === "helped"
-                                ? "border-emerald-500/20 bg-emerald-500/10 text-emerald-400"
+                                ? "ui-tone-emerald-panel ui-tone-emerald-text"
                                 : item.last_playbook_outcome_status === "partial"
-                                  ? "border-sky-500/20 bg-sky-500/10 text-sky-400"
+                                  ? "ui-tone-sky-panel ui-tone-sky-text"
                                   : item.last_playbook_outcome_status === "no_change"
-                                    ? "border-amber-500/20 bg-amber-500/10 text-amber-300"
-                                    : "border-rose-500/20 bg-rose-500/10 text-rose-300"
+                                    ? "ui-tone-amber-panel ui-tone-amber-text"
+                                    : "ui-tone-rose-panel ui-tone-rose-text"
                             }`}>
                               {item.last_playbook_outcome_status === "helped"
                                 ? "Playbook helped"
@@ -1192,12 +1192,12 @@ export default async function TeacherPrivateStudentsPage() {
                           {item.last_strategy_outcome_status ? (
                             <span className={`rounded-full border px-2.5 py-1 text-[11px] font-medium ${
                               item.last_strategy_outcome_status === "helped"
-                                ? "border-emerald-500/20 bg-emerald-500/10 text-emerald-400"
+                                ? "ui-tone-emerald-panel ui-tone-emerald-text"
                                 : item.last_strategy_outcome_status === "partial"
-                                  ? "border-sky-500/20 bg-sky-500/10 text-sky-400"
+                                  ? "ui-tone-sky-panel ui-tone-sky-text"
                                   : item.last_strategy_outcome_status === "no_change"
-                                    ? "border-amber-500/20 bg-amber-500/10 text-amber-300"
-                                    : "border-rose-500/20 bg-rose-500/10 text-rose-300"
+                                    ? "ui-tone-amber-panel ui-tone-amber-text"
+                                    : "ui-tone-rose-panel ui-tone-rose-text"
                             }`}>
                               {item.last_strategy_outcome_status === "helped"
                                 ? "Strategy helped"

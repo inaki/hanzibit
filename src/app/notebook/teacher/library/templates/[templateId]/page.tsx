@@ -58,7 +58,7 @@ export default async function AssignmentTemplateDetailPage({
         <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
           <section className="rounded-2xl border bg-card p-5">
             <div className="mb-4 flex items-center gap-2">
-              <BookCopy className="h-4 w-4 text-[var(--cn-orange)]" />
+              <BookCopy className="ui-tone-orange-text h-4 w-4" />
               <h2 className="text-sm font-semibold uppercase tracking-[0.2em] text-muted-foreground">Details</h2>
             </div>
             <form action={updateTemplateFormAction} className="space-y-3">
@@ -69,7 +69,7 @@ export default async function AssignmentTemplateDetailPage({
                   name="title"
                   required
                   defaultValue={template.title}
-                  className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-[var(--cn-orange)]"
+                  className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-[var(--ui-tone-orange-border)]"
                 />
               </div>
               <div>
@@ -78,7 +78,7 @@ export default async function AssignmentTemplateDetailPage({
                   name="description"
                   rows={3}
                   defaultValue={template.description || ""}
-                  className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-[var(--cn-orange)]"
+                  className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-[var(--ui-tone-orange-border)]"
                 />
               </div>
               <div>
@@ -87,7 +87,7 @@ export default async function AssignmentTemplateDetailPage({
                   name="prompt"
                   rows={4}
                   defaultValue={template.prompt || ""}
-                  className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-[var(--cn-orange)]"
+                  className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-[var(--ui-tone-orange-border)]"
                 />
               </div>
               <div className="grid gap-3 sm:grid-cols-2">
@@ -99,7 +99,7 @@ export default async function AssignmentTemplateDetailPage({
                     min={1}
                     max={6}
                     defaultValue={template.hsk_level ?? ""}
-                    className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-[var(--cn-orange)]"
+                    className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-[var(--ui-tone-orange-border)]"
                   />
                 </div>
                 <div>
@@ -107,7 +107,7 @@ export default async function AssignmentTemplateDetailPage({
                   <input
                     name="source_ref"
                     defaultValue={template.source_ref || ""}
-                    className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-[var(--cn-orange)]"
+                    className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-[var(--ui-tone-orange-border)]"
                   />
                 </div>
               </div>
@@ -119,7 +119,7 @@ export default async function AssignmentTemplateDetailPage({
                 <input type="checkbox" name="archived" defaultChecked={template.archived === 1} className="h-4 w-4" />
                 Archive template
               </label>
-              <PendingSubmitButton pendingLabel="Updating template..." className="w-full justify-center rounded-lg bg-[var(--cn-orange)] px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-[var(--cn-orange-dark)]">
+              <PendingSubmitButton pendingLabel="Updating template..." className="bg-primary text-primary-foreground w-full justify-center rounded-lg px-4 py-2 text-sm font-medium transition-colors hover:opacity-90">
                 Update Template
               </PendingSubmitButton>
             </form>

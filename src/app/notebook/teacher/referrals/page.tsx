@@ -161,7 +161,7 @@ export default async function TeacherReferralsPage() {
                       key={commission.id}
                       href="/notebook/teacher/referrals"
                       badges={
-                        <span className="rounded-full border border-sky-500/20 bg-sky-500/10 px-2.5 py-1 text-[11px] font-medium text-sky-400">
+                        <span className="ui-tone-sky-panel ui-tone-sky-text rounded-full border px-2.5 py-1 text-[11px] font-medium">
                           {commission.status}
                         </span>
                       }
@@ -191,7 +191,7 @@ export default async function TeacherReferralsPage() {
                     key={payout.id}
                     href="/notebook/teacher/referrals"
                     badges={
-                      <span className="rounded-full border border-emerald-500/20 bg-emerald-500/10 px-2.5 py-1 text-[11px] font-medium text-emerald-400">
+                      <span className="ui-tone-emerald-panel ui-tone-emerald-text rounded-full border px-2.5 py-1 text-[11px] font-medium">
                         {payout.status}
                       </span>
                     }

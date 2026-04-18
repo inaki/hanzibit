@@ -286,31 +286,31 @@ export default async function TeacherLibraryPage({
                           </span>
                         ) : null}
                         {playbook.usage_count === 0 ? (
-                          <span className="rounded-full border border-sky-500/20 bg-sky-500/10 px-2.5 py-1 font-medium text-sky-400">
+                          <span className="ui-tone-sky-panel ui-tone-sky-text rounded-full border px-2.5 py-1 font-medium">
                             Not used yet
                           </span>
                         ) : (
-                          <span className="rounded-full border border-emerald-500/20 bg-emerald-500/10 px-2.5 py-1 font-medium text-emerald-400">
+                          <span className="ui-tone-emerald-panel ui-tone-emerald-text rounded-full border px-2.5 py-1 font-medium">
                             In use
                           </span>
                         )}
                         {(playbook.linked_strategy_count ?? 0) === 0 ? (
-                          <span className="rounded-full border border-amber-500/20 bg-amber-500/10 px-2.5 py-1 font-medium text-amber-300">
+                          <span className="ui-tone-amber-panel ui-tone-amber-text rounded-full border px-2.5 py-1 font-medium">
                             No strategies linked yet
                           </span>
                         ) : null}
                         {!playbook.when_to_use ? (
-                          <span className="rounded-full border border-amber-500/20 bg-amber-500/10 px-2.5 py-1 font-medium text-amber-300">
+                          <span className="ui-tone-amber-panel ui-tone-amber-text rounded-full border px-2.5 py-1 font-medium">
                             Needs escalation rule
                           </span>
                         ) : null}
                         {playbook.replacement_playbook_title ? (
-                          <span className="rounded-full border border-violet-500/20 bg-violet-500/10 px-2.5 py-1 font-medium text-violet-300">
+                          <span className="ui-tone-violet-panel ui-tone-violet-text rounded-full border px-2.5 py-1 font-medium">
                             Replaced by {playbook.replacement_playbook_title}
                           </span>
                         ) : null}
                         {playbook.usage_count > 0 && !playbook.last_refined_at ? (
-                          <span className="rounded-full border border-sky-500/20 bg-sky-500/10 px-2.5 py-1 font-medium text-sky-400">
+                          <span className="ui-tone-sky-panel ui-tone-sky-text rounded-full border px-2.5 py-1 font-medium">
                             Refinement pending
                           </span>
                         ) : null}
@@ -382,12 +382,12 @@ export default async function TeacherLibraryPage({
                           </span>
                         ) : null}
                         {strategy.usage_count === 0 ? (
-                          <span className="rounded-full border border-amber-500/20 bg-amber-500/10 px-2.5 py-1 font-medium text-amber-300">
+                          <span className="ui-tone-amber-panel ui-tone-amber-text rounded-full border px-2.5 py-1 font-medium">
                             Not used yet
                           </span>
                         ) : null}
                         {strategy.usage_count > 0 && !strategy.last_refined_at ? (
-                          <span className="rounded-full border border-sky-500/20 bg-sky-500/10 px-2.5 py-1 font-medium text-sky-400">
+                          <span className="ui-tone-sky-panel ui-tone-sky-text rounded-full border px-2.5 py-1 font-medium">
                             Outcome-aware refinement pending
                           </span>
                         ) : null}
@@ -428,7 +428,7 @@ export default async function TeacherLibraryPage({
                   <select
                     name="resource_type"
                     defaultValue="journal_prompt"
-                    className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-[var(--cn-orange)]"
+                    className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-[var(--ui-tone-orange-border)]"
                   >
                     <option value="journal_prompt">Journal prompt</option>
                     <option value="study_word_set">Study word set</option>
@@ -443,7 +443,7 @@ export default async function TeacherLibraryPage({
                     name="title"
                     required
                     placeholder="e.g. HSK 1 family prompts"
-                    className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-[var(--cn-orange)]"
+                    className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-[var(--ui-tone-orange-border)]"
                   />
                 </div>
                 <div>
@@ -452,7 +452,7 @@ export default async function TeacherLibraryPage({
                     name="description"
                     rows={3}
                     placeholder="How will you reuse this resource?"
-                    className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-[var(--cn-orange)]"
+                    className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-[var(--ui-tone-orange-border)]"
                   />
                 </div>
                 <div>
@@ -463,10 +463,10 @@ export default async function TeacherLibraryPage({
                     min={1}
                     max={6}
                     placeholder="Optional"
-                    className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-[var(--cn-orange)]"
+                    className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-[var(--ui-tone-orange-border)]"
                   />
                 </div>
-                <PendingSubmitButton pendingLabel="Saving resource..." className="w-full justify-center rounded-lg bg-[var(--cn-orange)] px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-[var(--cn-orange-dark)]">
+                <PendingSubmitButton pendingLabel="Saving resource..." className="bg-primary text-primary-foreground w-full justify-center rounded-lg px-4 py-2 text-sm font-medium transition-colors hover:opacity-90">
                   Save Resource
                 </PendingSubmitButton>
               </form>
@@ -480,7 +480,7 @@ export default async function TeacherLibraryPage({
                     name="title"
                     required
                     placeholder="e.g. Tone accuracy reset"
-                    className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-[var(--cn-orange)]"
+                    className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-[var(--ui-tone-orange-border)]"
                   />
                 </div>
                 <div>
@@ -490,7 +490,7 @@ export default async function TeacherLibraryPage({
                     rows={2}
                     required
                     placeholder="Short reusable strategy summary"
-                    className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-[var(--cn-orange)]"
+                    className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-[var(--ui-tone-orange-border)]"
                   />
                 </div>
                 <div className="grid gap-3 sm:grid-cols-2">
@@ -499,7 +499,7 @@ export default async function TeacherLibraryPage({
                     <input
                       name="issue_focus"
                       placeholder="e.g. tone accuracy"
-                      className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-[var(--cn-orange)]"
+                      className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-[var(--ui-tone-orange-border)]"
                     />
                   </div>
                   <div>
@@ -507,7 +507,7 @@ export default async function TeacherLibraryPage({
                     <input
                       name="goal_focus"
                       placeholder="e.g. confidence in speaking"
-                      className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-[var(--cn-orange)]"
+                      className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-[var(--ui-tone-orange-border)]"
                     />
                   </div>
                 </div>
@@ -517,7 +517,7 @@ export default async function TeacherLibraryPage({
                     name="guidance"
                     rows={3}
                     placeholder="What should the teacher do next when applying this strategy?"
-                    className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-[var(--cn-orange)]"
+                    className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-[var(--ui-tone-orange-border)]"
                   />
                 </div>
                 <div className="grid gap-3 sm:grid-cols-2">
@@ -526,7 +526,7 @@ export default async function TeacherLibraryPage({
                     <select
                       name="linked_template_id"
                       defaultValue=""
-                      className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-[var(--cn-orange)]"
+                      className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-[var(--ui-tone-orange-border)]"
                     >
                       <option value="">No linked template</option>
                       {templates.map((template) => (
@@ -541,7 +541,7 @@ export default async function TeacherLibraryPage({
                     <select
                       name="linked_resource_id"
                       defaultValue=""
-                      className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-[var(--cn-orange)]"
+                      className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-[var(--ui-tone-orange-border)]"
                     >
                       <option value="">No linked resource</option>
                       {resources.map((resource) => (
@@ -552,7 +552,7 @@ export default async function TeacherLibraryPage({
                     </select>
                   </div>
                 </div>
-                <PendingSubmitButton pendingLabel="Saving strategy..." className="w-full justify-center rounded-lg bg-[var(--cn-orange)] px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-[var(--cn-orange-dark)]">
+                <PendingSubmitButton pendingLabel="Saving strategy..." className="bg-primary text-primary-foreground w-full justify-center rounded-lg px-4 py-2 text-sm font-medium transition-colors hover:opacity-90">
                   Save Strategy
                 </PendingSubmitButton>
               </form>
@@ -566,7 +566,7 @@ export default async function TeacherLibraryPage({
                     name="title"
                     required
                     placeholder="e.g. Confidence rebuild playbook"
-                    className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-[var(--cn-orange)]"
+                    className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-[var(--ui-tone-orange-border)]"
                   />
                 </div>
                 <div>
@@ -576,7 +576,7 @@ export default async function TeacherLibraryPage({
                     rows={2}
                     required
                     placeholder="Short repeatable support pattern summary"
-                    className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-[var(--cn-orange)]"
+                    className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-[var(--ui-tone-orange-border)]"
                   />
                 </div>
                 <div className="grid gap-3 sm:grid-cols-2">
@@ -585,7 +585,7 @@ export default async function TeacherLibraryPage({
                     <input
                       name="issue_focus"
                       placeholder="e.g. homework follow-through"
-                      className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-[var(--cn-orange)]"
+                      className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-[var(--ui-tone-orange-border)]"
                     />
                   </div>
                   <div>
@@ -593,7 +593,7 @@ export default async function TeacherLibraryPage({
                     <input
                       name="goal_focus"
                       placeholder="e.g. speaking confidence"
-                      className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-[var(--cn-orange)]"
+                      className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-[var(--ui-tone-orange-border)]"
                     />
                   </div>
                 </div>
@@ -603,7 +603,7 @@ export default async function TeacherLibraryPage({
                     name="when_to_use"
                     rows={2}
                     placeholder="What recurring pattern or escalation signal should trigger this playbook?"
-                    className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-[var(--cn-orange)]"
+                    className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-[var(--ui-tone-orange-border)]"
                   />
                 </div>
                 <div>
@@ -612,7 +612,7 @@ export default async function TeacherLibraryPage({
                     name="guidance"
                     rows={3}
                     placeholder="How should the teacher respond once this playbook is in use?"
-                    className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-[var(--cn-orange)]"
+                    className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-[var(--ui-tone-orange-border)]"
                   />
                 </div>
                 <div className="grid gap-3 sm:grid-cols-2">
@@ -621,7 +621,7 @@ export default async function TeacherLibraryPage({
                     <select
                       name="linked_template_id"
                       defaultValue=""
-                      className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-[var(--cn-orange)]"
+                      className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-[var(--ui-tone-orange-border)]"
                     >
                       <option value="">No linked template</option>
                       {templates.map((template) => (
@@ -636,7 +636,7 @@ export default async function TeacherLibraryPage({
                     <select
                       name="linked_resource_id"
                       defaultValue=""
-                      className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-[var(--cn-orange)]"
+                      className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-[var(--ui-tone-orange-border)]"
                     >
                       <option value="">No linked resource</option>
                       {resources.map((resource) => (
@@ -665,7 +665,7 @@ export default async function TeacherLibraryPage({
                     )}
                   </div>
                 </div>
-                <PendingSubmitButton pendingLabel="Saving playbook..." className="w-full justify-center rounded-lg bg-[var(--cn-orange)] px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-[var(--cn-orange-dark)]">
+                <PendingSubmitButton pendingLabel="Saving playbook..." className="bg-primary text-primary-foreground w-full justify-center rounded-lg px-4 py-2 text-sm font-medium transition-colors hover:opacity-90">
                   Save Playbook
                 </PendingSubmitButton>
               </form>
@@ -678,7 +678,7 @@ export default async function TeacherLibraryPage({
                   <select
                     name="template_type"
                     defaultValue="journal_prompt"
-                    className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-[var(--cn-orange)]"
+                    className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-[var(--ui-tone-orange-border)]"
                   >
                     <option value="journal_prompt">Journal prompt</option>
                     <option value="study_guide_word">Study guide word</option>
@@ -691,7 +691,7 @@ export default async function TeacherLibraryPage({
                   <select
                     name="resource_id"
                     defaultValue=""
-                    className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-[var(--cn-orange)]"
+                    className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-[var(--ui-tone-orange-border)]"
                   >
                     <option value="">No linked resource</option>
                     {resources.map((resource) => (
@@ -707,7 +707,7 @@ export default async function TeacherLibraryPage({
                     name="title"
                     required
                     placeholder="e.g. Use 爱 in 3 sentences"
-                    className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-[var(--cn-orange)]"
+                    className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-[var(--ui-tone-orange-border)]"
                   />
                 </div>
                 <div>
@@ -716,7 +716,7 @@ export default async function TeacherLibraryPage({
                     name="description"
                     rows={2}
                     placeholder="Optional classroom-facing description"
-                    className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-[var(--cn-orange)]"
+                    className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-[var(--ui-tone-orange-border)]"
                   />
                 </div>
                 <div>
@@ -725,7 +725,7 @@ export default async function TeacherLibraryPage({
                     name="prompt"
                     rows={3}
                     placeholder="What should students do?"
-                    className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-[var(--cn-orange)]"
+                    className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-[var(--ui-tone-orange-border)]"
                   />
                 </div>
                 <div className="grid gap-3 sm:grid-cols-2">
@@ -737,7 +737,7 @@ export default async function TeacherLibraryPage({
                       min={1}
                       max={6}
                       placeholder="Optional"
-                      className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-[var(--cn-orange)]"
+                      className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-[var(--ui-tone-orange-border)]"
                     />
                   </div>
                   <div>
@@ -745,7 +745,7 @@ export default async function TeacherLibraryPage({
                     <input
                       name="source_ref"
                       placeholder="Optional word id or source ref"
-                      className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-[var(--cn-orange)]"
+                      className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-[var(--ui-tone-orange-border)]"
                     />
                   </div>
                 </div>
@@ -753,7 +753,7 @@ export default async function TeacherLibraryPage({
                   <input type="checkbox" name="allow_resubmission" defaultChecked className="h-4 w-4" />
                   Allow resubmission
                 </label>
-                <PendingSubmitButton pendingLabel="Saving template..." className="w-full justify-center rounded-lg bg-[var(--cn-orange)] px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-[var(--cn-orange-dark)]">
+                <PendingSubmitButton pendingLabel="Saving template..." className="bg-primary text-primary-foreground w-full justify-center rounded-lg px-4 py-2 text-sm font-medium transition-colors hover:opacity-90">
                   Save Template
                 </PendingSubmitButton>
               </form>

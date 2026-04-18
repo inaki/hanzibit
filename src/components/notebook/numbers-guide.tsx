@@ -55,7 +55,7 @@ const LARGE_NUMBERS = [
 
 function SectionNumber({ n }: { n: number }) {
   return (
-    <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[var(--cn-orange)] text-xs font-bold text-white">
+    <span className="bg-primary text-primary-foreground flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-bold">
       {n}
     </span>
   );
@@ -75,7 +75,7 @@ function FoundationSection() {
             data-testid={`number-card-${item.num}`}
             className="flex flex-col items-center rounded-xl border bg-card p-3 shadow-sm"
           >
-            <span className="mb-1 flex h-5 w-5 items-center justify-center rounded-full bg-[var(--cn-orange-light)] text-[10px] font-semibold text-[var(--cn-orange)]">
+            <span className="ui-tone-orange-panel ui-tone-orange-text mb-1 flex h-5 w-5 items-center justify-center rounded-full text-[10px] font-semibold">
               {item.num}
             </span>
             <span className="text-2xl font-bold text-foreground">{item.char}</span>
@@ -95,7 +95,7 @@ function TeensSection() {
         <h2 className="text-xl font-bold text-foreground">The Logic of Teens (11–19)</h2>
       </div>
       <div className="flex flex-col gap-4 sm:flex-row">
-        <div className="flex-1 rounded-xl border-l-4 border-[var(--cn-orange)] bg-[var(--cn-orange-light)] p-5">
+        <div className="ui-tone-orange-panel flex-1 rounded-xl border-l-4 border-[var(--ui-tone-orange-border)] p-5">
           <p className="text-sm font-bold text-foreground">Pattern: 10 + N</p>
           <p className="mt-1 text-sm text-muted-foreground">
             Numbers from 11 to 19 are formed by taking &lsquo;10&rsquo; (十) and adding the single digit (1-9) after it.
@@ -105,7 +105,7 @@ function TeensSection() {
           {TEEN_EXAMPLES.map((ex) => (
             <div key={ex.num} className="flex items-center gap-2">
               <span className="text-sm text-muted-foreground/70">{ex.num}:</span>
-              <span className="text-lg font-bold text-[var(--cn-orange)]">{ex.chars}</span>
+              <span className="ui-tone-orange-text text-lg font-bold">{ex.chars}</span>
               <span className="text-xs text-muted-foreground">{ex.pinyin}</span>
             </div>
           ))}
@@ -133,7 +133,7 @@ function PatternCard({
           <div key={ex.label} className="flex items-center justify-between">
             <span className="text-sm text-muted-foreground">{ex.label}</span>
             <div className="flex items-center gap-2">
-              <span className="text-lg font-bold text-[var(--cn-orange)]">{ex.chars}</span>
+              <span className="ui-tone-orange-text text-lg font-bold">{ex.chars}</span>
               <span className="text-xs text-muted-foreground">{ex.pinyin}</span>
             </div>
           </div>
@@ -175,14 +175,14 @@ function LargeNumbersSection() {
       </div>
 
       {/* Info callout */}
-      <div className="mb-6 rounded-xl bg-[var(--cn-orange)] p-5 text-white">
+      <div className="bg-primary text-primary-foreground mb-6 rounded-xl p-5">
         <p className="flex items-center gap-2 text-sm font-bold">
           <Info className="h-4 w-4" />
           The 4-Digit Grouping (Myriad)
         </p>
-        <p className="mt-2 text-sm leading-relaxed text-white/90">
+        <p className="mt-2 text-sm leading-relaxed text-primary-foreground/90">
           Unlike English, which groups numbers by thousands (3 zeros: 1,000), Mandarin fundamentally groups large numbers by{" "}
-          <strong className="text-white">ten-thousands</strong> (4 zeros). This unit is called 万 (wàn). When translating large numbers, always count in blocks of four digits from the right.
+          <strong className="text-primary-foreground">ten-thousands</strong> (4 zeros). This unit is called 万 (wàn). When translating large numbers, always count in blocks of four digits from the right.
         </p>
       </div>
 
@@ -201,7 +201,7 @@ function LargeNumbersSection() {
             {LARGE_NUMBERS.map((row) => (
               <tr key={row.number} className="transition-colors hover:bg-muted/50">
                 <td className="px-5 py-3 font-mono text-sm text-foreground/80">{row.number}</td>
-                <td className="px-5 py-3 text-lg font-bold text-[var(--cn-orange)]">{row.char}</td>
+                <td className="ui-tone-orange-text px-5 py-3 text-lg font-bold">{row.char}</td>
                 <td className="px-5 py-3 text-sm italic text-muted-foreground">{row.pinyin}</td>
                 <td className="px-5 py-3 text-sm text-muted-foreground">{row.logic}</td>
               </tr>
@@ -308,7 +308,7 @@ function TryNumberDialog({
       <DialogContent data-testid="try-number-dialog" className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>
-            <Calculator className="mr-2 inline h-5 w-5 text-[var(--cn-orange)]" />
+            <Calculator className="ui-tone-orange-text mr-2 inline h-5 w-5" />
             Try Any Number
           </DialogTitle>
           <DialogDescription>
@@ -331,7 +331,7 @@ function TryNumberDialog({
 
         {result && (
           <div data-testid="try-number-result" className="rounded-xl border bg-card p-6 text-center">
-            <p className="text-4xl font-bold text-[var(--cn-orange)]">
+            <p className="ui-tone-orange-text text-4xl font-bold">
               {result.hanzi}
             </p>
             <p className="mt-2 text-sm text-muted-foreground">{result.pinyin}</p>
@@ -391,7 +391,7 @@ export function NumbersGuide() {
         <Button
           data-testid="try-number-button"
           onClick={() => setTryOpen(true)}
-          className="bg-[var(--cn-orange)] hover:bg-[var(--cn-orange-dark)] px-8 py-3 text-base"
+          className="bg-primary text-primary-foreground hover:opacity-90 px-8 py-3 text-base"
         >
           <Calculator className="mr-2 h-5 w-5" />
           Try Any Number
