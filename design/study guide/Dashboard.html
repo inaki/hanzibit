@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>HanziBit — Dashboard</title>
+<link rel="stylesheet" href="styles.css">
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body>
+<div id="root"></div>
+
+<!-- Tweaks panel (only visible when toggled) -->
+<div class="tweaks" id="tweaks">
+  <h4>Tweaks</h4>
+  <div class="tweak-group">
+    <div class="tweak-label">Layout</div>
+    <div class="seg-control vertical" id="layout-seg">
+      <button data-layout="focused">Focused — hero + sidebar</button>
+      <button data-layout="compact">Compact — all visible</button>
+      <button data-layout="minimal">Minimal — action tiles</button>
+    </div>
+  </div>
+  <div class="tweak-group">
+    <div class="tweak-label">Learner state</div>
+    <div class="seg-control" id="state-seg">
+      <button data-state="day1">Day 1</button>
+      <button data-state="active">Active</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  const TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
+    "layout": "compact",
+    "state": "active"
+  }/*EDITMODE-END*/;
+  window.__tweaks = { ...TWEAK_DEFAULTS };
+  document.body.dataset.layout = window.__tweaks.layout;
+  document.body.dataset.state = window.__tweaks.state;
+</script>
+
+<script type="text/babel" src="Sidebar.jsx"></script>
+<script type="text/babel" src="Dashboard.jsx"></script>
+<script type="text/babel">
+function App() {
+  const [layout, setLayout] = React.useState(window.__tweaks.layout);
+  const [state, setState] = React.useState(window.__tweaks.state);
+
+  React.useEffect(() => {
+    document.body.dataset.layout = layout;
+    document.body.dataset.state = state;
+    if (window.lucide) window.lucide.createIcons();
+  }, [layout, state]);
+
+  React.useEffect(() => {
+    const handler = (e) => {
+      if (!e.data || typeof e.data !== "object") return;
+      if (e.data.type === "__activate_edit_mode") document.getElementById("tweaks").classList.add("open");
+      if (e.data.type === "__deactivate_edit_mode") document.getElementById("tweaks").classList.remove("open");
+    };
+    window.addEventListener("message", handler);
+    window.parent.postMessage({ type: "__edit_mode_available" }, "*");
+
+    // wire tweak controls
+    const updateSeg = (container, val, attr) => {
+      container.querySelectorAll("button").forEach(b => {
+        b.classList.toggle("on", b.dataset[attr] === val);
+      });
+    };
+    const layoutSeg = document.getElementById("layout-seg");
+    const stateSeg = document.getElementById("state-seg");
+    updateSeg(layoutSeg, window.__tweaks.layout, "layout");
+    updateSeg(stateSeg, window.__tweaks.state, "state");
+    layoutSeg.addEventListener("click", (e) => {
+      const v = e.target.closest("button")?.dataset.layout;
+      if (!v) return;
+      setLayout(v);
+      updateSeg(layoutSeg, v, "layout");
+      window.parent.postMessage({ type: "__edit_mode_set_keys", edits: { layout: v } }, "*");
+    });
+    stateSeg.addEventListener("click", (e) => {
+      const v = e.target.closest("button")?.dataset.state;
+      if (!v) return;
+      setState(v);
+      updateSeg(stateSeg, v, "state");
+      window.parent.postMessage({ type: "__edit_mode_set_keys", edits: { state: v } }, "*");
+    });
+
+    return () => window.removeEventListener("message", handler);
+  }, []);
+
+  return (
+    <div className="app">
+      <Sidebar />
+      <main className="main">
+        <Dashboard layout={layout} state={state} />
+      </main>
+    </div>
+  );
+}
+ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+</script>
+</body>
+</html>

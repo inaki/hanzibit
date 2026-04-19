@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>HanziBit — Flashcards</title>
+<link rel="stylesheet" href="styles.css">
+<link rel="stylesheet" href="fc-styles.css">
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body>
+<div id="root"></div>
+
+<div class="tweaks" id="tweaks">
+  <h4>Tweaks</h4>
+  <div class="tweak-group">
+    <div class="tweak-label">Mode</div>
+    <div class="seg-control" id="mode-seg">
+      <button data-mode="practice">Practice</button>
+      <button data-mode="listen">Listen</button>
+      <button data-mode="browse">Browse</button>
+    </div>
+  </div>
+  <div class="tweak-group">
+    <div class="tweak-label">Card state</div>
+    <div class="seg-control" id="flip-seg">
+      <button data-flip="front">Front</button>
+      <button data-flip="back">Back</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  const TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
+    "mode": "practice",
+    "flip": "back"
+  }/*EDITMODE-END*/;
+  window.__tweaks = { ...TWEAK_DEFAULTS };
+</script>
+
+<script type="text/babel" src="Sidebar.jsx"></script>
+<script type="text/babel" src="Flashcards.jsx"></script>
+<script type="text/babel">
+function FcTopbar({ mode, setMode }) {
+  const modes = [
+    { id: "practice", label: "Practice", icon: "layers" },
+    { id: "listen", label: "Listen", icon: "headphones" },
+    { id: "browse", label: "Browse All", icon: "grid-2x2" },
+  ];
+  return (
+    <div className="fc-topbar">
+      <div className="fc-title-block">
+        <h1>Flashcards</h1>
+        <div className="sub">12 cards in deck · 3 due today</div>
+      </div>
+      <div className="fc-modes">
+        {modes.map(m => (
+          <button key={m.id} className={`fc-mode ${m.id} ${mode === m.id ? "on" : ""}`} onClick={() => setMode(m.id)}>
+            <i data-lucide={m.icon}></i> {m.label}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function SessionBar() {
+  // 12 cards, current is 3rd. First two: good, again.
+  const states = ["done", "again", "current", "", "", "", "", "", "", "", "", ""];
+  return (
+    <div className="fc-session-bar">
+      <span className="fc-sb-label">Session</span>
+      <div className="fc-sb-dots">
+        {states.map((s, i) => <div key={i} className={`fc-sb-dot ${s}`}></div>)}
+      </div>
+      <span className="fc-sb-meta"><b>3</b>/12 · <b>~4 min</b> left</span>
+    </div>
+  );
+}
+
+function App() {
+  const [mode, setMode] = React.useState(window.__tweaks.mode);
+  const [flipped, setFlipped] = React.useState(window.__tweaks.flip === "back");
+
+  React.useEffect(() => {
+    if (window.lucide) window.lucide.createIcons();
+  }, [mode, flipped]);
+
+  React.useEffect(() => {
+    const handler = (e) => {
+      if (!e.data || typeof e.data !== "object") return;
+      if (e.data.type === "__activate_edit_mode") document.getElementById("tweaks").classList.add("open");
+      if (e.data.type === "__deactivate_edit_mode") document.getElementById("tweaks").classList.remove("open");
+    };
+    window.addEventListener("message", handler);
+    window.parent.postMessage({ type: "__edit_mode_available" }, "*");
+
+    const updateSeg = (container, val, attr) => {
+      container.querySelectorAll("button").forEach(b => b.classList.toggle("on", b.dataset[attr] === val));
+    };
+    const modeSeg = document.getElementById("mode-seg");
+    const flipSeg = document.getElementById("flip-seg");
+    updateSeg(modeSeg, window.__tweaks.mode, "mode");
+    updateSeg(flipSeg, window.__tweaks.flip, "flip");
+    modeSeg.addEventListener("click", (e) => {
+      const v = e.target.closest("button")?.dataset.mode;
+      if (!v) return;
+      setMode(v);
+      updateSeg(modeSeg, v, "mode");
+      window.parent.postMessage({ type: "__edit_mode_set_keys", edits: { mode: v } }, "*");
+    });
+    flipSeg.addEventListener("click", (e) => {
+      const v = e.target.closest("button")?.dataset.flip;
+      if (!v) return;
+      setFlipped(v === "back");
+      updateSeg(flipSeg, v, "flip");
+      window.parent.postMessage({ type: "__edit_mode_set_keys", edits: { flip: v } }, "*");
+    });
+    return () => window.removeEventListener("message", handler);
+  }, []);
+
+  return (
+    <div className="fc-app">
+      <Sidebar />
+      <div className="fc-main">
+        <FcTopbar mode={mode} setMode={setMode} />
+        {mode !== "browse" && <SessionBar />}
+        {mode === "practice" && (
+          <div className="fc-stage">
+            <PracticeCard flipped={flipped} setFlipped={setFlipped} />
+          </div>
+        )}
+        {mode === "listen" && (
+          <div className="fc-stage">
+            <ListenCard />
+          </div>
+        )}
+        {mode === "browse" && <BrowseGrid />}
+      </div>
+    </div>
+  );
+}
+ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+</script>
+</body>
+</html>

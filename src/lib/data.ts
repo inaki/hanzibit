@@ -62,6 +62,7 @@ export interface CuratedGrammarPoint {
   reading_passage: string;
   comprehension_question: string;
   journal_prompt: string;
+  watch_out_notes: string | null;
   studied: boolean;
 }
 
@@ -981,6 +982,7 @@ export async function getCuratedGrammarPoints(
     reading_passage: string;
     comprehension_question: string;
     journal_prompt: string;
+    watch_out_notes: string | null;
     studied_at: string | null;
   }>(
     `SELECT cgp.*, ugp.studied_at
@@ -1003,6 +1005,7 @@ export async function getCuratedGrammarPoints(
     reading_passage: row.reading_passage,
     comprehension_question: row.comprehension_question,
     journal_prompt: row.journal_prompt,
+    watch_out_notes: row.watch_out_notes,
     studied: row.studied_at !== null,
   }));
 }

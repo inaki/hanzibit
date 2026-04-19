@@ -8,6 +8,7 @@ interface GrammarSeedItem {
   reading_passage: string;
   comprehension_question: string;
   journal_prompt: string;
+  watch_out_notes?: string;
 }
 
 export const CURATED_GRAMMAR_POINTS: GrammarSeedItem[] = [
@@ -16,13 +17,19 @@ export const CURATED_GRAMMAR_POINTS: GrammarSeedItem[] = [
     hsk_level: 1,
     display_order: 1,
     title: "是 (shì) — Equational Sentences",
-    pattern: "A + 是 + B",
+    pattern: "Subject + 是 + Noun",
     explanation:
       "是 links two nouns or noun phrases, stating that A equals or is identified as B. Unlike English 'to be', 是 is not used with adjectives — those use 很 instead.",
     examples: JSON.stringify([
-      { zh: "我是学生。", pinyin: "Wǒ shì xuésheng.", en: "I am a student." },
-      { zh: "她是我的老师。", pinyin: "Tā shì wǒ de lǎoshī.", en: "She is my teacher." },
-      { zh: "这是我的书。", pinyin: "Zhè shì wǒ de shū.", en: "This is my book." },
+      { zh: "我是学生。", pinyin: "Wǒ shì xuésheng.", en: "I am a student.", type: "good" },
+      { zh: "她是我的老师。", pinyin: "Tā shì wǒ de lǎoshī.", en: "She is my teacher.", type: "good" },
+      { zh: "这是我的书。", pinyin: "Zhè shì wǒ de shū.", en: "This is my book.", type: "good" },
+      { zh: "我是高。", pinyin: "Wǒ shì gāo.", en: "Intended: I am tall.", type: "bad", note: "是 cannot link a noun to an adjective. Use 很 instead: 我很高。" },
+    ]),
+    watch_out_notes: JSON.stringify([
+      "是 links nouns to nouns only — never use it before an adjective.",
+      "Negation of 是 is 不是, not 没是.",
+      "For yes/no questions, add 吗 at the end: 你是学生吗？",
     ]),
     reading_passage:
       "我叫李明，我是北京人。我的爸爸是医生，我的妈妈是老师。我有一个哥哥，他是大学生。我们是一家人，我很爱我的家。",
@@ -34,13 +41,19 @@ export const CURATED_GRAMMAR_POINTS: GrammarSeedItem[] = [
     hsk_level: 1,
     display_order: 2,
     title: "有 (yǒu) — Possession and Existence",
-    pattern: "A + 有 + B",
+    pattern: "Subject + 有 + Object",
     explanation:
       "有 expresses possession ('A has B') or existence ('there is/are B at A'). Its negation is 没有, never 不有.",
     examples: JSON.stringify([
-      { zh: "我有一个妹妹。", pinyin: "Wǒ yǒu yī gè mèimei.", en: "I have a younger sister." },
-      { zh: "桌子上有一本书。", pinyin: "Zhuōzi shàng yǒu yī běn shū.", en: "There is a book on the table." },
-      { zh: "你有没有时间？", pinyin: "Nǐ yǒu méiyǒu shíjiān?", en: "Do you have time?" },
+      { zh: "我有一个妹妹。", pinyin: "Wǒ yǒu yī gè mèimei.", en: "I have a younger sister.", type: "good" },
+      { zh: "桌子上有一本书。", pinyin: "Zhuōzi shàng yǒu yī běn shū.", en: "There is a book on the table.", type: "good" },
+      { zh: "你有没有时间？", pinyin: "Nǐ yǒu méiyǒu shíjiān?", en: "Do you have time?", type: "good" },
+      { zh: "我不有钱。", pinyin: "Wǒ bù yǒu qián.", en: "Intended: I don't have money.", type: "bad", note: "有 is always negated with 没有, never with 不. Correct: 我没有钱。" },
+    ]),
+    watch_out_notes: JSON.stringify([
+      "The only negation for 有 is 没有 — never 不有.",
+      "When 有 expresses existence, the location comes first: 桌子上有书。",
+      "没有 can be shortened to 没 before another verb, but not before a noun.",
     ]),
     reading_passage:
       "我家有三口人。我有一个爸爸和一个妈妈。我没有兄弟，但是我有一个姐姐。我们家里有一只猫，它叫小白。桌子上有很多书，都是我姐姐的。",
@@ -52,13 +65,19 @@ export const CURATED_GRAMMAR_POINTS: GrammarSeedItem[] = [
     hsk_level: 1,
     display_order: 3,
     title: "不 (bù) — Negation",
-    pattern: "不 + verb / adjective",
+    pattern: "Subject + 不 + Verb / Adj",
     explanation:
       "不 is the standard negation word, placed directly before a verb or adjective. Note that 有 is negated with 没, and completed actions use 没 instead of 不.",
     examples: JSON.stringify([
-      { zh: "我不喜欢喝咖啡。", pinyin: "Wǒ bù xǐhuān hē kāfēi.", en: "I don't like drinking coffee." },
-      { zh: "他今天不来。", pinyin: "Tā jīntiān bù lái.", en: "He is not coming today." },
-      { zh: "这个不贵。", pinyin: "Zhège bú guì.", en: "This is not expensive." },
+      { zh: "我不喜欢喝咖啡。", pinyin: "Wǒ bù xǐhuān hē kāfēi.", en: "I don't like drinking coffee.", type: "good" },
+      { zh: "他今天不来。", pinyin: "Tā jīntiān bù lái.", en: "He is not coming today.", type: "good" },
+      { zh: "这个不贵。", pinyin: "Zhège bú guì.", en: "This is not expensive.", type: "good" },
+      { zh: "我昨天不吃饭。", pinyin: "Wǒ zuótiān bù chī fàn.", en: "Intended: I didn't eat yesterday.", type: "bad", note: "For completed past actions, use 没 (not 不). Correct: 我昨天没吃饭。" },
+    ]),
+    watch_out_notes: JSON.stringify([
+      "Use 没 (not 不) to negate past completed actions: 我没去 — I didn't go.",
+      "有 is always negated with 没有, never 不有.",
+      "不 changes tone to bú before 4th-tone syllables: 不贵 (bú guì).",
     ]),
     reading_passage:
       "今天我不舒服，不想去学校。我不喜欢吃药，但是妈妈说要吃。今天天气不好，外面很冷。我不出去，在家休息。明天我会好的。",
@@ -74,9 +93,15 @@ export const CURATED_GRAMMAR_POINTS: GrammarSeedItem[] = [
     explanation:
       "Adding 吗 to the end of a statement turns it into a yes/no question. No word order changes are needed — just append 吗 and raise your intonation.",
     examples: JSON.stringify([
-      { zh: "你是中国人吗？", pinyin: "Nǐ shì Zhōngguórén ma?", en: "Are you Chinese?" },
-      { zh: "她喜欢猫吗？", pinyin: "Tā xǐhuān māo ma?", en: "Does she like cats?" },
-      { zh: "你有哥哥吗？", pinyin: "Nǐ yǒu gēgē ma?", en: "Do you have an older brother?" },
+      { zh: "你是中国人吗？", pinyin: "Nǐ shì Zhōngguórén ma?", en: "Are you Chinese?", type: "good" },
+      { zh: "她喜欢猫吗？", pinyin: "Tā xǐhuān māo ma?", en: "Does she like cats?", type: "good" },
+      { zh: "你有哥哥吗？", pinyin: "Nǐ yǒu gēgē ma?", en: "Do you have an older brother?", type: "good" },
+      { zh: "你是不是中国人吗？", pinyin: "Nǐ shì bu shì Zhōngguórén ma?", en: "Intended: Are you Chinese?", type: "bad", note: "Don't combine A-not-A questions with 吗 — choose one form. Correct: 你是中国人吗？ or 你是不是中国人？" },
+    ]),
+    watch_out_notes: JSON.stringify([
+      "Never add 吗 to a question that already uses an A-not-A pattern or a question word like 什么/哪里.",
+      "吗 questions are answered with the verb itself (喜欢 / 不喜欢), not with 是 or 不是 alone.",
+      "呢 can follow a topic to ask 'what about…?' without repeating the full question.",
     ]),
     reading_passage:
       "小红问她的朋友：「你喜欢看电影吗？」朋友说：「喜欢！你呢？」小红说：「我也喜欢。你今天有时间吗？我们一起去看吗？」朋友很高兴，说：「好啊！」",
@@ -92,9 +117,15 @@ export const CURATED_GRAMMAR_POINTS: GrammarSeedItem[] = [
     explanation:
       "也 means 'also' or 'too' and always comes before the verb or adjective, never at the end of the sentence as in English. It signals that the same statement applies to an additional subject.",
     examples: JSON.stringify([
-      { zh: "我也是学生。", pinyin: "Wǒ yě shì xuésheng.", en: "I am also a student." },
-      { zh: "他也喜欢吃火锅。", pinyin: "Tā yě xǐhuān chī huǒguō.", en: "He also likes eating hot pot." },
-      { zh: "我也不知道。", pinyin: "Wǒ yě bù zhīdào.", en: "I don't know either." },
+      { zh: "我也是学生。", pinyin: "Wǒ yě shì xuésheng.", en: "I am also a student.", type: "good" },
+      { zh: "他也喜欢吃火锅。", pinyin: "Tā yě xǐhuān chī huǒguō.", en: "He also likes eating hot pot.", type: "good" },
+      { zh: "我也不知道。", pinyin: "Wǒ yě bù zhīdào.", en: "I don't know either.", type: "good" },
+      { zh: "我是学生也。", pinyin: "Wǒ shì xuésheng yě.", en: "Intended: I am also a student.", type: "bad", note: "也 must come before the verb, never at the end of the sentence. Correct: 我也是学生。" },
+    ]),
+    watch_out_notes: JSON.stringify([
+      "也 always appears before the verb — putting it at the end is a direct English translation error.",
+      "In negative sentences, 也 comes before 不/没: 我也不知道 (I don't know either).",
+      "When combining 也 and 都, the order is 也都: 他们也都来了。",
     ]),
     reading_passage:
       "我喜欢学中文，我的朋友玛丽也喜欢学中文。我们一起去上课。老师很好，我们也很努力。玛丽会说法语，我也会说一点法语。我们是好朋友。",
@@ -110,9 +141,15 @@ export const CURATED_GRAMMAR_POINTS: GrammarSeedItem[] = [
     explanation:
       "都 means 'all' or 'both' and always appears before the verb, referring back to a plural subject or a list of items already mentioned. It can combine with 也 as 也都.",
     examples: JSON.stringify([
-      { zh: "我们都是学生。", pinyin: "Wǒmen dōu shì xuésheng.", en: "We are all students." },
-      { zh: "他们都喜欢踢足球。", pinyin: "Tāmen dōu xǐhuān tī zúqiú.", en: "They all like playing soccer." },
-      { zh: "这些菜都很好吃。", pinyin: "Zhèxiē cài dōu hěn hǎochī.", en: "All of these dishes are delicious." },
+      { zh: "我们都是学生。", pinyin: "Wǒmen dōu shì xuésheng.", en: "We are all students.", type: "good" },
+      { zh: "他们都喜欢踢足球。", pinyin: "Tāmen dōu xǐhuān tī zúqiú.", en: "They all like playing soccer.", type: "good" },
+      { zh: "这些菜都很好吃。", pinyin: "Zhèxiē cài dōu hěn hǎochī.", en: "All of these dishes are delicious.", type: "good" },
+      { zh: "都我们喜欢音乐。", pinyin: "Dōu wǒmen xǐhuān yīnyuè.", en: "Intended: We all like music.", type: "bad", note: "都 must follow the subject and come before the verb. Correct: 我们都喜欢音乐。" },
+    ]),
+    watch_out_notes: JSON.stringify([
+      "都 refers to a plural subject that has already been introduced — it cannot introduce new information.",
+      "都 comes before the verb, not after the subject block: 他们都来了 (✓) vs 都他们来了 (✗).",
+      "In negative sentences, 都不 means 'none' while 不都 means 'not all'.",
     ]),
     reading_passage:
       "我们班有二十个学生，我们都喜欢我们的汉语老师。今天老师带来了很多中国食物，大家都很高兴。同学们都尝了一点，都说好吃。我们都想学更多中国文化。",
@@ -128,9 +165,15 @@ export const CURATED_GRAMMAR_POINTS: GrammarSeedItem[] = [
     explanation:
       "In Chinese, adjectives directly serve as predicates without a linking verb. 很 is placed before the adjective not only to mean 'very' but also as a required filler when no contrast or emphasis is intended — a 'bare' adjective implies comparison.",
     examples: JSON.stringify([
-      { zh: "今天很热。", pinyin: "Jīntiān hěn rè.", en: "Today is (very) hot." },
-      { zh: "她的汉语很好。", pinyin: "Tā de Hànyǔ hěn hǎo.", en: "Her Chinese is very good." },
-      { zh: "这本书很有意思。", pinyin: "Zhè běn shū hěn yǒuyìsi.", en: "This book is very interesting." },
+      { zh: "今天很热。", pinyin: "Jīntiān hěn rè.", en: "Today is (very) hot.", type: "good" },
+      { zh: "她的汉语很好。", pinyin: "Tā de Hànyǔ hěn hǎo.", en: "Her Chinese is very good.", type: "good" },
+      { zh: "这本书很有意思。", pinyin: "Zhè běn shū hěn yǒuyìsi.", en: "This book is very interesting.", type: "good" },
+      { zh: "她是漂亮。", pinyin: "Tā shì piàoliang.", en: "Intended: She is pretty.", type: "bad", note: "Adjective predicates don't use 是. Use 很 before the adjective: 她很漂亮。" },
+    ]),
+    watch_out_notes: JSON.stringify([
+      "A lone adjective predicate (without 很) implies comparison or contrast: 今天冷 means 'today is cold (compared to something)'.",
+      "Never insert 是 between a subject and an adjective predicate.",
+      "For negation, use 不: 今天不热 — Today is not hot.",
     ]),
     reading_passage:
       "今天是周末，天气很好，不冷也不热。我们去了一个公园，公园里的花很漂亮。我们走了很久，有点儿累，但是很开心。下午我们吃了冰淇淋，很甜，很好吃。",
@@ -146,9 +189,15 @@ export const CURATED_GRAMMAR_POINTS: GrammarSeedItem[] = [
     explanation:
       "在 indicates that someone or something is located at a place. As a verb it means 'to be at'; as a preposition it precedes a place word and comes before the main verb.",
     examples: JSON.stringify([
-      { zh: "我在图书馆。", pinyin: "Wǒ zài túshūguǎn.", en: "I am at the library." },
-      { zh: "他在家里学习。", pinyin: "Tā zài jiā lǐ xuéxí.", en: "He studies at home." },
-      { zh: "书在桌子上。", pinyin: "Shū zài zhuōzi shàng.", en: "The book is on the table." },
+      { zh: "我在图书馆。", pinyin: "Wǒ zài túshūguǎn.", en: "I am at the library.", type: "good" },
+      { zh: "他在家里学习。", pinyin: "Tā zài jiā lǐ xuéxí.", en: "He studies at home.", type: "good" },
+      { zh: "书在桌子上。", pinyin: "Shū zài zhuōzi shàng.", en: "The book is on the table.", type: "good" },
+      { zh: "我学习在图书馆。", pinyin: "Wǒ xuéxí zài túshūguǎn.", en: "Intended: I study at the library.", type: "bad", note: "When 在 is a preposition showing where an action happens, it must come before the verb, not after. Correct: 我在图书馆学习。" },
+    ]),
+    watch_out_notes: JSON.stringify([
+      "When 在 marks the location of an action, it comes before the main verb: 我在家吃饭。",
+      "As a standalone verb meaning 'to be located', 在 comes after the subject: 他在学校。",
+      "Relative positions (上/下/里/旁边) follow the place noun: 桌子上, 房间里.",
     ]),
     reading_passage:
       "我现在在学校的图书馆。图书馆在学校的右边，很安静。我的朋友小明也在这里，他在旁边看书。我们在图书馆学习，不说话。下课以后，我们在外面的咖啡厅喝咖啡。",
@@ -164,9 +213,15 @@ export const CURATED_GRAMMAR_POINTS: GrammarSeedItem[] = [
     explanation:
       "的 links a modifier to the noun it describes, most commonly showing possession ('my book', 'teacher's office'). When the possessor is a personal pronoun and the noun is a close relationship or group, 的 is often omitted in speech.",
     examples: JSON.stringify([
-      { zh: "这是我的手机。", pinyin: "Zhè shì wǒ de shǒujī.", en: "This is my cell phone." },
-      { zh: "老师的办公室在哪里？", pinyin: "Lǎoshī de bàngōngshì zài nǎlǐ?", en: "Where is the teacher's office?" },
-      { zh: "他的中文名字很好听。", pinyin: "Tā de Zhōngwén míngzì hěn hǎotīng.", en: "His Chinese name sounds very nice." },
+      { zh: "这是我的手机。", pinyin: "Zhè shì wǒ de shǒujī.", en: "This is my cell phone.", type: "good" },
+      { zh: "老师的办公室在哪里？", pinyin: "Lǎoshī de bàngōngshì zài nǎlǐ?", en: "Where is the teacher's office?", type: "good" },
+      { zh: "他的中文名字很好听。", pinyin: "Tā de Zhōngwén míngzì hěn hǎotīng.", en: "His Chinese name sounds very nice.", type: "good" },
+      { zh: "我的妈妈很爱我的。", pinyin: "Wǒ de māma hěn ài wǒ de.", en: "Intended: My mother loves me very much.", type: "bad", note: "When the object is a close family member or the pronoun refers back to the subject, 的 is usually dropped. Correct: 我妈妈很爱我。" },
+    ]),
+    watch_out_notes: JSON.stringify([
+      "With personal pronouns + close relationships, 的 is often omitted: 我妈妈 (my mom), 他朋友 (his friend).",
+      "的 is always kept when the modifier is a longer phrase or full clause.",
+      "Don't confuse possessive 的 with the adverb marker 地 (adverb + 地 + verb) or complement marker 得.",
     ]),
     reading_passage:
       "这是我的房间。我的床在窗户旁边，床上有我的毯子和枕头。桌子上是我的电脑和我的书。墙上有我朋友的照片，我很喜欢。我的房间不大，但是很舒服。",
@@ -182,9 +237,15 @@ export const CURATED_GRAMMAR_POINTS: GrammarSeedItem[] = [
     explanation:
       "In Chinese, time expressions come before the verb (and usually after the subject), unlike English where they can appear at the end. This applies to clock times, days, and time adverbs like 现在, 今天, 明天.",
     examples: JSON.stringify([
-      { zh: "我每天七点起床。", pinyin: "Wǒ měitiān qī diǎn qǐchuáng.", en: "I get up at seven every day." },
-      { zh: "她明天去北京。", pinyin: "Tā míngtiān qù Běijīng.", en: "She is going to Beijing tomorrow." },
-      { zh: "我们下午两点开会。", pinyin: "Wǒmen xiàwǔ liǎng diǎn kāihuì.", en: "We have a meeting at 2 p.m." },
+      { zh: "我每天七点起床。", pinyin: "Wǒ měitiān qī diǎn qǐchuáng.", en: "I get up at seven every day.", type: "good" },
+      { zh: "她明天去北京。", pinyin: "Tā míngtiān qù Běijīng.", en: "She is going to Beijing tomorrow.", type: "good" },
+      { zh: "我们下午两点开会。", pinyin: "Wǒmen xiàwǔ liǎng diǎn kāihuì.", en: "We have a meeting at 2 p.m.", type: "good" },
+      { zh: "我去学校今天。", pinyin: "Wǒ qù xuéxiào jīntiān.", en: "Intended: I go to school today.", type: "bad", note: "Time words must come before the verb, not after the object. Correct: 我今天去学校。" },
+    ]),
+    watch_out_notes: JSON.stringify([
+      "Time expressions go before the verb — placing them at the end is a direct English word-order error.",
+      "Larger time units come first: 年 → 月 → 日 → 时 → 分 (year → month → day → hour → minute).",
+      "Duration complements (verb了 + duration, e.g. 学了三年) come after the verb, not before.",
     ]),
     reading_passage:
       "我每天早上六点半起床，七点吃早饭。上午我在学校上课，下午两点回家。晚上我先做作业，然后看一会儿电视。我周末不上课，可以睡懒觉。我很喜欢周末。",
@@ -416,7 +477,7 @@ export const CURATED_GRAMMAR_POINTS: GrammarSeedItem[] = [
     hsk_level: 3,
     display_order: 3,
     title: "比 (bǐ) — Comparison",
-    pattern: "A + 比 + B + adjective (+ degree)",
+    pattern: "X + 比 + Y + Adj",
     explanation:
       "比 forms a direct comparison: 'A is more [adj] than B'. The adjective follows directly after B without 很 or 更 (though 更 can be added for emphasis). Negation with 没有 is used for 'not as … as'.",
     examples: JSON.stringify([

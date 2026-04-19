@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>HanziBit — Study Guide</title>
+<link rel="stylesheet" href="styles.css">
+<link rel="stylesheet" href="sg-styles.css">
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/lucide@latest"></script>
+<style>
+  /* override main content area for SG fullbleed */
+  .sg-main { padding: 0; max-width: none; margin: 0; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<!-- Tweaks panel -->
+<div class="tweaks" id="tweaks">
+  <h4>Tweaks</h4>
+  <div class="tweak-group">
+    <div class="tweak-label">Mode</div>
+    <div class="seg-control" id="mode-seg">
+      <button data-mode="words">Words</button>
+      <button data-mode="grammar">Grammar</button>
+    </div>
+  </div>
+  <div class="tweak-group">
+    <div class="tweak-label">HSK Level</div>
+    <div class="seg-control" id="hsk-seg">
+      <button data-hsk="1">1</button>
+      <button data-hsk="2">2</button>
+      <button data-hsk="3">3</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  const TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
+    "mode": "words",
+    "hsk": "1"
+  }/*EDITMODE-END*/;
+  window.__tweaks = { ...TWEAK_DEFAULTS };
+</script>
+
+<script type="text/babel" src="Sidebar.jsx"></script>
+<script type="text/babel" src="StudyGuide.jsx"></script>
+<script type="text/babel">
+function SgTopbar({ mode, setMode, hsk }) {
+  return (
+    <div className="sg-topbar">
+      <div className="sg-topbar-left">
+        <div className="sg-tabs">
+          <button className={`sg-tab ${mode === "words" ? "on" : ""}`} onClick={() => setMode("words")}>
+            <i data-lucide="book-open" style={{ width: 14, height: 14, marginRight: 6, verticalAlign: -2 }}></i>
+            Words
+          </button>
+          <button className={`sg-tab ${mode === "grammar" ? "on" : ""}`} onClick={() => setMode("grammar")}>
+            <i data-lucide="languages" style={{ width: 14, height: 14, marginRight: 6, verticalAlign: -2 }}></i>
+            Grammar
+          </button>
+        </div>
+      </div>
+      <div className="topbar-right">
+        <div className="search">
+          <i data-lucide="search"></i>
+          <span>Search characters…</span>
+          <span className="kbd">⌘K</span>
+        </div>
+        <button className="btn btn-outline" style={{ width: 36, padding: 0, justifyContent: "center" }}>
+          <i data-lucide="settings"></i>
+        </button>
+        <div className="avatar">HB</div>
+      </div>
+    </div>
+  );
+}
+
+function HskHeader({ hsk }) {
+  // 148 total, 18 encountered, 6 flashcards, 6 due
+  return (
+    <div className="sg-hsk-header">
+      <div className="sg-hsk-left">
+        <span className="sg-hsk-pill"><i data-lucide="graduation-cap"></i> HSK {hsk} · 12% complete</span>
+        <div className="sg-hsk-bar-wrap">
+          <div className="sg-hsk-bar">
+            <div className="encountered" style={{ width: `${(18/148)*100}%` }}></div>
+            <div className="flashcards" style={{ width: `${(6/148)*100}%` }}></div>
+            <div className="retained" style={{ width: `${(5/148)*100}%` }}></div>
+          </div>
+          <span className="sg-hsk-bar-label">18 / 148</span>
+        </div>
+      </div>
+      <div className="sg-hsk-stats">
+        <div className="sg-hsk-stat orange"><div className="v">18</div><div className="l">Encountered</div></div>
+        <div className="sg-hsk-stat sky"><div className="v">6</div><div className="l">Flashcards</div></div>
+        <div className="sg-hsk-stat emerald"><div className="v">5</div><div className="l">Retained</div></div>
+        <div className="sg-hsk-stat amber"><div className="v">6</div><div className="l">Due</div></div>
+      </div>
+    </div>
+  );
+}
+
+function App() {
+  const [mode, setMode] = React.useState(window.__tweaks.mode);
+  const [hsk, setHsk] = React.useState(window.__tweaks.hsk);
+  const [activeWord, setActiveWord] = React.useState("ai");
+  const [activeGrammar, setActiveGrammar] = React.useState("bu");
+
+  React.useEffect(() => {
+    if (window.lucide) window.lucide.createIcons();
+  }, [mode, hsk, activeWord, activeGrammar]);
+
+  React.useEffect(() => {
+    const handler = (e) => {
+      if (!e.data || typeof e.data !== "object") return;
+      if (e.data.type === "__activate_edit_mode") document.getElementById("tweaks").classList.add("open");
+      if (e.data.type === "__deactivate_edit_mode") document.getElementById("tweaks").classList.remove("open");
+    };
+    window.addEventListener("message", handler);
+    window.parent.postMessage({ type: "__edit_mode_available" }, "*");
+
+    const updateSeg = (container, val, attr) => {
+      container.querySelectorAll("button").forEach(b => b.classList.toggle("on", b.dataset[attr] === val));
+    };
+    const modeSeg = document.getElementById("mode-seg");
+    const hskSeg = document.getElementById("hsk-seg");
+    updateSeg(modeSeg, window.__tweaks.mode, "mode");
+    updateSeg(hskSeg, window.__tweaks.hsk, "hsk");
+    modeSeg.addEventListener("click", (e) => {
+      const v = e.target.closest("button")?.dataset.mode;
+      if (!v) return;
+      setMode(v);
+      updateSeg(modeSeg, v, "mode");
+      window.parent.postMessage({ type: "__edit_mode_set_keys", edits: { mode: v } }, "*");
+    });
+    hskSeg.addEventListener("click", (e) => {
+      const v = e.target.closest("button")?.dataset.hsk;
+      if (!v) return;
+      setHsk(v);
+      updateSeg(hskSeg, v, "hsk");
+      window.parent.postMessage({ type: "__edit_mode_set_keys", edits: { hsk: v } }, "*");
+    });
+    return () => window.removeEventListener("message", handler);
+  }, []);
+
+  return (
+    <div className="sg-app">
+      <Sidebar />
+      <div className="sg-main">
+        <SgTopbar mode={mode} setMode={setMode} hsk={hsk} />
+        <HskHeader hsk={hsk} />
+        <div className="sg-body">
+          {mode === "words" ? (
+            <>
+              <WordList activeId={activeWord} onPick={setActiveWord} mode={mode} />
+              <WordDetail />
+            </>
+          ) : (
+            <>
+              <GrammarList activeId={activeGrammar} onPick={setActiveGrammar} />
+              <GrammarDetail />
+            </>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+</script>
+</body>
+</html>

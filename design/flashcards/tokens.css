@@ -1,0 +1,220 @@
+/* ==========================================================================
+   HanziBit — colors & type tokens
+   Derived from src/app/globals.css in inaki/hanzibit.
+   Mirrors the Tailwind v4 @theme setup so a non-Tailwind consumer can use it.
+   ========================================================================== */
+
+:root {
+  /* --- Type stacks ------------------------------------------------------- */
+  --app-font-sans: "SF Pro Text", "SF Pro Display", "Segoe UI", "Helvetica Neue",
+    Helvetica, Arial, system-ui, sans-serif;
+  --app-font-mono: "SFMono-Regular", "SF Mono", ui-monospace, "Cascadia Code",
+    "Roboto Mono", Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+
+  /* --- Size scale (rem, anchored to html font-size) ---------------------- */
+  --text-10: 0.625rem;   /* 10px — micro label / eyebrow */
+  --text-11: 0.6875rem;  /* 11px — pill text */
+  --text-xs: 0.75rem;    /* 12px — secondary */
+  --text-sm: 0.875rem;   /* 14px — body */
+  --text-base: 1rem;     /* 16px */
+  --text-lg: 1.125rem;   /* 18px — card title */
+  --text-xl: 1.25rem;    /* 20px — subsection */
+  --text-2xl: 1.5rem;    /* 24px */
+  --text-3xl: 1.875rem;  /* 30px — metric value */
+  --text-4xl: 2.25rem;   /* 36px — page title */
+  --text-5xl: 3rem;      /* 48px */
+  --text-hanzi-sm: 1.375rem; /* 22px — interlinear hanzi */
+  --text-hanzi-lg: 2.75rem;  /* 44px — flashcard hanzi */
+
+  /* --- Weights ----------------------------------------------------------- */
+  --fw-medium: 500;
+  --fw-semibold: 600;
+  --fw-bold: 700;
+
+  /* --- Tracking ---------------------------------------------------------- */
+  --tracking-wider: 0.05em;
+  --tracking-widest: 0.1em;
+  --tracking-eyebrow: 0.18em;
+
+  /* --- Radii (anchored to --radius) -------------------------------------- */
+  --radius: 0.625rem;                       /* 10px */
+  --radius-sm: calc(var(--radius) * 0.6);   /* 6px */
+  --radius-md: calc(var(--radius) * 0.8);   /* 8px */
+  --radius-lg: var(--radius);               /* 10px */
+  --radius-xl: calc(var(--radius) * 1.4);   /* 14px */
+  --radius-2xl: calc(var(--radius) * 1.8);  /* 18px */
+  --radius-3xl: calc(var(--radius) * 2.2);  /* 22px */
+  --radius-4xl: calc(var(--radius) * 2.6);  /* 26px */
+
+  /* --- Semantic colors — light ------------------------------------------ */
+  --background: oklch(0.975 0.002 75);
+  --foreground: oklch(0.145 0 0);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.145 0 0);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.145 0 0);
+  --primary: oklch(0.6 0.18 45);
+  --primary-foreground: oklch(0.985 0 0);
+  --secondary: oklch(0.97 0 0);
+  --secondary-foreground: oklch(0.205 0 0);
+  --muted: oklch(0.97 0 0);
+  --muted-foreground: oklch(0.556 0 0);
+  --accent: oklch(0.97 0.01 55);
+  --accent-foreground: oklch(0.205 0 0);
+  --destructive: oklch(0.577 0.245 27.325);
+  --border: oklch(0.922 0 0);
+  --input: oklch(0.922 0 0);
+  --ring: oklch(0.6 0.18 45);
+
+  /* --- Brand hex --------------------------------------------------------- */
+  --cn-orange: #e8601c;
+  --cn-orange-light: #fef3ed;
+  --cn-orange-dark: #c44d14;
+
+  /* --- UI Tone system — light ------------------------------------------- */
+  /* Each tone has: surface (bg), border, text, soft-text.
+     Hue angles — orange 45, sky 240, emerald 165, amber 85, rose 15, violet 315 */
+
+  --ui-tone-orange-surface:   oklch(0.965 0.02  45);
+  --ui-tone-orange-border:    oklch(0.88  0.05  45);
+  --ui-tone-orange-text:      oklch(0.6   0.18  45);
+  --ui-tone-orange-soft-text: oklch(0.36  0.07  45);
+
+  --ui-tone-sky-surface:      oklch(0.965 0.02  240);
+  --ui-tone-sky-border:       oklch(0.88  0.05  240);
+  --ui-tone-sky-text:         oklch(0.6   0.14  240);
+  --ui-tone-sky-soft-text:    oklch(0.4   0.06  240);
+
+  --ui-tone-emerald-surface:  oklch(0.965 0.02  165);
+  --ui-tone-emerald-border:   oklch(0.88  0.05  165);
+  --ui-tone-emerald-text:     oklch(0.58  0.13  165);
+  --ui-tone-emerald-soft-text:oklch(0.36  0.06  165);
+
+  --ui-tone-amber-surface:    oklch(0.965 0.03  85);
+  --ui-tone-amber-border:     oklch(0.88  0.07  85);
+  --ui-tone-amber-text:       oklch(0.62  0.14  85);
+  --ui-tone-amber-soft-text:  oklch(0.4   0.07  85);
+
+  --ui-tone-rose-surface:     oklch(0.965 0.02  15);
+  --ui-tone-rose-border:      oklch(0.88  0.05  15);
+  --ui-tone-rose-text:        oklch(0.6   0.18  15);
+  --ui-tone-rose-soft-text:   oklch(0.4   0.08  15);
+
+  --ui-tone-violet-surface:   oklch(0.965 0.02  315);
+  --ui-tone-violet-border:    oklch(0.88  0.05  315);
+  --ui-tone-violet-text:      oklch(0.55  0.16  315);
+  --ui-tone-violet-soft-text: oklch(0.38  0.08  315);
+
+  /* --- Sidebar ----------------------------------------------------------- */
+  --sidebar: oklch(1 0 0);
+  --sidebar-foreground: oklch(0.145 0 0);
+  --sidebar-primary: oklch(0.6 0.18 45);
+  --sidebar-primary-foreground: oklch(0.985 0 0);
+  --sidebar-accent: oklch(0.97 0.01 55);
+  --sidebar-accent-foreground: oklch(0.205 0 0);
+  --sidebar-border: oklch(0.922 0 0);
+  --sidebar-ring: oklch(0.6 0.18 45);
+}
+
+/* --- Semantic colors — dark --------------------------------------------- */
+.dark {
+  --background: oklch(0.145 0 0);
+  --foreground: oklch(0.985 0 0);
+  --card: oklch(0.205 0 0);
+  --card-foreground: oklch(0.985 0 0);
+  --popover: oklch(0.205 0 0);
+  --popover-foreground: oklch(0.985 0 0);
+  --primary: oklch(0.7 0.18 45);
+  --primary-foreground: oklch(0.145 0 0);
+  --secondary: oklch(0.269 0 0);
+  --secondary-foreground: oklch(0.985 0 0);
+  --muted: oklch(0.269 0 0);
+  --muted-foreground: oklch(0.708 0 0);
+  --accent: oklch(0.269 0 0);
+  --accent-foreground: oklch(0.985 0 0);
+  --destructive: oklch(0.704 0.191 22.216);
+  --border: oklch(1 0 0 / 10%);
+  --input: oklch(1 0 0 / 15%);
+  --ring: oklch(0.7 0.18 45);
+
+  --cn-orange: #f07030;
+  --cn-orange-light: #2a1a10;
+  --cn-orange-dark: #ff8844;
+
+  --sidebar: oklch(0.205 0 0);
+  --sidebar-foreground: oklch(0.985 0 0);
+  --sidebar-primary: oklch(0.7 0.18 45);
+  --sidebar-primary-foreground: oklch(0.145 0 0);
+  --sidebar-accent: oklch(0.269 0 0);
+  --sidebar-accent-foreground: oklch(0.985 0 0);
+  --sidebar-border: oklch(1 0 0 / 10%);
+  --sidebar-ring: oklch(0.556 0 0);
+}
+
+/* ==========================================================================
+   Semantic utility classes — use directly when Tailwind is unavailable.
+   ========================================================================== */
+
+body { background: var(--background); color: var(--foreground); }
+body, button, input, select, textarea { font-family: var(--app-font-sans); }
+code, kbd, samp, pre { font-family: var(--app-font-mono); }
+
+.h1 {
+  font-size: var(--text-4xl);
+  font-weight: var(--fw-bold);
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+  color: var(--foreground);
+}
+.h2 {
+  font-size: var(--text-3xl);
+  font-weight: var(--fw-bold);
+  line-height: 1.15;
+  color: var(--foreground);
+}
+.h3 {
+  font-size: var(--text-lg);
+  font-weight: var(--fw-semibold);
+  line-height: 1.3;
+  color: var(--foreground);
+}
+.eyebrow {
+  font-size: var(--text-10);
+  font-weight: var(--fw-semibold);
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-widest);
+  color: color-mix(in oklch, var(--muted-foreground) 70%, transparent);
+}
+.eyebrow-md {
+  font-size: var(--text-xs);
+  font-weight: var(--fw-semibold);
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-wider);
+  color: var(--muted-foreground);
+}
+.p { font-size: var(--text-sm); color: var(--muted-foreground); line-height: 1.55; }
+.body { font-size: var(--text-base); color: var(--foreground); line-height: 1.55; }
+.code { font-family: var(--app-font-mono); font-size: var(--text-sm); }
+
+.hanzi {
+  font-size: var(--text-hanzi-sm);
+  font-weight: var(--fw-bold);
+  line-height: 1.1;
+  color: var(--foreground);
+}
+.hanzi-accent { color: var(--cn-orange); }
+.pinyin { font-family: var(--app-font-mono); font-size: var(--text-xs); color: var(--muted-foreground); }
+
+/* Tone utility shortcuts */
+.tone-panel {
+  background: var(--ui-tone-orange-surface);
+  border: 1px solid var(--ui-tone-orange-border);
+  color: var(--ui-tone-orange-text);
+  border-radius: var(--radius-lg);
+  padding: 0.75rem 1rem;
+}
+.tone-panel[data-tone="sky"]      { background: var(--ui-tone-sky-surface);      border-color: var(--ui-tone-sky-border);      color: var(--ui-tone-sky-text); }
+.tone-panel[data-tone="emerald"]  { background: var(--ui-tone-emerald-surface);  border-color: var(--ui-tone-emerald-border);  color: var(--ui-tone-emerald-text); }
+.tone-panel[data-tone="amber"]    { background: var(--ui-tone-amber-surface);    border-color: var(--ui-tone-amber-border);    color: var(--ui-tone-amber-text); }
+.tone-panel[data-tone="rose"]     { background: var(--ui-tone-rose-surface);     border-color: var(--ui-tone-rose-border);     color: var(--ui-tone-rose-text); }
+.tone-panel[data-tone="violet"]   { background: var(--ui-tone-violet-surface);   border-color: var(--ui-tone-violet-border);   color: var(--ui-tone-violet-text); }

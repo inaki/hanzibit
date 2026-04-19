@@ -72,6 +72,7 @@
   --color-ui-tone-violet-border: var(--ui-tone-violet-border);
   --color-ui-tone-violet-text: var(--ui-tone-violet-text);
   --color-ui-tone-violet-soft-text: var(--ui-tone-violet-soft-text);
+  --color-text-body: var(--text-body);
 }
 
 :root {
@@ -138,6 +139,7 @@
   --ui-tone-violet-border: oklch(0.88 0.04 315);
   --ui-tone-violet-text: oklch(0.6 0.14 315);
   --ui-tone-violet-soft-text: oklch(0.38 0.05 315);
+  --text-body: oklch(0.3 0 0);
 }
 
 .dark {
@@ -199,6 +201,7 @@
   --ui-tone-violet-border: oklch(0.41 0.06 315);
   --ui-tone-violet-text: oklch(0.79 0.11 315);
   --ui-tone-violet-soft-text: oklch(0.92 0.02 315);
+  --text-body: oklch(0.78 0 0);
 }
 
 @layer base {

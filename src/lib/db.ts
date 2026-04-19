@@ -19,7 +19,7 @@ declare global {
   var __hanzibitSchemaVersion: number | undefined;
 }
 
-const SCHEMA_VERSION = 37;
+const SCHEMA_VERSION = 38;
 
 const APP_SCHEMA_SQL = `
   CREATE TABLE IF NOT EXISTS "user" (
@@ -734,8 +734,10 @@ const APP_SCHEMA_SQL = `
     reading_passage TEXT NOT NULL DEFAULT '',
     comprehension_question TEXT NOT NULL DEFAULT '',
     journal_prompt TEXT NOT NULL DEFAULT '',
+    watch_out_notes TEXT DEFAULT NULL,
     UNIQUE(hsk_level, display_order)
   );
+  ALTER TABLE curated_grammar_points ADD COLUMN IF NOT EXISTS watch_out_notes TEXT DEFAULT NULL;
 
   CREATE INDEX IF NOT EXISTS idx_cgp_level ON curated_grammar_points(hsk_level, display_order);
 
@@ -1129,14 +1131,17 @@ async function initializeSchema(): Promise<void> {
     ON curated_grammar_points (hsk_level, display_order)
   `);
 
-  // Seed curated grammar points (idempotent via ON CONFLICT DO NOTHING)
+  // Seed curated grammar points — update examples and watch_out_notes on conflict so improvements propagate
   for (const point of CURATED_GRAMMAR_POINTS) {
     await pool.query(
       `INSERT INTO curated_grammar_points
          (hsk_level, display_order, title, pattern, explanation, examples,
-          reading_passage, comprehension_question, journal_prompt)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)
-       ON CONFLICT (hsk_level, display_order) DO NOTHING`,
+          reading_passage, comprehension_question, journal_prompt, watch_out_notes)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)
+       ON CONFLICT (hsk_level, display_order) DO UPDATE
+         SET pattern = EXCLUDED.pattern,
+             examples = EXCLUDED.examples,
+             watch_out_notes = EXCLUDED.watch_out_notes`,
       [
         point.hsk_level,
         point.display_order,
@@ -1147,6 +1152,7 @@ async function initializeSchema(): Promise<void> {
         point.reading_passage,
         point.comprehension_question,
         point.journal_prompt,
+        point.watch_out_notes ?? null,
       ]
     );
   }

@@ -26,6 +26,9 @@ import {
   Puzzle,
   ArrowRight,
   Check,
+  Languages,
+  AlertCircle,
+  AlertTriangle,
 } from "lucide-react";
 import { AudioPlayButton } from "./audio-play-button";
 import { UpgradePrompt } from "@/components/upgrade-prompt";
@@ -109,6 +112,34 @@ function HighlightWord({ text, target }: { text: string; target: string }) {
           )}
         </span>
       ))}
+    </>
+  );
+}
+
+function HighlightPatternWord({ text, words }: { text: string; words: string[] }) {
+  type Seg = { t: string; hi: boolean };
+  let segments: Seg[] = [{ t: text, hi: false }];
+  for (const word of words) {
+    const next: Seg[] = [];
+    for (const seg of segments) {
+      if (seg.hi || !seg.t.includes(word)) { next.push(seg); continue; }
+      const parts = seg.t.split(word);
+      for (let i = 0; i < parts.length; i++) {
+        if (parts[i]) next.push({ t: parts[i], hi: false });
+        if (i < parts.length - 1) next.push({ t: word, hi: true });
+      }
+    }
+    segments = next;
+  }
+  return (
+    <>
+      {segments.map((seg, i) =>
+        seg.hi ? (
+          <span key={i} className="font-bold text-[var(--ui-tone-violet-text)]">{seg.t}</span>
+        ) : (
+          <span key={i}>{seg.t}</span>
+        )
+      )}
     </>
   );
 }
@@ -524,7 +555,7 @@ export function StudyGuide({
                     onClick={() => setSelectedGrammarId(gp.id)}
                     className={`flex w-full items-start gap-3 rounded-[10px] border px-3 py-2.5 text-left transition-colors ${
                       selectedGrammarId === gp.id
-                        ? "border-[rgba(139,92,246,0.3)] bg-[oklch(0.97_0.015_300)]"
+                        ? "border-[var(--ui-tone-violet-border)] bg-[var(--ui-tone-violet-surface)]"
                         : "border-transparent hover:bg-muted"
                     }`}
                   >
@@ -537,7 +568,7 @@ export function StudyGuide({
                       <p
                         className={`text-sm font-semibold leading-tight ${
                           selectedGrammarId === gp.id
-                            ? "text-[oklch(0.55_0.15_300)]"
+                            ? "text-[var(--ui-tone-violet-text)]"
                             : "text-foreground"
                         }`}
                       >
@@ -617,13 +648,26 @@ export function StudyGuide({
 
               {sidebarTab === "grammar" ? (
                 (() => {
-                  const selectedGp =
-                    grammarPoints.find((g) => g.id === selectedGrammarId) ?? null;
+                  const selectedGrammarIndex = grammarPoints.findIndex(
+                    (g) => g.id === selectedGrammarId
+                  );
+                  const selectedGp = grammarPoints[selectedGrammarIndex] ?? null;
+                  const prevGrammarPoint =
+                    selectedGrammarIndex > 0
+                      ? grammarPoints[selectedGrammarIndex - 1]
+                      : null;
+                  const nextGrammarPoint =
+                    selectedGrammarIndex < grammarPoints.length - 1
+                      ? grammarPoints[selectedGrammarIndex + 1]
+                      : null;
                   return selectedGp ? (
                     <GrammarDetail
                       key={selectedGp.id}
                       point={selectedGp}
                       level={data.level}
+                      prevPoint={prevGrammarPoint ?? null}
+                      nextPoint={nextGrammarPoint ?? null}
+                      onSelectGrammar={setSelectedGrammarId}
                       onStudied={(id) => {
                         setGrammarPoints((prev) =>
                           prev.map((g) => (g.id === id ? { ...g, studied: true } : g))
@@ -1419,20 +1463,45 @@ function GrammarDetail({
   point,
   level,
   onStudied,
+  prevPoint,
+  nextPoint,
+  onSelectGrammar,
 }: {
   point: CuratedGrammarPoint;
   level: number;
   onStudied: (id: number) => void;
+  prevPoint: CuratedGrammarPoint | null;
+  nextPoint: CuratedGrammarPoint | null;
+  onSelectGrammar: (id: number) => void;
 }) {
   const [isPending, startTransition] = useTransition();
 
-  const examples: { zh: string; pinyin: string; en: string }[] = (() => {
+  const allExamples: { zh: string; pinyin: string; en: string; type?: "good" | "bad"; note?: string }[] = (() => {
     try {
       return JSON.parse(point.examples);
     } catch {
       return [];
     }
   })();
+  const examples = allExamples.filter((e) => e.type !== "bad");
+  const badExamples = allExamples.filter((e) => e.type === "bad");
+
+  const watchOutNotes: string[] = (() => {
+    if (!point.watch_out_notes) return [];
+    try {
+      return JSON.parse(point.watch_out_notes);
+    } catch {
+      return [];
+    }
+  })();
+
+  // Parse "Subj + 不 + V/Adj" → ["Subj", "不", "V/Adj"]
+  const patternTokens = point.pattern
+    ? point.pattern.split("+").map((t) => t.trim())
+    : [];
+
+  // Chinese tokens from pattern — used to highlight in examples
+  const grammarWords = patternTokens.filter((t) => /[\u4e00-\u9fff]/.test(t));
 
   const journalHref = `/notebook?new=1&draftTitleZh=${encodeURIComponent("语法练习")}&draftTitleEn=${encodeURIComponent(`Grammar: ${point.title}`)}&draftUnit=${encodeURIComponent(`HSK ${level} Grammar`)}&draftLevel=${level}&draftPrompt=${encodeURIComponent(point.journal_prompt)}`;
 
@@ -1445,92 +1514,208 @@ function GrammarDetail({
   }
 
   return (
-    <div className="space-y-6">
+    <div>
       {/* Header */}
-      <div className="flex items-start justify-between gap-4">
-        <div>
-          <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground/70">
-            HSK {level} Grammar
-          </p>
-          <h2 className="mt-1 text-xl font-bold text-foreground">{point.title}</h2>
-          {point.pattern && (
-            <p className="mt-1 font-mono text-sm text-[var(--cn-orange)]">{point.pattern}</p>
+      <div className="mb-7 border-b border-border/60 pb-7">
+        <div className="mb-3 flex items-center gap-2">
+          <Languages className="h-4 w-4 text-[var(--ui-tone-violet-text)]" />
+          <span className="text-[11px] font-bold uppercase tracking-[0.15em] text-[var(--ui-tone-violet-text)]">
+            Grammar Pattern · HSK {level}
+          </span>
+        </div>
+        <h2 className="mb-3.5 text-[32px] font-bold leading-tight tracking-[-0.01em] text-foreground">
+          {point.title}
+        </h2>
+
+        {/* Formula token pills */}
+        {patternTokens.length > 0 && (
+          <div
+            data-testid="grammar-pattern-formula"
+            className="mb-3.5 inline-flex flex-wrap items-center gap-2.5 rounded-[12px] border border-[var(--ui-tone-violet-border)] bg-[var(--ui-tone-violet-surface)] px-4 py-2.5 font-mono text-lg font-semibold text-[var(--ui-tone-violet-text)]"
+          >
+            {patternTokens.map((token, i) => {
+              const isChinese = /[\u4e00-\u9fff]/.test(token);
+              return (
+                <span
+                  key={i}
+                  data-testid={`grammar-pattern-slot-${i}`}
+                  className="flex items-center gap-2.5"
+                >
+                  {i > 0 && (
+                    <span
+                      data-testid="grammar-pattern-separator"
+                      className="opacity-50"
+                    >
+                      +
+                    </span>
+                  )}
+                  <span
+                    data-testid={isChinese ? "grammar-pattern-token-chinese" : "grammar-pattern-token-label"}
+                    className={`rounded-[6px] px-2 py-0.5 ${
+                      isChinese
+                        ? "bg-[var(--cn-orange-light)] text-[var(--cn-orange-dark)]"
+                        : "bg-white text-[var(--ui-tone-violet-text)]"
+                    }`}
+                  >
+                    {token}
+                  </span>
+                </span>
+              );
+            })}
+          </div>
+        )}
+
+        <p className="max-w-[720px] text-[15px] leading-[1.6] text-foreground/80">
+          {point.explanation}
+        </p>
+
+        <div className="mt-4">
+          {point.studied ? (
+            <span className="inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-medium ui-tone-emerald-panel ui-tone-emerald-text">
+              <CheckCircle2 className="h-3.5 w-3.5" />
+              Studied
+            </span>
+          ) : (
+            <button
+              onClick={handleMarkStudied}
+              disabled={isPending}
+              className="inline-flex items-center gap-1.5 rounded-full border bg-card px-3 py-1 text-xs font-medium text-muted-foreground transition-colors hover:bg-muted disabled:opacity-50"
+            >
+              <Circle className="h-3.5 w-3.5" />
+              Mark studied
+            </button>
           )}
         </div>
-        {point.studied ? (
-          <span className="inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-medium ui-tone-emerald-panel ui-tone-emerald-text">
-            <CheckCircle2 className="h-3.5 w-3.5" />
-            Studied
-          </span>
-        ) : (
-          <button
-            onClick={handleMarkStudied}
-            disabled={isPending}
-            className="press-down inline-flex items-center gap-1.5 rounded-full border bg-card px-3 py-1 text-xs font-medium text-muted-foreground transition-colors hover:bg-muted disabled:opacity-50"
-          >
-            <Circle className="h-3.5 w-3.5" />
-            Mark studied
-          </button>
-        )}
-      </div>
-
-      {/* Explanation */}
-      <div>
-        <p className="mb-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground/70">
-          Explanation
-        </p>
-        <p className="text-sm leading-relaxed text-foreground/90">{point.explanation}</p>
       </div>
 
       {/* Examples */}
       {examples.length > 0 && (
-        <div>
-          <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground/70">
+        <div className="mb-7">
+          <h3 className="mb-3 text-[13px] font-bold uppercase tracking-[0.1em] text-muted-foreground">
             Examples
-          </p>
-          <div className="space-y-3">
+          </h3>
+          <div className="space-y-2.5">
             {examples.map((ex, i) => (
-              <div key={i} className="rounded-lg bg-muted/40 px-4 py-3">
-                <p className="text-base font-medium text-foreground">{ex.zh}</p>
-                <p className="mt-0.5 font-mono text-xs text-muted-foreground">{ex.pinyin}</p>
-                <p className="mt-1 text-sm text-muted-foreground">{ex.en}</p>
+              <div
+                key={i}
+                className="rounded-[12px] border border-border bg-card px-4 py-4"
+                style={{ borderLeftWidth: "3px", borderLeftColor: "var(--t-emerald-t)" }}
+              >
+                <p className="mb-1 text-[17px] font-medium leading-[1.6] text-foreground">
+                  <HighlightPatternWord text={ex.zh} words={grammarWords} />
+                </p>
+                <p className="mb-1 font-mono text-[12px] text-muted-foreground">{ex.pinyin}</p>
+                <p className="text-[13px] text-muted-foreground">{ex.en}</p>
               </div>
             ))}
           </div>
         </div>
       )}
 
+      {/* Common Mistake */}
+      {badExamples.length > 0 && (
+        <div className="mb-7">
+          <h3 className="mb-3 text-[13px] font-bold uppercase tracking-[0.1em] text-muted-foreground">
+            Common Mistake
+          </h3>
+          <div className="space-y-2.5">
+            {badExamples.map((ex, i) => (
+              <div
+                key={i}
+                className="rounded-[12px] border border-border bg-card px-4 py-4"
+                style={{ borderLeftWidth: "3px", borderLeftColor: "var(--t-rose-t)" }}
+              >
+                <p className="mb-1 text-[17px] font-medium leading-[1.6]">
+                  <span
+                    style={{
+                      color: "var(--t-rose-t)",
+                      fontWeight: 700,
+                      textDecoration: "line-through",
+                      textDecorationColor: "var(--t-rose-b)",
+                    }}
+                  >
+                    {ex.zh}
+                  </span>
+                </p>
+                <p className="mb-1 font-mono text-[12px] text-muted-foreground">{ex.pinyin}</p>
+                <p className="mb-2 text-[13px] text-muted-foreground">{ex.en}</p>
+                {ex.note && (
+                  <div className="flex items-start gap-1.5 text-[12px] font-medium text-[var(--t-rose-t)]">
+                    <AlertCircle className="mt-px h-[13px] w-[13px] shrink-0" />
+                    <span>{ex.note}</span>
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Watch Out For */}
+      {watchOutNotes.length > 0 && (
+        <div className="mb-7 rounded-[12px] border border-[var(--t-amber-b)] bg-[var(--t-amber-s)] px-4 py-4">
+          <p className="mb-2.5 flex items-center gap-1.5 text-[12px] font-bold uppercase tracking-[0.1em] text-[var(--t-amber-t)]">
+            <AlertTriangle className="h-[13px] w-[13px]" />
+            Watch out for
+          </p>
+          <ul className="list-none space-y-1">
+            {watchOutNotes.map((note, i) => (
+              <li key={i} className="relative pl-3.5 text-[13px] leading-[1.65] text-[var(--text-body)]">
+                <span
+                  className="absolute left-0 top-[9px] h-1 w-1 rounded-full bg-[var(--t-amber-t)]"
+                  aria-hidden
+                />
+                {note}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
       {/* Reading Passage */}
-      <div className="rounded-xl bg-card card-ring px-5 py-4">
-        <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground/70">
+      <div className="mb-7 rounded-xl bg-card card-ring px-5 py-4">
+        <p className="mb-2 text-[11px] font-bold uppercase tracking-[0.1em] text-muted-foreground">
           Reading Passage
         </p>
         <p className="text-base leading-[2] text-foreground/90">{point.reading_passage}</p>
         <div className="mt-3 border-t border-border/40 pt-3">
-          <p className="text-xs font-medium text-muted-foreground">
-            <span className="ui-tone-orange-text font-semibold">Comprehension: </span>
+          <p className="text-xs text-muted-foreground">
+            <span className="font-semibold text-[var(--cn-orange)]">Comprehension: </span>
             {point.comprehension_question}
           </p>
         </div>
       </div>
 
-      {/* Journal Prompt */}
-      <div className="rounded-xl ui-tone-orange-panel px-5 py-4">
-        <div className="mb-2 flex items-center gap-2">
-          <PenLine className="ui-tone-orange-text h-4 w-4" />
-          <p className="text-xs font-semibold uppercase tracking-wider ui-tone-orange-text">
-            Try Writing
-          </p>
-        </div>
-        <p className="mb-3 text-sm leading-relaxed text-foreground/90">{point.journal_prompt}</p>
+      {/* Footer */}
+      <div className="mt-6 flex flex-wrap items-center justify-between gap-3 border-t border-border/60 pt-5">
         <Link
           href={journalHref}
           onClick={handleMarkStudied}
-          className="inline-flex items-center gap-1.5 rounded-full bg-[var(--cn-orange)] px-4 py-2 text-xs font-semibold text-white transition-opacity hover:opacity-90"
+          className="inline-flex items-center gap-1.5 rounded-[10px] border border-border bg-card px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-muted"
         >
-          <PenLine className="h-3.5 w-3.5" />
-          Open journal with this prompt →
+          <PenLine className="h-4 w-4" />
+          Try this pattern in a journal entry
         </Link>
+        <div className="flex items-center gap-2">
+          {prevPoint && (
+            <button
+              onClick={() => onSelectGrammar(prevPoint.id)}
+              className="flex h-[38px] w-[38px] items-center justify-center rounded-[10px] border border-border bg-card text-muted-foreground transition-colors hover:bg-muted"
+              title={`Previous: ${prevPoint.title}`}
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </button>
+          )}
+          {nextPoint && (
+            <button
+              onClick={() => onSelectGrammar(nextPoint.id)}
+              className="inline-flex items-center gap-1.5 rounded-[10px] bg-[var(--cn-orange)] px-4 py-2 text-sm font-semibold text-white transition-opacity hover:opacity-90"
+            >
+              Next: {nextPoint.title}
+              <ArrowRight className="h-4 w-4" />
+            </button>
+          )}
+        </div>
       </div>
     </div>
   );
