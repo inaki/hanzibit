@@ -347,8 +347,9 @@ export function StudyGuide({
           {/* Sticky tab bar */}
           <div className="sticky top-0 z-10 border-b border-border bg-card px-4 py-3">
             <div className="flex items-center justify-between gap-3">
-              <div className="flex rounded-[10px] bg-muted p-0.5">
+              <div data-testid="study-guide-tab-bar" className="flex rounded-[10px] bg-muted p-0.5">
                 <button
+                  data-testid="study-guide-tab-words"
                   onClick={() => setSidebarTab("words")}
                   className={`flex items-center gap-1.5 rounded-[8px] px-3 py-1.5 text-xs font-medium transition-colors ${
                     sidebarTab === "words"
@@ -360,6 +361,7 @@ export function StudyGuide({
                   Words
                 </button>
                 <button
+                  data-testid="study-guide-tab-grammar"
                   onClick={() => setSidebarTab("grammar")}
                   className={`flex items-center gap-1.5 rounded-[8px] px-3 py-1.5 text-xs font-medium transition-colors ${
                     sidebarTab === "grammar"
@@ -412,15 +414,15 @@ export function StudyGuide({
               <div className="mb-3 flex flex-wrap gap-1.5">
                 {(
                   [
-                    { key: "all" as Filter, label: "All", count: data.words.length },
-                    { key: "new" as Filter, label: "New", count: newCount },
-                    { key: "learning" as Filter, label: "Learning", count: learningCount },
-                    { key: "known" as Filter, label: "Known", count: knownCount },
+                    { key: "all" as Filter, label: "All", count: data.words.length, testid: "study-guide-filter-all" },
+                    { key: "new" as Filter, label: "New", count: newCount, testid: "study-guide-filter-new" },
+                    { key: "learning" as Filter, label: "Learning", count: learningCount, testid: "study-guide-filter-learning" },
+                    { key: "known" as Filter, label: "Known", count: knownCount, testid: "study-guide-filter-known" },
                   ]
                 ).map((f) => (
                   <button
                     key={f.key}
-                    data-testid={`study-guide-filter-${f.key}`}
+                    data-testid={f.testid}
                     onClick={() => setFilter(f.key)}
                     className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-semibold transition-colors ${
                       filter === f.key
@@ -465,7 +467,7 @@ export function StudyGuide({
                     return (
                       <button
                         key={item.word.id}
-                        data-testid={`study-guide-word-${item.word.simplified}`}
+                        data-testid="study-guide-word-item"
                         onClick={() => setSelectedWordId(item.word.id)}
                         className={`grid w-full rounded-[10px] border px-2.5 py-2.5 text-left transition-colors ${
                           isSelected
@@ -552,6 +554,7 @@ export function StudyGuide({
                 grammarPoints.map((gp) => (
                   <button
                     key={gp.id}
+                    data-testid="study-guide-grammar-item"
                     onClick={() => setSelectedGrammarId(gp.id)}
                     className={`flex w-full items-start gap-3 rounded-[10px] border px-3 py-2.5 text-left transition-colors ${
                       selectedGrammarId === gp.id
@@ -975,28 +978,35 @@ function WordDetail({
     <div data-testid="study-guide-detail">
       {/* Hero */}
       <div
+        data-testid="word-detail-hero"
         className="mb-7 grid items-center gap-9 border-b border-border/60 pb-7"
         style={{ gridTemplateColumns: "auto 1fr" }}
       >
         {/* Left: char + action buttons */}
         <div className="flex flex-col items-center gap-2.5">
-          <p className="text-[120px] font-bold leading-none tracking-[-0.02em] text-foreground">
+          <p
+            data-testid="word-detail-character"
+            className="text-[120px] font-bold leading-none tracking-[-0.02em] text-foreground"
+          >
             {item.word.simplified}
           </p>
           <div className="flex gap-2">
             <AudioPlayButton
+              data-testid="word-detail-audio"
               text={item.word.simplified}
               type="word"
               size="md"
               className="bg-[var(--cn-orange)] text-white hover:bg-[var(--cn-orange-dark)] hover:text-white"
             />
             <button
+              data-testid="word-detail-stroke-order"
               className="flex h-[34px] w-[34px] items-center justify-center rounded-[10px] border border-border bg-card text-muted-foreground transition-colors hover:bg-muted"
               title="Stroke order"
             >
               <PenSquare className="h-4 w-4" />
             </button>
             <button
+              data-testid="word-detail-bookmark"
               className="flex h-[34px] w-[34px] items-center justify-center rounded-[10px] border border-border bg-card text-muted-foreground transition-colors hover:bg-muted"
               title="Bookmark"
             >
@@ -1007,15 +1017,21 @@ function WordDetail({
 
         {/* Right: meta */}
         <div className="min-w-0">
-          <div className="mb-1.5 flex flex-wrap items-baseline gap-2 font-mono text-[28px] font-semibold leading-none text-[var(--cn-orange)]">
+          <div
+            data-testid="word-detail-pinyin"
+            className="mb-1.5 flex flex-wrap items-baseline gap-2 font-mono text-[28px] font-semibold leading-none text-[var(--cn-orange)]"
+          >
             {item.word.pinyin}
             {tone < 5 && (
-              <span className="inline-block rounded-[5px] bg-[var(--cn-orange-light)] px-1.5 py-0.5 align-middle text-[11px] font-bold uppercase tracking-wider text-[var(--cn-orange-dark)]">
+              <span
+                data-testid="word-detail-tone-badge"
+                className="inline-block rounded-[5px] bg-[var(--cn-orange-light)] px-1.5 py-0.5 align-middle text-[11px] font-bold uppercase tracking-wider text-[var(--cn-orange-dark)]"
+              >
                 Tone {tone}
               </span>
             )}
           </div>
-          <div className="mb-0.5 text-lg font-medium leading-snug text-foreground">
+          <div data-testid="word-detail-english" className="mb-0.5 text-lg font-medium leading-snug text-foreground">
             {item.word.english.split(";")[0]}
           </div>
           {item.word.english.includes(";") && (
@@ -1025,35 +1041,35 @@ function WordDetail({
           )}
           {item.word.traditional &&
             item.word.traditional !== item.word.simplified && (
-              <div className="mb-2 text-sm text-muted-foreground/60">
+              <div data-testid="word-detail-traditional" className="mb-2 text-sm text-muted-foreground/60">
                 Traditional: {item.word.traditional}
               </div>
             )}
-          <div className="mt-3 flex flex-wrap gap-2">
+          <div data-testid="word-detail-status-badges" className="mt-3 flex flex-wrap gap-2">
             {item.encountered ? (
-              <span className="inline-flex items-center gap-1 rounded-full border px-3 py-1 text-xs font-medium ui-tone-emerald-panel ui-tone-emerald-text">
+              <span data-testid="word-detail-badge-encountered" className="inline-flex items-center gap-1 rounded-full border px-3 py-1 text-xs font-medium ui-tone-emerald-panel ui-tone-emerald-text">
                 <CheckCircle2 className="h-3.5 w-3.5" />
                 Encountered
               </span>
             ) : (
-              <span className="inline-flex items-center gap-1 rounded-full border border-[var(--t-sky-b)] bg-[var(--t-sky-s)] px-3 py-1 text-xs font-medium text-[var(--t-sky-t)]">
+              <span data-testid="word-detail-badge-not-encountered" className="inline-flex items-center gap-1 rounded-full border border-[var(--t-sky-b)] bg-[var(--t-sky-s)] px-3 py-1 text-xs font-medium text-[var(--t-sky-t)]">
                 <Sparkles className="h-3.5 w-3.5" />
                 Not yet encountered
               </span>
             )}
             {hasFlashcard ? (
-              <span className="inline-flex items-center gap-1 rounded-full border px-3 py-1 text-xs font-medium ui-tone-sky-panel ui-tone-sky-text">
+              <span data-testid="word-detail-badge-has-flashcard" className="inline-flex items-center gap-1 rounded-full border px-3 py-1 text-xs font-medium ui-tone-sky-panel ui-tone-sky-text">
                 <Layers className="h-3.5 w-3.5" />
                 In flashcards
               </span>
             ) : (
-              <span className="inline-flex items-center gap-1 rounded-full bg-muted px-3 py-1 text-xs font-medium text-muted-foreground">
+              <span data-testid="word-detail-badge-no-flashcard" className="inline-flex items-center gap-1 rounded-full bg-muted px-3 py-1 text-xs font-medium text-muted-foreground">
                 <Layers className="h-3.5 w-3.5" />
                 No flashcard yet
               </span>
             )}
             {isFocusWord && (
-              <span className="inline-flex items-center gap-1 rounded-full border px-3 py-1 text-xs font-medium ui-tone-orange-panel ui-tone-orange-text">
+              <span data-testid="word-detail-badge-focus" className="inline-flex items-center gap-1 rounded-full border px-3 py-1 text-xs font-medium ui-tone-orange-panel ui-tone-orange-text">
                 <CheckCircle2 className="h-3.5 w-3.5" />
                 Today&apos;s focus
               </span>
@@ -1065,7 +1081,7 @@ function WordDetail({
 
       {/* Cultural note */}
       {item.word.cultural_note && (
-        <div className="mb-6 rounded-lg ui-tone-amber-panel px-4 py-3 text-sm">
+        <div data-testid="word-detail-cultural-note" className="mb-6 rounded-lg ui-tone-amber-panel px-4 py-3 text-sm">
           <p className="ui-tone-amber-text mb-1 text-[10px] font-semibold uppercase tracking-wider">
             Cultural note
           </p>
@@ -1075,7 +1091,7 @@ function WordDetail({
 
       {/* Character Breakdown */}
       {breakdowns.length > 0 && (
-        <div className="mb-7">
+        <div data-testid="word-detail-breakdown" className="mb-7">
           <SecTitle icon={Puzzle} right="Hover a radical for details">
             Character Breakdown
           </SecTitle>
@@ -1126,7 +1142,7 @@ function WordDetail({
 
       {/* Seen in context */}
       {collocations.length > 0 && (
-        <div className="mb-7">
+        <div data-testid="word-detail-collocations" className="mb-7">
           <SecTitle icon={Quote}>Seen in context</SecTitle>
           <div className="space-y-2.5">
             {collocations.map((c) => (
@@ -1263,7 +1279,7 @@ function WordDetail({
       )}
 
       {/* Practice Ladder */}
-      <div className="mb-7">
+      <div data-testid="word-detail-practice-ladder" className="mb-7">
         <SecTitle
           icon={ListChecks}
           right={`${completedSteps.size} of 4 done · ~5 min total`}
@@ -1277,6 +1293,7 @@ function WordDetail({
             return (
               <div
                 key={i}
+                data-testid="word-detail-practice-step"
                 className={`overflow-hidden rounded-[14px] border transition-all ${
                   isDone
                     ? "border-[var(--t-emerald-b)] bg-[var(--t-emerald-s)]"
@@ -1320,6 +1337,7 @@ function WordDetail({
                   <div className="border-t border-border/50 px-4 pb-4">
                     {step.body}
                     <button
+                      data-testid="word-detail-practice-step-mark-done"
                       onClick={() => {
                         setCompletedSteps((prev) => new Set([...prev, i]));
                         setOpenStep(i < 3 ? i + 1 : -1);
@@ -1337,7 +1355,7 @@ function WordDetail({
       </div>
 
       {/* Footer: flashcard info/action + prev/next navigation */}
-      <div className="mt-6 flex items-center justify-between border-t border-border/60 pt-5">
+      <div data-testid="word-detail-footer" className="mt-6 flex items-center justify-between border-t border-border/60 pt-5">
         <div>
           {item.flashcard ? (
             <div className="flex gap-4 text-sm">
@@ -1384,6 +1402,7 @@ function WordDetail({
 
         <div className="flex items-center gap-2">
           <button
+            data-testid="word-detail-prev"
             disabled={!prevWord}
             onClick={() => prevWord && onSelectWord(prevWord.word.id)}
             className="flex h-[34px] w-[34px] items-center justify-center rounded-[10px] border border-border bg-card text-muted-foreground transition-colors hover:bg-muted disabled:cursor-not-allowed disabled:opacity-40"
@@ -1392,6 +1411,7 @@ function WordDetail({
             <ChevronLeft className="h-4 w-4" />
           </button>
           <button
+            data-testid="word-detail-next"
             disabled={!nextWord}
             onClick={() => nextWord && onSelectWord(nextWord.word.id)}
             className="flex h-[34px] w-[34px] items-center justify-center rounded-[10px] border border-border bg-card text-muted-foreground transition-colors hover:bg-muted disabled:cursor-not-allowed disabled:opacity-40"
@@ -1401,6 +1421,7 @@ function WordDetail({
           </button>
           {nextWord && (
             <button
+              data-testid="word-detail-next-cta"
               onClick={() => onSelectWord(nextWord.word.id)}
               className="inline-flex items-center gap-1.5 rounded-[10px] bg-[var(--cn-orange)] px-4 py-2 text-sm font-semibold text-white transition-opacity hover:opacity-90"
             >
@@ -1514,16 +1535,16 @@ function GrammarDetail({
   }
 
   return (
-    <div>
+    <div data-testid="grammar-detail">
       {/* Header */}
-      <div className="mb-7 border-b border-border/60 pb-7">
+      <div data-testid="grammar-detail-header" className="mb-7 border-b border-border/60 pb-7">
         <div className="mb-3 flex items-center gap-2">
           <Languages className="h-4 w-4 text-[var(--ui-tone-violet-text)]" />
           <span className="text-[11px] font-bold uppercase tracking-[0.15em] text-[var(--ui-tone-violet-text)]">
             Grammar Pattern · HSK {level}
           </span>
         </div>
-        <h2 className="mb-3.5 text-[32px] font-bold leading-tight tracking-[-0.01em] text-foreground">
+        <h2 data-testid="grammar-detail-title" className="mb-3.5 text-[32px] font-bold leading-tight tracking-[-0.01em] text-foreground">
           {point.title}
         </h2>
 
@@ -1538,7 +1559,7 @@ function GrammarDetail({
               return (
                 <span
                   key={i}
-                  data-testid={`grammar-pattern-slot-${i}`}
+                  data-testid="grammar-pattern-slot"
                   className="flex items-center gap-2.5"
                 >
                   {i > 0 && (
@@ -1565,18 +1586,19 @@ function GrammarDetail({
           </div>
         )}
 
-        <p className="max-w-[720px] text-[15px] leading-[1.6] text-foreground/80">
+        <p data-testid="grammar-detail-explanation" className="max-w-[720px] text-[15px] leading-[1.6] text-foreground/80">
           {point.explanation}
         </p>
 
         <div className="mt-4">
           {point.studied ? (
-            <span className="inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-medium ui-tone-emerald-panel ui-tone-emerald-text">
+            <span data-testid="grammar-detail-studied-badge" className="inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-medium ui-tone-emerald-panel ui-tone-emerald-text">
               <CheckCircle2 className="h-3.5 w-3.5" />
               Studied
             </span>
           ) : (
             <button
+              data-testid="grammar-detail-mark-studied"
               onClick={handleMarkStudied}
               disabled={isPending}
               className="inline-flex items-center gap-1.5 rounded-full border bg-card px-3 py-1 text-xs font-medium text-muted-foreground transition-colors hover:bg-muted disabled:opacity-50"
@@ -1590,7 +1612,7 @@ function GrammarDetail({
 
       {/* Examples */}
       {examples.length > 0 && (
-        <div className="mb-7">
+        <div data-testid="grammar-detail-examples" className="mb-7">
           <h3 className="mb-3 text-[13px] font-bold uppercase tracking-[0.1em] text-muted-foreground">
             Examples
           </h3>
@@ -1598,6 +1620,7 @@ function GrammarDetail({
             {examples.map((ex, i) => (
               <div
                 key={i}
+                data-testid="grammar-detail-example"
                 className="rounded-[12px] border border-border bg-card px-4 py-4"
                 style={{ borderLeftWidth: "3px", borderLeftColor: "var(--t-emerald-t)" }}
               >
@@ -1614,7 +1637,7 @@ function GrammarDetail({
 
       {/* Common Mistake */}
       {badExamples.length > 0 && (
-        <div className="mb-7">
+        <div data-testid="grammar-detail-common-mistakes" className="mb-7">
           <h3 className="mb-3 text-[13px] font-bold uppercase tracking-[0.1em] text-muted-foreground">
             Common Mistake
           </h3>
@@ -1622,6 +1645,7 @@ function GrammarDetail({
             {badExamples.map((ex, i) => (
               <div
                 key={i}
+                data-testid="grammar-detail-bad-example"
                 className="rounded-[12px] border border-border bg-card px-4 py-4"
                 style={{ borderLeftWidth: "3px", borderLeftColor: "var(--t-rose-t)" }}
               >
@@ -1653,7 +1677,7 @@ function GrammarDetail({
 
       {/* Watch Out For */}
       {watchOutNotes.length > 0 && (
-        <div className="mb-7 rounded-[12px] border border-[var(--t-amber-b)] bg-[var(--t-amber-s)] px-4 py-4">
+        <div data-testid="grammar-detail-watch-out" className="mb-7 rounded-[12px] border border-[var(--t-amber-b)] bg-[var(--t-amber-s)] px-4 py-4">
           <p className="mb-2.5 flex items-center gap-1.5 text-[12px] font-bold uppercase tracking-[0.1em] text-[var(--t-amber-t)]">
             <AlertTriangle className="h-[13px] w-[13px]" />
             Watch out for
@@ -1673,7 +1697,7 @@ function GrammarDetail({
       )}
 
       {/* Reading Passage */}
-      <div className="mb-7 rounded-xl bg-card card-ring px-5 py-4">
+      <div data-testid="grammar-detail-reading" className="mb-7 rounded-xl bg-card card-ring px-5 py-4">
         <p className="mb-2 text-[11px] font-bold uppercase tracking-[0.1em] text-muted-foreground">
           Reading Passage
         </p>
@@ -1689,6 +1713,7 @@ function GrammarDetail({
       {/* Footer */}
       <div className="mt-6 flex flex-wrap items-center justify-between gap-3 border-t border-border/60 pt-5">
         <Link
+          data-testid="grammar-detail-journal-link"
           href={journalHref}
           onClick={handleMarkStudied}
           className="inline-flex items-center gap-1.5 rounded-[10px] border border-border bg-card px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-muted"
@@ -1699,6 +1724,7 @@ function GrammarDetail({
         <div className="flex items-center gap-2">
           {prevPoint && (
             <button
+              data-testid="grammar-detail-prev"
               onClick={() => onSelectGrammar(prevPoint.id)}
               className="flex h-[38px] w-[38px] items-center justify-center rounded-[10px] border border-border bg-card text-muted-foreground transition-colors hover:bg-muted"
               title={`Previous: ${prevPoint.title}`}
@@ -1708,6 +1734,7 @@ function GrammarDetail({
           )}
           {nextPoint && (
             <button
+              data-testid="grammar-detail-next"
               onClick={() => onSelectGrammar(nextPoint.id)}
               className="inline-flex items-center gap-1.5 rounded-[10px] bg-[var(--cn-orange)] px-4 py-2 text-sm font-semibold text-white transition-opacity hover:opacity-90"
             >

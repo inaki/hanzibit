@@ -785,7 +785,7 @@ export function getPool(): Pool {
       connectionString: getDatabaseUrl(),
       ssl: getDatabaseUrl().includes("localhost")
         ? false
-        : { rejectUnauthorized: false },
+        : { rejectUnauthorized: true },
     });
   }
   return global.__hanzibitPool;

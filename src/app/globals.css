@@ -140,6 +140,26 @@
   --ui-tone-violet-text: oklch(0.6 0.14 315);
   --ui-tone-violet-soft-text: oklch(0.38 0.05 315);
   --text-body: oklch(0.3 0 0);
+
+  /* Short-form tone aliases (matches design system) */
+  --t-sky-s: var(--ui-tone-sky-surface);
+  --t-sky-b: var(--ui-tone-sky-border);
+  --t-sky-t: var(--ui-tone-sky-text);
+  --t-emerald-s: var(--ui-tone-emerald-surface);
+  --t-emerald-b: var(--ui-tone-emerald-border);
+  --t-emerald-t: var(--ui-tone-emerald-text);
+  --t-amber-s: var(--ui-tone-amber-surface);
+  --t-amber-b: var(--ui-tone-amber-border);
+  --t-amber-t: var(--ui-tone-amber-text);
+  --t-rose-s: var(--ui-tone-rose-surface);
+  --t-rose-b: var(--ui-tone-rose-border);
+  --t-rose-t: var(--ui-tone-rose-text);
+  --t-violet-s: var(--ui-tone-violet-surface);
+  --t-violet-b: var(--ui-tone-violet-border);
+  --t-violet-t: var(--ui-tone-violet-text);
+  --t-orange-s: var(--ui-tone-orange-surface);
+  --t-orange-b: var(--ui-tone-orange-border);
+  --t-orange-t: var(--ui-tone-orange-text);
 }
 
 .dark {
