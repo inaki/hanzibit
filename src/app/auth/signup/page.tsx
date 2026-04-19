@@ -23,7 +23,7 @@ export default function SignUpPage() {
 
   // Redirect to notebook if already logged in
   if (session && !isPending) {
-    router.replace("/notebook");
+    router.replace("/notebook/dashboard");
     return null;
   }
 
@@ -36,7 +36,7 @@ export default function SignUpPage() {
       if (result.error) {
         setError(result.error.message || "Sign up failed");
       } else {
-        router.push("/notebook");
+        router.push("/notebook/dashboard");
       }
     } catch {
       setError("Something went wrong. Please try again.");

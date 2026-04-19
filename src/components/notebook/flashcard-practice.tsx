@@ -3,7 +3,8 @@
 import Link from "next/link";
 import { useEffect, useState, useTransition } from "react";
 import type { Flashcard } from "@/lib/data";
-import { RotateCcw, ChevronLeft, ChevronRight, Eye, Volume2, Target, BookText } from "lucide-react";
+import { RotateCcw, ChevronLeft, ChevronRight, Eye, Target, BookText } from "lucide-react";
+import { AudioPlayButton } from "./audio-play-button";
 import { getDailyPracticeAction, reviewFlashcard } from "@/lib/actions";
 import { UpgradePrompt } from "@/components/upgrade-prompt";
 import type { DailyPracticePlan } from "@/lib/daily-practice";
@@ -160,7 +161,7 @@ export function FlashcardPractice({
       <div className="mb-8 flex items-center justify-between">
         <div>
           <h1 data-testid="flashcards-heading" className="text-3xl font-bold text-foreground">
-            {isBeginnerFocusedSession ? "First Review" : "Flashcards"}
+            {isBeginnerFocusedSession ? "Tiny Review" : "Flashcards"}
           </h1>
           <p data-testid="flashcards-count" className="mt-1 text-sm text-muted-foreground">
             {isBeginnerFocusedSession
@@ -315,13 +316,7 @@ export function FlashcardPractice({
             {/* Speak button — shown on front face only */}
             {!flipped && (
               <div className="mb-4 flex justify-center">
-                <FlashcardControlButton
-                  onClick={() => new Audio(`/api/tts?text=${encodeURIComponent(currentCard.front)}`).play()}
-                  className="flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs"
-                >
-                  <Volume2 className="h-3.5 w-3.5" />
-                  Pronounce
-                </FlashcardControlButton>
+                <AudioPlayButton text={currentCard.front} type="word" size="md" />
               </div>
             )}
 
@@ -415,7 +410,10 @@ export function FlashcardPractice({
               key={card.id}
               data-testid={`flashcard-browse-${card.front}`}
             >
-              <p className="text-2xl font-bold text-foreground">{card.front}</p>
+              <div className="flex items-center gap-2">
+                <p className="text-2xl font-bold text-foreground">{card.front}</p>
+                <AudioPlayButton text={card.front} type="word" size="sm" />
+              </div>
               <p className="mt-1 text-sm text-muted-foreground">{card.back}</p>
               <div className="mt-3 flex items-center justify-between text-xs text-muted-foreground/70">
                 <span>{card.deck}</span>

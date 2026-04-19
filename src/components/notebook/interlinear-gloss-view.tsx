@@ -1,48 +1,90 @@
 "use client";
-
-import Link from "next/link";
 import type { GlossParagraph, GlossSegment } from "@/lib/gloss";
-import { buildGlossPhraseCandidates } from "@/lib/gloss-phrases";
+import { summarizeEnglishGloss } from "@/lib/annotation-suggestions";
+import { AudioPlayButton } from "./audio-play-button";
 
 interface InterlinearGlossViewProps {
   paragraphs: GlossParagraph[];
-  buildJournalHref?: (token: { hanzi: string; pinyin: string; english: string }) => string;
-  buildPhraseJournalHref?: (phrase: { hanzi: string; english: string }) => string;
+}
+
+function buildReadableSentenceEnglish(segments: GlossParagraph): string {
+  const glosses = (Array.isArray(segments) ? segments : []).filter(
+    (seg): seg is Extract<GlossSegment, { type: "gloss" }> => seg.type === "gloss"
+  );
+
+  const hanziLine = glosses.map((seg) => seg.token.hanzi).join("").trim();
+  const englishLine = glosses
+    .map((seg) => seg.token.english)
+    .join(" ")
+    .replace(/\s+/g, " ")
+    .trim();
+
+  if (!hanziLine) return englishLine;
+
+  const compactEnglishFor = (word: string): string => {
+    const token = glosses.find((seg) => seg.token.hanzi === word);
+    return token?.token.english || word;
+  };
+
+  const quotedWordMeaning = (word: string): string => {
+    const compact = summarizeEnglishGloss(compactEnglishFor(word)) || compactEnglishFor(word);
+    return `"${compact.replace(/^to\s+/i, "").trim()}"`;
+  };
+
+  const useInShortSentenceMatch = hanziLine.match(/^用(.+)写一个短句$/);
+  if (useInShortSentenceMatch) {
+    const word = useInShortSentenceMatch[1];
+    return `Use ${quotedWordMeaning(word)} in a short sentence.`;
+  }
+
+  const importantMatch = hanziLine.match(/^老师说[“"]?(.+?)[”"]?很重要$/);
+  if (importantMatch) {
+    const word = importantMatch[1];
+    return `${quotedWordMeaning(word)} is important.`;
+  }
+
+  const studiedMatch = hanziLine.match(/^今天我学习(.+)$/);
+  if (studiedMatch) {
+    const word = studiedMatch[1];
+    return `Today I studied ${quotedWordMeaning(word)}.`;
+  }
+
+  const afterClassMatch = hanziLine.match(/^我回家以后用(.+)写一个短句$/);
+  if (afterClassMatch) {
+    const word = afterClassMatch[1];
+    return `After going home, I used ${quotedWordMeaning(word)} in a short sentence.`;
+  }
+
+  return englishLine;
 }
 
 function GlossWord({
   segment,
-  buildJournalHref,
 }: {
   segment: GlossSegment & { type: "gloss" };
-  buildJournalHref?: (token: { hanzi: string; pinyin: string; english: string }) => string;
 }) {
   const { token } = segment;
-  const journalHref = buildJournalHref?.(token);
   return (
     <span
       data-testid={`gloss-word-${token.hanzi}`}
-      className="inline-flex flex-col items-center mx-1 my-1"
+      className="group inline-flex flex-col items-center mx-1 my-1"
     >
-      <span
-        className={`text-[22px] font-bold leading-tight ${
-          token.userAnnotated
-            ? "ui-tone-orange-text"
-            : "text-foreground"
-        }`}
-      >
-        {token.hanzi}
+      <span className="relative inline-flex items-center justify-center">
+        <span
+          className={`text-[22px] font-bold leading-tight ${
+            token.userAnnotated
+              ? "ui-tone-orange-text"
+              : "text-foreground"
+          }`}
+        >
+          {token.hanzi}
+        </span>
+        <span className="absolute -right-4 opacity-0 group-hover:opacity-100 transition-opacity">
+          <AudioPlayButton text={token.hanzi} type="word" size="sm" />
+        </span>
       </span>
       <span className="text-xs leading-tight text-muted-foreground">{token.pinyin}</span>
       <span className="text-[10px] leading-tight text-muted-foreground/80">{token.english}</span>
-      {journalHref && (
-        <Link
-          href={journalHref}
-          className="ui-tone-orange-text mt-1 text-[10px] font-medium hover:underline"
-        >
-          Use in journal
-        </Link>
-      )}
     </span>
   );
 }
@@ -57,8 +99,6 @@ function GlossPunctuation({ char }: { char: string }) {
 
 export function InterlinearGlossView({
   paragraphs,
-  buildJournalHref,
-  buildPhraseJournalHref,
 }: InterlinearGlossViewProps) {
   const safeParagraphs = Array.isArray(paragraphs) ? paragraphs : [];
 
@@ -70,26 +110,12 @@ export function InterlinearGlossView({
             {(Array.isArray(segments) ? segments : []).map((seg, si) => {
               if (seg.type === "break") return <div key={si} className="w-full" />;
               if (seg.type === "punctuation") return <GlossPunctuation key={si} char={seg.char} />;
-              return <GlossWord key={si} segment={seg} buildJournalHref={buildJournalHref} />;
+              return <GlossWord key={si} segment={seg} />;
             })}
           </div>
-          {buildPhraseJournalHref && buildGlossPhraseCandidates(segments).length > 0 && (
-            <div className="flex flex-wrap items-center gap-2">
-              <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/70">
-                Try a phrase
-              </p>
-              {buildGlossPhraseCandidates(segments).map((phrase) => (
-                <Link
-                  key={`${pi}-${phrase.hanzi}`}
-                  href={buildPhraseJournalHref(phrase)}
-                  className="ui-tone-orange-panel ui-tone-orange-text inline-flex items-center rounded-full border px-3 py-1 text-[11px] font-medium transition-colors hover:opacity-90"
-                  title={phrase.english}
-                >
-                  {phrase.hanzi}
-                </Link>
-              ))}
-            </div>
-          )}
+          <p className="text-sm leading-relaxed text-muted-foreground">
+            {buildReadableSentenceEnglish(segments)}
+          </p>
         </div>
       ))}
     </div>

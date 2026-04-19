@@ -112,7 +112,7 @@ async function ensureTeacherAuthFallback() {
          "createdAt",
          "updatedAt"
        )
-       VALUES ($1, $2, $3, 0, NULL, NOW(), NOW())`,
+       VALUES ($1, $2, $3, FALSE, NULL, NOW(), NOW())`,
       [teacherUserId, DEV_TEACHER.name, DEV_TEACHER.email]
     );
 

@@ -624,10 +624,10 @@ function NewEntryDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent data-testid="new-entry-dialog" className="flex max-h-[90vh] flex-col overflow-hidden sm:max-w-lg">
         <DialogHeader>
-          <DialogTitle>{draft?.beginner ? "First Guided Response" : "New Journal Entry"}</DialogTitle>
+          <DialogTitle>{draft?.beginner ? "Try One Sentence" : "New Journal Entry"}</DialogTitle>
           <DialogDescription>
             {draft?.beginner
-              ? "Write one short sentence using the study word. Keep it small and simple."
+              ? "Optional: keep the ready-made sentence, change one small part, or close this and review instead."
               : "Write a new journal entry in Mandarin."}
           </DialogDescription>
         </DialogHeader>
@@ -651,7 +651,7 @@ function NewEntryDialog({
                 <input type="hidden" name="unit" value={draft?.unit ?? ""} />
                 <input type="hidden" name="hsk_level" value={draft?.hskLevel ?? 1} />
                 <GuidanceBanner title="Start small" tone="sky" className="px-4 py-3 text-sm">
-                  You only need one short sentence. Use the study word once and keep going even if it feels imperfect.
+                  You can keep the ready-made sentence as it is, change one small part, or skip writing for now. This step is optional.
                 </GuidanceBanner>
               </>
             ) : (
@@ -727,7 +727,7 @@ function NewEntryDialog({
               {!!draft?.prompt && (
                 <p className="mt-2 text-xs text-muted-foreground">
                   {draft?.beginner
-                    ? "Keep the seeded word and add one short sentence of your own."
+                    ? "Keep this sentence, change one small part, or close this and go review."
                     : "Use the prompt above, then write your own response below."}
                 </p>
               )}
@@ -756,7 +756,7 @@ function NewEntryDialog({
           </div>
           <DialogFooter>
             <DialogFormActions
-              submitLabel="Create Entry"
+              submitLabel={draft?.beginner ? "Save sentence" : "Create Entry"}
               submitPendingLabel="Creating..."
               submitDisabled={hasMarkupIssues}
               isPending={isPending}

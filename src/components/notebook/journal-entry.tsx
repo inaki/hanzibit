@@ -2,9 +2,10 @@
 
 import { useRef, useState, useEffect } from "react";
 import type { JournalEntry, EntryAnnotation } from "@/lib/data";
-import { buildInlineAnnotation, parseInput, type Token } from "@/lib/parse-tokens";
+import { parseInput, type Token } from "@/lib/parse-tokens";
 import { useGloss } from "./gloss-context";
 import { InterlinearGlossView } from "./interlinear-gloss-view";
+import { AudioPlayButton } from "./audio-play-button";
 
 interface JournalEntryViewProps {
   entry: JournalEntry;
@@ -56,6 +57,9 @@ function HanziToken({ hanzi, pinyin, english }: { hanzi: string; pinyin: string;
         >
           <span className="ui-tone-orange-text block text-sm font-bold">{pinyin}</span>
           <span className="block text-xs text-muted-foreground">{english}</span>
+          <span className="pointer-events-auto mt-1 flex justify-center">
+            <AudioPlayButton text={hanzi} type="word" size="sm" />
+          </span>
           {/* Arrow */}
           <span
             className={`absolute top-full border-[6px] border-transparent border-t-popover ${
@@ -95,10 +99,6 @@ export function JournalEntryView({
 
   const gloss = useGloss();
   const showGloss = gloss.state.active && gloss.state.data && !gloss.state.loading;
-  const buildGlossJournalHref = (token: { hanzi: string; pinyin: string; english: string }) =>
-    `/notebook?entry=${encodeURIComponent(entry.id)}&new=1&draftTitleZh=${encodeURIComponent(`练习：${token.hanzi}`)}&draftTitleEn=${encodeURIComponent(`Practice: ${token.english}`)}&draftUnit=${encodeURIComponent(entry.unit || "Notebook Gloss")}&draftLevel=${encodeURIComponent(String(entry.hsk_level || 1))}&draftContentZh=${encodeURIComponent(buildInlineAnnotation(token.hanzi, token.pinyin, token.english))}&draftSelectedText=${encodeURIComponent(token.hanzi)}&draftPrompt=${encodeURIComponent(`Use ${token.hanzi} in 2-3 original sentences based on what you just read.`)}&draftTargetWord=${encodeURIComponent(token.hanzi)}&draftTargetPinyin=${encodeURIComponent(token.pinyin)}&draftTargetEnglish=${encodeURIComponent(token.english)}`;
-  const buildGlossPhraseJournalHref = (phrase: { hanzi: string; english: string }) =>
-    `/notebook?entry=${encodeURIComponent(entry.id)}&new=1&draftTitleZh=${encodeURIComponent(`练习：${phrase.hanzi}`)}&draftTitleEn=${encodeURIComponent(`Practice: ${phrase.english}`)}&draftUnit=${encodeURIComponent(entry.unit || "Notebook Gloss")}&draftLevel=${encodeURIComponent(String(entry.hsk_level || 1))}&draftContentZh=${encodeURIComponent(phrase.hanzi)}&draftSelectedText=${encodeURIComponent(phrase.hanzi)}&draftPrompt=${encodeURIComponent(`Reuse the phrase "${phrase.hanzi}" in 2-3 original sentences based on what you just read.`)}`;
 
   // --- Smooth height animation for the entire card ---
   const outerRef = useRef<HTMLDivElement>(null);
@@ -157,9 +157,6 @@ export function JournalEntryView({
             <p data-testid="journal-entry-date" className="ui-tone-orange-text font-medium">
               {date}
             </p>
-            <p data-testid="journal-entry-id" className="text-muted-foreground">
-              {entry.id}
-            </p>
           </div>
         </div>
 
@@ -193,11 +190,7 @@ export function JournalEntryView({
               <p className="animate-pulse text-sm text-muted-foreground">Loading interlinear gloss...</p>
             )}
             {gloss.state.data && (
-              <InterlinearGlossView
-                paragraphs={gloss.state.data}
-                buildJournalHref={buildGlossJournalHref}
-                buildPhraseJournalHref={buildGlossPhraseJournalHref}
-              />
+              <InterlinearGlossView paragraphs={gloss.state.data} />
             )}
           </div>
         </div>

@@ -10,6 +10,7 @@ interface GlossState {
   loading: boolean;
   data: GlossParagraph[] | null;
   entryId: string | null;
+  contentKey: string | null;
 }
 
 interface GlossContextValue {
@@ -28,26 +29,47 @@ export function GlossProvider({ children }: { children: ReactNode }) {
     loading: false,
     data: null,
     entryId: null,
+    contentKey: null,
   });
   const [isPending, startTransition] = useTransition();
-  const cacheRef = useRef<{ entryId: string | null; data: GlossParagraph[] | null }>({ entryId: null, data: null });
+  const cacheRef = useRef<{
+    entryId: string | null;
+    contentKey: string | null;
+    data: GlossParagraph[] | null;
+  }>({ entryId: null, contentKey: null, data: null });
   const stickyRef = useRef(false);
 
   // Keep refs in sync with state
   useEffect(() => {
-    cacheRef.current = { entryId: state.entryId, data: state.data };
+    cacheRef.current = {
+      entryId: state.entryId,
+      contentKey: state.contentKey,
+      data: state.data,
+    };
     stickyRef.current = state.sticky;
   });
 
   const fetchGloss = useCallback(
     (entryId: string, contentZh: string) => {
+      const contentKey = `${contentZh.length}:${contentZh}`;
+
       // Don't refetch if we already have data for this entry
-      if (cacheRef.current.data && cacheRef.current.entryId === entryId) {
+      if (
+        cacheRef.current.data &&
+        cacheRef.current.entryId === entryId &&
+        cacheRef.current.contentKey === contentKey
+      ) {
         setState((s) => ({ ...s, active: true }));
         return;
       }
 
-      setState((s) => ({ ...s, active: true, loading: true, entryId }));
+      setState((s) => ({
+        ...s,
+        active: true,
+        loading: true,
+        entryId,
+        contentKey,
+      }));
       startTransition(async () => {
         const data = await glossEntryAction(entryId, contentZh);
         setState((s) => ({ ...s, loading: false, data }));

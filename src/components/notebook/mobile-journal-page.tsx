@@ -20,6 +20,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Volume2, Layers, Eye, RotateCcw } from "lucide-react";
+import { AudioPlayButton } from "./audio-play-button";
 import { GuidanceBanner } from "@/components/patterns/guidance";
 import type { JournalEntry } from "@/lib/data";
 import { parseInput, extractHanziTokens, replaceTextRange, validateInlineMarkup } from "@/lib/parse-tokens";
@@ -351,9 +352,9 @@ function MobileNewEntryDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="flex max-h-[90vh] flex-col overflow-hidden sm:max-w-lg">
         <DialogHeader>
-          <DialogTitle>{draft?.beginner ? "First Guided Response" : "New Entry"}</DialogTitle>
+          <DialogTitle>{draft?.beginner ? "Try One Sentence" : "New Entry"}</DialogTitle>
           <DialogDescription>
-            {draft?.beginner ? "Write one short sentence using the study word." : "Write a new journal entry."}
+            {draft?.beginner ? "Optional: keep the ready-made sentence, change one small part, or close this and review instead." : "Write a new journal entry."}
           </DialogDescription>
         </DialogHeader>
         <form action={handleSubmit} className="flex min-h-0 flex-1 flex-col">
@@ -376,7 +377,7 @@ function MobileNewEntryDialog({
                 <input type="hidden" name="unit" value={draft?.unit ?? ""} />
                 <input type="hidden" name="hsk_level" value={draft?.hskLevel ?? 1} />
                 <GuidanceBanner title="Start small" tone="sky" className="px-3 py-3 text-sm">
-                  You only need one short sentence. Use the study word once and do not worry about writing a long entry yet.
+                  You can keep the ready-made sentence as it is, change one small part, or skip this and go review.
                 </GuidanceBanner>
               </>
             ) : (
@@ -405,7 +406,7 @@ function MobileNewEntryDialog({
             {!!draft?.prompt && (
               <p className="text-xs text-muted-foreground">
                 {draft?.beginner
-                  ? "Keep the seeded word and add one short sentence of your own."
+                  ? "Keep this sentence, change one small part, or close this and go review."
                   : "Read the prompt above, then write your own answer here."}
               </p>
             )}
@@ -435,7 +436,7 @@ function MobileNewEntryDialog({
           <DialogFooter>
             <DialogClose render={<Button variant="outline" />}>Cancel</DialogClose>
             <Button type="submit" disabled={isPending || hasMarkupIssues} className="bg-primary text-primary-foreground hover:opacity-90">
-              {isPending ? "Creating..." : "Create"}
+              {isPending ? "Creating..." : draft?.beginner ? "Save sentence" : "Create"}
             </Button>
           </DialogFooter>
         </form>
@@ -476,14 +477,12 @@ function MobilePronunciationDialog({
                     <p className="text-xs text-muted-foreground">{h.english}</p>
                   </div>
                 </div>
-                <button
-                  onClick={() => {
-                    new Audio(`/api/tts?text=${encodeURIComponent(h.hanzi)}`).play();
-                  }}
-                  className="ui-tone-orange-panel ui-tone-orange-text rounded-full border p-2 transition-colors hover:opacity-85"
-                >
-                  <Volume2 className="h-4 w-4" />
-                </button>
+                <AudioPlayButton
+                  text={h.hanzi}
+                  type="word"
+                  size="md"
+                  className="ui-tone-orange-panel ui-tone-orange-text border"
+                />
               </div>
             ))
           )}

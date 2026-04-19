@@ -39,6 +39,11 @@ interface ProgressData {
   percent: number;
 }
 
+interface BeginnerCompletionState {
+  word: string;
+  wroteSentence: boolean;
+}
+
 export function DashboardView() {
   const { settings } = useSettings();
 
@@ -175,8 +180,8 @@ export function DashboardView() {
               <p className="ui-tone-sky-text text-xs font-semibold uppercase tracking-wider">Welcome</p>
               <h2 className="mt-2 text-2xl font-bold text-foreground">Start learning Chinese one small step at a time.</h2>
                 <p className="mt-2 text-sm leading-6 text-muted-foreground">
-                  HanziBit works best when you do one tiny loop: study one word, write one short response,
-                  and review a few cards. You do not need to configure anything else first.
+                  HanziBit works best when you do one tiny loop: study one word, optionally try one ready-made sentence,
+                  and finish with a tiny review. You do not need to configure anything else first.
                 </p>
             </div>
             <div className="flex shrink-0 flex-col gap-2">
@@ -202,8 +207,8 @@ export function DashboardView() {
             />
             <BeginnerStepCard
               step="2"
-              title="Write one short response"
-              body="Use the guided journal prompt so you never have to start from a blank page."
+              title="Optionally try one sentence"
+              body="Use a ready-made sentence if you want. You can also skip writing for now."
             />
             <BeginnerStepCard
               step="3"
@@ -214,6 +219,14 @@ export function DashboardView() {
         </DashboardPanel>
       )}
 
+      {!loading && isBeginnerFirstRun && (
+        <DashboardPanel className="mb-6 p-4">
+          <p className="text-sm text-muted-foreground">
+            After you finish your first loop, your progress, reviews, and study history will start to appear here.
+          </p>
+        </DashboardPanel>
+      )}
+
       {!loading && isBeginnerFirstCompletion && beginnerCompletion && (
         <DashboardPanel tone="emerald" className="mb-6 p-6">
           <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
@@ -221,8 +234,8 @@ export function DashboardView() {
               <p className="ui-tone-emerald-text text-xs font-semibold uppercase tracking-wider">Day one complete</p>
               <h2 className="mt-2 text-2xl font-bold text-foreground">You finished your first Chinese practice loop.</h2>
               <p className="mt-2 text-sm leading-6 text-muted-foreground">
-                You studied <span className="font-medium text-foreground">{beginnerCompletion.word}</span>, wrote a short response,
-                and completed your first review. That is enough for today. The goal now is to come back tomorrow and repeat one small loop.
+                You studied <span className="font-medium text-foreground">{beginnerCompletion.word}</span>
+                {beginnerCompletion.wroteSentence ? ", tried one sentence," : ""} and completed your first review. That is enough for today. The goal now is to come back tomorrow and repeat one small loop.
               </p>
             </div>
             <div className="flex shrink-0 flex-col gap-2">
@@ -245,8 +258,12 @@ export function DashboardView() {
             />
             <BeginnerPreviewCard
               icon={<PenLine className="ui-tone-emerald-text h-4 w-4" />}
-              title="1 short response"
-              body="You finished your first guided sentence instead of staring at a blank notebook."
+              title={beginnerCompletion.wroteSentence ? "1 sentence attempt" : "Optional writing skipped"}
+              body={
+                beginnerCompletion.wroteSentence
+                  ? "You tried one supported sentence instead of starting from a blank page."
+                  : "You can come back to sentence-building later. You still completed the first learning loop."
+              }
             />
             <BeginnerPreviewCard
               icon={<RotateCcw className="ui-tone-emerald-text h-4 w-4" />}
@@ -257,6 +274,8 @@ export function DashboardView() {
         </DashboardPanel>
       )}
 
+      {!isBeginnerFirstRun && (
+      <>
       <DashboardSection
         title="Today&apos;s Practice"
         icon={CheckCircle2}
@@ -739,6 +758,8 @@ export function DashboardView() {
           <p className="ui-tone-emerald-text text-sm font-medium">All caught up — no struggling cards right now.</p>
         </DashboardPanel>
       )}
+      </>
+      )}
     </div>
   );
 }
@@ -746,13 +767,18 @@ export function DashboardView() {
 function getBeginnerCompletionState(
   dailyPractice: DailyPracticePlan,
   stats: Stats
-): { word: string } | null {
-  if (!dailyPractice.loopCompleted) return null;
+): BeginnerCompletionState | null {
+  if (!dailyPractice.studyCompleted) return null;
+  if (!dailyPractice.reviewCompleted) return null;
   if (!dailyPractice.recommendedStudyWord?.simplified) return null;
   if (stats.entryCount > 1) return null;
   if (stats.reviewCount > 5) return null;
   return {
     word: dailyPractice.recommendedStudyWord.simplified,
+    wroteSentence:
+      dailyPractice.guidedResponsesToday > 0 ||
+      dailyPractice.entriesCreatedToday > 0 ||
+      stats.entryCount > 0,
   };
 }
 
@@ -767,7 +793,8 @@ function getDashboardMode(dailyPractice: DailyPracticePlan, stats: Stats): {
     stats.entryCount === 0 &&
     stats.reviewCount === 0 &&
     dailyPractice.guidedResponsesToday === 0 &&
-    dailyPractice.completedSteps === 0;
+    dailyPractice.entriesCreatedToday === 0 &&
+    dailyPractice.reviewsCompletedToday === 0;
 
   if (noRealActivityYet) {
     return {

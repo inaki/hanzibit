@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useTransition, useRef } from "react";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import {
   BookOpen,
   Layers,
@@ -20,6 +20,7 @@ import {
   NotebookPen,
   ChevronDown,
 } from "lucide-react";
+import { AudioPlayButton } from "./audio-play-button";
 import { UpgradePrompt } from "@/components/upgrade-prompt";
 import { EmptyStateNotice } from "@/components/patterns/guidance";
 import { InfoPanel, SectionCard } from "@/components/patterns/surfaces";
@@ -31,6 +32,7 @@ import type { StudyGuideData, StudyGuideWord } from "@/lib/data";
 import { buildStudyGuideReading } from "@/lib/study-guide-content";
 import type { DailyPracticePlan } from "@/lib/daily-practice";
 import { buildInlineAnnotation } from "@/lib/parse-tokens";
+import { summarizeEnglishGloss } from "@/lib/annotation-suggestions";
 
 type Filter = "all" | "encountered" | "not-yet" | "flashcard";
 
@@ -38,9 +40,10 @@ interface StudyGuideProps {
   initialData: StudyGuideData;
   assignmentId?: string;
   beginnerMode?: boolean;
+  isPro?: boolean;
 }
 
-export function StudyGuide({ initialData, assignmentId, beginnerMode = false }: StudyGuideProps) {
+export function StudyGuide({ initialData, assignmentId, beginnerMode = false, isPro = false }: StudyGuideProps) {
   const { settings } = useSettings();
   const searchParams = useSearchParams();
   const [data, setData] = useState(initialData);
@@ -307,6 +310,7 @@ export function StudyGuide({ initialData, assignmentId, beginnerMode = false }: 
                     dailyPractice={dailyPractice}
                     assignmentId={assignmentId}
                     beginnerMode={isBeginnerMode}
+                    isPro={isPro}
                   />
                 ) : (
                   <EmptyStateNotice
@@ -353,25 +357,36 @@ function WordDetail({
   dailyPractice,
   assignmentId,
   beginnerMode = false,
+  isPro = false,
 }: {
   item: StudyGuideWord;
   level: number;
   dailyPractice: DailyPracticePlan | null;
   assignmentId?: string;
   beginnerMode?: boolean;
+  isPro?: boolean;
 }) {
   const [creating, setCreating] = useState(false);
+  const [openingReview, setOpeningReview] = useState(false);
   const [createdWordId, setCreatedWordId] = useState<number | null>(null);
   const [showFullDetails, setShowFullDetails] = useState(!beginnerMode);
+  const router = useRouter();
   const reading = buildStudyGuideReading(item, level);
+  const compactEnglish = summarizeEnglishGloss(item.word.english) || item.word.english;
   const draftTitleZh = `练习：${item.word.simplified}`;
-  const draftTitleEn = `Practice: ${item.word.english}`;
+  const draftTitleEn = `Practice: ${compactEnglish}`;
   const draftUnit = `HSK ${level} Study Guide`;
-  const draftContentZh = buildInlineAnnotation(item.word.simplified, item.word.pinyin, item.word.english);
+  const draftContentZh = buildInlineAnnotation(item.word.simplified, item.word.pinyin, compactEnglish);
+  const beginnerSentenceZh = reading.focusPhraseZh.includes(item.word.simplified)
+    ? reading.focusPhraseZh.replace(
+        item.word.simplified,
+        buildInlineAnnotation(item.word.simplified, item.word.pinyin, compactEnglish)
+      )
+    : `${draftContentZh} ${reading.focusPhraseZh}`.trim();
   const assignmentParam = assignmentId
     ? `&draftAssignmentId=${encodeURIComponent(assignmentId)}`
     : "";
-  const journalHref = `/notebook?new=1&draftTitleZh=${encodeURIComponent(draftTitleZh)}&draftTitleEn=${encodeURIComponent(draftTitleEn)}&draftUnit=${encodeURIComponent(draftUnit)}&draftLevel=${level}&draftContentZh=${encodeURIComponent(draftContentZh)}&draftPrompt=${encodeURIComponent(reading.responsePrompt)}&draftSourceZh=${encodeURIComponent(reading.passageZh)}&draftSourceEn=${encodeURIComponent(reading.passageEn)}&draftTargetWord=${encodeURIComponent(item.word.simplified)}&draftTargetPinyin=${encodeURIComponent(item.word.pinyin)}&draftTargetEnglish=${encodeURIComponent(item.word.english)}&draftSourceType=study_guide&draftSourceRef=${encodeURIComponent(String(item.word.id))}${assignmentParam}`;
+  const journalHref = `/notebook?new=1&draftTitleZh=${encodeURIComponent(draftTitleZh)}&draftTitleEn=${encodeURIComponent(draftTitleEn)}&draftUnit=${encodeURIComponent(draftUnit)}&draftLevel=${level}&draftContentZh=${encodeURIComponent(beginnerMode ? beginnerSentenceZh : draftContentZh)}&draftPrompt=${encodeURIComponent(beginnerMode ? `Optional: keep this sentence as it is, or change one small part so it still uses ${item.word.simplified}. You can also skip writing for now and go review the word.` : reading.responsePrompt)}&draftSourceZh=${encodeURIComponent(reading.passageZh)}&draftSourceEn=${encodeURIComponent(reading.passageEn)}&draftTargetWord=${encodeURIComponent(item.word.simplified)}&draftTargetPinyin=${encodeURIComponent(item.word.pinyin)}&draftTargetEnglish=${encodeURIComponent(beginnerMode ? compactEnglish : item.word.english)}&draftSourceType=study_guide&draftSourceRef=${encodeURIComponent(String(item.word.id))}${assignmentParam}${beginnerMode ? "&draftBeginner=1" : ""}`;
   const phraseJournalHref = `/notebook?new=1&draftTitleZh=${encodeURIComponent(draftTitleZh)}&draftTitleEn=${encodeURIComponent(draftTitleEn)}&draftUnit=${encodeURIComponent(draftUnit)}&draftLevel=${level}&draftContentZh=${encodeURIComponent(`${draftContentZh} ${reading.focusPhraseZh}`)}&draftSelectedText=${encodeURIComponent(reading.focusPhraseZh)}&draftPrompt=${encodeURIComponent(`Use the phrase "${reading.focusPhraseZh}" in your own response and keep ${item.word.simplified} annotated.`)}&draftSourceZh=${encodeURIComponent(reading.passageZh)}&draftSourceEn=${encodeURIComponent(reading.passageEn)}&draftTargetWord=${encodeURIComponent(item.word.simplified)}&draftTargetPinyin=${encodeURIComponent(item.word.pinyin)}&draftTargetEnglish=${encodeURIComponent(item.word.english)}&draftSourceType=study_guide&draftSourceRef=${encodeURIComponent(String(item.word.id))}${assignmentParam}`;
   const listeningJournalHref = `/notebook?new=1&draftTitleZh=${encodeURIComponent(draftTitleZh)}&draftTitleEn=${encodeURIComponent(draftTitleEn)}&draftUnit=${encodeURIComponent(`${draftUnit} Listening`)}&draftLevel=${level}&draftContentZh=${encodeURIComponent(`${draftContentZh} ${reading.listeningZh}`)}&draftSelectedText=${encodeURIComponent(reading.listeningZh)}&draftPrompt=${encodeURIComponent(reading.listeningPrompt)}&draftSourceZh=${encodeURIComponent(reading.listeningZh)}&draftSourceEn=${encodeURIComponent(reading.listeningEn)}&draftTargetWord=${encodeURIComponent(item.word.simplified)}&draftTargetPinyin=${encodeURIComponent(item.word.pinyin)}&draftTargetEnglish=${encodeURIComponent(item.word.english)}&draftSourceType=study_guide&draftSourceRef=${encodeURIComponent(String(item.word.id))}${assignmentParam}`;
   const phraseCandidateHrefs = reading.phraseCandidates.map((candidate) => ({
@@ -401,6 +416,25 @@ function WordDetail({
     }
   }
 
+  async function handleOpenReview() {
+    if (beginnerMode && !hasFlashcard) {
+      setOpeningReview(true);
+      try {
+        const result = await createFlashcardForWord(
+          item.word.simplified,
+          item.word.pinyin,
+          item.word.english
+        );
+        if ("id" in result || "duplicate" in result) {
+          setCreatedWordId(item.word.id);
+        }
+      } finally {
+        setOpeningReview(false);
+      }
+    }
+    router.push(reviewHref);
+  }
+
   const created = createdWordId === item.word.id;
   const hasFlashcard = item.flashcard !== null || created;
 
@@ -408,7 +442,10 @@ function WordDetail({
     return (
       <SectionCard data-testid="study-guide-detail" className="rounded-xl p-8">
         <div className="mb-6 text-center">
-          <p className="ui-tone-orange-text text-7xl font-bold">{item.word.simplified}</p>
+          <div className="inline-flex items-center gap-2">
+            <p className="ui-tone-orange-text text-7xl font-bold">{item.word.simplified}</p>
+            <AudioPlayButton text={item.word.simplified} type="word" size="md" />
+          </div>
           <p className="mt-3 text-xl font-medium text-foreground/80">{item.word.pinyin}</p>
           <p className="mt-1 text-muted-foreground">{item.word.english}</p>
         </div>
@@ -420,18 +457,29 @@ function WordDetail({
           icon={Sparkles}
         >
           <InfoPanel title="Tiny example">
-            <p className="mt-2 text-lg leading-8 text-foreground">{reading.focusPhraseZh}</p>
+            <div className="mt-2 flex items-center gap-2">
+              <p className="text-lg leading-8 text-foreground">{reading.focusPhraseZh}</p>
+              {isPro && <AudioPlayButton text={reading.focusPhraseZh} type="sentence" />}
+            </div>
             <p className="mt-2 text-sm text-muted-foreground">{reading.focusPhraseEn}</p>
           </InfoPanel>
           <p className="mt-4 text-sm text-foreground/85">
-            Read the word, glance at the example, then use it once in your journal. That is enough for your first study step.
+            Read the word, glance at the example, then open one tiny review card. If you want, you can also try one ready-made sentence before that.
           </p>
           <div className="mt-4 flex flex-wrap gap-3">
-            <Link
-              href={journalHref}
+            <button
+              type="button"
+              onClick={handleOpenReview}
+              disabled={openingReview}
               className="inline-flex items-center rounded-full bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-opacity hover:opacity-90"
             >
-              Use this in journal →
+              {openingReview ? "Preparing tiny review..." : "Open tiny review →"}
+            </button>
+            <Link
+              href={journalHref}
+              className="ui-tone-sky-panel ui-tone-sky-text inline-flex items-center rounded-full border bg-card px-4 py-2 text-sm font-medium transition-colors hover:bg-muted/60"
+            >
+              Try one sentence (optional) →
             </Link>
             <button
               type="button"
@@ -450,7 +498,10 @@ function WordDetail({
     <SectionCard data-testid="study-guide-detail" className="rounded-xl p-8">
       {/* Character display */}
       <div className="mb-6 text-center">
-        <p className="ui-tone-orange-text text-7xl font-bold">{item.word.simplified}</p>
+        <div className="inline-flex items-center gap-2">
+          <p className="ui-tone-orange-text text-7xl font-bold">{item.word.simplified}</p>
+          <AudioPlayButton text={item.word.simplified} type="word" size="md" />
+        </div>
         {item.word.traditional && (
           <p className="mt-1 text-lg text-muted-foreground/70">{item.word.traditional}</p>
         )}
@@ -611,7 +662,10 @@ function WordDetail({
         </div>
         <div className="mt-4 grid gap-3 md:grid-cols-2">
           <InfoPanel title="Notice This Phrase" icon={Sparkles}>
-            <p className="mt-2 text-sm font-semibold text-foreground">{reading.focusPhraseZh}</p>
+            <div className="mt-2 flex items-center gap-1.5">
+              <p className="text-sm font-semibold text-foreground">{reading.focusPhraseZh}</p>
+              {isPro && <AudioPlayButton text={reading.focusPhraseZh} type="sentence" />}
+            </div>
             <p className="mt-1 text-sm text-muted-foreground">{reading.focusPhraseEn}</p>
             <Link
               href={phraseJournalHref}

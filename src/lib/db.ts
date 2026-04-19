@@ -15,14 +15,14 @@ declare global {
   var __hanzibitSchemaVersion: number | undefined;
 }
 
-const SCHEMA_VERSION = 32;
+const SCHEMA_VERSION = 34;
 
 const APP_SCHEMA_SQL = `
   CREATE TABLE IF NOT EXISTS "user" (
     id TEXT PRIMARY KEY,
     name TEXT NOT NULL,
     email TEXT NOT NULL UNIQUE,
-    "emailVerified" INTEGER NOT NULL DEFAULT 0,
+    "emailVerified" BOOLEAN NOT NULL DEFAULT FALSE,
     image TEXT,
     "createdAt" TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     "updatedAt" TIMESTAMPTZ NOT NULL DEFAULT NOW()
@@ -697,6 +697,27 @@ const APP_SCHEMA_SQL = `
 
   CREATE INDEX IF NOT EXISTS idx_daily_loop_user_date
     ON daily_loop_completions(user_id, completed_on DESC);
+
+  CREATE TABLE IF NOT EXISTS tts_cache (
+    cache_key  TEXT PRIMARY KEY,
+    blob_url   TEXT NOT NULL,
+    char_count INTEGER NOT NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    play_count INTEGER NOT NULL DEFAULT 0
+  );
+
+  CREATE TABLE IF NOT EXISTS tts_usage (
+    id            TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
+    user_id       TEXT REFERENCES "user"(id) ON DELETE SET NULL,
+    cache_key     TEXT,
+    was_cache_hit BOOLEAN NOT NULL,
+    char_count    INTEGER NOT NULL,
+    type          TEXT NOT NULL CHECK (type IN ('word','sentence','dynamic')),
+    created_at    TIMESTAMPTZ NOT NULL DEFAULT NOW()
+  );
+
+  CREATE INDEX IF NOT EXISTS idx_tts_usage_user_id ON tts_usage(user_id);
+  CREATE INDEX IF NOT EXISTS idx_tts_usage_created_at ON tts_usage(created_at);
 `;
 
 function getDatabaseUrl(): string {
@@ -761,6 +782,35 @@ async function runWithReconnect<T>(fn: () => Promise<T>): Promise<T> {
 async function initializeSchema(): Promise<void> {
   const pool = getPool();
   await pool.query(APP_SCHEMA_SQL);
+  await pool.query(`
+    DO $$
+    DECLARE
+      email_verified_type TEXT;
+    BEGIN
+      SELECT data_type
+      INTO email_verified_type
+      FROM information_schema.columns
+      WHERE table_schema = 'public'
+        AND table_name = 'user'
+        AND column_name = 'emailVerified';
+
+      IF email_verified_type IS NOT NULL AND email_verified_type <> 'boolean' THEN
+        ALTER TABLE "user"
+          ALTER COLUMN "emailVerified" DROP DEFAULT;
+
+        ALTER TABLE "user"
+          ALTER COLUMN "emailVerified"
+          TYPE BOOLEAN
+          USING CASE
+            WHEN COALESCE("emailVerified"::text, '0') IN ('1', 'true', 't', 'TRUE', 'T') THEN TRUE
+            ELSE FALSE
+          END;
+
+        ALTER TABLE "user"
+          ALTER COLUMN "emailVerified" SET DEFAULT FALSE;
+      END IF;
+    END $$;
+  `);
   await pool.query(`
     ALTER TABLE teacher_strategies
       ADD COLUMN IF NOT EXISTS refinement_note TEXT,
@@ -970,6 +1020,32 @@ async function initializeSchema(): Promise<void> {
   await pool.query(`
     CREATE INDEX IF NOT EXISTS idx_private_strategy_outcomes_strategy
       ON private_student_strategy_outcomes(teacher_strategy_id, recorded_at DESC, created_at DESC)
+  `);
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS tts_cache (
+      cache_key  TEXT PRIMARY KEY,
+      blob_url   TEXT NOT NULL,
+      char_count INTEGER NOT NULL,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      play_count INTEGER NOT NULL DEFAULT 0
+    )
+  `);
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS tts_usage (
+      id            TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
+      user_id       TEXT REFERENCES "user"(id) ON DELETE SET NULL,
+      cache_key     TEXT,
+      was_cache_hit BOOLEAN NOT NULL,
+      char_count    INTEGER NOT NULL,
+      type          TEXT NOT NULL CHECK (type IN ('word','sentence','dynamic')),
+      created_at    TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    )
+  `);
+  await pool.query(`
+    CREATE INDEX IF NOT EXISTS idx_tts_usage_user_id ON tts_usage(user_id)
+  `);
+  await pool.query(`
+    CREATE INDEX IF NOT EXISTS idx_tts_usage_created_at ON tts_usage(created_at)
   `);
 }
 

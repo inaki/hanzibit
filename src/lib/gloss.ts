@@ -26,6 +26,10 @@ interface DictEntry {
   english: string;
 }
 
+const BEGINNER_GLOSS_OVERRIDES: Record<string, string> = {
+  短句: "sentence",
+};
+
 /**
  * Batch-load all possible substrings from CEDICT for a given text.
  * Returns a Map<simplified, DictEntry> (first match wins for duplicates).
@@ -92,12 +96,14 @@ function segmentText(text: string, dict: Map<string, DictEntry>): GlossSegment[]
       const sub = text.slice(i, i + len);
       const entry = dict.get(sub);
       if (entry) {
+        const beginnerEnglish =
+          BEGINNER_GLOSS_OVERRIDES[sub] ?? entry.english.split("; ")[0];
         segments.push({
           type: "gloss",
           token: {
             hanzi: sub,
             pinyin: entry.pinyin_display,
-            english: entry.english.split("; ")[0], // Take first definition
+            english: beginnerEnglish,
             userAnnotated: false,
           },
         });
