@@ -11,6 +11,11 @@ import {
   getOwnedJournalEntry,
   getUserProgress,
   getStudyGuideData,
+  getLevelReadiness,
+  getCuratedGrammarPoints,
+  markGrammarPointStudied,
+  getCollocations,
+  getCharacterBreakdowns,
   getUserStreak,
   getUserStats,
   getWeakFlashcards,
@@ -21,6 +26,10 @@ import {
   type Flashcard,
   type HskWord,
   type StudyGuideData,
+  type LevelReadiness,
+  type CuratedGrammarPoint,
+  type HskCollocation,
+  type CharacterBreakdown,
 } from "./data";
 import type { AnnotationLookupEntry } from "./annotation-suggestions";
 import { canReviewFlashcard, canAccessHskLevel } from "./gates";
@@ -389,6 +398,38 @@ export async function getStreakAction(): Promise<number> {
 export async function getWeakFlashcardsAction(limit = 3): Promise<Flashcard[]> {
   const userId = await getAuthUserId();
   return getWeakFlashcards(userId, limit);
+}
+
+export async function getLevelReadinessAction(level: number): Promise<LevelReadiness> {
+  const userId = await getAuthUserId();
+  return getLevelReadiness(userId, level);
+}
+
+export async function getCuratedGrammarPointsAction(
+  level: number
+): Promise<CuratedGrammarPoint[]> {
+  const userId = await getAuthUserId();
+  return getCuratedGrammarPoints(userId, level);
+}
+
+export async function markGrammarPointStudiedAction(
+  grammarPointId: number
+): Promise<void> {
+  const userId = await getAuthUserId();
+  await markGrammarPointStudied(userId, grammarPointId);
+}
+
+export async function getCollocationsAction(
+  wordSimplified: string
+): Promise<HskCollocation[]> {
+  const userId = await getAuthUserId();
+  return getCollocations(userId, wordSimplified);
+}
+
+export async function getCharacterBreakdownsAction(
+  wordSimplified: string
+): Promise<CharacterBreakdown[]> {
+  return getCharacterBreakdowns(wordSimplified);
 }
 
 export async function getUserStatsAction() {

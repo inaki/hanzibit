@@ -1,9 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState, useTransition } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
 import type { Flashcard } from "@/lib/data";
-import { RotateCcw, ChevronLeft, ChevronRight, Eye, Target, BookText } from "lucide-react";
+import { RotateCcw, ChevronLeft, ChevronRight, Eye, Target, BookText, Headphones, CheckCheck } from "lucide-react";
 import { AudioPlayButton } from "./audio-play-button";
 import { getDailyPracticeAction, reviewFlashcard } from "@/lib/actions";
 import { UpgradePrompt } from "@/components/upgrade-prompt";
@@ -28,6 +28,7 @@ interface FlashcardPracticeProps {
 }
 
 type FilterTab = "all" | "due";
+type PracticeMode = "practice" | "listen" | "browse";
 
 const QUALITY_BUTTONS = [
   { label: "Again", quality: 1, color: "border ui-tone-rose-panel ui-tone-rose-text hover:opacity-80 active:translate-y-px" },
@@ -55,12 +56,15 @@ export function FlashcardPractice({
     : -1;
   const [currentIndex, setCurrentIndex] = useState(initialFocusedIndex >= 0 ? initialFocusedIndex : 0);
   const [flipped, setFlipped] = useState(false);
-  const [mode, setMode] = useState<"practice" | "browse">("practice");
+  const [mode, setMode] = useState<PracticeMode>("practice");
   const [filter, setFilter] = useState<FilterTab>(initialFilter);
   const [reviewFeedback, setReviewFeedback] = useState<string | null>(null);
   const [limitReached, setLimitReached] = useState(false);
   const [isPending, startTransition] = useTransition();
   const [dailyPractice, setDailyPractice] = useState<DailyPracticePlan | null>(null);
+  const [dictationInput, setDictationInput] = useState("");
+  const [dictationChecked, setDictationChecked] = useState(false);
+  const dictationInputRef = useRef<HTMLInputElement>(null);
 
   const now = new Date().toISOString();
   const filteredCards = filter === "due"
@@ -100,12 +104,16 @@ export function FlashcardPractice({
   function next() {
     setFlipped(false);
     setReviewFeedback(null);
+    setDictationInput("");
+    setDictationChecked(false);
     setCurrentIndex((i) => Math.min(i + 1, total - 1));
   }
 
   function prev() {
     setFlipped(false);
     setReviewFeedback(null);
+    setDictationInput("");
+    setDictationChecked(false);
     setCurrentIndex((i) => Math.max(i - 1, 0));
   }
 
@@ -143,6 +151,8 @@ export function FlashcardPractice({
     setCurrentIndex(nextFocusIndex >= 0 ? nextFocusIndex : 0);
     setFlipped(false);
     setReviewFeedback(null);
+    setDictationInput("");
+    setDictationChecked(false);
   }
 
   if (cards.length === 0) {
@@ -189,6 +199,16 @@ export function FlashcardPractice({
               Practice
             </button>
             <button
+              data-testid="flashcards-mode-listen"
+              onClick={() => { setMode("listen"); setDictationInput(""); setDictationChecked(false); setFlipped(false); setReviewFeedback(null); }}
+              className={`inline-flex items-center gap-1 rounded-md px-3 py-1.5 text-xs font-medium transition-colors ${
+                mode === "listen" ? "bg-primary text-primary-foreground" : "text-muted-foreground"
+              }`}
+            >
+              <Headphones className="h-3 w-3" />
+              Listen
+            </button>
+            <button
               data-testid="flashcards-mode-browse"
               onClick={() => setMode("browse")}
               className={`rounded-md px-3 py-1.5 text-xs font-medium transition-colors ${
@@ -202,7 +222,7 @@ export function FlashcardPractice({
       </div>
 
       {/* Filter tabs */}
-      {mode === "practice" && !isBeginnerFocusedSession && (
+      {(mode === "practice" || mode === "listen") && !isBeginnerFocusedSession && (
         <div data-testid="flashcards-filter" className="mb-6 inline-flex rounded-full border border-border bg-card/70 p-1">
           <button
             data-testid="flashcards-filter-all"
@@ -229,7 +249,7 @@ export function FlashcardPractice({
         </div>
       )}
 
-      {mode === "practice" ? (
+      {(mode === "practice" || mode === "listen") ? (
         total === 0 ? (
           <FlashcardPanel className="py-16 text-center text-sm text-muted-foreground/70">
             {filter === "due" ? "No cards due for review!" : "No cards to practice."}
@@ -289,32 +309,97 @@ export function FlashcardPractice({
             )}
 
             {/* Flashcard */}
-            <button
-              data-testid="flashcard-card"
-              onClick={() => setFlipped(!flipped)}
-              className="mb-6 flex min-h-[260px] w-full cursor-pointer flex-col items-center justify-center rounded-[20px] bg-card card-ring px-8 py-14 gap-3 transition-colors"
-            >
-              {!flipped ? (
-                <div data-testid="flashcard-front" className="text-center">
-                  <p className="text-[64px] font-bold leading-none text-foreground">{currentCard.front}</p>
-                  <p className="mt-5 text-[11px] font-semibold uppercase tracking-[0.1em] text-muted-foreground">
-                    {isBeginnerFocusedSession ? "Tap to see the meaning" : "Click to reveal"}
-                  </p>
-                </div>
-              ) : (
-                <div data-testid="flashcard-back" className="flex flex-col items-center gap-2 text-center">
-                  <p className="text-[48px] font-bold leading-none text-[var(--cn-orange)]">{currentCard.front}</p>
-                  <p className="text-lg text-foreground/90">{currentCard.back}</p>
-                  <div className="mt-2 inline-flex items-center gap-2 rounded-full border border-border bg-muted/40 px-3 py-1 text-xs text-muted-foreground">
-                    <span className="font-medium text-foreground/80">Deck</span>
-                    <span>{currentCard.deck}</span>
+            {mode === "listen" ? (
+              /* Dictation mode card */
+              <div className="mb-6">
+                <FlashcardPanel className="flex min-h-[260px] flex-col items-center justify-center gap-5 px-8 py-12">
+                  {!dictationChecked ? (
+                    <>
+                      <div className="flex flex-col items-center gap-2 text-center">
+                        <Headphones className="h-8 w-8 text-muted-foreground/50" />
+                        <p className="text-sm text-muted-foreground">Listen, then type the characters</p>
+                      </div>
+                      <AudioPlayButton
+                        key={currentCard.id}
+                        text={currentCard.front}
+                        type="word"
+                        size="md"
+                        className="!h-14 !w-14 border bg-card text-foreground card-ring hover:bg-muted"
+                      />
+                      <form
+                        className="flex w-full max-w-xs flex-col items-center gap-3"
+                        onSubmit={(e) => {
+                          e.preventDefault();
+                          if (dictationInput.trim()) setDictationChecked(true);
+                        }}
+                      >
+                        <input
+                          ref={dictationInputRef}
+                          value={dictationInput}
+                          onChange={(e) => setDictationInput(e.target.value)}
+                          placeholder="在这里输入…"
+                          className="w-full rounded-lg border bg-background px-4 py-2.5 text-center text-lg text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-ring"
+                          autoComplete="off"
+                          autoCorrect="off"
+                          spellCheck={false}
+                        />
+                        <button
+                          type="submit"
+                          disabled={!dictationInput.trim()}
+                          className="inline-flex items-center gap-2 rounded-full bg-primary px-5 py-2 text-sm font-medium text-primary-foreground disabled:opacity-40"
+                        >
+                          <CheckCheck className="h-4 w-4" />
+                          Check
+                        </button>
+                      </form>
+                    </>
+                  ) : (
+                    /* Revealed state */
+                    <div className="flex flex-col items-center gap-3 text-center">
+                      <p className="text-[56px] font-bold leading-none text-[var(--cn-orange)]">{currentCard.front}</p>
+                      <p className="text-lg text-foreground/90">{currentCard.back}</p>
+                      <div className={`mt-1 inline-flex items-center gap-2 rounded-full px-4 py-1.5 text-sm font-medium ${
+                        dictationInput.trim() === currentCard.front
+                          ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300"
+                          : "bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-300"
+                      }`}>
+                        {dictationInput.trim() === currentCard.front ? "✓ Correct!" : (
+                          <>You typed: <span className="font-bold">{dictationInput.trim() || "—"}</span></>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </FlashcardPanel>
+              </div>
+            ) : (
+              /* Standard practice card */
+              <button
+                data-testid="flashcard-card"
+                onClick={() => setFlipped(!flipped)}
+                className="mb-6 flex min-h-[260px] w-full cursor-pointer flex-col items-center justify-center rounded-[20px] bg-card card-ring px-8 py-14 gap-3 transition-colors"
+              >
+                {!flipped ? (
+                  <div data-testid="flashcard-front" className="text-center">
+                    <p className="text-[64px] font-bold leading-none text-foreground">{currentCard.front}</p>
+                    <p className="mt-5 text-[11px] font-semibold uppercase tracking-[0.1em] text-muted-foreground">
+                      {isBeginnerFocusedSession ? "Tap to see the meaning" : "Click to reveal"}
+                    </p>
                   </div>
-                </div>
-              )}
-            </button>
+                ) : (
+                  <div data-testid="flashcard-back" className="flex flex-col items-center gap-2 text-center">
+                    <p className="text-[48px] font-bold leading-none text-[var(--cn-orange)]">{currentCard.front}</p>
+                    <p className="text-lg text-foreground/90">{currentCard.back}</p>
+                    <div className="mt-2 inline-flex items-center gap-2 rounded-full border border-border bg-muted/40 px-3 py-1 text-xs text-muted-foreground">
+                      <span className="font-medium text-foreground/80">Deck</span>
+                      <span>{currentCard.deck}</span>
+                    </div>
+                  </div>
+                )}
+              </button>
+            )}
 
-            {/* Speak button — shown on front face only */}
-            {!flipped && (
+            {/* Speak button — shown on front face only, practice mode */}
+            {mode === "practice" && !flipped && (
               <div className="mb-4 flex justify-center">
                 <AudioPlayButton text={currentCard.front} type="word" size="md" />
               </div>
@@ -334,8 +419,8 @@ export function FlashcardPractice({
               </p>
             )}
 
-            {/* SM-2 scoring buttons (shown after flip) */}
-            {flipped && !reviewFeedback && !limitReached && (
+            {/* SM-2 scoring buttons (shown after flip / after dictation check) */}
+            {(mode === "listen" ? dictationChecked : flipped) && !reviewFeedback && !limitReached && (
               <FlashcardActionPanel data-testid="flashcard-scoring" className="mb-6 rounded-2xl bg-card/70">
                 <p className="mb-3 text-center text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground/70">
                   {isBeginnerFocusedSession ? "How did this one word feel?" : "How did this feel?"}
@@ -377,13 +462,15 @@ export function FlashcardPractice({
                 >
                   <ChevronLeft className="h-5 w-5" />
                 </FlashcardControlButton>
-                <FlashcardControlButton
-                  data-testid="flashcard-flip"
-                  onClick={() => { setFlipped(!flipped); setReviewFeedback(null); }}
-                >
-                  <RotateCcw className="mr-1.5 inline h-4 w-4" />
-                  Flip
-                </FlashcardControlButton>
+                {mode !== "listen" && (
+                  <FlashcardControlButton
+                    data-testid="flashcard-flip"
+                    onClick={() => { setFlipped(!flipped); setReviewFeedback(null); }}
+                  >
+                    <RotateCcw className="mr-1.5 inline h-4 w-4" />
+                    Flip
+                  </FlashcardControlButton>
+                )}
                 <FlashcardControlButton
                   data-testid="flashcard-next"
                   onClick={next}

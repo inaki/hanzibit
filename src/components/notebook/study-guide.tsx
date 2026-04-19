@@ -19,6 +19,8 @@ import {
   CircleHelp,
   NotebookPen,
   ChevronDown,
+  GraduationCap,
+  PenLine,
 } from "lucide-react";
 import { AudioPlayButton } from "./audio-play-button";
 import { UpgradePrompt } from "@/components/upgrade-prompt";
@@ -27,8 +29,8 @@ import { InfoPanel, SectionCard } from "@/components/patterns/surfaces";
 import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
 import { useSettings } from "./settings-context";
-import { getStudyGuideDataAction, createFlashcardForWord, getDailyPracticeAction } from "@/lib/actions";
-import type { StudyGuideData, StudyGuideWord } from "@/lib/data";
+import { getStudyGuideDataAction, createFlashcardForWord, getDailyPracticeAction, getCuratedGrammarPointsAction, markGrammarPointStudiedAction, getCollocationsAction, getCharacterBreakdownsAction } from "@/lib/actions";
+import type { StudyGuideData, StudyGuideWord, CuratedGrammarPoint, HskCollocation, CharacterBreakdown } from "@/lib/data";
 import { buildStudyGuideReading } from "@/lib/study-guide-content";
 import type { DailyPracticePlan } from "@/lib/daily-practice";
 import { buildInlineAnnotation } from "@/lib/parse-tokens";
@@ -54,6 +56,10 @@ export function StudyGuide({ initialData, assignmentId, beginnerMode = false, is
   const [search, setSearch] = useState("");
   const [dailyPractice, setDailyPractice] = useState<DailyPracticePlan | null>(null);
   const [isPending, startTransition] = useTransition();
+  const [sidebarTab, setSidebarTab] = useState<"words" | "grammar">("words");
+  const [grammarPoints, setGrammarPoints] = useState<CuratedGrammarPoint[]>([]);
+  const [selectedGrammarId, setSelectedGrammarId] = useState<number | null>(null);
+  const [grammarLoading, setGrammarLoading] = useState(false);
 
   // Sync with settings HSK level on mount only
   const initialSynced = useRef(false);
@@ -96,12 +102,32 @@ export function StudyGuide({ initialData, assignmentId, beginnerMode = false, is
     };
   }, [data.level]);
 
+  useEffect(() => {
+    if (sidebarTab !== "grammar") return;
+    let cancelled = false;
+    setGrammarLoading(true);
+    getCuratedGrammarPointsAction(data.level).then((pts) => {
+      if (cancelled) return;
+      setGrammarPoints(pts);
+      setSelectedGrammarId(pts[0]?.id ?? null);
+      setGrammarLoading(false);
+    });
+    return () => { cancelled = true; };
+  }, [sidebarTab, data.level]);
+
   function handleLevelChange(level: number) {
     startTransition(async () => {
       const newData = await getStudyGuideDataAction(level);
       setData(newData);
       setSelectedWordId(newData.words[0]?.word.id ?? null);
       setSearch("");
+      if (sidebarTab === "grammar") {
+        setGrammarLoading(true);
+        const pts = await getCuratedGrammarPointsAction(level);
+        setGrammarPoints(pts);
+        setSelectedGrammarId(pts[0]?.id ?? null);
+        setGrammarLoading(false);
+      }
     });
   }
 
@@ -134,12 +160,30 @@ export function StudyGuide({ initialData, assignmentId, beginnerMode = false, is
       <div className="flex min-h-0 flex-1 flex-col gap-6 lg:flex-row lg:gap-0">
         <SectionCard className="lg:h-full lg:w-[320px] lg:shrink-0 lg:overflow-y-auto lg:rounded-none lg:border-0 lg:border-r lg:bg-card lg:p-4">
           <div className="mb-4 flex items-center justify-between gap-3">
-            <h2
-              data-testid="study-guide-list-heading"
-              className="text-xs font-semibold uppercase tracking-widest text-muted-foreground/70"
-            >
-              Study Words
-            </h2>
+            <div className="flex rounded-[10px] bg-muted p-0.5">
+              <button
+                onClick={() => setSidebarTab("words")}
+                className={`flex items-center gap-1.5 rounded-[8px] px-3 py-1.5 text-xs font-medium transition-colors ${
+                  sidebarTab === "words"
+                    ? "bg-card text-foreground shadow-sm"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                <BookOpen className="h-3.5 w-3.5" />
+                Words
+              </button>
+              <button
+                onClick={() => setSidebarTab("grammar")}
+                className={`flex items-center gap-1.5 rounded-[8px] px-3 py-1.5 text-xs font-medium transition-colors ${
+                  sidebarTab === "grammar"
+                    ? "bg-card text-foreground shadow-sm"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                <GraduationCap className="h-3.5 w-3.5" />
+                Grammar
+              </button>
+            </div>
             <div className="relative shrink-0">
               <select
                 data-testid="study-guide-level-select"
@@ -158,7 +202,43 @@ export function StudyGuide({ initialData, assignmentId, beginnerMode = false, is
             </div>
           </div>
 
-          {!data.locked && (
+          {!data.locked && sidebarTab === "grammar" && (
+            <div data-testid="study-guide-grammar-list" className="space-y-1">
+              {grammarLoading ? (
+                <p className="py-8 text-center text-sm text-muted-foreground/70">Loading grammar…</p>
+              ) : grammarPoints.length === 0 ? (
+                <p className="py-8 text-center text-sm text-muted-foreground/70">No grammar patterns yet.</p>
+              ) : (
+                grammarPoints.map((gp) => (
+                  <button
+                    key={gp.id}
+                    onClick={() => setSelectedGrammarId(gp.id)}
+                    className={`flex w-full items-start gap-3 rounded-lg px-3 py-2.5 text-left transition-colors ${
+                      selectedGrammarId === gp.id
+                        ? "ui-tone-orange-panel border"
+                        : "border border-border bg-card hover:border-border"
+                    }`}
+                  >
+                    {gp.studied ? (
+                      <CheckCircle2 className="ui-tone-emerald-text mt-0.5 h-4 w-4 shrink-0" />
+                    ) : (
+                      <Circle className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground/50" />
+                    )}
+                    <div className="min-w-0 flex-1">
+                      <p className={`text-sm font-semibold leading-tight ${selectedGrammarId === gp.id ? "ui-tone-orange-text" : "text-foreground"}`}>
+                        {gp.title}
+                      </p>
+                      {gp.pattern && (
+                        <p className="mt-0.5 truncate font-mono text-[11px] text-muted-foreground/70">{gp.pattern}</p>
+                      )}
+                    </div>
+                  </button>
+                ))
+              )}
+            </div>
+          )}
+
+          {!data.locked && sidebarTab === "words" && (
             <>
               {isBeginnerMode && (
                 <EmptyStateNotice className="ui-tone-sky-panel mb-4 px-4 py-3">
@@ -302,7 +382,27 @@ export function StudyGuide({ initialData, assignmentId, beginnerMode = false, is
               )}
 
               <div className="mt-6">
-                {selected ? (
+                {sidebarTab === "grammar" ? (
+                  (() => {
+                    const selectedGp = grammarPoints.find((g) => g.id === selectedGrammarId) ?? null;
+                    return selectedGp ? (
+                      <GrammarDetail
+                        key={selectedGp.id}
+                        point={selectedGp}
+                        level={data.level}
+                        onStudied={(id) => {
+                          setGrammarPoints((prev) =>
+                            prev.map((g) => (g.id === id ? { ...g, studied: true } : g))
+                          );
+                        }}
+                      />
+                    ) : (
+                      <EmptyStateNotice className="flex h-64 items-center justify-center rounded-xl bg-card card-ring text-sm">
+                        Select a grammar pattern to view details
+                      </EmptyStateNotice>
+                    );
+                  })()
+                ) : selected ? (
                   <WordDetail
                     key={`${selected.word.id}-${isBeginnerMode ? "beginner" : "full"}`}
                     item={selected}
@@ -370,7 +470,14 @@ function WordDetail({
   const [openingReview, setOpeningReview] = useState(false);
   const [createdWordId, setCreatedWordId] = useState<number | null>(null);
   const [showFullDetails, setShowFullDetails] = useState(!beginnerMode);
+  const [collocations, setCollocations] = useState<HskCollocation[]>([]);
+  const [breakdowns, setBreakdowns] = useState<CharacterBreakdown[]>([]);
   const router = useRouter();
+
+  useEffect(() => {
+    getCollocationsAction(item.word.simplified).then(setCollocations).catch(() => {});
+    getCharacterBreakdownsAction(item.word.simplified).then(setBreakdowns).catch(() => {});
+  }, [item.word.simplified]);
   const reading = buildStudyGuideReading(item, level);
   const compactEnglish = summarizeEnglishGloss(item.word.english) || item.word.english;
   const draftTitleZh = `练习：${item.word.simplified}`;
@@ -510,7 +617,7 @@ function WordDetail({
       </div>
 
       {/* Status badges */}
-      <div className="mb-6 flex flex-wrap justify-center gap-2">
+      <div className="mb-4 flex flex-wrap justify-center gap-2">
         {item.encountered ? (
           <span className="ui-tone-emerald-panel ui-tone-emerald-text inline-flex items-center gap-1 rounded-full border px-3 py-1 text-xs font-medium">
             <CheckCircle2 className="h-3.5 w-3.5" />
@@ -534,7 +641,83 @@ function WordDetail({
             Today&apos;s focus
           </span>
         ) : null}
+        <RegisterBadge register={item.word.register} />
       </div>
+
+      {/* Cultural note */}
+      {item.word.cultural_note && (
+        <div className="mb-6 rounded-lg ui-tone-amber-panel px-4 py-3 text-sm">
+          <p className="ui-tone-amber-text mb-1 text-[10px] font-semibold uppercase tracking-wider">Cultural note</p>
+          <p className="leading-relaxed text-foreground/90">{item.word.cultural_note}</p>
+        </div>
+      )}
+
+      {/* Character breakdown */}
+      {breakdowns.length > 0 && (
+        <div className="mb-6">
+          <p className="mb-3 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+            Character breakdown
+          </p>
+          <div className="space-y-3">
+            {breakdowns.map((bd) => (
+              <div key={bd.character} className="rounded-lg bg-muted/50 px-4 py-3">
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="text-2xl font-bold text-foreground/90">{bd.character}</span>
+                  <span className="text-muted-foreground">=</span>
+                  {bd.components.map((c, i) => (
+                    <span key={i} className="flex items-center gap-1">
+                      {i > 0 && <span className="text-muted-foreground/50">+</span>}
+                      <span className="inline-flex flex-col items-center">
+                        <span className="text-lg font-medium text-foreground">{c.char}</span>
+                        <span className="text-[10px] text-muted-foreground leading-none">{c.meaning}</span>
+                      </span>
+                    </span>
+                  ))}
+                </div>
+                {bd.mnemonic && (
+                  <p className="mt-2 text-xs italic text-muted-foreground">{bd.mnemonic}</p>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Collocations */}
+      {collocations.length > 0 && (
+        <div className="mb-6">
+          <p className="mb-3 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+            In context with words you know
+          </p>
+          <div className="space-y-2">
+            {collocations.map((c) => (
+              <div key={c.id} className="rounded-lg bg-muted/50 px-4 py-3">
+                <p className="text-base font-medium leading-snug">{c.sentence_zh}</p>
+                <p className="mt-0.5 text-sm text-muted-foreground">{c.sentence_en}</p>
+                {c.known_words.length > 0 && (
+                  <div className="mt-2 flex flex-wrap gap-1">
+                    {c.known_words.map((w) => (
+                      <span
+                        key={w}
+                        className={`inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-medium ${
+                          c.encountered_words.includes(w)
+                            ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300"
+                            : "bg-muted text-muted-foreground"
+                        }`}
+                      >
+                        {w}
+                        {c.encountered_words.includes(w) && (
+                          <span className="ml-1 opacity-70">✓</span>
+                        )}
+                      </span>
+                    ))}
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {isFocusWord && dailyPractice?.focusWordProgress ? (
         <div className="ui-tone-orange-panel mb-6 rounded-lg border p-4">
@@ -752,6 +935,24 @@ function WordDetail({
   );
 }
 
+function RegisterBadge({ register }: { register: string }) {
+  if (!register || register === "neutral") return null;
+  const configs: Record<string, { label: string; className: string }> = {
+    chengyu:    { label: "Chengyu",    className: "bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300" },
+    formal:     { label: "Formal",     className: "ui-tone-sky-panel ui-tone-sky-text" },
+    written:    { label: "Written",    className: "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300" },
+    colloquial: { label: "Colloquial", className: "ui-tone-amber-panel ui-tone-amber-text" },
+    slang:      { label: "Slang",      className: "bg-pink-100 text-pink-700 dark:bg-pink-900/30 dark:text-pink-300" },
+  };
+  const config = configs[register];
+  if (!config) return null;
+  return (
+    <span className={`inline-flex items-center rounded-full border px-3 py-1 text-xs font-medium ${config.className}`}>
+      {config.label}
+    </span>
+  );
+}
+
 function FocusStatusPill({ done, label }: { done: boolean; label: string }) {
   return (
     <span
@@ -763,5 +964,117 @@ function FocusStatusPill({ done, label }: { done: boolean; label: string }) {
     >
       {label}
     </span>
+  );
+}
+
+function GrammarDetail({
+  point,
+  level,
+  onStudied,
+}: {
+  point: CuratedGrammarPoint;
+  level: number;
+  onStudied: (id: number) => void;
+}) {
+  const [isPending, startTransition] = useTransition();
+  const router = useRouter();
+
+  const examples: { zh: string; pinyin: string; en: string }[] = (() => {
+    try { return JSON.parse(point.examples); } catch { return []; }
+  })();
+
+  const journalHref = `/notebook?new=1&draftTitleZh=${encodeURIComponent("语法练习")}&draftTitleEn=${encodeURIComponent(`Grammar: ${point.title}`)}&draftUnit=${encodeURIComponent(`HSK ${level} Grammar`)}&draftLevel=${level}&draftPrompt=${encodeURIComponent(point.journal_prompt)}`;
+
+  function handleMarkStudied() {
+    if (point.studied) return;
+    startTransition(async () => {
+      await markGrammarPointStudiedAction(point.id);
+      onStudied(point.id);
+    });
+  }
+
+  return (
+    <SectionCard className="space-y-6 p-6">
+      {/* Header */}
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground/70">
+            HSK {level} Grammar
+          </p>
+          <h2 className="mt-1 text-xl font-bold text-foreground">{point.title}</h2>
+          {point.pattern && (
+            <p className="mt-1 font-mono text-sm text-[var(--cn-orange)]">{point.pattern}</p>
+          )}
+        </div>
+        {point.studied ? (
+          <span className="inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-medium ui-tone-emerald-panel ui-tone-emerald-text">
+            <CheckCircle2 className="h-3.5 w-3.5" />
+            Studied
+          </span>
+        ) : (
+          <button
+            onClick={handleMarkStudied}
+            disabled={isPending}
+            className="press-down inline-flex items-center gap-1.5 rounded-full border bg-card px-3 py-1 text-xs font-medium text-muted-foreground transition-colors hover:bg-muted disabled:opacity-50"
+          >
+            <Circle className="h-3.5 w-3.5" />
+            Mark studied
+          </button>
+        )}
+      </div>
+
+      {/* Explanation */}
+      <div>
+        <p className="mb-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground/70">Explanation</p>
+        <p className="text-sm leading-relaxed text-foreground/90">{point.explanation}</p>
+      </div>
+
+      {/* Examples */}
+      {examples.length > 0 && (
+        <div>
+          <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground/70">Examples</p>
+          <div className="space-y-3">
+            {examples.map((ex, i) => (
+              <div key={i} className="rounded-lg bg-muted/40 px-4 py-3">
+                <p className="text-base font-medium text-foreground">{ex.zh}</p>
+                <p className="mt-0.5 font-mono text-xs text-muted-foreground">{ex.pinyin}</p>
+                <p className="mt-1 text-sm text-muted-foreground">{ex.en}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Reading Passage */}
+      <div className="rounded-xl bg-card card-ring px-5 py-4">
+        <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground/70">
+          Reading Passage
+        </p>
+        <p className="text-base leading-[2] text-foreground/90">{point.reading_passage}</p>
+        <div className="mt-3 border-t border-border/40 pt-3">
+          <p className="text-xs font-medium text-muted-foreground">
+            <span className="ui-tone-orange-text font-semibold">Comprehension: </span>
+            {point.comprehension_question}
+          </p>
+        </div>
+      </div>
+
+      {/* Journal Prompt */}
+      <div className="rounded-xl ui-tone-orange-panel px-5 py-4">
+        <div className="mb-2 flex items-center gap-2">
+          <PenLine className="ui-tone-orange-text h-4 w-4" />
+          <p className="text-xs font-semibold uppercase tracking-wider ui-tone-orange-text">Try Writing</p>
+        </div>
+        <p className="mb-3 text-sm leading-relaxed text-foreground/90">{point.journal_prompt}</p>
+        <Link
+          href={journalHref}
+          onClick={handleMarkStudied}
+          className="inline-flex items-center gap-1.5 rounded-full bg-[var(--cn-orange)] px-4 py-2 text-xs font-semibold text-white transition-opacity hover:opacity-90"
+        >
+          <PenLine className="h-3.5 w-3.5" />
+          Open journal with this prompt →
+        </Link>
+      </div>
+    </SectionCard>
   );
 }

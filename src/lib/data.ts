@@ -51,6 +51,20 @@ export interface GrammarPoint {
   created_at: string;
 }
 
+export interface CuratedGrammarPoint {
+  id: number;
+  hsk_level: number;
+  display_order: number;
+  title: string;
+  pattern: string | null;
+  explanation: string;
+  examples: string;
+  reading_passage: string;
+  comprehension_question: string;
+  journal_prompt: string;
+  studied: boolean;
+}
+
 export interface Flashcard {
   id: string;
   user_id: string;
@@ -82,6 +96,8 @@ export interface HskWord {
   pinyin: string;
   english: string;
   hsk_level: number;
+  register: string;
+  cultural_note: string | null;
 }
 
 export interface CedictWord {
@@ -175,6 +191,99 @@ export function selectWeakFlashcards(cards: Flashcard[], limit = 5): Flashcard[]
       return a.next_review.localeCompare(b.next_review);
     })
     .slice(0, limit);
+}
+
+export interface HskCollocation {
+  id: number;
+  word_simplified: string;
+  sentence_zh: string;
+  sentence_en: string;
+  known_words: string[];
+  encountered_words: string[];
+}
+
+export interface CharacterComponent {
+  char: string;
+  meaning: string;
+}
+
+export interface CharacterBreakdown {
+  character: string;
+  radical: string;
+  radical_meaning: string;
+  components: CharacterComponent[];
+  mnemonic: string | null;
+}
+
+export interface LevelReadiness {
+  level: number;
+  score: number;
+  encountered: { count: number; total: number; percent: number };
+  withFlashcard: { count: number; total: number; percent: number };
+  reviewedTwice: { count: number; total: number; percent: number };
+  isReady: boolean;
+}
+
+export async function getLevelReadiness(
+  userId: string,
+  level: number
+): Promise<LevelReadiness> {
+  const [hskWords, entries, levelFlashcards] = await Promise.all([
+    getHskWords(level),
+    query<{ content_zh: string }>(
+      "SELECT content_zh FROM journal_entries WHERE user_id = $1",
+      [userId]
+    ),
+    query<{ front: string; review_count: number }>(
+      `SELECT DISTINCT ON (f.front) f.front, f.review_count
+       FROM flashcards f
+       JOIN hsk_words w ON w.simplified = f.front
+       WHERE f.user_id = $1 AND w.hsk_level = $2`,
+      [userId, level]
+    ),
+  ]);
+
+  const total = hskWords.length;
+  if (total === 0) {
+    return {
+      level,
+      score: 0,
+      encountered: { count: 0, total: 0, percent: 0 },
+      withFlashcard: { count: 0, total: 0, percent: 0 },
+      reviewedTwice: { count: 0, total: 0, percent: 0 },
+      isReady: false,
+    };
+  }
+
+  const encounteredProgress = calculateEncounteredProgress(
+    hskWords,
+    entries.map((e) => e.content_zh),
+    levelFlashcards.map((f) => f.front)
+  );
+
+  const withFlashcardCount = levelFlashcards.length;
+  const reviewedTwiceCount = levelFlashcards.filter((f) => f.review_count >= 2).length;
+  const withFlashcardPct = Math.round((withFlashcardCount / total) * 100);
+  const reviewedTwicePct = Math.round((reviewedTwiceCount / total) * 100);
+
+  const score = Math.round(
+    encounteredProgress.percent * 0.4 +
+    withFlashcardPct * 0.3 +
+    reviewedTwicePct * 0.3
+  );
+
+  return {
+    level,
+    score,
+    encountered: {
+      count: encounteredProgress.encountered,
+      total,
+      percent: encounteredProgress.percent,
+    },
+    withFlashcard: { count: withFlashcardCount, total, percent: withFlashcardPct },
+    reviewedTwice: { count: reviewedTwiceCount, total, percent: reviewedTwicePct },
+    isReady: score >= 80,
+  };
 }
 
 export async function getJournalEntries(userId: string): Promise<JournalEntry[]> {
@@ -280,6 +389,66 @@ export async function searchCedictWords(queryText: string): Promise<CedictWord[]
      LIMIT 50`,
     [pattern]
   );
+}
+
+export async function getCollocations(
+  userId: string,
+  wordSimplified: string
+): Promise<HskCollocation[]> {
+  const [collocations, flashcardFronts] = await Promise.all([
+    query<Omit<HskCollocation, "encountered_words">>(
+      "SELECT * FROM hsk_collocations WHERE word_simplified = $1 ORDER BY id",
+      [wordSimplified]
+    ),
+    query<{ front: string }>(
+      "SELECT DISTINCT front FROM flashcards WHERE user_id = $1",
+      [userId]
+    ),
+  ]);
+
+  if (collocations.length === 0) return [];
+
+  const knownSet = new Set(flashcardFronts.map((f) => f.front));
+  return collocations.map((c) => ({
+    ...c,
+    encountered_words: c.known_words.filter((w) => knownSet.has(w)),
+  }));
+}
+
+export async function getCharacterBreakdowns(
+  wordSimplified: string
+): Promise<CharacterBreakdown[]> {
+  const chars = [...wordSimplified];
+  if (chars.length === 0) return [];
+
+  const rows = await query<{
+    character: string;
+    radical: string;
+    radical_meaning: string;
+    components_json: string;
+    mnemonic: string | null;
+  }>(
+    `SELECT * FROM character_components WHERE character = ANY($1)`,
+    [chars]
+  );
+
+  return chars
+    .map((ch) => rows.find((r) => r.character === ch))
+    .filter((r): r is NonNullable<typeof r> => r !== undefined)
+    .map((r) => ({
+      character: r.character,
+      radical: r.radical,
+      radical_meaning: r.radical_meaning,
+      components: JSON.parse(r.components_json) as CharacterComponent[],
+      mnemonic: r.mnemonic,
+    }));
+}
+
+export async function getAllCharacterRadicals(): Promise<Record<string, string>> {
+  const rows = await query<{ character: string; radical: string }>(
+    "SELECT character, radical FROM character_components"
+  );
+  return Object.fromEntries(rows.map((r) => [r.character, r.radical]));
 }
 
 export async function getGrammarPoints(userId: string): Promise<GrammarPoint[]> {
@@ -795,4 +964,57 @@ export async function getStudyGuideData(
       dueForReview,
     },
   };
+}
+
+export async function getCuratedGrammarPoints(
+  userId: string,
+  level: number
+): Promise<CuratedGrammarPoint[]> {
+  const rows = await query<{
+    id: number;
+    hsk_level: number;
+    display_order: number;
+    title: string;
+    pattern: string | null;
+    explanation: string;
+    examples: string;
+    reading_passage: string;
+    comprehension_question: string;
+    journal_prompt: string;
+    studied_at: string | null;
+  }>(
+    `SELECT cgp.*, ugp.studied_at
+     FROM curated_grammar_points cgp
+     LEFT JOIN user_grammar_progress ugp
+       ON ugp.grammar_point_id = cgp.id AND ugp.user_id = $1
+     WHERE cgp.hsk_level = $2
+     ORDER BY cgp.display_order`,
+    [userId, level]
+  );
+
+  return rows.map((row) => ({
+    id: row.id,
+    hsk_level: row.hsk_level,
+    display_order: row.display_order,
+    title: row.title,
+    pattern: row.pattern,
+    explanation: row.explanation,
+    examples: row.examples,
+    reading_passage: row.reading_passage,
+    comprehension_question: row.comprehension_question,
+    journal_prompt: row.journal_prompt,
+    studied: row.studied_at !== null,
+  }));
+}
+
+export async function markGrammarPointStudied(
+  userId: string,
+  grammarPointId: number
+): Promise<void> {
+  await execute(
+    `INSERT INTO user_grammar_progress (id, user_id, grammar_point_id)
+     VALUES (gen_random_uuid()::text, $1, $2)
+     ON CONFLICT (user_id, grammar_point_id) DO NOTHING`,
+    [userId, grammarPointId]
+  );
 }

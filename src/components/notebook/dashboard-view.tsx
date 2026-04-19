@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { Flame, Layers, PenLine, RotateCcw, TrendingUp, AlertCircle, CheckCircle2, BookText, Loader2 } from "lucide-react";
+import { Flame, Layers, PenLine, RotateCcw, TrendingUp, AlertCircle, CheckCircle2, BookText, Loader2, Target } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { MetricPill } from "@/components/patterns/status";
 import { FocusWordStepBadge, PriorityBadge } from "@/components/patterns/status";
@@ -19,8 +19,9 @@ import {
   getUserStatsAction,
   getWeakFlashcardsAction,
   getCharacterOfTheDayAction,
+  getLevelReadinessAction,
 } from "@/lib/actions";
-import type { Flashcard, HskWord } from "@/lib/data";
+import type { Flashcard, HskWord, LevelReadiness } from "@/lib/data";
 import type { DailyPracticePlan } from "@/lib/daily-practice";
 import { buildInlineAnnotation } from "@/lib/parse-tokens";
 
@@ -53,6 +54,7 @@ export function DashboardView() {
   const [weakCards, setWeakCards] = useState<Flashcard[]>([]);
   const [charOfDay, setCharOfDay] = useState<HskWord | null>(null);
   const [dailyPractice, setDailyPractice] = useState<DailyPracticePlan | null>(null);
+  const [readiness, setReadiness] = useState<LevelReadiness | null>(null);
   const [loadedLevel, setLoadedLevel] = useState<number | null>(null);
   const loading = loadedLevel !== settings.hskLevel;
   const dashboardMode = !loading && dailyPractice ? getDashboardMode(dailyPractice, stats) : null;
@@ -141,7 +143,8 @@ export function DashboardView() {
       getWeakFlashcardsAction(5),
       getCharacterOfTheDayAction(settings.hskLevel),
       getDailyPracticeAction(settings.hskLevel),
-    ]).then(([s, p, st, w, c, plan]) => {
+      getLevelReadinessAction(settings.hskLevel),
+    ]).then(([s, p, st, w, c, plan, r]) => {
       if (cancelled) return;
       setStreak(s);
       setProgress(p);
@@ -149,6 +152,7 @@ export function DashboardView() {
       setWeakCards(w);
       setCharOfDay(c);
       setDailyPractice(plan);
+      setReadiness(r);
       setLoadedLevel(settings.hskLevel);
     });
 
@@ -681,6 +685,66 @@ export function DashboardView() {
         </div>
       </DashboardSection>
 
+      {/* Level Readiness */}
+      {!isBeginnerFirstRun && !isBeginnerFirstCompletion && (!loading || readiness) && (readiness?.score ?? 0) > 0 && (
+        <DashboardSection
+          title={`HSK ${settings.hskLevel} Readiness`}
+          icon={Target}
+          className="mb-6"
+          action={
+            <span className={`text-sm font-bold ${readiness?.isReady ? "ui-tone-emerald-text" : "ui-tone-orange-text"}`}>
+              {loading ? <LoadingStatWithIcon className="h-5 w-12" compact /> : `${readiness?.score ?? 0}%`}
+            </span>
+          }
+        >
+          {readiness?.isReady && (
+            <DashboardPanel tone="emerald" className="mb-4 px-4 py-3">
+              <p className="ui-tone-emerald-text text-sm font-semibold">
+                You&apos;re ready for the HSK {readiness.level} exam!
+              </p>
+              <p className="mt-1 text-xs text-muted-foreground">
+                You&apos;ve encountered the vocabulary, built your flashcard deck, and reviewed your cards.{" "}
+                {readiness.level < 6 && (
+                  <Link href="/notebook/settings" className="ui-tone-emerald-text font-medium hover:underline">
+                    Move to HSK {readiness.level + 1} →
+                  </Link>
+                )}
+              </p>
+            </DashboardPanel>
+          )}
+          <div className="space-y-3">
+            <ReadinessBar
+              label="Words encountered"
+              value={readiness?.encountered.percent ?? 0}
+              count={readiness?.encountered.count ?? 0}
+              total={readiness?.encountered.total ?? 0}
+              tone="orange"
+            />
+            <ReadinessBar
+              label="Flashcard coverage"
+              value={readiness?.withFlashcard.percent ?? 0}
+              count={readiness?.withFlashcard.count ?? 0}
+              total={readiness?.withFlashcard.total ?? 0}
+              tone="sky"
+            />
+            <ReadinessBar
+              label="Retention (reviewed 2×)"
+              value={readiness?.reviewedTwice.percent ?? 0}
+              count={readiness?.reviewedTwice.count ?? 0}
+              total={readiness?.reviewedTwice.total ?? 0}
+              tone="emerald"
+            />
+          </div>
+          {!readiness?.isReady && readiness && (
+            <p className="mt-3 text-xs text-muted-foreground">
+              {readiness.score >= 60
+                ? "Getting close! Keep reviewing and writing to push past 80%."
+                : "Keep going — encounter more words, create flashcards, and review them regularly."}
+            </p>
+          )}
+        </DashboardSection>
+      )}
+
       {/* Flashcard stats + weak cards */}
       <div className="mb-6 grid grid-cols-2 gap-4">
         <DashboardStatCard icon={Layers} label="Flashcards" className="[&_svg]:ui-tone-sky-text">
@@ -1021,5 +1085,49 @@ function LoadingStatWithIcon({
       <Loader2 className={`ui-tone-orange-text ${compact ? "h-3.5 w-3.5" : "h-4 w-4"} animate-spin`} />
       <LoadingValue className={className} />
     </span>
+  );
+}
+
+function ReadinessBar({
+  label,
+  value,
+  count,
+  total,
+  tone,
+}: {
+  label: string;
+  value: number;
+  count: number;
+  total: number;
+  tone: "orange" | "sky" | "emerald";
+}) {
+  const textClass =
+    tone === "orange"
+      ? "ui-tone-orange-text"
+      : tone === "sky"
+        ? "ui-tone-sky-text"
+        : "ui-tone-emerald-text";
+  const barClass =
+    tone === "orange"
+      ? "ui-tone-orange-dot"
+      : tone === "sky"
+        ? "ui-tone-sky-dot"
+        : "ui-tone-emerald-dot";
+
+  return (
+    <div>
+      <div className="mb-1.5 flex items-center justify-between text-xs">
+        <span className="text-muted-foreground">{label}</span>
+        <span className={`font-medium tabular-nums ${textClass}`}>
+          {count}/{total}
+        </span>
+      </div>
+      <div className="h-[6px] rounded-full bg-muted">
+        <div
+          className={`h-full rounded-full transition-all duration-500 ${barClass}`}
+          style={{ width: `${Math.min(100, Math.max(0, value))}%` }}
+        />
+      </div>
+    </div>
   );
 }

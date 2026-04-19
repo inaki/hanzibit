@@ -7,14 +7,34 @@ import type { HskWord, HskLevelSummary } from "@/lib/data";
 interface HskVocabularyListProps {
   words: HskWord[];
   summaries: HskLevelSummary[];
+  charRadicals?: Record<string, string>;
 }
 
-export function HskVocabularyList({ words, summaries }: HskVocabularyListProps) {
+export function HskVocabularyList({ words, summaries, charRadicals = {} }: HskVocabularyListProps) {
   const [activeLevel, setActiveLevel] = useState(1);
   const [search, setSearch] = useState("");
+  const [activeRadical, setActiveRadical] = useState<string | null>(null);
+
+  const levelWords = useMemo(
+    () => words.filter((w) => w.hsk_level === activeLevel),
+    [words, activeLevel]
+  );
+
+  const radicalsForLevel = useMemo(() => {
+    const seen = new Set<string>();
+    const result: string[] = [];
+    for (const w of levelWords) {
+      const radical = charRadicals[w.simplified[0]];
+      if (radical && !seen.has(radical)) {
+        seen.add(radical);
+        result.push(radical);
+      }
+    }
+    return result.sort();
+  }, [levelWords, charRadicals]);
 
   const filtered = useMemo(() => {
-    let result = words.filter((w) => w.hsk_level === activeLevel);
+    let result = levelWords;
     if (search.trim()) {
       const q = search.trim().toLowerCase();
       result = result.filter(
@@ -24,10 +44,17 @@ export function HskVocabularyList({ words, summaries }: HskVocabularyListProps) 
           w.english.toLowerCase().includes(q)
       );
     }
+    if (activeRadical) {
+      result = result.filter((w) => charRadicals[w.simplified[0]] === activeRadical);
+    }
     return result;
-  }, [words, activeLevel, search]);
+  }, [levelWords, search, activeRadical, charRadicals]);
 
   const activeSummary = summaries.find((s) => s.hsk_level === activeLevel);
+
+  function getWordRadical(word: HskWord): string | null {
+    return charRadicals[word.simplified[0]] ?? null;
+  }
 
   return (
     <div data-testid="vocabulary-list" className="mx-auto max-w-4xl">
@@ -47,7 +74,7 @@ export function HskVocabularyList({ words, summaries }: HskVocabularyListProps) 
           <button
             key={s.hsk_level}
             data-testid={`vocabulary-level-${s.hsk_level}`}
-            onClick={() => { setActiveLevel(s.hsk_level); setSearch(""); }}
+            onClick={() => { setActiveLevel(s.hsk_level); setSearch(""); setActiveRadical(null); }}
             className={`flex items-center gap-2 rounded-lg px-4 py-2.5 text-sm font-medium transition-colors ${
               activeLevel === s.hsk_level
                 ? "bg-primary text-primary-foreground shadow-sm"
@@ -81,9 +108,39 @@ export function HskVocabularyList({ words, summaries }: HskVocabularyListProps) 
         />
       </div>
 
+      {/* Radical filter — only shown when breakdown data is available */}
+      {radicalsForLevel.length > 0 && (
+        <div className="mb-4 flex flex-wrap items-center gap-2">
+          <span className="text-xs font-medium text-muted-foreground">Radical:</span>
+          <button
+            onClick={() => setActiveRadical(null)}
+            className={`rounded-full px-3 py-1 text-xs font-medium transition-colors ${
+              activeRadical === null
+                ? "bg-foreground text-background"
+                : "bg-muted text-muted-foreground hover:bg-muted/80"
+            }`}
+          >
+            All
+          </button>
+          {radicalsForLevel.map((r) => (
+            <button
+              key={r}
+              onClick={() => setActiveRadical(activeRadical === r ? null : r)}
+              className={`rounded-full px-3 py-1 text-sm font-medium transition-colors ${
+                activeRadical === r
+                  ? "bg-primary text-primary-foreground"
+                  : "bg-muted text-muted-foreground hover:bg-muted/80"
+              }`}
+            >
+              {r}
+            </button>
+          ))}
+        </div>
+      )}
+
       {/* Count */}
       <p data-testid="vocabulary-list-count" className="mb-3 text-xs text-muted-foreground/70">
-        {search
+        {search || activeRadical
           ? `${filtered.length} result${filtered.length !== 1 ? "s" : ""}`
           : `${activeSummary?.word_count ?? 0} words in HSK ${activeLevel}`}
       </p>
@@ -96,6 +153,9 @@ export function HskVocabularyList({ words, summaries }: HskVocabularyListProps) 
               <th className="px-5 py-3">Character</th>
               <th className="px-5 py-3">Pinyin</th>
               <th className="px-5 py-3">Meaning</th>
+              {radicalsForLevel.length > 0 && (
+                <th className="hidden px-5 py-3 sm:table-cell">Radical</th>
+              )}
             </tr>
           </thead>
           <tbody className="divide-y">
@@ -115,13 +175,26 @@ export function HskVocabularyList({ words, summaries }: HskVocabularyListProps) 
                 </td>
                 <td className="px-5 py-3 text-sm text-foreground/80">{word.pinyin}</td>
                 <td className="px-5 py-3 text-sm text-muted-foreground">{word.english}</td>
+                {radicalsForLevel.length > 0 && (
+                  <td className="hidden px-5 py-3 sm:table-cell">
+                    {(() => { const r = getWordRadical(word); return r ? (
+                      <button
+                        onClick={() => setActiveRadical(r)}
+                        className="text-lg text-muted-foreground/70 hover:text-foreground transition-colors"
+                        title={`Filter by radical ${r}`}
+                      >
+                        {r}
+                      </button>
+                    ) : null; })()}
+                  </td>
+                )}
               </tr>
             ))}
           </tbody>
         </table>
         {filtered.length === 0 && (
           <div data-testid="vocabulary-empty" className="py-12 text-center text-sm text-muted-foreground/70">
-            {search ? "No words match your search." : "No words for this level."}
+            {search || activeRadical ? "No words match your filter." : "No words for this level."}
           </div>
         )}
       </div>

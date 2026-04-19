@@ -1,4 +1,8 @@
 import { Pool, type PoolClient, type QueryResultRow, types } from "pg";
+import { CURATED_GRAMMAR_POINTS } from "./grammar-seed";
+import { REGISTER_SEED } from "./register-seed";
+import { COLLOCATION_SEED } from "./collocation-seed";
+import { CHARACTER_BREAKDOWN_SEED } from "./character-breakdown-seed";
 
 types.setTypeParser(types.builtins.INT8, (value) => Number(value));
 types.setTypeParser(types.builtins.NUMERIC, (value) => Number(value));
@@ -15,7 +19,7 @@ declare global {
   var __hanzibitSchemaVersion: number | undefined;
 }
 
-const SCHEMA_VERSION = 34;
+const SCHEMA_VERSION = 37;
 
 const APP_SCHEMA_SQL = `
   CREATE TABLE IF NOT EXISTS "user" (
@@ -718,6 +722,51 @@ const APP_SCHEMA_SQL = `
 
   CREATE INDEX IF NOT EXISTS idx_tts_usage_user_id ON tts_usage(user_id);
   CREATE INDEX IF NOT EXISTS idx_tts_usage_created_at ON tts_usage(created_at);
+
+  CREATE TABLE IF NOT EXISTS curated_grammar_points (
+    id SERIAL PRIMARY KEY,
+    hsk_level INTEGER NOT NULL,
+    display_order INTEGER NOT NULL DEFAULT 0,
+    title TEXT NOT NULL,
+    pattern TEXT,
+    explanation TEXT NOT NULL,
+    examples TEXT NOT NULL DEFAULT '[]',
+    reading_passage TEXT NOT NULL DEFAULT '',
+    comprehension_question TEXT NOT NULL DEFAULT '',
+    journal_prompt TEXT NOT NULL DEFAULT '',
+    UNIQUE(hsk_level, display_order)
+  );
+
+  CREATE INDEX IF NOT EXISTS idx_cgp_level ON curated_grammar_points(hsk_level, display_order);
+
+  CREATE TABLE IF NOT EXISTS user_grammar_progress (
+    id TEXT PRIMARY KEY,
+    user_id TEXT NOT NULL REFERENCES "user"(id) ON DELETE CASCADE,
+    grammar_point_id INTEGER NOT NULL REFERENCES curated_grammar_points(id) ON DELETE CASCADE,
+    studied_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    UNIQUE(user_id, grammar_point_id)
+  );
+
+  CREATE INDEX IF NOT EXISTS idx_ugp_user ON user_grammar_progress(user_id, studied_at DESC);
+
+  CREATE TABLE IF NOT EXISTS hsk_collocations (
+    id SERIAL PRIMARY KEY,
+    word_simplified TEXT NOT NULL,
+    sentence_zh TEXT NOT NULL,
+    sentence_en TEXT NOT NULL,
+    known_words TEXT[] NOT NULL DEFAULT '{}',
+    UNIQUE(word_simplified, sentence_zh)
+  );
+
+  CREATE INDEX IF NOT EXISTS idx_hsk_collocations_word ON hsk_collocations(word_simplified);
+
+  CREATE TABLE IF NOT EXISTS character_components (
+    character TEXT PRIMARY KEY,
+    radical TEXT NOT NULL,
+    radical_meaning TEXT NOT NULL,
+    components_json TEXT NOT NULL,
+    mnemonic TEXT
+  );
 `;
 
 function getDatabaseUrl(): string {
@@ -1047,6 +1096,80 @@ async function initializeSchema(): Promise<void> {
   await pool.query(`
     CREATE INDEX IF NOT EXISTS idx_tts_usage_created_at ON tts_usage(created_at)
   `);
+
+  await pool.query(`
+    ALTER TABLE hsk_words
+      ADD COLUMN IF NOT EXISTS register TEXT NOT NULL DEFAULT 'neutral',
+      ADD COLUMN IF NOT EXISTS cultural_note TEXT
+  `);
+
+  // Seed register and cultural_note values (idempotent — only updates when data differs)
+  for (const item of REGISTER_SEED) {
+    if (item.register && item.cultural_note) {
+      await pool.query(
+        `UPDATE hsk_words SET register = $1, cultural_note = $2 WHERE simplified = $3`,
+        [item.register, item.cultural_note, item.simplified]
+      );
+    } else if (item.register) {
+      await pool.query(
+        `UPDATE hsk_words SET register = $1 WHERE simplified = $2`,
+        [item.register, item.simplified]
+      );
+    } else if (item.cultural_note) {
+      await pool.query(
+        `UPDATE hsk_words SET cultural_note = $1 WHERE simplified = $2`,
+        [item.cultural_note, item.simplified]
+      );
+    }
+  }
+
+  // Seed curated grammar points (idempotent via ON CONFLICT DO NOTHING)
+  for (const point of CURATED_GRAMMAR_POINTS) {
+    await pool.query(
+      `INSERT INTO curated_grammar_points
+         (hsk_level, display_order, title, pattern, explanation, examples,
+          reading_passage, comprehension_question, journal_prompt)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)
+       ON CONFLICT (hsk_level, display_order) DO NOTHING`,
+      [
+        point.hsk_level,
+        point.display_order,
+        point.title,
+        point.pattern,
+        point.explanation,
+        point.examples,
+        point.reading_passage,
+        point.comprehension_question,
+        point.journal_prompt,
+      ]
+    );
+  }
+
+  // Seed collocations (idempotent — skip if already exists for this word+sentence pair)
+  for (const item of COLLOCATION_SEED) {
+    await pool.query(
+      `INSERT INTO hsk_collocations (word_simplified, sentence_zh, sentence_en, known_words)
+       VALUES ($1, $2, $3, $4)
+       ON CONFLICT (word_simplified, sentence_zh) DO NOTHING`,
+      [item.word_simplified, item.sentence_zh, item.sentence_en, item.known_words]
+    );
+  }
+
+  // Seed character component breakdowns (idempotent via ON CONFLICT DO NOTHING)
+  for (const item of CHARACTER_BREAKDOWN_SEED) {
+    await pool.query(
+      `INSERT INTO character_components (character, radical, radical_meaning, components_json, mnemonic)
+       VALUES ($1, $2, $3, $4, $5)
+       ON CONFLICT (character) DO NOTHING`,
+      [
+        item.character,
+        item.radical,
+        item.radical_meaning,
+        JSON.stringify(item.components),
+        item.mnemonic ?? null,
+      ]
+    );
+  }
 }
 
 export async function ensureAppSchema(): Promise<void> {
