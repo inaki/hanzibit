@@ -495,7 +495,7 @@ export function StudyGuide({
                         <div className="min-w-0 px-3">
                           <div className="mb-0.5 flex items-baseline gap-1.5">
                             <span
-                              className={`text-[18px] font-bold leading-none ${
+                              className={`cn-font-chinese text-[18px] font-bold leading-none ${
                                 isSelected
                                   ? "text-[var(--cn-orange)]"
                                   : "text-foreground"
@@ -986,7 +986,7 @@ function WordDetail({
         <div className="flex flex-col items-center gap-2.5">
           <p
             data-testid="word-detail-character"
-            className="text-[120px] font-bold leading-none tracking-[-0.02em] text-foreground"
+            className="cn-font-chinese text-[120px] font-bold leading-none tracking-[-0.02em] text-foreground"
           >
             {item.word.simplified}
           </p>
@@ -1108,7 +1108,7 @@ function WordDetail({
                   {bd.character}
                 </div>
                 <div className="relative flex flex-wrap items-center gap-2.5">
-                  <span className="mr-1 border-r border-dashed border-border pr-3 text-[48px] font-bold leading-none text-foreground">
+                  <span className="cn-font-chinese mr-1 border-r border-dashed border-border pr-3 text-[48px] font-bold leading-none text-foreground">
                     {bd.character}
                   </span>
                   <span className="text-2xl font-light text-muted-foreground">=</span>
@@ -1118,7 +1118,7 @@ function WordDetail({
                         <span className="text-lg font-light text-muted-foreground">+</span>
                       )}
                       <span className="flex min-w-[60px] cursor-pointer flex-col items-center gap-1 rounded-[10px] bg-[var(--cn-orange-light)] px-2.5 py-1.5 transition-colors hover:bg-[oklch(0.96_0.04_45)]">
-                        <span className="text-[28px] font-bold leading-none text-[var(--cn-orange-dark)]">
+                        <span className="cn-font-chinese text-[28px] font-bold leading-none text-[var(--cn-orange-dark)]">
                           {c.char}
                         </span>
                         <span className="text-[10px] font-semibold tracking-[0.02em] text-[var(--cn-orange-dark)]">
@@ -1152,7 +1152,7 @@ function WordDetail({
                 style={{ gridTemplateColumns: "1fr auto" }}
               >
                 <div>
-                  <p className="mb-1 text-[17px] font-medium leading-relaxed">
+                  <p className="cn-font-chinese mb-1 text-[17px] font-medium leading-relaxed">
                     <HighlightWord
                       text={c.sentence_zh}
                       target={item.word.simplified}
@@ -1574,7 +1574,7 @@ function GrammarDetail({
                     data-testid={isChinese ? "grammar-pattern-token-chinese" : "grammar-pattern-token-label"}
                     className={`rounded-[6px] px-2 py-0.5 ${
                       isChinese
-                        ? "bg-[var(--cn-orange-light)] text-[var(--cn-orange-dark)]"
+                        ? "cn-font-chinese bg-[var(--cn-orange-light)] text-[var(--cn-orange-dark)]"
                         : "bg-white text-[var(--ui-tone-violet-text)]"
                     }`}
                   >
@@ -1624,7 +1624,7 @@ function GrammarDetail({
                 className="rounded-[12px] border border-border bg-card px-4 py-4"
                 style={{ borderLeftWidth: "3px", borderLeftColor: "var(--t-emerald-t)" }}
               >
-                <p className="mb-1 text-[17px] font-medium leading-[1.6] text-foreground">
+                <p className="cn-font-chinese mb-1 text-[17px] font-medium leading-[1.6] text-foreground">
                   <HighlightPatternWord text={ex.zh} words={grammarWords} />
                 </p>
                 <p className="mb-1 font-mono text-[12px] text-muted-foreground">{ex.pinyin}</p>
@@ -1649,7 +1649,7 @@ function GrammarDetail({
                 className="rounded-[12px] border border-border bg-card px-4 py-4"
                 style={{ borderLeftWidth: "3px", borderLeftColor: "var(--t-rose-t)" }}
               >
-                <p className="mb-1 text-[17px] font-medium leading-[1.6]">
+                <p className="cn-font-chinese mb-1 text-[17px] font-medium leading-[1.6]">
                   <span
                     style={{
                       color: "var(--t-rose-t)",
@@ -1701,7 +1701,7 @@ function GrammarDetail({
         <p className="mb-2 text-[11px] font-bold uppercase tracking-[0.1em] text-muted-foreground">
           Reading Passage
         </p>
-        <p className="text-base leading-[2] text-foreground/90">{point.reading_passage}</p>
+        <p className="cn-font-chinese text-base leading-[2] text-foreground/90">{point.reading_passage}</p>
         <div className="mt-3 border-t border-border/40 pt-3">
           <p className="text-xs text-muted-foreground">
             <span className="font-semibold text-[var(--cn-orange)]">Comprehension: </span>

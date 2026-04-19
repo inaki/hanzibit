@@ -80,6 +80,7 @@
     Helvetica, Arial, system-ui, sans-serif;
   --app-font-mono: "SFMono-Regular", "SF Mono", ui-monospace, "Cascadia Code",
     "Roboto Mono", Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+  --cn-font: "KaiTi", "STKaiti", "BiauKai", cursive;
   --background: oklch(0.975 0.002 75);
   --foreground: oklch(0.145 0 0);
   --card: oklch(1 0 0);
@@ -248,6 +249,22 @@
   }
 }
 
+html.cn-font-kaiti {
+  --cn-font: "KaiTi", "STKaiti", "BiauKai", cursive;
+}
+html.cn-font-noto-sans {
+  --cn-font: "Noto Sans SC", sans-serif;
+}
+html.cn-font-source-han {
+  --cn-font: "Source Han Sans SC", "Noto Sans SC", sans-serif;
+}
+html.cn-font-fangsong {
+  --cn-font: "FangSong", "STFangSong", serif;
+}
+html.cn-font-yahei {
+  --cn-font: "Microsoft YaHei", "PingFang SC", "Hiragino Sans GB", sans-serif;
+}
+
 @layer utilities {
   .ui-tone-orange-panel {
     border-color: var(--ui-tone-orange-border);
@@ -376,6 +393,10 @@
 
   .dark .card-ring {
     box-shadow: 0 0 0 1px oklch(1 0 0 / 8%);
+  }
+
+  .cn-font-chinese {
+    font-family: var(--cn-font);
   }
 
   .press-down:active {

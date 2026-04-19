@@ -4,6 +4,7 @@ import { createContext, useContext, useState, useEffect, useCallback, type React
 
 export type FontSize = "normal" | "large" | "extra-large";
 export type HskVersion = "2.0" | "3.0";
+export type ChineseFont = "kaiti" | "noto-sans" | "source-han-sans" | "fangsong" | "yahei";
 
 export interface UserProfile {
   name: string;
@@ -11,6 +12,7 @@ export interface UserProfile {
 
 export interface Settings {
   fontSize: FontSize;
+  chineseFont: ChineseFont;
   hskVersion: HskVersion;
   hskLevel: number;
   profile: UserProfile;
@@ -18,6 +20,7 @@ export interface Settings {
 
 const DEFAULT_SETTINGS: Settings = {
   fontSize: "normal",
+  chineseFont: "kaiti",
   hskVersion: "2.0",
   hskLevel: 1,
   profile: { name: "" },
@@ -29,6 +32,7 @@ interface SettingsContextValue {
   settings: Settings;
   update: (patch: Partial<Settings>) => void;
   updateProfile: (patch: Partial<UserProfile>) => void;
+  reset: () => void;
 }
 
 const SettingsContext = createContext<SettingsContextValue | null>(null);
@@ -52,7 +56,6 @@ function saveSettings(settings: Settings) {
   }
 }
 
-/** Maps font size setting to a CSS class on <html> */
 const FONT_SIZE_CLASS: Record<FontSize, string> = {
   normal: "",
   large: "cn-font-large",
@@ -61,9 +64,31 @@ const FONT_SIZE_CLASS: Record<FontSize, string> = {
 
 function applyFontSize(size: FontSize) {
   const html = document.documentElement;
-  // Remove any existing font class
   html.classList.remove("cn-font-large", "cn-font-xl");
   const cls = FONT_SIZE_CLASS[size];
+  if (cls) html.classList.add(cls);
+}
+
+const ALL_CHINESE_FONT_CLASSES = [
+  "cn-font-kaiti",
+  "cn-font-noto-sans",
+  "cn-font-source-han",
+  "cn-font-fangsong",
+  "cn-font-yahei",
+] as const;
+
+const CHINESE_FONT_CLASS: Record<ChineseFont, string> = {
+  "kaiti": "cn-font-kaiti",
+  "noto-sans": "cn-font-noto-sans",
+  "source-han-sans": "cn-font-source-han",
+  "fangsong": "cn-font-fangsong",
+  "yahei": "cn-font-yahei",
+};
+
+function applyChineseFont(font: ChineseFont) {
+  const html = document.documentElement;
+  html.classList.remove(...ALL_CHINESE_FONT_CLASSES);
+  const cls = CHINESE_FONT_CLASS[font];
   if (cls) html.classList.add(cls);
 }
 
@@ -77,6 +102,7 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setSettings(loaded);
     applyFontSize(loaded.fontSize);
+    applyChineseFont(loaded.chineseFont);
     setHydrated(true);
   }, []);
 
@@ -85,6 +111,7 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
       const next = { ...prev, ...patch };
       saveSettings(next);
       if (patch.fontSize) applyFontSize(patch.fontSize);
+      if (patch.chineseFont) applyChineseFont(patch.chineseFont);
       return next;
     });
   }, []);
@@ -97,11 +124,21 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
     });
   }, []);
 
+  const reset = useCallback(() => {
+    setSettings((prev) => {
+      const next = { ...DEFAULT_SETTINGS, profile: prev.profile };
+      saveSettings(next);
+      applyFontSize(next.fontSize);
+      applyChineseFont(next.chineseFont);
+      return next;
+    });
+  }, []);
+
   // Don't render children until hydrated to avoid mismatch
   if (!hydrated) return null;
 
   return (
-    <SettingsContext.Provider value={{ settings, update, updateProfile }}>
+    <SettingsContext.Provider value={{ settings, update, updateProfile, reset }}>
       {children}
     </SettingsContext.Provider>
   );

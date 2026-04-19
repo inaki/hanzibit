@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Settings, User, Type, GraduationCap, Lock, CreditCard, Crown, ExternalLink } from "lucide-react";
+import { Settings, User, Type, GraduationCap, Lock, CreditCard, Crown, ExternalLink, RotateCcw } from "lucide-react";
 import { GuidanceBanner } from "@/components/patterns/guidance";
 import {
   Dialog,
@@ -17,6 +17,7 @@ import {
   useSettings,
   type FontSize,
   type HskVersion,
+  type ChineseFont,
 } from "./settings-context";
 import { getSubscriptionInfo, type SubscriptionInfo } from "@/lib/subscription-action";
 import { PLANS, formatUsd } from "@/lib/stripe";
@@ -40,13 +41,51 @@ const FONT_PREVIEW_SIZE: Record<FontSize, string> = {
   "extra-large": "text-lg",
 };
 
+const CHINESE_FONT_OPTIONS: {
+  value: ChineseFont;
+  label: string;
+  description: string;
+  fontFamily: string;
+}[] = [
+  {
+    value: "kaiti",
+    label: "楷体 KaiTi",
+    description: "Default — best for HSK 1–4 writing practice",
+    fontFamily: "'KaiTi', 'STKaiti', 'BiauKai', cursive",
+  },
+  {
+    value: "noto-sans",
+    label: "Noto Sans",
+    description: "Clean screen reading",
+    fontFamily: "'Noto Sans SC', sans-serif",
+  },
+  {
+    value: "source-han-sans",
+    label: "Source Han",
+    description: "Great stroke clarity",
+    fontFamily: "'Source Han Sans SC', 'Noto Sans SC', sans-serif",
+  },
+  {
+    value: "fangsong",
+    label: "仿宋 FangSong",
+    description: "Good for balanced reading",
+    fontFamily: "'FangSong', 'STFangSong', serif",
+  },
+  {
+    value: "yahei",
+    label: "微软雅黑",
+    description: "Clean modern screen font",
+    fontFamily: "'Microsoft YaHei', 'PingFang SC', sans-serif",
+  },
+];
+
 const HSK_OPTIONS: { value: HskVersion; label: string; description: string; available: boolean }[] = [
   { value: "2.0", label: "HSK 2.0", description: "Classic 6 levels, ~5,000 words", available: true },
   { value: "3.0", label: "HSK 3.0", description: "New standard, 9 levels, ~11,000 words", available: false },
 ];
 
 export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
-  const { settings, update, updateProfile } = useSettings();
+  const { settings, update, updateProfile, reset } = useSettings();
   const { data: session } = useSession();
   const [draftName, setDraftName] = useState("");
   const [isEditingName, setIsEditingName] = useState(false);
@@ -381,6 +420,70 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
                 我喜欢学习中文。
               </p>
             </GuidanceBanner>
+          </section>
+
+          {/* --- Chinese Font --- */}
+          <section data-testid="settings-chinese-font">
+            <h3 className="mb-1 flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              <Type className="h-3.5 w-3.5" />
+              Chinese Character Font
+            </h3>
+            <p className="mb-3 text-xs text-muted-foreground">
+              Affects characters in flashcards, examples, and study passages.
+            </p>
+            <div className="grid grid-cols-3 gap-2">
+              {CHINESE_FONT_OPTIONS.map((opt) => {
+                const selected = settings.chineseFont === opt.value;
+                return (
+                  <button
+                    key={opt.value}
+                    data-testid={`settings-chinese-font-${opt.value}`}
+                    onClick={() => update({ chineseFont: opt.value })}
+                    className={`flex flex-col items-center gap-1.5 rounded-lg border p-3 transition-colors ${
+                      selected
+                        ? "ui-tone-orange-panel border-[var(--ui-tone-orange-border)]"
+                        : "border-border bg-card hover:border-muted-foreground/30"
+                    }`}
+                  >
+                    <span
+                      className={`text-2xl font-bold leading-none ${selected ? "ui-tone-orange-text" : "text-foreground/80"}`}
+                      style={opt.fontFamily ? { fontFamily: opt.fontFamily } : undefined}
+                    >
+                      学
+                    </span>
+                    <span className={`text-xs font-medium ${selected ? "ui-tone-orange-text" : "text-foreground/70"}`}>
+                      {opt.label}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+            {/* Live preview */}
+            <GuidanceBanner tone="muted" className="mt-3 border-dashed px-4 py-3">
+              <p className="mb-1 text-xs text-muted-foreground">Preview</p>
+              <p className="cn-font-chinese text-2xl leading-relaxed text-foreground">
+                学习汉字很有意思。
+              </p>
+            </GuidanceBanner>
+          </section>
+
+          {/* --- Reset --- */}
+          <section data-testid="settings-reset">
+            <div className="border-t pt-4">
+              <Button
+                data-testid="settings-reset-defaults"
+                variant="outline"
+                size="sm"
+                onClick={reset}
+                className="w-full text-xs text-muted-foreground hover:text-foreground"
+              >
+                <RotateCcw className="mr-1.5 h-3.5 w-3.5" />
+                Reset to Defaults
+              </Button>
+              <p className="mt-1.5 text-center text-xs text-muted-foreground">
+                Resets font, size, and HSK settings. Profile is kept.
+              </p>
+            </div>
           </section>
         </div>
       </DialogContent>
