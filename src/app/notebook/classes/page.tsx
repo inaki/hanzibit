@@ -102,7 +102,7 @@ export async function ClassesPageContent({
               <h1 className="mt-2 text-3xl font-bold text-foreground">{title}</h1>
               <p className="mt-2 max-w-2xl text-sm text-muted-foreground">{description}</p>
             </div>
-            <div className="inline-flex items-center rounded-full border bg-card px-3 py-1.5 text-xs font-medium text-muted-foreground">
+            <div className="inline-flex items-center rounded-full bg-card card-ring px-3 py-1.5 text-xs font-medium text-muted-foreground">
               {teacher ? "Teacher role active" : "Learner role active"}
             </div>
           </div>
@@ -161,7 +161,7 @@ export async function ClassesPageContent({
             </div>
 
             {classrooms.length === 0 ? (
-              <div className="rounded-2xl border bg-card p-6 text-sm text-muted-foreground">
+              <div className="rounded-2xl bg-card card-ring p-6 text-sm text-muted-foreground">
                 {teacher
                   ? "You are not in any classrooms yet. Create one if you want to teach, or join one with a classroom code."
                   : "You are not in any classes yet. Once a teacher shares a code, it will appear here after you join."}
@@ -172,7 +172,7 @@ export async function ClassesPageContent({
                   <Link
                     key={classroom.id}
                     href={`${basePath}/${classroom.id}`}
-                    className="rounded-2xl border bg-card p-5 transition-colors hover:border-[var(--ui-tone-orange-border)] hover:bg-muted/20"
+                    className="rounded-2xl bg-card card-ring p-5 transition-colors hover:border-[var(--ui-tone-orange-border)] hover:bg-muted/20"
                   >
                     <div className="flex items-center justify-between gap-3">
                       <h3 className="text-lg font-semibold text-foreground">{classroom.name}</h3>
@@ -200,7 +200,7 @@ export async function ClassesPageContent({
           </section>
 
           <aside className="space-y-6">
-            <section className="rounded-2xl border bg-card p-5">
+            <section className="rounded-2xl bg-card card-ring p-5">
               <div className="mb-4 flex items-center gap-2">
                 <PlusCircle className="ui-tone-orange-text h-4 w-4" />
                 <h2 className="text-sm font-semibold uppercase tracking-[0.2em] text-muted-foreground">
@@ -239,7 +239,7 @@ export async function ClassesPageContent({
               )}
             </section>
 
-            <section className="rounded-2xl border bg-card p-5">
+            <section className="rounded-2xl bg-card card-ring p-5">
               <div className="mb-4 flex items-center gap-2">
                 <LogIn className="ui-tone-orange-text h-4 w-4" />
                 <h2 className="text-sm font-semibold uppercase tracking-[0.2em] text-muted-foreground">

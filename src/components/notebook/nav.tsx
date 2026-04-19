@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect, useTransition } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { BookOpen, Search, Settings, Moon, Sun, LogOut } from "lucide-react";
+import { Search, Settings, Moon, Sun, LogOut } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
 import {
@@ -138,15 +138,6 @@ export function NotebookNav() {
   return (
     <header data-testid="notebook-nav" className="flex h-14 shrink-0 items-center justify-between border-b bg-card px-6">
       <div className="flex items-center gap-8">
-        <Link href="/" data-testid="notebook-nav-logo" className="flex items-center gap-2">
-          <div className="bg-primary text-primary-foreground flex h-8 w-8 items-center justify-center rounded-lg">
-            <BookOpen className="h-5 w-5" />
-          </div>
-          <span className="text-base font-bold text-foreground">
-            HanziBit
-          </span>
-        </Link>
-
         <nav data-testid="notebook-nav-links" className="hidden items-center gap-6 text-sm md:flex">
           {navLinks
             .filter(
@@ -190,7 +181,7 @@ export function NotebookNav() {
             className="w-56 rounded-full border-border bg-muted/50 pl-9 text-sm"
           />
           {showResults && searchQuery.length > 0 && (
-            <div className="absolute top-full right-0 z-50 mt-1 w-80 rounded-lg border bg-card shadow-lg">
+            <div className="absolute top-full right-0 z-50 mt-1 w-80 rounded-lg bg-card card-ring shadow-lg">
               {isPending ? (
                 <p className="px-4 py-3 text-sm text-muted-foreground/70">Searching...</p>
               ) : searchResults.length === 0 ? (

@@ -33,7 +33,7 @@ export function GrammarPointsList({ items }: GrammarPointsListProps) {
             <div
               key={point.id}
               data-testid={`grammar-point-${point.id}`}
-              className="overflow-hidden rounded-xl border bg-card"
+              className="overflow-hidden rounded-xl bg-card card-ring"
             >
               <button
                 data-testid={`grammar-point-toggle-${point.id}`}

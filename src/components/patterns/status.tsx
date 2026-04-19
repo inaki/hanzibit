@@ -1,15 +1,46 @@
-import { CheckCircle2, Circle } from "lucide-react";
-
+import type { ReactNode } from "react";
 import { cn } from "@/lib/utils";
 
-type PillTone = "muted" | "sky" | "rose" | "emerald" | "amber";
+export type StatusPillVariant =
+  | "priority"
+  | "focus"
+  | "done"
+  | "pending"
+  | "watch"
+  | "caution"
+  | "urgent";
 
-function getPillToneClass(tone: PillTone) {
-  if (tone === "sky") return "ui-tone-sky-panel ui-tone-sky-text";
-  if (tone === "emerald") return "ui-tone-emerald-panel ui-tone-emerald-text";
-  if (tone === "amber") return "ui-tone-amber-panel ui-tone-amber-text";
-  if (tone === "rose") return "ui-tone-rose-panel ui-tone-rose-text";
-  return "bg-muted text-muted-foreground";
+const pillVariantClasses: Record<StatusPillVariant, string> = {
+  priority: "bg-[var(--cn-orange)] text-white",
+  focus:
+    "bg-[var(--cn-orange-light)] text-[var(--cn-orange-dark)] border border-[var(--cn-orange)]/25",
+  done: "border ui-tone-emerald-panel ui-tone-emerald-text",
+  pending: "bg-muted text-muted-foreground",
+  watch: "border ui-tone-sky-panel ui-tone-sky-text",
+  caution: "border ui-tone-amber-panel ui-tone-amber-text",
+  urgent: "border ui-tone-rose-panel ui-tone-rose-text",
+};
+
+export function StatusPill({
+  variant,
+  children,
+  className,
+}: {
+  variant: StatusPillVariant;
+  children: ReactNode;
+  className?: string;
+}) {
+  return (
+    <span
+      className={cn(
+        "inline-flex items-center rounded-full px-2.5 py-0.5 text-[11px] font-medium",
+        pillVariantClasses[variant],
+        className
+      )}
+    >
+      {children}
+    </span>
+  );
 }
 
 export function MetricPill({
@@ -18,19 +49,21 @@ export function MetricPill({
   className,
 }: {
   label: string;
-  tone: PillTone;
+  tone: "muted" | "sky" | "rose" | "emerald" | "amber" | "violet";
   className?: string;
 }) {
+  const variantMap: Record<typeof tone, StatusPillVariant> = {
+    muted: "pending",
+    sky: "watch",
+    rose: "urgent",
+    emerald: "done",
+    amber: "caution",
+    violet: "watch",
+  };
   return (
-    <span
-      className={cn(
-        "rounded-full border px-2.5 py-1 text-[11px] font-medium",
-        getPillToneClass(tone),
-        className
-      )}
-    >
+    <StatusPill variant={variantMap[tone]} className={className}>
       {label}
-    </span>
+    </StatusPill>
   );
 }
 
@@ -41,25 +74,19 @@ export function PriorityPill({
   level: "urgent" | "high" | "watch";
   className?: string;
 }) {
+  const variantMap = { urgent: "urgent", high: "caution", watch: "watch" } as const;
   return (
-    <MetricPill
-      label={level}
-      tone={level === "urgent" ? "rose" : level === "high" ? "amber" : "sky"}
-      className={className}
-    />
+    <StatusPill variant={variantMap[level]} className={className}>
+      {level}
+    </StatusPill>
   );
 }
 
 export function PriorityBadge({ className }: { className?: string }) {
   return (
-    <span
-      className={cn(
-        "mb-2 inline-flex items-center rounded-full bg-primary px-2 py-0.5 text-[11px] font-medium text-primary-foreground",
-        className
-      )}
-    >
+    <StatusPill variant="priority" className={cn("mb-2", className)}>
       Priority
-    </span>
+    </StatusPill>
   );
 }
 
@@ -73,17 +100,8 @@ export function FocusWordStepBadge({
   className?: string;
 }) {
   return (
-    <span
-      className={cn(
-        "inline-flex items-center gap-1 rounded-full px-2 py-0.5",
-        done
-          ? "border ui-tone-emerald-panel ui-tone-emerald-text"
-          : "bg-background text-muted-foreground",
-        className
-      )}
-    >
-      {done ? <CheckCircle2 className="h-3 w-3" /> : <Circle className="h-3 w-3" />}
+    <StatusPill variant={done ? "done" : "pending"} className={className}>
       {label}
-    </span>
+    </StatusPill>
   );
 }

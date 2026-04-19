@@ -10,13 +10,13 @@ export default function NotebookLayout({
 }) {
   return (
     <SettingsProvider>
-      <div data-testid="notebook-layout" className="flex h-screen flex-col">
-        <NotebookNav />
-        <div className="flex flex-1 overflow-hidden">
-          <NotebookSidebar />
+      <div data-testid="notebook-layout" className="flex h-screen">
+        <NotebookSidebar />
+        <div className="flex flex-1 flex-col overflow-hidden">
+          <NotebookNav />
           <main data-testid="notebook-main-content" className="flex-1 overflow-auto bg-background">{children}</main>
+          <MobileNav />
         </div>
-        <MobileNav />
       </div>
     </SettingsProvider>
   );

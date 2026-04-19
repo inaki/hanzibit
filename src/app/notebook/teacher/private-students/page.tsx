@@ -996,7 +996,7 @@ export default async function TeacherPrivateStudentsPage() {
         ) : null}
 
         {privateStudents.length === 0 ? (
-          <div className="rounded-2xl border bg-card p-6 text-sm text-muted-foreground">
+          <div className="rounded-2xl bg-card card-ring p-6 text-sm text-muted-foreground">
             No private learners yet. Converted tutoring inquiries will appear here after they become private classrooms.
           </div>
         ) : (

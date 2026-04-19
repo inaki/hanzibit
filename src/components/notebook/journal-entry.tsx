@@ -135,7 +135,7 @@ export function JournalEntryView({
     <div
       ref={outerRef}
       data-testid="journal-entry"
-      className="mx-auto max-w-2xl overflow-hidden rounded-xl border bg-card shadow-sm transition-[height] duration-400 ease-in-out"
+      className="mx-auto max-w-2xl overflow-hidden rounded-xl bg-card card-ring transition-[height] duration-400 ease-in-out"
     >
       <div ref={innerRef} className="p-8 md:p-10">
         {/* Entry Header */}
@@ -161,9 +161,9 @@ export function JournalEntryView({
         </div>
 
         {/* Title */}
-        <h1 data-testid="journal-entry-title" className="mb-10 text-4xl font-bold text-foreground">
-          {entry.title_zh}{" "}
-          <span className="text-xl font-normal text-muted-foreground">({entry.title_en})</span>
+        <h1 data-testid="journal-entry-title" className="mb-10 text-[22px] font-bold leading-tight">
+          <span className="mr-2.5 text-[var(--cn-orange)]">{entry.title_zh}</span>
+          <span className="text-base font-normal text-muted-foreground">{entry.title_en}</span>
         </h1>
 
         {/* Chinese Text Content — crossfade between normal and interlinear gloss */}

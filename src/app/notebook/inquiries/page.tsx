@@ -123,7 +123,7 @@ export async function LearnerInquiriesPageContent({
         ) : null}
 
         {inquiries.length === 0 ? (
-          <div className="rounded-2xl border bg-card p-6 text-sm text-muted-foreground">
+          <div className="rounded-2xl bg-card card-ring p-6 text-sm text-muted-foreground">
             You have not sent any teacher inquiries yet.{" "}
             <Link href="/teachers" className="ui-tone-orange-text font-medium hover:underline">
               Browse teachers
@@ -133,7 +133,7 @@ export async function LearnerInquiriesPageContent({
         ) : (
           <div className="grid gap-4">
             {inquiries.map((inquiry) => (
-              <article key={inquiry.id} className="rounded-2xl border bg-card p-5">
+              <article key={inquiry.id} className="rounded-2xl bg-card card-ring p-5">
                 <div className="space-y-3">
                   <div className="flex flex-wrap items-center gap-3">
                     <StatusPill status={inquiry.status} />

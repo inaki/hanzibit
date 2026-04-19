@@ -41,7 +41,7 @@ export function ActionRailButton({
         data-testid={testId}
         onClick={onClick}
         disabled={disabled}
-        className={`rounded-lg p-2.5 transition-colors disabled:opacity-30 ${classes} ${className}`.trim()}
+        className={`press-down rounded-[10px] p-2.5 transition-colors disabled:opacity-30 ${classes} ${className}`.trim()}
       >
         {children ?? (Icon ? <Icon className="h-[18px] w-[18px]" /> : null)}
       </TooltipTrigger>

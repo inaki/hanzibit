@@ -77,12 +77,18 @@ export function NotebookSidebar() {
 
   return (
     <aside data-testid="notebook-sidebar" className="hidden w-60 shrink-0 flex-col border-r bg-card p-5 lg:flex overflow-y-auto h-full">
+      {/* Logo mark */}
+      <div className="mb-7 flex items-center gap-2.5">
+        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-[10px] bg-[var(--cn-orange)] text-[18px] font-bold leading-none text-white">
+          汉
+        </div>
+        <span className="text-base font-bold">HanziBit</span>
+      </div>
+
       {/* Sections */}
       <div data-testid="notebook-sidebar-sections" className="mb-8">
-        <p className="mb-3 text-[10px] font-semibold tracking-widest text-muted-foreground/70 uppercase">
-          Notebook Sections
-        </p>
-        <div className="space-y-1">
+        <p className="eyebrow mb-3">Notebook Sections</p>
+        <div className="space-y-0.5">
           {sections
             .filter(
               (section) =>
@@ -97,16 +103,16 @@ export function NotebookSidebar() {
                 key={section.label}
                 href={section.href}
                 data-testid={`notebook-sidebar-section-${section.label.toLowerCase().replace(/\s+/g, "-")}`}
-                className={`flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition-colors ${
+                className={`flex w-full items-center gap-3 rounded-[10px] px-3 py-2.5 text-sm transition-colors ${
                   active
-                    ? "bg-primary font-medium text-primary-foreground"
-                    : "text-muted-foreground hover:bg-muted"
+                    ? "bg-[var(--cn-orange)] font-medium text-white hover:bg-[var(--cn-orange-dark)]"
+                    : "text-muted-foreground hover:bg-muted hover:text-foreground"
                 }`}
               >
-                <section.icon className="h-4 w-4" />
+                <section.icon className="h-4 w-4 shrink-0" />
                 {section.label}
                 {section.label === "Flashcards" && dueCount > 0 && (
-                  <span className="ui-tone-rose-panel ui-tone-rose-text ml-auto rounded-full border px-1.5 py-0.5 text-[10px] font-bold leading-none">
+                  <span className="ml-auto rounded-full bg-rose-500 px-1.5 py-px text-[10px] font-bold leading-tight text-white">
                     {dueCount}
                   </span>
                 )}
@@ -122,22 +128,22 @@ export function NotebookSidebar() {
       </div>
 
       {/* Character of the day */}
-      <div data-testid="notebook-sidebar-character-of-day" className="rounded-xl border bg-muted/30 p-4">
-        <p className="mb-2 text-[10px] text-muted-foreground/70">Character of the day</p>
+      <div data-testid="notebook-sidebar-character-of-day" className="rounded-[12px] border bg-muted/40 p-3.5">
+        <p className="eyebrow mb-2.5">Character of the day</p>
         <div className="flex items-center gap-3">
-          <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-lg bg-card shadow-sm">
-            <span data-testid="notebook-sidebar-character" className="ui-tone-orange-text text-3xl font-bold leading-none">
+          <div className="flex h-[52px] w-[52px] shrink-0 items-center justify-center rounded-[10px] bg-card shadow-sm">
+            <span data-testid="notebook-sidebar-character" className="text-[28px] font-bold leading-none text-[var(--cn-orange)]">
               {charOfDay ? charOfDay.simplified[0] : "…"}
             </span>
           </div>
           <div className="min-w-0">
-            <p data-testid="notebook-sidebar-character-simplified" className="font-semibold text-foreground">
+            <p data-testid="notebook-sidebar-character-simplified" className="text-[13px] font-semibold text-foreground">
               {charOfDay?.simplified ?? ""}
             </p>
-            <p data-testid="notebook-sidebar-character-pinyin" className="text-xs text-foreground/70">
+            <p data-testid="notebook-sidebar-character-pinyin" className="font-mono text-[11px] text-muted-foreground">
               {charOfDay?.pinyin ?? ""}
             </p>
-            <p data-testid="notebook-sidebar-character-meaning" className="truncate text-xs text-muted-foreground">
+            <p data-testid="notebook-sidebar-character-meaning" className="truncate text-[11px] text-muted-foreground/70">
               {charOfDay?.english ?? ""}
             </p>
           </div>

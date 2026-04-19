@@ -39,7 +39,7 @@ export default async function TeacherProfilePage() {
         </div>
 
         <div className="grid gap-6 xl:grid-cols-[minmax(0,1.1fr)_minmax(320px,0.9fr)]">
-          <section className="rounded-2xl border bg-card p-5">
+          <section className="rounded-2xl bg-card card-ring p-5">
             <div className="mb-4 flex items-center gap-2">
               <UserRound className="h-4 w-4 text-[var(--cn-orange)]" />
               <h2 className="text-sm font-semibold uppercase tracking-[0.2em] text-muted-foreground">
@@ -184,7 +184,7 @@ export default async function TeacherProfilePage() {
           </section>
 
           <aside className="space-y-6">
-            <section className="rounded-2xl border bg-card p-5">
+            <section className="rounded-2xl bg-card card-ring p-5">
               <div className="mb-4 flex items-center gap-2">
                 <Globe2 className="h-4 w-4 text-[var(--cn-orange)]" />
                 <h2 className="text-sm font-semibold uppercase tracking-[0.2em] text-muted-foreground">

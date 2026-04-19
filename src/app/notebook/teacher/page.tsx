@@ -48,7 +48,7 @@ function SummaryCard({
   return (
     <Link
       href={href}
-      className="rounded-2xl border bg-card p-5 transition-colors hover:border-[var(--ui-tone-orange-border)] hover:bg-muted/20"
+      className="rounded-2xl bg-card card-ring p-5 transition-colors hover:border-[var(--ui-tone-orange-border)] hover:bg-muted/20"
     >
       <div className="flex items-center gap-2 text-muted-foreground">
         <Icon className="ui-tone-orange-text h-4 w-4" />
@@ -363,7 +363,7 @@ export default async function TeacherOverviewPage() {
           </SectionCard>
         </div>
 
-        <div className="rounded-2xl border bg-card p-5">
+        <div className="rounded-2xl bg-card card-ring p-5">
           <h2 className="text-sm font-semibold uppercase tracking-[0.2em] text-muted-foreground">
             Review Rhythm
           </h2>
@@ -374,7 +374,7 @@ export default async function TeacherOverviewPage() {
 
         <div className="grid gap-6 xl:grid-cols-[minmax(0,1.05fr)_minmax(320px,0.95fr)]">
           <section className="space-y-6">
-            <div className="rounded-2xl border bg-card p-5">
+            <div className="rounded-2xl bg-card card-ring p-5">
               <div className="flex items-center gap-2">
                 <AlertTriangle className="ui-tone-orange-text h-4 w-4" />
                 <h2 className="text-sm font-semibold uppercase tracking-[0.2em] text-muted-foreground">
@@ -427,7 +427,7 @@ export default async function TeacherOverviewPage() {
               )}
             </div>
 
-            <div className="rounded-2xl border bg-card p-5">
+            <div className="rounded-2xl bg-card card-ring p-5">
               <div className="flex items-center gap-2">
                 <AlertTriangle className="ui-tone-orange-text h-4 w-4" />
                 <h2 className="text-sm font-semibold uppercase tracking-[0.2em] text-muted-foreground">
@@ -475,7 +475,7 @@ export default async function TeacherOverviewPage() {
               )}
             </div>
 
-            <div className="rounded-2xl border bg-card p-5">
+            <div className="rounded-2xl bg-card card-ring p-5">
               <h2 className="text-sm font-semibold uppercase tracking-[0.2em] text-muted-foreground">
                 Needs Attention
               </h2>
@@ -619,7 +619,7 @@ export default async function TeacherOverviewPage() {
           </section>
 
           <aside className="space-y-6">
-            <section className="rounded-2xl border bg-card p-5">
+            <section className="rounded-2xl bg-card card-ring p-5">
               <h2 className="text-sm font-semibold uppercase tracking-[0.2em] text-muted-foreground">
                 Quick Access
               </h2>

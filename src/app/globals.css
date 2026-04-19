@@ -218,6 +218,11 @@
   html.cn-font-xl {
     font-size: 20px;
   }
+  button:focus-visible,
+  [role="button"]:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 3px oklch(0.6 0.18 45 / 30%);
+  }
 }
 
 @layer utilities {
@@ -332,6 +337,26 @@
     border-color: var(--ui-tone-orange-border);
     background-color: var(--ui-tone-orange-surface);
     color: var(--ui-tone-orange-text);
+  }
+
+  .eyebrow {
+    font-size: 0.625rem;
+    font-weight: 600;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--muted-foreground);
+  }
+
+  .card-ring {
+    box-shadow: 0 0 0 1px oklch(0 0 0 / 6%);
+  }
+
+  .dark .card-ring {
+    box-shadow: 0 0 0 1px oklch(1 0 0 / 8%);
+  }
+
+  .press-down:active {
+    transform: translateY(1px);
   }
 
   .themed-scrollbar {

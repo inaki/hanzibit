@@ -20,7 +20,7 @@ export function TeachingEntityCard({
   return (
     <Link
       href={href}
-      className="block rounded-2xl border bg-card p-5 transition-colors hover:border-[var(--ui-tone-orange-border)] hover:bg-muted/20"
+      className="block rounded-2xl bg-card card-ring p-5 transition-colors hover:bg-muted/20"
     >
       <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
         <div className="space-y-3">

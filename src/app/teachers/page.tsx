@@ -87,7 +87,7 @@ export default async function TeachersDirectoryPage({
           </p>
         </div>
 
-        <section className="rounded-2xl border bg-card p-5">
+        <section className="rounded-2xl bg-card card-ring p-5">
           <form className="grid gap-3 md:grid-cols-5">
             <label className="relative md:col-span-2">
               <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
@@ -163,7 +163,7 @@ export default async function TeachersDirectoryPage({
                   <Link
                     key={profile.id}
                     href={`/teachers/${profile.public_slug}`}
-                    className="block rounded-2xl border bg-card p-6 transition-colors hover:border-[var(--cn-orange)]/30 hover:bg-muted/10"
+                    className="block rounded-2xl bg-card card-ring p-6 transition-colors hover:bg-muted/10"
                   >
                     <div className="flex items-start justify-between gap-3">
                       <div>

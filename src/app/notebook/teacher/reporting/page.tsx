@@ -125,7 +125,7 @@ export default async function TeacherReportingPage() {
 
         <div className="grid gap-6 xl:grid-cols-[minmax(0,1.2fr)_300px]">
           <section className="space-y-6">
-            <div className="rounded-3xl border bg-card p-6">
+            <div className="rounded-3xl bg-card card-ring p-6">
               <div className="flex items-start justify-between gap-4">
                 <div>
                   <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">
@@ -149,7 +149,7 @@ export default async function TeacherReportingPage() {
             </div>
 
             <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_280px]">
-              <div className="rounded-3xl border bg-card p-6">
+              <div className="rounded-3xl bg-card card-ring p-6">
                 <div className="mb-5 flex items-center gap-2">
                   <h2 className="text-sm font-semibold uppercase tracking-[0.2em] text-muted-foreground">
                     Priority & Rhythm
@@ -358,7 +358,7 @@ export default async function TeacherReportingPage() {
               </div>
             </div>
 
-            <div className="rounded-3xl border bg-card p-5">
+            <div className="rounded-3xl bg-card card-ring p-5">
               <div className="mb-4 flex items-center gap-2">
                 <Users className="ui-tone-orange-text h-4 w-4" />
                 <h2 className="text-sm font-semibold uppercase tracking-[0.2em] text-muted-foreground">
@@ -965,7 +965,7 @@ export default async function TeacherReportingPage() {
               </div>
             </TeachingCollectionSection>
 
-            <div className="rounded-2xl border bg-card p-5">
+            <div className="rounded-2xl bg-card card-ring p-5">
               <div className="mb-4 flex items-center gap-2">
                 <Users className="ui-tone-orange-text h-4 w-4" />
                 <h2 className="text-sm font-semibold uppercase tracking-[0.2em] text-muted-foreground">
@@ -1217,7 +1217,7 @@ export default async function TeacherReportingPage() {
               )}
             </div>
 
-            <div className="rounded-2xl border bg-card p-5">
+            <div className="rounded-2xl bg-card card-ring p-5">
               <div className="mb-4 flex items-center gap-2">
                 <Users className="h-4 w-4 text-[var(--cn-orange)]" />
                 <h2 className="text-sm font-semibold uppercase tracking-[0.2em] text-muted-foreground">
@@ -1279,7 +1279,7 @@ export default async function TeacherReportingPage() {
               )}
             </div>
 
-            <div className="rounded-2xl border bg-card p-5">
+            <div className="rounded-2xl bg-card card-ring p-5">
               <div className="mb-4 flex items-center gap-2">
                 <UserRoundSearch className="ui-tone-orange-text h-4 w-4" />
                 <h2 className="text-sm font-semibold uppercase tracking-[0.2em] text-muted-foreground">
@@ -1328,7 +1328,7 @@ export default async function TeacherReportingPage() {
           </section>
 
           <aside className="space-y-6">
-            <section className="rounded-2xl border bg-card p-5">
+            <section className="rounded-2xl bg-card card-ring p-5">
               <div className="mb-4 flex items-center gap-2">
                 <AlertTriangle className="ui-tone-orange-text h-4 w-4" />
                 <h2 className="text-sm font-semibold uppercase tracking-[0.2em] text-muted-foreground">
@@ -1370,7 +1370,7 @@ export default async function TeacherReportingPage() {
               )}
             </section>
 
-            <section className="rounded-2xl border bg-card p-5">
+            <section className="rounded-2xl bg-card card-ring p-5">
               <div className="mb-4 flex items-center gap-2">
                 <Users className="ui-tone-orange-text h-4 w-4" />
                 <h2 className="text-sm font-semibold uppercase tracking-[0.2em] text-muted-foreground">

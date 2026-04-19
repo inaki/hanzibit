@@ -98,7 +98,7 @@ export async function AssignmentsPageContent({
               <h1 className="mt-2 text-3xl font-bold text-foreground">{title}</h1>
               <p className="mt-2 max-w-2xl text-sm text-muted-foreground">{description}</p>
             </div>
-            <div className="inline-flex items-center rounded-full border bg-card px-3 py-1.5 text-xs font-medium text-muted-foreground">
+            <div className="inline-flex items-center rounded-full bg-card card-ring px-3 py-1.5 text-xs font-medium text-muted-foreground">
               {teacher ? "Teacher and student views share this inbox" : "Student assignment inbox"}
             </div>
           </div>
@@ -129,7 +129,7 @@ export async function AssignmentsPageContent({
         ) : null}
 
         {assignments.length === 0 ? (
-          <div className="rounded-2xl border bg-card p-6 text-sm text-muted-foreground">
+          <div className="rounded-2xl bg-card card-ring p-6 text-sm text-muted-foreground">
             No assignments yet. Once a teacher creates one, it will appear here.
           </div>
         ) : (
@@ -202,7 +202,7 @@ function AssignmentInboxCard({
   return (
     <Link
       href={`/notebook/assignments/${assignment.id}`}
-      className="block rounded-2xl border bg-card p-5 transition-colors hover:border-[var(--ui-tone-orange-border)] hover:bg-muted/20"
+      className="block rounded-2xl bg-card card-ring p-5 transition-colors hover:border-[var(--ui-tone-orange-border)] hover:bg-muted/20"
     >
       <div className="flex items-center justify-between gap-4">
         <div className="min-w-0">

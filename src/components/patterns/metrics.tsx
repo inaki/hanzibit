@@ -50,7 +50,7 @@ export function SummaryStatCard({
   className?: string;
 }) {
   return (
-    <div className={cn("rounded-2xl border p-5", getSurfaceToneClass(tone), className)}>
+    <div className={cn("rounded-2xl p-5", tone === "default" ? "bg-card card-ring" : `border ${getSurfaceToneClass(tone)}`, className)}>
       <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">{label}</p>
       <p className="mt-3 text-3xl font-bold text-foreground">{value}</p>
     </div>
@@ -73,7 +73,7 @@ export function CompactStatCard({
       <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
         {label}
       </p>
-      <p className="mt-3 text-3xl font-bold text-foreground">{value}</p>
+      <p className="mt-3 text-2xl font-bold text-foreground">{value}</p>
     </div>
   );
 }

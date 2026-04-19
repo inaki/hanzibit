@@ -315,7 +315,7 @@ export function StudyGuide({ initialData, assignmentId, beginnerMode = false, is
                 ) : (
                   <EmptyStateNotice
                     data-testid="study-guide-empty"
-                    className="flex h-64 items-center justify-center rounded-xl border bg-card text-sm"
+                    className="flex h-64 items-center justify-center rounded-xl bg-card card-ring text-sm"
                   >
                     Select a word to view details
                   </EmptyStateNotice>
@@ -443,11 +443,11 @@ function WordDetail({
       <SectionCard data-testid="study-guide-detail" className="rounded-xl p-8">
         <div className="mb-6 text-center">
           <div className="inline-flex items-center gap-2">
-            <p className="ui-tone-orange-text text-7xl font-bold">{item.word.simplified}</p>
+            <p className="text-[64px] font-bold leading-none text-[var(--cn-orange)]">{item.word.simplified}</p>
             <AudioPlayButton text={item.word.simplified} type="word" size="md" />
           </div>
-          <p className="mt-3 text-xl font-medium text-foreground/80">{item.word.pinyin}</p>
-          <p className="mt-1 text-muted-foreground">{item.word.english}</p>
+          <p className="font-mono mt-3 text-base text-muted-foreground">{item.word.pinyin}</p>
+          <p className="mt-1 text-sm text-muted-foreground">{item.word.english}</p>
         </div>
 
         <SectionCard
@@ -477,14 +477,14 @@ function WordDetail({
             </button>
             <Link
               href={journalHref}
-              className="ui-tone-sky-panel ui-tone-sky-text inline-flex items-center rounded-full border bg-card px-4 py-2 text-sm font-medium transition-colors hover:bg-muted/60"
+              className="ui-tone-sky-panel ui-tone-sky-text inline-flex items-center rounded-full bg-card card-ring px-4 py-2 text-sm font-medium transition-colors hover:bg-muted/60"
             >
               Try one sentence (optional) →
             </Link>
             <button
               type="button"
               onClick={() => setShowFullDetails(true)}
-              className="ui-tone-sky-panel ui-tone-sky-text inline-flex items-center rounded-full border bg-card px-4 py-2 text-sm font-medium transition-colors hover:bg-muted/60"
+              className="ui-tone-sky-panel ui-tone-sky-text inline-flex items-center rounded-full bg-card card-ring px-4 py-2 text-sm font-medium transition-colors hover:bg-muted/60"
             >
               See full study details
             </button>
@@ -499,7 +499,7 @@ function WordDetail({
       {/* Character display */}
       <div className="mb-6 text-center">
         <div className="inline-flex items-center gap-2">
-          <p className="ui-tone-orange-text text-7xl font-bold">{item.word.simplified}</p>
+          <p className="text-[64px] font-bold leading-none text-[var(--cn-orange)]">{item.word.simplified}</p>
           <AudioPlayButton text={item.word.simplified} type="word" size="md" />
         </div>
         {item.word.traditional && (
@@ -562,7 +562,7 @@ function WordDetail({
               {!dailyPractice.focusWordProgress.wroteToday && (
                 <Link
                   href={journalHref}
-                  className="ui-tone-orange-panel ui-tone-orange-text inline-flex items-center rounded-full border bg-card px-3 py-1 text-xs font-medium transition-colors hover:bg-muted/60"
+                  className="ui-tone-orange-panel ui-tone-orange-text inline-flex items-center rounded-full bg-card card-ring px-3 py-1 text-xs font-medium transition-colors hover:bg-muted/60"
                 >
                   Write now →
                 </Link>
@@ -652,7 +652,7 @@ function WordDetail({
               <Link
                 key={candidate.zh}
                 href={candidate.href}
-                className="ui-tone-orange-panel ui-tone-orange-text inline-flex items-center rounded-full border bg-card px-3 py-1.5 text-xs font-medium transition-colors hover:bg-muted/60"
+                className="ui-tone-orange-panel ui-tone-orange-text inline-flex items-center rounded-full bg-card card-ring px-3 py-1.5 text-xs font-medium transition-colors hover:bg-muted/60"
                 title={candidate.en}
               >
                 {candidate.zh}
@@ -755,13 +755,12 @@ function WordDetail({
 function FocusStatusPill({ done, label }: { done: boolean; label: string }) {
   return (
     <span
-      className={`inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-medium ${
+      className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-medium ${
         done
           ? "border ui-tone-emerald-panel ui-tone-emerald-text"
           : "bg-background text-muted-foreground"
       }`}
     >
-      {done ? <CheckCircle2 className="h-3.5 w-3.5" /> : <Circle className="h-3.5 w-3.5" />}
       {label}
     </span>
   );

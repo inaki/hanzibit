@@ -44,7 +44,7 @@ export default async function PublicTeacherProfilePage({
   return (
     <div data-testid="public-teacher-profile-page" className="min-h-screen bg-background px-6 py-12">
       <div className="mx-auto max-w-5xl space-y-8">
-        <div className="rounded-3xl border bg-card p-8">
+        <div className="rounded-3xl bg-card card-ring p-8">
           <p className="text-xs font-semibold uppercase tracking-[0.25em] text-muted-foreground">
             HanziBit Teacher
           </p>
@@ -64,7 +64,7 @@ export default async function PublicTeacherProfilePage({
 
         <div className="grid gap-6 lg:grid-cols-[minmax(0,1.2fr)_minmax(300px,0.8fr)]">
           <section className="space-y-6">
-            <div className="rounded-2xl border bg-card p-6">
+            <div className="rounded-2xl bg-card card-ring p-6">
               <div className="mb-3 flex items-center gap-2">
                 <BookOpen className="h-4 w-4 text-[var(--cn-orange)]" />
                 <h2 className="text-sm font-semibold uppercase tracking-[0.2em] text-muted-foreground">
@@ -76,7 +76,7 @@ export default async function PublicTeacherProfilePage({
               </p>
             </div>
 
-            <div className="rounded-2xl border bg-card p-6">
+            <div className="rounded-2xl bg-card card-ring p-6">
               <div className="mb-4 flex items-center gap-2">
                 <Sparkles className="h-4 w-4 text-[var(--cn-orange)]" />
                 <h2 className="text-sm font-semibold uppercase tracking-[0.2em] text-muted-foreground">
@@ -90,7 +90,7 @@ export default async function PublicTeacherProfilePage({
           </section>
 
           <aside className="space-y-6">
-            <div className="rounded-2xl border bg-card p-6">
+            <div className="rounded-2xl bg-card card-ring p-6">
               <div className="space-y-4 text-sm">
                 <InfoRow icon={Languages} label="Languages" value={profile.languages_json.join(", ") || "Not specified"} />
                 <InfoRow icon={GraduationCap} label="Levels taught" value={profile.levels_json.join(", ") || "Not specified"} />
@@ -106,10 +106,10 @@ export default async function PublicTeacherProfilePage({
               <p className="mt-3 text-sm text-foreground/85">
                 Send a lightweight inquiry first. This keeps the first teacher discovery flow simple before scheduling and marketplace automation.
               </p>
-              <div className="mt-4 rounded-xl border bg-card/70 p-4 text-sm text-muted-foreground">
+              <div className="mt-4 rounded-xl bg-card/70 card-ring p-4 text-sm text-muted-foreground">
                 Pricing: {profile.pricing_summary || "Not specified yet"}
               </div>
-              <div className="mt-4 rounded-xl border bg-card p-4">
+              <div className="mt-4 rounded-xl bg-card card-ring p-4">
                 {session?.user ? (
                   <form action={createInquiryFormAction} className="space-y-3">
                     <input type="hidden" name="teacher_user_id" value={profile.teacher_user_id} />

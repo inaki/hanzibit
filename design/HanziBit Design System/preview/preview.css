@@ -1,0 +1,39 @@
+/* Shared CSS for design-system preview cards */
+:root {
+  --app-font-sans: "SF Pro Text", "SF Pro Display", "Segoe UI", "Helvetica Neue", Helvetica, Arial, system-ui, sans-serif;
+  --app-font-mono: "SFMono-Regular", "SF Mono", ui-monospace, "Cascadia Code", Menlo, monospace;
+  --background: #f9f7f4;
+  --foreground: #1a1a1a;
+  --card: #ffffff;
+  --muted: #f5f5f5;
+  --muted-foreground: #737373;
+  --border: #e5e5e5;
+  --cn-orange: #e8601c;
+  --cn-orange-light: #fef3ed;
+  --cn-orange-dark: #c44d14;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; font-family: var(--app-font-sans); color: var(--foreground); background: var(--background); -webkit-font-smoothing: antialiased; }
+.card {
+  width: 700px;
+  padding: 20px 22px;
+  background: var(--card);
+  border-radius: 14px;
+  border: 1px solid var(--border);
+  box-sizing: border-box;
+}
+.eyebrow {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: #a3a3a3;
+}
+.mono { font-family: var(--app-font-mono); }
+.row { display: flex; align-items: center; gap: 10px; }
+.col { display: flex; flex-direction: column; gap: 8px; }
+.chip {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 2px 8px; border-radius: 999px;
+  font-size: 11px; font-weight: 500;
+}

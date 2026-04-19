@@ -25,7 +25,7 @@ export default async function ReferralAdminPage() {
           </p>
         </div>
 
-        <section className="rounded-2xl border bg-card p-5">
+        <section className="rounded-2xl bg-card card-ring p-5">
           <h2 className="text-sm font-semibold uppercase tracking-[0.2em] text-muted-foreground">
             Override Student Attribution
           </h2>

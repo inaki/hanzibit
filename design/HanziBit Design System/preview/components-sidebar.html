@@ -1,0 +1,31 @@
+<!DOCTYPE html><html><head><meta charset="utf-8"><link rel="stylesheet" href="preview.css">
+<style>
+.card { padding: 0; background: #ffffff; border: 1px solid #e5e5e5; display:flex; gap: 0; }
+.sidebar { width: 240px; padding: 20px; border-right: 1px solid #e5e5e5; }
+.eye { font-size: 10px; font-weight: 600; color: #a3a3a3; letter-spacing: 0.18em; text-transform: uppercase; margin-bottom: 10px; }
+.item { display:flex; align-items:center; gap: 12px; padding: 10px 12px; border-radius: 10px; font-size: 14px; color: #737373; margin-bottom: 2px; }
+.item.active { background: #e8601c; color: #fff; font-weight: 500; }
+.item.hover { background: #f5f5f5; color:#1a1a1a; }
+.item .ic { width:14px; height:14px; border:1.5px solid currentColor; border-radius:3px; }
+.badge { margin-left: auto; font-size: 10px; font-weight: 700; background: #ef4444; color: #fff; border-radius: 999px; padding: 1px 6px; }
+.demo-right { flex: 1; padding: 20px; background: #f9f7f4; }
+.key { font-size:10px; font-weight:600; color:#a3a3a3; letter-spacing:0.1em; text-transform:uppercase; margin-top: 8px; }
+</style>
+</head><body>
+<div class="card">
+  <div class="sidebar">
+    <div class="eye">Notebook Sections</div>
+    <div class="item"><span class="ic"></span>Dashboard</div>
+    <div class="item active"><span class="ic"></span>Daily Journal</div>
+    <div class="item hover"><span class="ic"></span>Study Guide</div>
+    <div class="item"><span class="ic"></span>Flashcards<span class="badge">12</span></div>
+    <div class="item"><span class="ic"></span>Vocabulary List</div>
+  </div>
+  <div class="demo-right">
+    <div class="key">Active</div><div style="font-size:12px; color:#525252;">Orange background, white text, font-medium</div>
+    <div class="key">Hover</div><div style="font-size:12px; color:#525252;">bg-muted, text-foreground</div>
+    <div class="key">Default</div><div style="font-size:12px; color:#525252;">text-muted-foreground, transparent bg</div>
+    <div class="key">Badge</div><div style="font-size:12px; color:#525252;">red-500 bg, white text, 10px bold, rounded-full</div>
+  </div>
+</div>
+</body></html>

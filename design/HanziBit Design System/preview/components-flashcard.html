@@ -1,0 +1,31 @@
+<!DOCTYPE html><html><head><meta charset="utf-8"><link rel="stylesheet" href="preview.css">
+<style>
+.card { padding: 22px; display:flex; gap: 18px; align-items:stretch; }
+.fc { flex:1; border-radius:18px; background:#fff; border:1px solid #e5e5e5; padding:22px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:6px; min-height:140px; }
+.hanzi { font-size:44px; font-weight:700; color:#1a1a1a; line-height:1; }
+.py { font-family:var(--app-font-mono); font-size:13px; color:#737373; }
+.en { font-size:12px; color:#a3a3a3; }
+.rating { display:flex; gap:8px; margin-top: 10px; }
+.r { padding:6px 14px; border-radius:8px; font-size:12px; font-weight:500; border: 1px solid #e5e5e5; background:#fff; color:#525252; }
+.r.again { background:#fdeeec; color:#b83a2c; border-color:rgba(184,58,44,0.18); }
+.r.good { background:#effaf3; color:#137a4d; border-color:rgba(19,122,77,0.18); }
+.r.easy { background:#e8601c; color:#fff; border-color:#e8601c; }
+</style>
+</head><body>
+<div class="card">
+  <div class="fc">
+    <div class="hanzi">服务员</div>
+    <div class="py">fúwùyuán</div>
+    <div class="en">waiter · waitress</div>
+  </div>
+  <div class="fc" style="justify-content:space-between;">
+    <div style="font-size:13px; color:#a3a3a3;">Rate your recall</div>
+    <div class="rating">
+      <button class="r again">Again</button>
+      <button class="r">Hard</button>
+      <button class="r good">Good</button>
+      <button class="r easy">Easy</button>
+    </div>
+  </div>
+</div>
+</body></html>

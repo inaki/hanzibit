@@ -7,7 +7,7 @@ export function FlashcardPanel({
   ...props
 }: React.HTMLAttributes<HTMLDivElement>) {
   return (
-    <div className={cn("rounded-xl border bg-card", className)} {...props}>
+    <div className={cn("rounded-xl bg-card card-ring", className)} {...props}>
       {children}
     </div>
   );
@@ -33,7 +33,7 @@ export function FlashcardBrowseCard({
   return (
     <FlashcardPanel
       className={cn(
-        "p-5 transition-colors hover:border-[var(--ui-tone-orange-border)]",
+        "p-5 transition-colors hover:bg-[var(--ui-tone-orange-surface)]",
         className
       )}
       {...props}
@@ -73,7 +73,7 @@ export function FlashcardControlButton({
   return (
     <button
       className={cn(
-        "rounded-lg border bg-card px-4 py-2.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted/50 disabled:opacity-30",
+        "press-down rounded-[10px] border bg-card px-4 py-2.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted/50 disabled:opacity-30",
         className
       )}
       {...props}
@@ -91,7 +91,7 @@ export function FlashcardProgressBar({
   className?: string;
 }) {
   return (
-    <div className={cn("mt-6 h-1.5 rounded-full bg-muted", className)}>
+    <div className={cn("mt-6 h-[10px] rounded-full bg-muted", className)}>
       <div
         className="ui-tone-orange-dot h-full rounded-full transition-all"
         style={{ width: `${Math.max(0, Math.min(100, value))}%` }}

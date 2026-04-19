@@ -67,13 +67,13 @@ function GlossWord({
   return (
     <span
       data-testid={`gloss-word-${token.hanzi}`}
-      className="group inline-flex flex-col items-center mx-1 my-1"
+      className="group inline-flex flex-col items-center mx-1.5 my-1"
     >
       <span className="relative inline-flex items-center justify-center">
         <span
-          className={`text-[22px] font-bold leading-tight ${
+          className={`text-[26px] font-bold leading-none ${
             token.userAnnotated
-              ? "ui-tone-orange-text"
+              ? "text-[var(--cn-orange)]"
               : "text-foreground"
           }`}
         >
@@ -83,8 +83,8 @@ function GlossWord({
           <AudioPlayButton text={token.hanzi} type="word" size="sm" />
         </span>
       </span>
-      <span className="text-xs leading-tight text-muted-foreground">{token.pinyin}</span>
-      <span className="text-[10px] leading-tight text-muted-foreground/80">{token.english}</span>
+      <span className="font-mono text-[11px] leading-tight text-muted-foreground mt-0.5">{token.pinyin}</span>
+      <span className="text-[10px] leading-tight text-muted-foreground/70 mt-px">{token.english}</span>
     </span>
   );
 }
@@ -92,7 +92,7 @@ function GlossWord({
 function GlossPunctuation({ char }: { char: string }) {
   return (
     <span className="inline-flex items-end mx-0.5 self-start">
-      <span className="text-[22px] leading-tight text-foreground/90">{char}</span>
+      <span className="text-[26px] leading-none text-foreground/90">{char}</span>
     </span>
   );
 }
@@ -106,7 +106,7 @@ export function InterlinearGlossView({
     <div data-testid="interlinear-gloss-view" className="space-y-6">
       {safeParagraphs.map((segments, pi) => (
         <div key={pi} className="space-y-3">
-          <div className="flex flex-wrap items-end">
+          <div className="flex flex-wrap items-end gap-y-4">
             {(Array.isArray(segments) ? segments : []).map((seg, si) => {
               if (seg.type === "break") return <div key={si} className="w-full" />;
               if (seg.type === "punctuation") return <GlossPunctuation key={si} char={seg.char} />;

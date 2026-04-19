@@ -89,7 +89,7 @@ export default function SignInPage() {
           </Link>
         </div>
 
-        <div data-testid="signin-card" className="rounded-xl border bg-card p-8 shadow-sm">
+        <div data-testid="signin-card" className="rounded-xl bg-card card-ring p-8 shadow-sm">
           <h1 data-testid="signin-heading" className="mb-2 text-2xl font-bold text-foreground">
             Welcome back
           </h1>

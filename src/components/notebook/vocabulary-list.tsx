@@ -89,7 +89,7 @@ export function HskVocabularyList({ words, summaries }: HskVocabularyListProps) 
       </p>
 
       {/* Word table */}
-      <div data-testid="vocabulary-table" className="overflow-hidden rounded-xl border bg-card">
+      <div data-testid="vocabulary-table" className="overflow-hidden rounded-xl bg-card card-ring">
         <table className="w-full">
           <thead>
             <tr className="border-b bg-muted/50 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">

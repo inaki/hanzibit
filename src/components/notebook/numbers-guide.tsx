@@ -73,7 +73,7 @@ function FoundationSection() {
           <div
             key={item.num}
             data-testid={`number-card-${item.num}`}
-            className="flex flex-col items-center rounded-xl border bg-card p-3 shadow-sm"
+            className="flex flex-col items-center rounded-xl bg-card card-ring p-3 shadow-sm"
           >
             <span className="ui-tone-orange-panel ui-tone-orange-text mb-1 flex h-5 w-5 items-center justify-center rounded-full text-[10px] font-semibold">
               {item.num}
@@ -125,7 +125,7 @@ function PatternCard({
   examples: { label: string; chars: string; pinyin: string }[];
 }) {
   return (
-    <div className="flex-1 rounded-xl border bg-card p-5">
+    <div className="flex-1 rounded-xl bg-card card-ring p-5">
       <p className="text-sm font-bold text-foreground">{title}</p>
       <p className="mt-1 text-sm text-muted-foreground">{description}</p>
       <div className="mt-4 space-y-3">
@@ -187,7 +187,7 @@ function LargeNumbersSection() {
       </div>
 
       {/* Table */}
-      <div className="overflow-hidden rounded-xl border bg-card">
+      <div className="overflow-hidden rounded-xl bg-card card-ring">
         <table className="w-full">
           <thead>
             <tr className="border-b bg-muted/50 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">
@@ -330,7 +330,7 @@ function TryNumberDialog({
         </div>
 
         {result && (
-          <div data-testid="try-number-result" className="rounded-xl border bg-card p-6 text-center">
+          <div data-testid="try-number-result" className="rounded-xl bg-card card-ring p-6 text-center">
             <p className="ui-tone-orange-text text-4xl font-bold">
               {result.hanzi}
             </p>

@@ -40,11 +40,11 @@ export function RecentReviewsList({ items }: RecentReviewsListProps) {
       </div>
 
       {items.length === 0 ? (
-        <div data-testid="recent-reviews-empty" className="rounded-xl border bg-card py-16 text-center text-sm text-muted-foreground/70">
+        <div data-testid="recent-reviews-empty" className="rounded-xl bg-card card-ring py-16 text-center text-sm text-muted-foreground/70">
           No reviews yet. Start reviewing vocabulary and flashcards!
         </div>
       ) : (
-        <div data-testid="recent-reviews-table" className="overflow-hidden rounded-xl border bg-card">
+        <div data-testid="recent-reviews-table" className="overflow-hidden rounded-xl bg-card card-ring">
           <table className="w-full">
             <thead>
               <tr className="border-b bg-muted/50 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">

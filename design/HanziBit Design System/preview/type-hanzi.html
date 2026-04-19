@@ -1,0 +1,22 @@
+<!DOCTYPE html><html><head><meta charset="utf-8"><link rel="stylesheet" href="preview.css">
+<style>
+.card { padding: 24px; display:flex; gap: 36px; align-items:flex-end; flex-wrap:wrap; }
+.word { display:inline-flex; flex-direction:column; align-items:center; gap:2px; }
+.hanzi { font-size:32px; font-weight:700; line-height:1.1; color:#1a1a1a; }
+.hanzi.accent { color:#e8601c; }
+.py { font-family: var(--app-font-mono); font-size:12px; color:#737373; }
+.en { font-size:10px; color:#a3a3a3; }
+.note { font-size:11px; color:#a3a3a3; letter-spacing:0.1em; text-transform:uppercase; font-weight:600; }
+</style>
+</head><body>
+<div class="card">
+  <div style="flex:1; display:flex; gap:12px; align-items:flex-end;">
+    <div class="word"><span class="hanzi accent">我</span><span class="py">wǒ</span><span class="en">I</span></div>
+    <div class="word"><span class="hanzi">想</span><span class="py">xiǎng</span><span class="en">want</span></div>
+    <div class="word"><span class="hanzi">学</span><span class="py">xué</span><span class="en">learn</span></div>
+    <div class="word"><span class="hanzi accent">中文</span><span class="py">zhōngwén</span><span class="en">Chinese</span></div>
+    <span style="font-size:32px; color:#1a1a1a;">。</span>
+  </div>
+  <div class="note">Interlinear gloss — hanzi + pinyin + english, stacked</div>
+</div>
+</body></html>

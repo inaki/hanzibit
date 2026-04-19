@@ -150,7 +150,7 @@ export function LandingDemo() {
                     Self-Notes &amp; Annotations
                   </p>
                   <div className="grid gap-4 sm:grid-cols-2">
-                    <div data-testid="landing-demo-grammar-tip" className="rounded-lg border border-border bg-card p-4">
+                    <div data-testid="landing-demo-grammar-tip" className="rounded-lg bg-card card-ring p-4">
                       <p className="mb-1 text-xs font-semibold text-foreground">
                         Grammar Tip
                       </p>
@@ -159,7 +159,7 @@ export function LandingDemo() {
                         the subject and before the adjective/verb.
                       </p>
                     </div>
-                    <div data-testid="landing-demo-mnemonic" className="rounded-lg border border-border bg-card p-4">
+                    <div data-testid="landing-demo-mnemonic" className="rounded-lg bg-card card-ring p-4">
                       <p className="mb-1 text-xs font-semibold text-foreground">
                         Mnemonic
                       </p>

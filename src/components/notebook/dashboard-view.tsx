@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { Flame, Layers, PenLine, RotateCcw, TrendingUp, AlertCircle, CheckCircle2, Circle, BookText, Loader2 } from "lucide-react";
+import { Flame, Layers, PenLine, RotateCcw, TrendingUp, AlertCircle, CheckCircle2, BookText, Loader2 } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { MetricPill } from "@/components/patterns/status";
 import { FocusWordStepBadge, PriorityBadge } from "@/components/patterns/status";
@@ -394,13 +394,12 @@ export function DashboardView() {
             </div>
             {!loading && dailyPractice && (
               <span
-                className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-medium ${
+                className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium ${
                   dailyPractice.loopCompleted
                     ? "border ui-tone-emerald-panel ui-tone-emerald-text"
                     : "bg-background text-muted-foreground"
                 }`}
               >
-                <CheckCircle2 className="h-3.5 w-3.5" />
                 {dailyPractice.completedSteps}/{dailyPractice.totalSteps}
               </span>
             )}
@@ -672,7 +671,7 @@ export function DashboardView() {
       >
         <Progress
           value={progress.percent}
-          className="mb-3 h-2.5 [&_[data-slot=progress-indicator]]:bg-primary"
+          className="mb-3 h-[10px] [&_[data-slot=progress-indicator]]:bg-primary"
         />
         <div className="flex items-center justify-between text-sm text-muted-foreground">
           <span>{loading ? <LoadingLineWithIcon className="h-4 w-40" compact /> : `${progress.encountered} / ${progress.total} words encountered`}</span>
@@ -698,8 +697,8 @@ export function DashboardView() {
           <div className="flex items-center gap-4">
             {loading ? (
               <>
-                <div className="ui-tone-orange-panel flex h-16 w-16 shrink-0 items-center justify-center rounded-xl border">
-                  <Loader2 className="ui-tone-orange-text h-7 w-7 animate-spin" />
+                <div className="flex h-[52px] w-[52px] shrink-0 items-center justify-center rounded-[10px] bg-card shadow-sm">
+                  <Loader2 className="ui-tone-orange-text h-5 w-5 animate-spin" />
                 </div>
                 <div className="space-y-2">
                   <LoadingLine className="h-4 w-16" />
@@ -709,15 +708,15 @@ export function DashboardView() {
               </>
             ) : (
               <>
-                <div className="ui-tone-orange-panel flex h-16 w-16 shrink-0 items-center justify-center rounded-xl border">
-                  <span className="ui-tone-orange-text text-4xl font-bold leading-none">
+                <div className="flex h-[52px] w-[52px] shrink-0 items-center justify-center rounded-[10px] bg-card shadow-sm">
+                  <span className="text-[28px] font-bold leading-none text-[var(--cn-orange)]">
                     {charOfDay ? charOfDay.simplified[0] : "—"}
                   </span>
                 </div>
                 <div>
-                  <p className="font-semibold text-foreground">{charOfDay?.simplified ?? ""}</p>
-                  <p className="text-sm text-foreground/70">{charOfDay?.pinyin ?? ""}</p>
-                  <p className="text-sm text-muted-foreground">{charOfDay?.english ?? ""}</p>
+                  <p className="text-[13px] font-semibold text-foreground">{charOfDay?.simplified ?? ""}</p>
+                  <p className="font-mono text-[11px] text-muted-foreground">{charOfDay?.pinyin ?? ""}</p>
+                  <p className="text-[11px] text-muted-foreground/70">{charOfDay?.english ?? ""}</p>
                 </div>
               </>
             )}
@@ -881,11 +880,11 @@ function PracticeCard({
 }) {
   return (
     <div
-      className={`rounded-lg border p-4 ${
+      className={`rounded-[12px] border p-3.5 ${
         done
           ? "ui-tone-emerald-panel"
           : emphasized
-            ? "ui-tone-orange-panel shadow-sm"
+            ? "ui-tone-orange-panel shadow-[0_1px_3px_oklch(0.6_0.18_45/10%)]"
             : "border-border bg-muted/40"
       }`}
     >
@@ -893,25 +892,22 @@ function PracticeCard({
         <span className="sr-only">{stepLabel}</span>
         <div className="ml-auto flex flex-wrap items-center justify-end gap-1.5">
           {done ? (
-            <span className="ui-tone-emerald-panel ui-tone-emerald-text inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[11px] font-medium">
-              <CheckCircle2 className="h-3.5 w-3.5" />
+            <span className="ui-tone-emerald-panel ui-tone-emerald-text inline-flex items-center rounded-full border px-2 py-0.5 text-[11px] font-medium">
               Done
             </span>
           ) : (
-            <span className="inline-flex items-center gap-1 rounded-full bg-background/80 px-2 py-0.5 text-[11px] font-medium text-muted-foreground">
-              <Circle className="h-3.5 w-3.5" />
+            <span className="inline-flex items-center rounded-full bg-background/80 px-2 py-0.5 text-[11px] font-medium text-muted-foreground">
               Pending
             </span>
           )}
           {focusDone !== null && focusDone !== undefined && (
             <span
-              className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-medium ${
+              className={`inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-medium ${
                 focusDone
                   ? "ui-tone-orange-panel ui-tone-orange-text border"
                   : "bg-background/80 text-muted-foreground"
               }`}
             >
-              {focusDone ? <CheckCircle2 className="h-3.5 w-3.5" /> : <Circle className="h-3.5 w-3.5" />}
               Focus word
             </span>
           )}

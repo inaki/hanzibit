@@ -83,7 +83,7 @@ export default function ResetPasswordPage() {
           </Link>
         </div>
 
-        <div className="rounded-xl border bg-card p-8 shadow-sm">
+        <div className="rounded-xl bg-card card-ring p-8 shadow-sm">
           <h1 className="mb-2 text-2xl font-bold text-foreground">Reset password</h1>
           <p className="mb-6 text-sm text-muted-foreground">
             Choose a new password for your account.

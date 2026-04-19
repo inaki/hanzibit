@@ -16,7 +16,7 @@ export function TeachingExplainerBlock({
   tone?: "muted" | "sky" | "amber" | "rose" | "emerald" | "violet";
 }) {
   const toneClasses = {
-    muted: "border bg-card",
+    muted: "bg-card card-ring",
     sky: "ui-tone-sky-panel",
     amber: "ui-tone-amber-panel",
     rose: "ui-tone-rose-panel",

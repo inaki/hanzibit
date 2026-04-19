@@ -195,7 +195,7 @@ export function NotebookActionBar({
             onMouseLeave={() => gloss.deactivate()}
             onClick={() => entry && gloss.toggleSticky(entry.id, entry.content_zh)}
             disabled={!entry}
-            className={`rounded-lg p-2.5 transition-colors disabled:opacity-30 ${
+            className={`press-down rounded-[10px] p-2.5 transition-colors disabled:opacity-30 ${
               gloss.state.sticky
                 ? "bg-[var(--cn-orange)] text-white"
                 : "text-muted-foreground/70 hover:bg-muted hover:text-foreground"
@@ -808,7 +808,7 @@ function PronunciationDialog({
               <div
                 key={h.hanzi}
                 data-testid={`pronunciation-item-${h.hanzi}`}
-                className="flex items-center justify-between rounded-lg border px-4 py-3"
+                className="flex items-center justify-between rounded-lg bg-card card-ring px-4 py-3"
               >
                 <div className="flex items-center gap-4">
                   <span className="ui-tone-orange-text text-2xl font-bold">
@@ -994,7 +994,7 @@ function FlashcardModeDialog({
             {/* Progress */}
             <div data-testid="flashcard-mode-progress" className="flex items-center gap-2 text-xs text-muted-foreground/70">
               <span>Card {currentIndex + 1} of {total}</span>
-              <div className="h-1 flex-1 rounded-full bg-muted">
+              <div className="h-[10px] flex-1 rounded-full bg-muted">
                 <div
                   className="h-full rounded-full bg-primary transition-all"
                   style={{ width: `${((currentIndex + 1) / total) * 100}%` }}
@@ -1006,7 +1006,7 @@ function FlashcardModeDialog({
             <button
               data-testid="flashcard-mode-card"
               onClick={() => setFlipped(!flipped)}
-              className="flex h-48 w-full items-center justify-center rounded-xl border-2 bg-card transition-all hover:shadow-md"
+              className="flex h-48 w-full items-center justify-center rounded-[20px] bg-card card-ring transition-all hover:shadow-md"
             >
               {!flipped ? (
                 <div data-testid="flashcard-mode-front" className="text-center">

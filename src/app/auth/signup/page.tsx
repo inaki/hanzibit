@@ -59,7 +59,7 @@ export default function SignUpPage() {
           </Link>
         </div>
 
-        <div data-testid="signup-card" className="rounded-xl border bg-card p-8 shadow-sm">
+        <div data-testid="signup-card" className="rounded-xl bg-card card-ring p-8 shadow-sm">
           <h1 data-testid="signup-heading" className="mb-2 text-2xl font-bold text-foreground">
             Create your account
           </h1>

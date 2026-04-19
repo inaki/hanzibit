@@ -65,7 +65,7 @@ export function LandingFeatures() {
             <div
               key={feature.title}
               data-testid={`landing-feature-card-${feature.title.toLowerCase().replace(/\s+/g, "-")}`}
-              className="group rounded-xl border bg-card p-6 transition-all hover:border-foreground/20 hover:shadow-md"
+              className="group rounded-xl bg-card card-ring p-6 transition-all hover:shadow-md"
             >
               <div className="ui-tone-orange-panel ui-tone-orange-text group-hover:bg-primary group-hover:text-primary-foreground mb-4 flex h-12 w-12 items-center justify-center rounded-lg transition-colors">
                 <feature.icon className="h-6 w-6" />

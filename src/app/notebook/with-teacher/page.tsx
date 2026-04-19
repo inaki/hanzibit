@@ -23,7 +23,7 @@ function SummaryCard({
   return (
     <Link
       href={href}
-      className="rounded-2xl border bg-card p-5 transition-colors hover:border-[var(--cn-orange)]/30 hover:bg-muted/20"
+      className="rounded-2xl bg-card card-ring p-5 transition-colors hover:border-[var(--cn-orange)]/30 hover:bg-muted/20"
     >
       <div className="flex items-center justify-between gap-4">
         <div>

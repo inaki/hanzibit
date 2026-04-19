@@ -56,7 +56,7 @@ export default async function AssignmentTemplateDetailPage({
         </div>
 
         <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
-          <section className="rounded-2xl border bg-card p-5">
+          <section className="rounded-2xl bg-card card-ring p-5">
             <div className="mb-4 flex items-center gap-2">
               <BookCopy className="ui-tone-orange-text h-4 w-4" />
               <h2 className="text-sm font-semibold uppercase tracking-[0.2em] text-muted-foreground">Details</h2>
@@ -125,7 +125,7 @@ export default async function AssignmentTemplateDetailPage({
             </form>
           </section>
 
-          <aside className="rounded-2xl border bg-card p-5">
+          <aside className="rounded-2xl bg-card card-ring p-5">
             <h2 className="text-sm font-semibold uppercase tracking-[0.2em] text-muted-foreground">Metadata</h2>
             <div className="mt-4 space-y-3 text-sm">
               <div className="flex items-center justify-between gap-3">

@@ -1,0 +1,31 @@
+<!DOCTYPE html><html><head><meta charset="utf-8"><link rel="stylesheet" href="preview.css">
+<style>
+.card { padding: 22px; display:flex; gap: 10px; flex-wrap:wrap; align-items:center; }
+.pill {
+  display:inline-flex; align-items:center; gap:4px; padding:2px 10px; border-radius: 999px;
+  font-size: 11px; font-weight: 500; border: 1px solid transparent;
+}
+.dot { width:6px; height:6px; border-radius:50%; display:inline-block; }
+.priority { background:#e8601c; color:#fff; }
+.focus { background:#fef3ed; color:#c44d14; border-color:rgba(232,96,28,0.25); }
+.done { background:#effaf3; color:#137a4d; border-color:rgba(19,122,77,0.18); }
+.pending { background:#f5f5f5; color:#737373; }
+.urgent { background:#fdeeec; color:#b83a2c; border-color:rgba(184,58,44,0.18); }
+.watch { background:#eff6fd; color:#2563a8; border-color:rgba(37,99,168,0.18); }
+.caution { background:#fbf5e4; color:#8a6b12; border-color:rgba(138,107,18,0.18); }
+.grammar { background:#f7ecf4; color:#8e2f86; border-color:rgba(142,47,134,0.18); }
+</style>
+</head><body>
+<div class="card">
+  <span class="pill priority">Priority</span>
+  <span class="pill focus"><span class="dot" style="background:#e8601c;"></span>Focus word</span>
+  <span class="pill done">✓ Done</span>
+  <span class="pill pending">○ Pending</span>
+  <span class="pill urgent">Urgent</span>
+  <span class="pill caution">In progress</span>
+  <span class="pill watch">Informational</span>
+  <span class="pill grammar">Grammar · violet</span>
+  <span class="pill" style="background:#e8601c;color:#fff;">HSK 1</span>
+  <span class="pill" style="background:#fff;color:#525252;border:1px solid #e5e5e5;">Outline</span>
+</div>
+</body></html>

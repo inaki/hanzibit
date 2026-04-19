@@ -4,10 +4,10 @@ import type { ReactNode } from "react";
 type DashboardTone = "default" | "sky" | "emerald" | "orange";
 
 function getDashboardPanelTone(tone: DashboardTone) {
-  if (tone === "sky") return "ui-tone-sky-panel";
-  if (tone === "emerald") return "ui-tone-emerald-panel";
-  if (tone === "orange") return "ui-tone-orange-panel";
-  return "border-border bg-card";
+  if (tone === "sky") return "border ui-tone-sky-panel";
+  if (tone === "emerald") return "border ui-tone-emerald-panel";
+  if (tone === "orange") return "border ui-tone-orange-panel";
+  return "bg-card card-ring";
 }
 
 export function DashboardSection({
@@ -24,7 +24,7 @@ export function DashboardSection({
   className?: string;
 }) {
   return (
-    <div className={`rounded-xl border bg-card p-6 ${className}`.trim()}>
+    <div className={`rounded-xl bg-card card-ring p-6 ${className}`.trim()}>
       {title || action ? (
         <div className="mb-4 flex items-center gap-2">
           {Icon ? <Icon className="ui-tone-orange-text h-4 w-4" /> : null}
@@ -64,7 +64,7 @@ export function DashboardStatCard({
     <DashboardPanel className={className}>
       <div className="mb-3 flex items-center gap-2">
         {Icon ? <Icon className="h-4 w-4" /> : null}
-        <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground/70">{label}</span>
+        <span className="text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground/70">{label}</span>
       </div>
       {children}
     </DashboardPanel>
