@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { getJournalEntries, getEntryAnnotations } from "@/lib/data";
 import { getAuthUserId } from "@/lib/auth-utils";
 import { isProUser } from "@/lib/subscription";
@@ -145,8 +146,25 @@ async function NotebookPageInner({
               annotations={annotations}
             />
           ) : (
-            <div data-testid="notebook-empty-state" className="flex h-full items-center justify-center text-muted-foreground">
-              <p>No journal entries yet. Create your first entry!</p>
+            <div data-testid="notebook-empty-state" className="flex h-full items-center justify-center px-6">
+              <div className="max-w-sm text-center">
+                <div className="mb-4 text-4xl font-bold text-[var(--cn-orange)]">你好</div>
+                <h2 className="mb-2 text-xl font-bold text-foreground">Your journal is empty</h2>
+                <p className="mb-6 text-sm leading-6 text-muted-foreground">
+                  Write one short sentence using a word you just studied. Your entries will appear here and build into a real learning record.
+                </p>
+                <div className="flex flex-col items-center gap-3">
+                  <Link
+                    href="/notebook/lessons?level=1&beginner=1"
+                    className="inline-flex items-center justify-center rounded-full bg-primary px-5 py-2.5 text-sm font-medium text-primary-foreground transition-opacity hover:opacity-90"
+                  >
+                    Start with one word →
+                  </Link>
+                  <p className="text-xs text-muted-foreground">
+                    Or use the button above to create an entry directly.
+                  </p>
+                </div>
+              </div>
             </div>
           )}
         </div>

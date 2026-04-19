@@ -114,6 +114,10 @@ export default async function TeacherReportingPage() {
     })
     .sort((a, b) => b.sortWeight - a.sortWeight || a.studentName.localeCompare(b.studentName));
 
+  const intakeBlockingItems = operatingReviewItems.filter(
+    (item) => item.state === "reset_now" || item.state === "rebalance"
+  );
+
   return (
     <div data-testid="teacher-reporting-page" className="h-full overflow-auto p-6 pb-20 md:p-10 lg:pb-10">
       <div className="mx-auto max-w-6xl space-y-8">
@@ -455,6 +459,70 @@ export default async function TeacherReportingPage() {
                 ))}
               </div>
             </TeachingCollectionSection>
+
+            <SectionCard title="Capacity / Intake">
+              <div className="mb-5 flex flex-wrap items-center gap-3">
+                <MetricPill
+                  label={
+                    reporting.intakeReadinessSummary.intake_state === "pause"
+                      ? "Pause intake"
+                      : reporting.intakeReadinessSummary.intake_state === "hold"
+                        ? "Hold steady"
+                        : reporting.intakeReadinessSummary.intake_state === "cautious"
+                          ? "Cautious capacity"
+                          : "Ready to expand"
+                  }
+                  tone={
+                    reporting.intakeReadinessSummary.intake_state === "pause"
+                      ? "rose"
+                      : reporting.intakeReadinessSummary.intake_state === "hold"
+                        ? "amber"
+                        : reporting.intakeReadinessSummary.intake_state === "cautious"
+                          ? "sky"
+                          : "emerald"
+                  }
+                />
+              </div>
+              <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+                <CompactStatCard label="Blocking intake" value={reporting.intakeReadinessSummary.pause_intake_count} tone="rose" />
+                <CompactStatCard label="Slowing intake" value={reporting.intakeReadinessSummary.hold_steady_count} tone="amber" />
+                <CompactStatCard label="Cautious capacity" value={reporting.intakeReadinessSummary.cautious_capacity_count} tone="sky" />
+                <CompactStatCard label="Ready to expand" value={reporting.intakeReadinessSummary.ready_to_expand_count} tone="emerald" />
+              </div>
+              {reporting.intakeReadinessSummary.summary_note ? (
+                <div className="mt-4">
+                  <TeachingExplainerBlock>{reporting.intakeReadinessSummary.summary_note}</TeachingExplainerBlock>
+                </div>
+              ) : null}
+              {intakeBlockingItems.length > 0 ? (
+                <div className="mt-5">
+                  <p className="mb-3 text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+                    Blocking reasons
+                  </p>
+                  <div className="space-y-2">
+                    {intakeBlockingItems.map((item) => (
+                      <Link
+                        key={`intake-block:${item.id}`}
+                        href={item.href}
+                        className="flex items-center justify-between gap-3 rounded-xl border px-4 py-3 transition-colors hover:border-[var(--ui-tone-orange-border)] hover:bg-muted/20"
+                      >
+                        <div>
+                          <div className="flex flex-wrap items-center gap-2">
+                            <MetricPill
+                              label={item.state === "reset_now" ? "Blocks intake" : "Slows intake"}
+                              tone={item.state === "reset_now" ? "rose" : "amber"}
+                            />
+                            <span className="text-sm font-medium text-foreground">{item.studentName}</span>
+                          </div>
+                          <p className="mt-1 text-xs text-muted-foreground">{item.note}</p>
+                        </div>
+                        <div className="ui-tone-orange-text shrink-0 text-xs font-medium">Open →</div>
+                      </Link>
+                    ))}
+                  </div>
+                </div>
+              ) : null}
+            </SectionCard>
 
             <TeachingCollectionSection
               title="Portfolio Distribution"

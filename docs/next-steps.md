@@ -504,9 +504,9 @@ Current status:
 - [x] Create a concrete Phase 22 planning baseline
 - [x] Turn Phase 22 into an implementation-ready spec
 - [x] Milestone 1: intake-readiness summary
-- [ ] Milestone 2: learner-level capacity-pressure visibility
-- [ ] Milestone 3: capacity / intake reporting
-- [ ] Phase 22 polish / closeout on web
+- [x] Milestone 2: learner-level capacity-pressure visibility
+- [x] Milestone 3: capacity / intake reporting
+- [x] Phase 22 polish / closeout on web
 
 Primary reference:
 

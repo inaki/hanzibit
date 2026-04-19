@@ -159,9 +159,18 @@ export function FlashcardPractice({
     return (
       <FlashcardPanel
         data-testid="flashcards-empty"
-        className="mx-auto max-w-2xl py-16 text-center text-sm text-muted-foreground/70"
+        className="mx-auto max-w-2xl py-16 text-center"
       >
-        No flashcards yet. Add vocabulary to create flashcards!
+        <p className="mb-2 text-base font-semibold text-foreground">No flashcards yet</p>
+        <p className="mb-6 text-sm text-muted-foreground">
+          Study a word in the Study Guide and save it — your first card will appear here.
+        </p>
+        <Link
+          href="/notebook/lessons?level=1&beginner=1"
+          className="inline-flex items-center rounded-full bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-opacity hover:opacity-90"
+        >
+          Go to Study Guide →
+        </Link>
       </FlashcardPanel>
     );
   }

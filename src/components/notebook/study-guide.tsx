@@ -11,32 +11,50 @@ import {
   Circle,
   Search,
   Plus,
-  Languages,
   Lock,
-  BookText,
   PenSquare,
   Sparkles,
-  CircleHelp,
   NotebookPen,
   ChevronDown,
   GraduationCap,
   PenLine,
+  BookMarked,
+  ChevronLeft,
+  ChevronRight,
+  ListChecks,
+  Quote,
+  Puzzle,
+  ArrowRight,
+  Check,
 } from "lucide-react";
 import { AudioPlayButton } from "./audio-play-button";
 import { UpgradePrompt } from "@/components/upgrade-prompt";
 import { EmptyStateNotice } from "@/components/patterns/guidance";
-import { InfoPanel, SectionCard } from "@/components/patterns/surfaces";
+import { SectionCard } from "@/components/patterns/surfaces";
 import { Input } from "@/components/ui/input";
-import { Progress } from "@/components/ui/progress";
 import { useSettings } from "./settings-context";
-import { getStudyGuideDataAction, createFlashcardForWord, getDailyPracticeAction, getCuratedGrammarPointsAction, markGrammarPointStudiedAction, getCollocationsAction, getCharacterBreakdownsAction } from "@/lib/actions";
-import type { StudyGuideData, StudyGuideWord, CuratedGrammarPoint, HskCollocation, CharacterBreakdown } from "@/lib/data";
+import {
+  getStudyGuideDataAction,
+  createFlashcardForWord,
+  getDailyPracticeAction,
+  getCuratedGrammarPointsAction,
+  markGrammarPointStudiedAction,
+  getCollocationsAction,
+  getCharacterBreakdownsAction,
+} from "@/lib/actions";
+import type {
+  StudyGuideData,
+  StudyGuideWord,
+  CuratedGrammarPoint,
+  HskCollocation,
+  CharacterBreakdown,
+} from "@/lib/data";
 import { buildStudyGuideReading } from "@/lib/study-guide-content";
 import type { DailyPracticePlan } from "@/lib/daily-practice";
 import { buildInlineAnnotation } from "@/lib/parse-tokens";
 import { summarizeEnglishGloss } from "@/lib/annotation-suggestions";
 
-type Filter = "all" | "encountered" | "not-yet" | "flashcard";
+type Filter = "all" | "new" | "learning" | "known";
 
 interface StudyGuideProps {
   initialData: StudyGuideData;
@@ -45,7 +63,62 @@ interface StudyGuideProps {
   isPro?: boolean;
 }
 
-export function StudyGuide({ initialData, assignmentId, beginnerMode = false, isPro = false }: StudyGuideProps) {
+function detectTone(pinyin: string): number {
+  if (/[āēīōūǖ]/.test(pinyin)) return 1;
+  if (/[áéíóúǘ]/.test(pinyin)) return 2;
+  if (/[ǎěǐǒǔǚ]/.test(pinyin)) return 3;
+  if (/[àèìòùǜ]/.test(pinyin)) return 4;
+  return 5;
+}
+
+function SecTitle({
+  icon: Icon,
+  right,
+  children,
+}: {
+  icon?: React.ComponentType<{ className?: string }>;
+  right?: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="mb-3.5 flex items-center gap-2">
+      {Icon && <Icon className="h-3.5 w-3.5 text-[var(--cn-orange)]" />}
+      <span className="text-[11px] font-bold uppercase tracking-[0.15em] text-muted-foreground">
+        {children}
+      </span>
+      <span className="flex-1" />
+      {right && (
+        <span className="text-[11px] font-medium text-muted-foreground">{right}</span>
+      )}
+    </div>
+  );
+}
+
+function HighlightWord({ text, target }: { text: string; target: string }) {
+  const parts = text.split(target);
+  if (parts.length <= 1) return <>{text}</>;
+  return (
+    <>
+      {parts.map((part, i) => (
+        <span key={i}>
+          {part}
+          {i < parts.length - 1 && (
+            <span className="rounded px-0.5 bg-[var(--cn-orange-light)] text-[var(--cn-orange-dark)] font-bold">
+              {target}
+            </span>
+          )}
+        </span>
+      ))}
+    </>
+  );
+}
+
+export function StudyGuide({
+  initialData,
+  assignmentId,
+  beginnerMode = false,
+  isPro = false,
+}: StudyGuideProps) {
   const { settings } = useSettings();
   const searchParams = useSearchParams();
   const [data, setData] = useState(initialData);
@@ -61,7 +134,6 @@ export function StudyGuide({ initialData, assignmentId, beginnerMode = false, is
   const [selectedGrammarId, setSelectedGrammarId] = useState<number | null>(null);
   const [grammarLoading, setGrammarLoading] = useState(false);
 
-  // Sync with settings HSK level on mount only
   const initialSynced = useRef(false);
   useEffect(() => {
     if (!initialSynced.current && settings.hskLevel !== data.level) {
@@ -77,14 +149,15 @@ export function StudyGuide({ initialData, assignmentId, beginnerMode = false, is
     const wordIdFromUrl = searchParams.get("wordId");
     if (wordIdFromUrl) {
       const parsedWordId = Number.parseInt(wordIdFromUrl, 10);
-      if (Number.isInteger(parsedWordId) && data.words.some((item) => item.word.id === parsedWordId)) {
+      if (
+        Number.isInteger(parsedWordId) &&
+        data.words.some((item) => item.word.id === parsedWordId)
+      ) {
         return parsedWordId;
       }
     }
-
     const wordFromUrl = searchParams.get("word");
     if (!wordFromUrl) return null;
-
     const found = data.words.find((item) => item.word.simplified === wordFromUrl);
     return found?.word.id ?? null;
   })();
@@ -92,11 +165,8 @@ export function StudyGuide({ initialData, assignmentId, beginnerMode = false, is
   useEffect(() => {
     let cancelled = false;
     getDailyPracticeAction(data.level).then((plan) => {
-      if (!cancelled) {
-        setDailyPractice(plan);
-      }
+      if (!cancelled) setDailyPractice(plan);
     });
-
     return () => {
       cancelled = true;
     };
@@ -112,7 +182,9 @@ export function StudyGuide({ initialData, assignmentId, beginnerMode = false, is
       setSelectedGrammarId(pts[0]?.id ?? null);
       setGrammarLoading(false);
     });
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, [sidebarTab, data.level]);
 
   function handleLevelChange(level: number) {
@@ -131,11 +203,14 @@ export function StudyGuide({ initialData, assignmentId, beginnerMode = false, is
     });
   }
 
-  // Filter + search
+  const newCount = data.words.filter((w) => !w.encountered && !w.flashcard).length;
+  const learningCount = data.words.filter((w) => w.flashcard !== null).length;
+  const knownCount = data.words.filter((w) => w.encountered).length;
+
   const filteredWords = data.words.filter((w) => {
-    if (filter === "encountered" && !w.encountered) return false;
-    if (filter === "not-yet" && w.encountered) return false;
-    if (filter === "flashcard" && !w.flashcard) return false;
+    if (filter === "new" && (w.encountered || w.flashcard)) return false;
+    if (filter === "learning" && !w.flashcard) return false;
+    if (filter === "known" && !w.encountered) return false;
     if (search) {
       const q = search.toLowerCase();
       return (
@@ -149,42 +224,72 @@ export function StudyGuide({ initialData, assignmentId, beginnerMode = false, is
 
   const effectiveSelectedWordId = requestedWordId ?? selectedWordId;
   const selected =
-    filteredWords.find((item) => item.word.id === effectiveSelectedWordId) ?? filteredWords[0] ?? null;
+    filteredWords.find((item) => item.word.id === effectiveSelectedWordId) ??
+    filteredWords[0] ??
+    null;
+  const selectedIndex = filteredWords.findIndex(
+    (item) => item.word.id === selected?.word.id
+  );
+  const prevWord = selectedIndex > 0 ? filteredWords[selectedIndex - 1] : null;
+  const nextWord =
+    selectedIndex < filteredWords.length - 1
+      ? filteredWords[selectedIndex + 1]
+      : null;
   const isBeginnerMode = beginnerMode && data.level === 1;
+
+  const encPct =
+    data.summary.total > 0
+      ? (data.summary.encountered / data.summary.total) * 100
+      : 0;
+  const fcPct =
+    data.summary.total > 0
+      ? (data.summary.withFlashcard / data.summary.total) * 100
+      : 0;
 
   return (
     <div
       data-testid="study-guide"
-      className="flex h-full flex-col overflow-auto p-6 pb-20 md:p-10 lg:overflow-hidden lg:p-0"
+      className="flex h-full flex-col overflow-hidden"
     >
-      <div className="flex min-h-0 flex-1 flex-col gap-6 lg:flex-row lg:gap-0">
-        <SectionCard className="lg:h-full lg:w-[320px] lg:shrink-0 lg:overflow-y-auto lg:rounded-none lg:border-0 lg:border-r lg:bg-card lg:p-4">
-          <div className="mb-4 flex items-center justify-between gap-3">
-            <div className="flex rounded-[10px] bg-muted p-0.5">
-              <button
-                onClick={() => setSidebarTab("words")}
-                className={`flex items-center gap-1.5 rounded-[8px] px-3 py-1.5 text-xs font-medium transition-colors ${
-                  sidebarTab === "words"
-                    ? "bg-card text-foreground shadow-sm"
-                    : "text-muted-foreground hover:text-foreground"
-                }`}
-              >
-                <BookOpen className="h-3.5 w-3.5" />
-                Words
-              </button>
-              <button
-                onClick={() => setSidebarTab("grammar")}
-                className={`flex items-center gap-1.5 rounded-[8px] px-3 py-1.5 text-xs font-medium transition-colors ${
-                  sidebarTab === "grammar"
-                    ? "bg-card text-foreground shadow-sm"
-                    : "text-muted-foreground hover:text-foreground"
-                }`}
-              >
-                <GraduationCap className="h-3.5 w-3.5" />
-                Grammar
-              </button>
+      {/* Slim HSK header — desktop only, non-beginner, non-locked */}
+      {!isBeginnerMode && !data.locked && (
+        <div className="hidden shrink-0 items-center gap-5 border-b bg-card px-8 py-3 lg:flex">
+          <div className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-[rgba(232,96,28,0.2)] bg-[var(--cn-orange-light)] px-2.5 py-1 text-xs font-semibold text-[var(--cn-orange-dark)]">
+            <BookMarked className="h-3 w-3" />
+            HSK {data.level}
+          </div>
+          <div className="flex min-w-[200px] max-w-[360px] flex-1 items-center gap-2.5">
+            <div className="relative h-1.5 flex-1 overflow-hidden rounded-full bg-muted">
+              <div
+                className="absolute inset-y-0 left-0 rounded-full bg-[var(--cn-orange)]"
+                style={{ width: `${encPct}%` }}
+              />
+              <div
+                className="absolute inset-y-0 left-0 rounded-full bg-[var(--t-sky-t)] opacity-85"
+                style={{ width: `${fcPct}%` }}
+              />
             </div>
-            <div className="relative shrink-0">
+            <span className="shrink-0 font-mono text-[12px] text-muted-foreground">
+              {Math.round(encPct)}%
+            </span>
+          </div>
+          <div className="flex gap-5">
+            {[
+              { v: data.summary.total, l: "words", c: "text-foreground" },
+              { v: data.summary.encountered, l: "encountered", c: "text-[var(--cn-orange)]" },
+              { v: data.summary.withFlashcard, l: "flashcards", c: "text-[var(--t-sky-t)]" },
+              { v: data.summary.dueForReview, l: "due", c: "text-[var(--t-amber-t)]" },
+            ].map(({ v, l, c }) => (
+              <div key={l} className="flex flex-col gap-0.5">
+                <span className={`text-[16px] font-bold leading-none ${c}`}>{v}</span>
+                <span className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
+                  {l}
+                </span>
+              </div>
+            ))}
+          </div>
+          <div className="ml-auto shrink-0">
+            <div className="relative">
               <select
                 data-testid="study-guide-level-select"
                 value={data.level}
@@ -201,22 +306,226 @@ export function StudyGuide({ initialData, assignmentId, beginnerMode = false, is
               <ChevronDown className="pointer-events-none absolute right-2 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground/70" />
             </div>
           </div>
+        </div>
+      )}
 
+      {/* Main body */}
+      <div className="flex flex-1 min-h-0 flex-col overflow-auto p-6 pb-20 md:p-10 lg:flex-row lg:overflow-hidden lg:p-0">
+        {/* Left sidebar */}
+        <div className="mb-6 lg:mb-0 lg:h-full lg:w-[320px] lg:shrink-0 lg:overflow-y-auto lg:border-r lg:bg-card">
+          {/* Sticky tab bar */}
+          <div className="sticky top-0 z-10 border-b border-border bg-card px-4 py-3">
+            <div className="flex items-center justify-between gap-3">
+              <div className="flex rounded-[10px] bg-muted p-0.5">
+                <button
+                  onClick={() => setSidebarTab("words")}
+                  className={`flex items-center gap-1.5 rounded-[8px] px-3 py-1.5 text-xs font-medium transition-colors ${
+                    sidebarTab === "words"
+                      ? "bg-card text-foreground shadow-sm"
+                      : "text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  <BookOpen className="h-3.5 w-3.5" />
+                  Words
+                </button>
+                <button
+                  onClick={() => setSidebarTab("grammar")}
+                  className={`flex items-center gap-1.5 rounded-[8px] px-3 py-1.5 text-xs font-medium transition-colors ${
+                    sidebarTab === "grammar"
+                      ? "bg-card text-foreground shadow-sm"
+                      : "text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  <GraduationCap className="h-3.5 w-3.5" />
+                  Grammar
+                </button>
+              </div>
+              {/* Level selector — mobile only (desktop has it in the slim header) */}
+              <div className="relative shrink-0 lg:hidden">
+                <select
+                  value={data.level}
+                  onChange={(e) => handleLevelChange(Number.parseInt(e.target.value, 10))}
+                  disabled={isPending}
+                  className="appearance-none rounded-lg border border-border bg-card py-1.5 pl-3 pr-8 text-xs font-medium text-foreground outline-none"
+                >
+                  {[1, 2, 3, 4, 5, 6].map((level) => (
+                    <option key={level} value={level}>
+                      HSK {level}
+                    </option>
+                  ))}
+                </select>
+                <ChevronDown className="pointer-events-none absolute right-2 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground/70" />
+              </div>
+            </div>
+          </div>
+
+          {/* Words list */}
+          {!data.locked && sidebarTab === "words" && (
+            <div className="p-4">
+              {isBeginnerMode && (
+                <EmptyStateNotice className="ui-tone-sky-panel mb-4 px-4 py-3">
+                  Start with one HSK 1 word. Open the first word, read the tiny
+                  example, and use it in one short journal response.
+                </EmptyStateNotice>
+              )}
+              <div className="relative mb-3">
+                <Search className="absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground/70" />
+                <Input
+                  data-testid="study-guide-search"
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  placeholder="Search words…"
+                  className="pl-9 text-sm"
+                />
+              </div>
+              <div className="mb-3 flex flex-wrap gap-1.5">
+                {(
+                  [
+                    { key: "all" as Filter, label: "All", count: data.words.length },
+                    { key: "new" as Filter, label: "New", count: newCount },
+                    { key: "learning" as Filter, label: "Learning", count: learningCount },
+                    { key: "known" as Filter, label: "Known", count: knownCount },
+                  ]
+                ).map((f) => (
+                  <button
+                    key={f.key}
+                    data-testid={`study-guide-filter-${f.key}`}
+                    onClick={() => setFilter(f.key)}
+                    className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-semibold transition-colors ${
+                      filter === f.key
+                        ? "bg-foreground text-background"
+                        : "bg-muted text-muted-foreground hover:bg-muted"
+                    }`}
+                  >
+                    {f.label}
+                    <span
+                      className={`rounded-full px-1.5 py-0.5 text-[10px] font-bold leading-none ${
+                        filter === f.key
+                          ? "bg-white/25"
+                          : "bg-black/[0.06]"
+                      }`}
+                    >
+                      {f.count}
+                    </span>
+                  </button>
+                ))}
+              </div>
+
+              <div data-testid="study-guide-word-list" className="space-y-0.5">
+                {filteredWords.length === 0 ? (
+                  <p className="py-8 text-center text-sm text-muted-foreground/70">
+                    No words match your filter.
+                  </p>
+                ) : (
+                  filteredWords.map((item) => {
+                    const isSelected = selected?.word.id === item.word.id;
+                    const wStatus = item.encountered
+                      ? "known"
+                      : item.flashcard
+                      ? "learning"
+                      : "not-yet";
+                    const isDue =
+                      item.flashcard &&
+                      new Date(item.flashcard.nextReview) <= new Date();
+                    const isStuck =
+                      item.flashcard &&
+                      item.flashcard.easeFactor < 2.0 &&
+                      item.flashcard.reviewCount > 1;
+                    return (
+                      <button
+                        key={item.word.id}
+                        data-testid={`study-guide-word-${item.word.simplified}`}
+                        onClick={() => setSelectedWordId(item.word.id)}
+                        className={`grid w-full rounded-[10px] border px-2.5 py-2.5 text-left transition-colors ${
+                          isSelected
+                            ? "border-[rgba(232,96,28,0.35)] bg-[var(--cn-orange-light)]"
+                            : "border-transparent hover:bg-muted"
+                        }`}
+                        style={{ gridTemplateColumns: "18px 1fr auto" }}
+                      >
+                        <div
+                          className={`mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full ${
+                            wStatus === "known"
+                              ? "bg-[var(--t-emerald-t)]"
+                              : wStatus === "learning"
+                              ? "bg-[var(--cn-orange)]"
+                              : "border border-border/80"
+                          }`}
+                        >
+                          {wStatus === "known" && (
+                            <Check className="h-2.5 w-2.5 stroke-[3.5] text-white" />
+                          )}
+                          {wStatus === "learning" && (
+                            <div className="h-1.5 w-1.5 rounded-full bg-white" />
+                          )}
+                        </div>
+                        <div className="min-w-0 px-3">
+                          <div className="mb-0.5 flex items-baseline gap-1.5">
+                            <span
+                              className={`text-[18px] font-bold leading-none ${
+                                isSelected
+                                  ? "text-[var(--cn-orange)]"
+                                  : "text-foreground"
+                              }`}
+                            >
+                              {item.word.simplified}
+                            </span>
+                            <span className="truncate font-mono text-[11px] leading-none text-muted-foreground">
+                              {item.word.pinyin}
+                            </span>
+                          </div>
+                          <p className="truncate text-xs leading-snug text-muted-foreground">
+                            {item.word.english}
+                          </p>
+                        </div>
+                        <div className="flex flex-col items-end gap-0.5">
+                          {isStuck && (
+                            <span className="text-[9px] font-bold uppercase tracking-wide text-[var(--t-rose-t)]">
+                              Stuck
+                            </span>
+                          )}
+                          {isDue && !isStuck && (
+                            <span className="text-[9px] font-bold uppercase tracking-wide text-[var(--t-amber-t)]">
+                              Due
+                            </span>
+                          )}
+                          {wStatus === "not-yet" && !isDue && !isStuck && (
+                            <span className="text-[9px] font-bold uppercase tracking-wide text-[var(--t-sky-t)]">
+                              New
+                            </span>
+                          )}
+                        </div>
+                      </button>
+                    );
+                  })
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Grammar list */}
           {!data.locked && sidebarTab === "grammar" && (
-            <div data-testid="study-guide-grammar-list" className="space-y-1">
+            <div
+              data-testid="study-guide-grammar-list"
+              className="space-y-1 p-4"
+            >
               {grammarLoading ? (
-                <p className="py-8 text-center text-sm text-muted-foreground/70">Loading grammar…</p>
+                <p className="py-8 text-center text-sm text-muted-foreground/70">
+                  Loading grammar…
+                </p>
               ) : grammarPoints.length === 0 ? (
-                <p className="py-8 text-center text-sm text-muted-foreground/70">No grammar patterns yet.</p>
+                <p className="py-8 text-center text-sm text-muted-foreground/70">
+                  No grammar patterns yet.
+                </p>
               ) : (
                 grammarPoints.map((gp) => (
                   <button
                     key={gp.id}
                     onClick={() => setSelectedGrammarId(gp.id)}
-                    className={`flex w-full items-start gap-3 rounded-lg px-3 py-2.5 text-left transition-colors ${
+                    className={`flex w-full items-start gap-3 rounded-[10px] border px-3 py-2.5 text-left transition-colors ${
                       selectedGrammarId === gp.id
-                        ? "ui-tone-orange-panel border"
-                        : "border border-border bg-card hover:border-border"
+                        ? "border-[rgba(139,92,246,0.3)] bg-[oklch(0.97_0.015_300)]"
+                        : "border-transparent hover:bg-muted"
                     }`}
                   >
                     {gp.studied ? (
@@ -225,11 +534,19 @@ export function StudyGuide({ initialData, assignmentId, beginnerMode = false, is
                       <Circle className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground/50" />
                     )}
                     <div className="min-w-0 flex-1">
-                      <p className={`text-sm font-semibold leading-tight ${selectedGrammarId === gp.id ? "ui-tone-orange-text" : "text-foreground"}`}>
+                      <p
+                        className={`text-sm font-semibold leading-tight ${
+                          selectedGrammarId === gp.id
+                            ? "text-[oklch(0.55_0.15_300)]"
+                            : "text-foreground"
+                        }`}
+                      >
                         {gp.title}
                       </p>
                       {gp.pattern && (
-                        <p className="mt-0.5 truncate font-mono text-[11px] text-muted-foreground/70">{gp.pattern}</p>
+                        <p className="mt-0.5 truncate font-mono text-[11px] text-muted-foreground/70">
+                          {gp.pattern}
+                        </p>
                       )}
                     </div>
                   </button>
@@ -237,100 +554,10 @@ export function StudyGuide({ initialData, assignmentId, beginnerMode = false, is
               )}
             </div>
           )}
+        </div>
 
-          {!data.locked && sidebarTab === "words" && (
-            <>
-              {isBeginnerMode && (
-                <EmptyStateNotice className="ui-tone-sky-panel mb-4 px-4 py-3">
-                  Start with one HSK 1 word. You do not need to search yet. Open the first word, read the tiny example, and use it in one short journal response.
-                </EmptyStateNotice>
-              )}
-              <div className="relative mb-3">
-                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground/70" />
-                <Input
-                  data-testid="study-guide-search"
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                  placeholder="Search words..."
-                  className="pl-9 text-sm"
-                />
-              </div>
-
-              <div className="mb-3 flex flex-wrap gap-1">
-                {([
-                  { key: "all", label: `All (${data.words.length})` },
-                  { key: "encountered", label: `Known (${data.summary.encountered})` },
-                  { key: "not-yet", label: `New (${data.summary.total - data.summary.encountered})` },
-                  { key: "flashcard", label: `Cards (${data.summary.withFlashcard})` },
-                ] as { key: Filter; label: string }[]).map((f) => (
-                  <button
-                    key={f.key}
-                    data-testid={`study-guide-filter-${f.key}`}
-                    onClick={() => {
-                      setFilter(f.key);
-                    }}
-                    className={`rounded-full px-2.5 py-1 text-[11px] font-medium transition-colors ${
-                      filter === f.key
-                        ? "bg-foreground text-background"
-                        : "bg-muted text-muted-foreground hover:bg-muted"
-                    }`}
-                  >
-                    {f.label}
-                  </button>
-                ))}
-              </div>
-
-              <div data-testid="study-guide-word-list" className="space-y-1">
-                {filteredWords.length === 0 ? (
-                  <p className="py-8 text-center text-sm text-muted-foreground/70">
-                    No words match your filter.
-                  </p>
-                ) : (
-                  filteredWords.map((item) => {
-                    const isSelected = selectedWordId === item.word.id;
-                    return (
-                      <button
-                        key={item.word.id}
-                        data-testid={`study-guide-word-${item.word.simplified}`}
-                        onClick={() => setSelectedWordId(item.word.id)}
-                        className={`flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left transition-colors ${
-                          isSelected
-                            ? "ui-tone-orange-panel border"
-                            : "border border-border bg-card hover:border-border"
-                        }`}
-                      >
-                        {item.encountered ? (
-                          <CheckCircle2 className="ui-tone-emerald-text h-4 w-4 shrink-0" />
-                        ) : (
-                          <Circle className="h-4 w-4 shrink-0 text-muted-foreground/50" />
-                        )}
-                        <div className="min-w-0 flex-1">
-                          <div className="flex items-center gap-2">
-                            <span className={`text-lg font-bold ${isSelected ? "ui-tone-orange-text" : "text-foreground"}`}>
-                              {item.word.simplified}
-                            </span>
-                            <span className="truncate text-xs text-muted-foreground/70">{item.word.pinyin}</span>
-                          </div>
-                          <p className="truncate text-xs text-muted-foreground">{item.word.english}</p>
-                        </div>
-                        <div className="flex shrink-0 items-center gap-1">
-                          {item.flashcard && item.flashcard.easeFactor < 2.0 && item.flashcard.reviewCount > 1 && (
-                            <span className="ui-tone-rose-panel ui-tone-rose-text rounded border px-1 text-[10px]">struggling</span>
-                          )}
-                          {item.flashcard && (
-                            <Layers className="ui-tone-sky-text h-3.5 w-3.5" />
-                          )}
-                        </div>
-                      </button>
-                    );
-                  })
-                )}
-              </div>
-            </>
-          )}
-        </SectionCard>
-
-        <div className="min-h-0 flex-1 lg:overflow-y-auto lg:px-6 lg:py-6">
+        {/* Right detail pane */}
+        <div className="min-h-0 flex-1 lg:overflow-y-auto lg:px-10 lg:py-8">
           {data.locked ? (
             <EmptyStateNotice className="mx-6 mt-6 flex flex-col items-center justify-center rounded-xl py-16 text-center lg:mx-0 lg:mt-0">
               <Lock className="mb-3 h-8 w-8 text-muted-foreground/50" />
@@ -344,102 +571,91 @@ export function StudyGuide({ initialData, assignmentId, beginnerMode = false, is
             </EmptyStateNotice>
           ) : (
             <>
+              {/* Mobile progress card */}
               {!isBeginnerMode && (
-                <SectionCard
-                  title={`HSK ${data.level} Progress`}
-                  description="Track how much of this level you have already encountered and reviewed."
-                  action={
-                    <span className="ui-tone-orange-text text-sm font-bold">
-                      {data.summary.total > 0
-                        ? Math.round((data.summary.encountered / data.summary.total) * 100)
-                        : 0}%
-                    </span>
-                  }
-                >
-                  <Progress
-                    value={data.summary.total > 0 ? (data.summary.encountered / data.summary.total) * 100 : 0}
-                    className="mb-4 h-2 [&_[data-slot=progress-indicator]]:bg-primary"
-                  />
-                  <div className="grid grid-cols-2 gap-4 text-center sm:grid-cols-4">
-                    <div>
-                      <p className="text-2xl font-bold text-foreground">{data.summary.total}</p>
-                      <p className="text-xs text-muted-foreground">Total words</p>
+                <div className="mb-6 lg:hidden">
+                  <div className="rounded-xl bg-card card-ring p-5">
+                    <div className="mb-3 flex items-center justify-between">
+                      <p className="text-sm font-semibold text-foreground">
+                        HSK {data.level} Progress
+                      </p>
+                      <span className="text-sm font-bold text-[var(--cn-orange)]">
+                        {Math.round(encPct)}%
+                      </span>
                     </div>
-                    <div>
-                      <p className="ui-tone-emerald-text text-2xl font-bold">{data.summary.encountered}</p>
-                      <p className="text-xs text-muted-foreground">Encountered</p>
+                    <div className="relative mb-4 h-1.5 overflow-hidden rounded-full bg-muted">
+                      <div
+                        className="absolute inset-y-0 left-0 rounded-full bg-[var(--cn-orange)]"
+                        style={{ width: `${encPct}%` }}
+                      />
+                      <div
+                        className="absolute inset-y-0 left-0 rounded-full bg-[var(--t-sky-t)] opacity-85"
+                        style={{ width: `${fcPct}%` }}
+                      />
                     </div>
-                    <div>
-                      <p className="ui-tone-sky-text text-2xl font-bold">{data.summary.withFlashcard}</p>
-                      <p className="text-xs text-muted-foreground">Flashcards</p>
-                    </div>
-                    <div>
-                      <p className="ui-tone-amber-text text-2xl font-bold">{data.summary.dueForReview}</p>
-                      <p className="text-xs text-muted-foreground">Due for review</p>
+                    <div className="grid grid-cols-4 gap-2 text-center">
+                      <div>
+                        <p className="text-xl font-bold text-foreground">{data.summary.total}</p>
+                        <p className="text-xs text-muted-foreground">Total</p>
+                      </div>
+                      <div>
+                        <p className="text-xl font-bold text-[var(--cn-orange)]">{data.summary.encountered}</p>
+                        <p className="text-xs text-muted-foreground">Enc.</p>
+                      </div>
+                      <div>
+                        <p className="text-xl font-bold text-[var(--t-sky-t)]">{data.summary.withFlashcard}</p>
+                        <p className="text-xs text-muted-foreground">Cards</p>
+                      </div>
+                      <div>
+                        <p className="text-xl font-bold text-[var(--t-amber-t)]">{data.summary.dueForReview}</p>
+                        <p className="text-xs text-muted-foreground">Due</p>
+                      </div>
                     </div>
                   </div>
-                </SectionCard>
+                </div>
               )}
 
-              <div className="mt-6">
-                {sidebarTab === "grammar" ? (
-                  (() => {
-                    const selectedGp = grammarPoints.find((g) => g.id === selectedGrammarId) ?? null;
-                    return selectedGp ? (
-                      <GrammarDetail
-                        key={selectedGp.id}
-                        point={selectedGp}
-                        level={data.level}
-                        onStudied={(id) => {
-                          setGrammarPoints((prev) =>
-                            prev.map((g) => (g.id === id ? { ...g, studied: true } : g))
-                          );
-                        }}
-                      />
-                    ) : (
-                      <EmptyStateNotice className="flex h-64 items-center justify-center rounded-xl bg-card card-ring text-sm">
-                        Select a grammar pattern to view details
-                      </EmptyStateNotice>
-                    );
-                  })()
-                ) : selected ? (
-                  <WordDetail
-                    key={`${selected.word.id}-${isBeginnerMode ? "beginner" : "full"}`}
-                    item={selected}
-                    level={data.level}
-                    dailyPractice={dailyPractice}
-                    assignmentId={assignmentId}
-                    beginnerMode={isBeginnerMode}
-                    isPro={isPro}
-                  />
-                ) : (
-                  <EmptyStateNotice
-                    data-testid="study-guide-empty"
-                    className="flex h-64 items-center justify-center rounded-xl bg-card card-ring text-sm"
-                  >
-                    Select a word to view details
-                  </EmptyStateNotice>
-                )}
-              </div>
-
-              {!isBeginnerMode && data.grammarPoints.length > 0 && (
-                <SectionCard
-                  className="mt-6 p-6"
-                  title={`Grammar Points — HSK ${data.level}`}
-                  icon={Languages}
+              {sidebarTab === "grammar" ? (
+                (() => {
+                  const selectedGp =
+                    grammarPoints.find((g) => g.id === selectedGrammarId) ?? null;
+                  return selectedGp ? (
+                    <GrammarDetail
+                      key={selectedGp.id}
+                      point={selectedGp}
+                      level={data.level}
+                      onStudied={(id) => {
+                        setGrammarPoints((prev) =>
+                          prev.map((g) => (g.id === id ? { ...g, studied: true } : g))
+                        );
+                      }}
+                    />
+                  ) : (
+                    <EmptyStateNotice className="flex h-64 items-center justify-center rounded-xl bg-card card-ring text-sm">
+                      Select a grammar pattern to view details
+                    </EmptyStateNotice>
+                  );
+                })()
+              ) : selected ? (
+                <WordDetail
+                  key={`${selected.word.id}-${isBeginnerMode ? "beginner" : "full"}`}
+                  item={selected}
+                  level={data.level}
+                  dailyPractice={dailyPractice}
+                  assignmentId={assignmentId}
+                  beginnerMode={isBeginnerMode}
+                  isPro={isPro}
+                  prevWord={prevWord}
+                  nextWord={nextWord}
+                  onSelectWord={setSelectedWordId}
+                />
+              ) : (
+                <EmptyStateNotice
+                  data-testid="study-guide-empty"
+                  className="flex h-64 items-center justify-center rounded-xl bg-card card-ring text-sm"
                 >
-                  <div className="space-y-3">
-                    {data.grammarPoints.map((gp) => (
-                      <div key={gp.id} className="rounded-lg border border-border bg-muted/50 p-4">
-                        <p className="text-sm font-semibold text-foreground">{gp.title}</p>
-                        {gp.pattern && (
-                          <p className="ui-tone-orange-text mt-0.5 font-mono text-xs">{gp.pattern}</p>
-                        )}
-                        <p className="mt-1 text-xs text-muted-foreground">{gp.explanation}</p>
-                      </div>
-                    ))}
-                  </div>
-                </SectionCard>
+                  Select a word to view details
+                </EmptyStateNotice>
               )}
             </>
           )}
@@ -458,6 +674,9 @@ function WordDetail({
   assignmentId,
   beginnerMode = false,
   isPro = false,
+  prevWord,
+  nextWord,
+  onSelectWord,
 }: {
   item: StudyGuideWord;
   level: number;
@@ -465,6 +684,9 @@ function WordDetail({
   assignmentId?: string;
   beginnerMode?: boolean;
   isPro?: boolean;
+  prevWord: StudyGuideWord | null;
+  nextWord: StudyGuideWord | null;
+  onSelectWord: (id: number) => void;
 }) {
   const [creating, setCreating] = useState(false);
   const [openingReview, setOpeningReview] = useState(false);
@@ -472,18 +694,25 @@ function WordDetail({
   const [showFullDetails, setShowFullDetails] = useState(!beginnerMode);
   const [collocations, setCollocations] = useState<HskCollocation[]>([]);
   const [breakdowns, setBreakdowns] = useState<CharacterBreakdown[]>([]);
+  const [openStep, setOpenStep] = useState<number>(0);
+  const [completedSteps, setCompletedSteps] = useState<Set<number>>(new Set());
   const router = useRouter();
 
   useEffect(() => {
     getCollocationsAction(item.word.simplified).then(setCollocations).catch(() => {});
     getCharacterBreakdownsAction(item.word.simplified).then(setBreakdowns).catch(() => {});
   }, [item.word.simplified]);
+
   const reading = buildStudyGuideReading(item, level);
   const compactEnglish = summarizeEnglishGloss(item.word.english) || item.word.english;
   const draftTitleZh = `练习：${item.word.simplified}`;
   const draftTitleEn = `Practice: ${compactEnglish}`;
   const draftUnit = `HSK ${level} Study Guide`;
-  const draftContentZh = buildInlineAnnotation(item.word.simplified, item.word.pinyin, compactEnglish);
+  const draftContentZh = buildInlineAnnotation(
+    item.word.simplified,
+    item.word.pinyin,
+    compactEnglish
+  );
   const beginnerSentenceZh = reading.focusPhraseZh.includes(item.word.simplified)
     ? reading.focusPhraseZh.replace(
         item.word.simplified,
@@ -544,16 +773,22 @@ function WordDetail({
 
   const created = createdWordId === item.word.id;
   const hasFlashcard = item.flashcard !== null || created;
+  const tone = detectTone(item.word.pinyin);
 
+  // Beginner mode — simplified view
   if (beginnerMode && !showFullDetails) {
     return (
       <SectionCard data-testid="study-guide-detail" className="rounded-xl p-8">
         <div className="mb-6 text-center">
           <div className="inline-flex items-center gap-2">
-            <p className="text-[64px] font-bold leading-none text-[var(--cn-orange)]">{item.word.simplified}</p>
+            <p className="text-[64px] font-bold leading-none text-[var(--cn-orange)]">
+              {item.word.simplified}
+            </p>
             <AudioPlayButton text={item.word.simplified} type="word" size="md" />
           </div>
-          <p className="font-mono mt-3 text-base text-muted-foreground">{item.word.pinyin}</p>
+          <p className="font-mono mt-3 text-base text-muted-foreground">
+            {item.word.pinyin}
+          </p>
           <p className="mt-1 text-sm text-muted-foreground">{item.word.english}</p>
         </div>
 
@@ -563,15 +798,21 @@ function WordDetail({
           description="You only need to learn one small thing right now."
           icon={Sparkles}
         >
-          <InfoPanel title="Tiny example">
+          <div className="rounded-lg bg-card card-ring p-4">
+            <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/70 mb-2">
+              Tiny example
+            </p>
             <div className="mt-2 flex items-center gap-2">
               <p className="text-lg leading-8 text-foreground">{reading.focusPhraseZh}</p>
-              {isPro && <AudioPlayButton text={reading.focusPhraseZh} type="sentence" />}
+              {isPro && (
+                <AudioPlayButton text={reading.focusPhraseZh} type="sentence" />
+              )}
             </div>
             <p className="mt-2 text-sm text-muted-foreground">{reading.focusPhraseEn}</p>
-          </InfoPanel>
+          </div>
           <p className="mt-4 text-sm text-foreground/85">
-            Read the word, glance at the example, then open one tiny review card. If you want, you can also try one ready-made sentence before that.
+            Read the word, glance at the example, then open one tiny review card. If you
+            want, you can also try one ready-made sentence before that.
           </p>
           <div className="mt-4 flex flex-wrap gap-3">
             <button
@@ -601,116 +842,236 @@ function WordDetail({
     );
   }
 
-  return (
-    <SectionCard data-testid="study-guide-detail" className="rounded-xl p-8">
-      {/* Character display */}
-      <div className="mb-6 text-center">
-        <div className="inline-flex items-center gap-2">
-          <p className="text-[64px] font-bold leading-none text-[var(--cn-orange)]">{item.word.simplified}</p>
-          <AudioPlayButton text={item.word.simplified} type="word" size="md" />
+  const practiceSteps = [
+    {
+      verb: "Notice",
+      title: `Spot ${item.word.simplified} in a phrase`,
+      time: "~30s",
+      body: (
+        <div className="pt-3">
+          <p className="mb-3 text-sm text-muted-foreground">
+            Find {item.word.simplified} in context. Tap a phrase to use it in your journal:
+          </p>
+          <div className="flex flex-wrap gap-2">
+            {phraseCandidateHrefs.map((c) => (
+              <Link
+                key={c.zh}
+                href={c.href}
+                title={c.en}
+                className="inline-flex items-center rounded-full border border-[var(--ui-tone-orange-border)] bg-[var(--ui-tone-orange-surface)] px-3 py-1.5 text-xs font-medium text-[var(--cn-orange-dark)] transition-colors hover:bg-[var(--cn-orange-light)]"
+              >
+                {c.zh}
+              </Link>
+            ))}
+            <Link
+              href={phraseJournalHref}
+              className="inline-flex items-center rounded-full border border-[var(--ui-tone-orange-border)] bg-[var(--ui-tone-orange-surface)] px-3 py-1.5 text-xs font-medium text-[var(--cn-orange-dark)] transition-colors hover:bg-[var(--cn-orange-light)]"
+            >
+              {reading.focusPhraseZh}
+            </Link>
+          </div>
         </div>
-        {item.word.traditional && (
-          <p className="mt-1 text-lg text-muted-foreground/70">{item.word.traditional}</p>
-        )}
-        <p className="mt-3 text-xl font-medium text-foreground/80">{item.word.pinyin}</p>
-        <p className="mt-1 text-muted-foreground">{item.word.english}</p>
-      </div>
+      ),
+    },
+    {
+      verb: "Echo",
+      title: "Listen and repeat",
+      time: "~1 min",
+      body: (
+        <div className="pt-3">
+          <div className="mb-3 rounded-lg bg-muted/40 px-4 py-3">
+            <p className="font-medium text-foreground">{reading.listeningZh}</p>
+            <p className="mt-1 text-sm text-muted-foreground">{reading.listeningEn}</p>
+          </div>
+          <p className="mb-3 text-sm text-muted-foreground">{reading.listeningPrompt}</p>
+          <div className="flex items-center gap-2">
+            {isPro && (
+              <AudioPlayButton text={reading.listeningZh} type="sentence" />
+            )}
+            <Link
+              href={listeningJournalHref}
+              className="inline-flex items-center rounded-full bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground transition-opacity hover:opacity-90"
+            >
+              Respond in journal →
+            </Link>
+          </div>
+        </div>
+      ),
+    },
+    {
+      verb: "Check",
+      title: "Quick comprehension",
+      time: "~30s",
+      body: (
+        <div className="pt-3">
+          <p className="text-sm text-foreground">{reading.comprehensionCheck}</p>
+        </div>
+      ),
+    },
+    {
+      verb: "Write",
+      title: `Use ${item.word.simplified} in your own sentence`,
+      time: "~3 min",
+      body: (
+        <div className="pt-3">
+          <p className="mb-3 text-sm text-muted-foreground">{reading.responsePrompt}</p>
+          <Link
+            href={journalHref}
+            className="inline-flex items-center gap-1.5 rounded-full bg-[var(--cn-orange)] px-4 py-2 text-xs font-semibold text-white transition-opacity hover:opacity-90"
+          >
+            <PenLine className="h-3.5 w-3.5" />
+            Open journal →
+          </Link>
+        </div>
+      ),
+    },
+  ];
 
-      {/* Status badges */}
-      <div className="mb-4 flex flex-wrap justify-center gap-2">
-        {item.encountered ? (
-          <span className="ui-tone-emerald-panel ui-tone-emerald-text inline-flex items-center gap-1 rounded-full border px-3 py-1 text-xs font-medium">
-            <CheckCircle2 className="h-3.5 w-3.5" />
-            Encountered
-          </span>
-        ) : (
-          <span className="inline-flex items-center gap-1 rounded-full bg-muted px-3 py-1 text-xs font-medium text-muted-foreground">
-            <Circle className="h-3.5 w-3.5" />
-            Not yet encountered
-          </span>
-        )}
-        {hasFlashcard ? (
-          <span className="ui-tone-sky-panel ui-tone-sky-text inline-flex items-center gap-1 rounded-full border px-3 py-1 text-xs font-medium">
-            <Layers className="h-3.5 w-3.5" />
-            In flashcards
-          </span>
-        ) : null}
-        {isFocusWord ? (
-          <span className="ui-tone-orange-panel ui-tone-orange-text inline-flex items-center gap-1 rounded-full border px-3 py-1 text-xs font-medium">
-            <CheckCircle2 className="h-3.5 w-3.5" />
-            Today&apos;s focus
-          </span>
-        ) : null}
-        <RegisterBadge register={item.word.register} />
+  return (
+    <div data-testid="study-guide-detail">
+      {/* Hero */}
+      <div
+        className="mb-7 grid items-center gap-9 border-b border-border/60 pb-7"
+        style={{ gridTemplateColumns: "auto 1fr" }}
+      >
+        {/* Left: char + action buttons */}
+        <div className="flex flex-col items-center gap-2.5">
+          <p className="text-[120px] font-bold leading-none tracking-[-0.02em] text-foreground">
+            {item.word.simplified}
+          </p>
+          <div className="flex gap-2">
+            <AudioPlayButton
+              text={item.word.simplified}
+              type="word"
+              size="md"
+              className="bg-[var(--cn-orange)] text-white hover:bg-[var(--cn-orange-dark)] hover:text-white"
+            />
+            <button
+              className="flex h-[34px] w-[34px] items-center justify-center rounded-[10px] border border-border bg-card text-muted-foreground transition-colors hover:bg-muted"
+              title="Stroke order"
+            >
+              <PenSquare className="h-4 w-4" />
+            </button>
+            <button
+              className="flex h-[34px] w-[34px] items-center justify-center rounded-[10px] border border-border bg-card text-muted-foreground transition-colors hover:bg-muted"
+              title="Bookmark"
+            >
+              <BookMarked className="h-4 w-4" />
+            </button>
+          </div>
+        </div>
+
+        {/* Right: meta */}
+        <div className="min-w-0">
+          <div className="mb-1.5 flex flex-wrap items-baseline gap-2 font-mono text-[28px] font-semibold leading-none text-[var(--cn-orange)]">
+            {item.word.pinyin}
+            {tone < 5 && (
+              <span className="inline-block rounded-[5px] bg-[var(--cn-orange-light)] px-1.5 py-0.5 align-middle text-[11px] font-bold uppercase tracking-wider text-[var(--cn-orange-dark)]">
+                Tone {tone}
+              </span>
+            )}
+          </div>
+          <div className="mb-0.5 text-lg font-medium leading-snug text-foreground">
+            {item.word.english.split(";")[0]}
+          </div>
+          {item.word.english.includes(";") && (
+            <div className="mb-2 text-sm text-muted-foreground">
+              {item.word.english.split(";").slice(1).join(";").trim()}
+            </div>
+          )}
+          {item.word.traditional &&
+            item.word.traditional !== item.word.simplified && (
+              <div className="mb-2 text-sm text-muted-foreground/60">
+                Traditional: {item.word.traditional}
+              </div>
+            )}
+          <div className="mt-3 flex flex-wrap gap-2">
+            {item.encountered ? (
+              <span className="inline-flex items-center gap-1 rounded-full border px-3 py-1 text-xs font-medium ui-tone-emerald-panel ui-tone-emerald-text">
+                <CheckCircle2 className="h-3.5 w-3.5" />
+                Encountered
+              </span>
+            ) : (
+              <span className="inline-flex items-center gap-1 rounded-full border border-[var(--t-sky-b)] bg-[var(--t-sky-s)] px-3 py-1 text-xs font-medium text-[var(--t-sky-t)]">
+                <Sparkles className="h-3.5 w-3.5" />
+                Not yet encountered
+              </span>
+            )}
+            {hasFlashcard ? (
+              <span className="inline-flex items-center gap-1 rounded-full border px-3 py-1 text-xs font-medium ui-tone-sky-panel ui-tone-sky-text">
+                <Layers className="h-3.5 w-3.5" />
+                In flashcards
+              </span>
+            ) : (
+              <span className="inline-flex items-center gap-1 rounded-full bg-muted px-3 py-1 text-xs font-medium text-muted-foreground">
+                <Layers className="h-3.5 w-3.5" />
+                No flashcard yet
+              </span>
+            )}
+            {isFocusWord && (
+              <span className="inline-flex items-center gap-1 rounded-full border px-3 py-1 text-xs font-medium ui-tone-orange-panel ui-tone-orange-text">
+                <CheckCircle2 className="h-3.5 w-3.5" />
+                Today&apos;s focus
+              </span>
+            )}
+            <RegisterBadge register={item.word.register} />
+          </div>
+        </div>
       </div>
 
       {/* Cultural note */}
       {item.word.cultural_note && (
         <div className="mb-6 rounded-lg ui-tone-amber-panel px-4 py-3 text-sm">
-          <p className="ui-tone-amber-text mb-1 text-[10px] font-semibold uppercase tracking-wider">Cultural note</p>
+          <p className="ui-tone-amber-text mb-1 text-[10px] font-semibold uppercase tracking-wider">
+            Cultural note
+          </p>
           <p className="leading-relaxed text-foreground/90">{item.word.cultural_note}</p>
         </div>
       )}
 
-      {/* Character breakdown */}
+      {/* Character Breakdown */}
       {breakdowns.length > 0 && (
-        <div className="mb-6">
-          <p className="mb-3 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-            Character breakdown
-          </p>
+        <div className="mb-7">
+          <SecTitle icon={Puzzle} right="Hover a radical for details">
+            Character Breakdown
+          </SecTitle>
           <div className="space-y-3">
             {breakdowns.map((bd) => (
-              <div key={bd.character} className="rounded-lg bg-muted/50 px-4 py-3">
-                <div className="flex flex-wrap items-center gap-2">
-                  <span className="text-2xl font-bold text-foreground/90">{bd.character}</span>
-                  <span className="text-muted-foreground">=</span>
+              <div
+                key={bd.character}
+                className="relative overflow-hidden rounded-[14px] border border-border bg-card px-5 py-5"
+              >
+                <div
+                  aria-hidden
+                  className="pointer-events-none absolute -right-7 -top-10 text-[200px] font-bold leading-none text-[var(--cn-orange)] opacity-[0.04]"
+                >
+                  {bd.character}
+                </div>
+                <div className="relative flex flex-wrap items-center gap-2.5">
+                  <span className="mr-1 border-r border-dashed border-border pr-3 text-[48px] font-bold leading-none text-foreground">
+                    {bd.character}
+                  </span>
+                  <span className="text-2xl font-light text-muted-foreground">=</span>
                   {bd.components.map((c, i) => (
-                    <span key={i} className="flex items-center gap-1">
-                      {i > 0 && <span className="text-muted-foreground/50">+</span>}
-                      <span className="inline-flex flex-col items-center">
-                        <span className="text-lg font-medium text-foreground">{c.char}</span>
-                        <span className="text-[10px] text-muted-foreground leading-none">{c.meaning}</span>
+                    <span key={i} className="flex items-center gap-2">
+                      {i > 0 && (
+                        <span className="text-lg font-light text-muted-foreground">+</span>
+                      )}
+                      <span className="flex min-w-[60px] cursor-pointer flex-col items-center gap-1 rounded-[10px] bg-[var(--cn-orange-light)] px-2.5 py-1.5 transition-colors hover:bg-[oklch(0.96_0.04_45)]">
+                        <span className="text-[28px] font-bold leading-none text-[var(--cn-orange-dark)]">
+                          {c.char}
+                        </span>
+                        <span className="text-[10px] font-semibold tracking-[0.02em] text-[var(--cn-orange-dark)]">
+                          {c.meaning}
+                        </span>
                       </span>
                     </span>
                   ))}
                 </div>
                 {bd.mnemonic && (
-                  <p className="mt-2 text-xs italic text-muted-foreground">{bd.mnemonic}</p>
-                )}
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Collocations */}
-      {collocations.length > 0 && (
-        <div className="mb-6">
-          <p className="mb-3 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-            In context with words you know
-          </p>
-          <div className="space-y-2">
-            {collocations.map((c) => (
-              <div key={c.id} className="rounded-lg bg-muted/50 px-4 py-3">
-                <p className="text-base font-medium leading-snug">{c.sentence_zh}</p>
-                <p className="mt-0.5 text-sm text-muted-foreground">{c.sentence_en}</p>
-                {c.known_words.length > 0 && (
-                  <div className="mt-2 flex flex-wrap gap-1">
-                    {c.known_words.map((w) => (
-                      <span
-                        key={w}
-                        className={`inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-medium ${
-                          c.encountered_words.includes(w)
-                            ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300"
-                            : "bg-muted text-muted-foreground"
-                        }`}
-                      >
-                        {w}
-                        {c.encountered_words.includes(w) && (
-                          <span className="ml-1 opacity-70">✓</span>
-                        )}
-                      </span>
-                    ))}
+                  <div className="relative mt-4 flex items-start gap-2.5 border-t border-border/60 pt-3.5 text-sm italic text-foreground/70">
+                    <Sparkles className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[var(--cn-orange)]" />
+                    <p>{bd.mnemonic}</p>
                   </div>
                 )}
               </div>
@@ -719,21 +1080,69 @@ function WordDetail({
         </div>
       )}
 
+      {/* Seen in context */}
+      {collocations.length > 0 && (
+        <div className="mb-7">
+          <SecTitle icon={Quote}>Seen in context</SecTitle>
+          <div className="space-y-2.5">
+            {collocations.map((c) => (
+              <div
+                key={c.id}
+                className="grid gap-3 rounded-[12px] border border-border bg-card p-4"
+                style={{ gridTemplateColumns: "1fr auto" }}
+              >
+                <div>
+                  <p className="mb-1 text-[17px] font-medium leading-relaxed">
+                    <HighlightWord
+                      text={c.sentence_zh}
+                      target={item.word.simplified}
+                    />
+                  </p>
+                  <p className="text-sm text-muted-foreground">{c.sentence_en}</p>
+                  {c.known_words.length > 0 && (
+                    <div className="mt-2 flex flex-wrap gap-1">
+                      {c.known_words.map((w) => (
+                        <span
+                          key={w}
+                          className={`inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-medium ${
+                            c.encountered_words.includes(w)
+                              ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300"
+                              : "bg-muted text-muted-foreground"
+                          }`}
+                        >
+                          {w}
+                          {c.encountered_words.includes(w) && (
+                            <span className="ml-1 opacity-70">✓</span>
+                          )}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                </div>
+                <div className="flex shrink-0 items-start gap-1 whitespace-nowrap pt-1 text-[10px] font-bold uppercase tracking-[0.12em] text-[var(--cn-orange-dark)]">
+                  <BookMarked className="h-3 w-3" />
+                  HSK context
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Today's Loop (focus word only) */}
       {isFocusWord && dailyPractice?.focusWordProgress ? (
         <div className="ui-tone-orange-panel mb-6 rounded-lg border p-4">
           <p className="ui-tone-orange-text text-xs font-semibold uppercase tracking-wider">
             Today&apos;s Loop
-          </p>
-          <p className="mt-1 text-sm text-foreground/85">
-            This study item is the current focus word in today&apos;s learner loop.
           </p>
           <div className="mt-3 flex flex-wrap items-center gap-2">
             <FocusStatusPill done={dailyPractice.focusWordProgress.reviewedToday} label="Review" />
             <FocusStatusPill done={dailyPractice.focusWordProgress.studiedToday} label="Study" />
             <FocusStatusPill done={dailyPractice.focusWordProgress.wroteToday} label="Write" />
           </div>
-          {(!dailyPractice.focusWordProgress.reviewedToday || !dailyPractice.focusWordProgress.wroteToday) && (
-            <div className="mt-4 flex flex-wrap items-center gap-3">
+          {(!dailyPractice.focusWordProgress.reviewedToday ||
+            !dailyPractice.focusWordProgress.wroteToday) && (
+            <div className="mt-3 flex flex-wrap items-center gap-3">
               {!dailyPractice.focusWordProgress.reviewedToday && (
                 <Link
                   href={reviewHref}
@@ -753,7 +1162,7 @@ function WordDetail({
             </div>
           )}
           {dailyPractice.focusWordProgress.wroteToday && latestFocusResponseHref && (
-            <div className="mt-4">
+            <div className="mt-3">
               <Link
                 href={latestFocusResponseHref}
                 className="ui-tone-orange-text inline-flex items-center text-xs font-medium hover:underline"
@@ -768,12 +1177,9 @@ function WordDetail({
       {/* Journal entries */}
       {item.journalEntries.length > 0 && (
         <div className="mb-6">
-          <h4 className="mb-2 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground/70">
-            <BookOpen className="h-3.5 w-3.5" />
-            Appeared in
-          </h4>
-        <div className="space-y-1">
-          {item.journalEntries.map((entry) => (
+          <SecTitle icon={BookOpen}>Appeared in</SecTitle>
+          <div className="space-y-1">
+            {item.journalEntries.map((entry) => (
               <Link
                 key={entry.id}
                 href={`/notebook?entry=${entry.id}`}
@@ -788,16 +1194,10 @@ function WordDetail({
         </div>
       )}
 
-      <div className="mb-6">
-        <h4 className="mb-2 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground/70">
-          <NotebookPen className="h-3.5 w-3.5" />
-          Guided Responses
-        </h4>
-        {item.guidedResponses.length === 0 ? (
-          <EmptyStateNotice className="border-border bg-muted/30 px-4 py-3">
-            No guided response yet for this study item.
-          </EmptyStateNotice>
-        ) : (
+      {/* Guided Responses */}
+      {item.guidedResponses.length > 0 && (
+        <div className="mb-6">
+          <SecTitle icon={NotebookPen}>Guided Responses</SecTitle>
           <div className="space-y-2">
             {item.guidedResponses.map((response) => (
               <Link
@@ -815,139 +1215,185 @@ function WordDetail({
               </Link>
             ))}
           </div>
-        )}
+        </div>
+      )}
+
+      {/* Practice Ladder */}
+      <div className="mb-7">
+        <SecTitle
+          icon={ListChecks}
+          right={`${completedSteps.size} of 4 done · ~5 min total`}
+        >
+          Practice Ladder
+        </SecTitle>
+        <div className="space-y-2.5">
+          {practiceSteps.map((step, i) => {
+            const isDone = completedSteps.has(i);
+            const isOpen = openStep === i;
+            return (
+              <div
+                key={i}
+                className={`overflow-hidden rounded-[14px] border transition-all ${
+                  isDone
+                    ? "border-[var(--t-emerald-b)] bg-[var(--t-emerald-s)]"
+                    : isOpen
+                    ? "border-[rgba(232,96,28,0.4)] bg-card shadow-[0_0_0_1px_rgba(232,96,28,0.4),0_2px_6px_rgba(232,96,28,0.06)]"
+                    : "border-border bg-card"
+                }`}
+              >
+                <div
+                  className="grid cursor-pointer items-center gap-3.5 px-4 py-3.5"
+                  style={{ gridTemplateColumns: "32px 1fr auto auto" }}
+                  onClick={() => setOpenStep(isOpen ? -1 : i)}
+                >
+                  <div
+                    className={`flex h-8 w-8 items-center justify-center rounded-full text-sm font-bold transition-colors ${
+                      isDone
+                        ? "bg-[var(--t-emerald-t)] text-white"
+                        : isOpen
+                        ? "bg-[var(--cn-orange)] text-white"
+                        : "bg-muted text-muted-foreground"
+                    }`}
+                  >
+                    {isDone ? <Check className="h-4 w-4 stroke-[3]" /> : i + 1}
+                  </div>
+                  <div>
+                    <span className="mr-2 text-xs font-bold uppercase tracking-wider text-[var(--cn-orange)]">
+                      {step.verb}
+                    </span>
+                    <span className="text-sm font-medium text-foreground">
+                      {step.title}
+                    </span>
+                  </div>
+                  <span className="text-xs text-muted-foreground">{step.time}</span>
+                  <ChevronDown
+                    className={`h-4 w-4 text-muted-foreground transition-transform ${
+                      isOpen ? "rotate-180" : ""
+                    }`}
+                  />
+                </div>
+                {isOpen && (
+                  <div className="border-t border-border/50 px-4 pb-4">
+                    {step.body}
+                    <button
+                      onClick={() => {
+                        setCompletedSteps((prev) => new Set([...prev, i]));
+                        setOpenStep(i < 3 ? i + 1 : -1);
+                      }}
+                      className="mt-3 text-xs font-medium text-[var(--cn-orange)] hover:underline"
+                    >
+                      Mark done →
+                    </button>
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
       </div>
 
-      <SectionCard
-        className="ui-tone-orange-panel mb-6 border p-5"
-        title="Input Practice"
-        icon={BookText}
-      >
-        <p className="text-sm font-semibold text-foreground">{reading.title}</p>
-        <p className="mt-3 text-lg leading-[1.9] text-foreground/90">{reading.passageZh}</p>
-        <p className="mt-3 text-sm text-muted-foreground">{reading.passageEn}</p>
-        <div className="mt-4">
-          <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground/70">
-            Try These Phrases
-          </p>
-          <div className="mt-2 flex flex-wrap gap-2">
-            {phraseCandidateHrefs.map((candidate) => (
-              <Link
-                key={candidate.zh}
-                href={candidate.href}
-                className="ui-tone-orange-panel ui-tone-orange-text inline-flex items-center rounded-full bg-card card-ring px-3 py-1.5 text-xs font-medium transition-colors hover:bg-muted/60"
-                title={candidate.en}
-              >
-                {candidate.zh}
-              </Link>
-            ))}
-          </div>
-        </div>
-        <div className="mt-4 grid gap-3 md:grid-cols-2">
-          <InfoPanel title="Notice This Phrase" icon={Sparkles}>
-            <div className="mt-2 flex items-center gap-1.5">
-              <p className="text-sm font-semibold text-foreground">{reading.focusPhraseZh}</p>
-              {isPro && <AudioPlayButton text={reading.focusPhraseZh} type="sentence" />}
+      {/* Footer: flashcard info/action + prev/next navigation */}
+      <div className="mt-6 flex items-center justify-between border-t border-border/60 pt-5">
+        <div>
+          {item.flashcard ? (
+            <div className="flex gap-4 text-sm">
+              <div>
+                <p className="text-xs text-muted-foreground/70">Reviews</p>
+                <p className="font-bold text-foreground">{item.flashcard.reviewCount}</p>
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground/70">Interval</p>
+                <p className="font-bold text-foreground">{item.flashcard.intervalDays}d</p>
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground/70">Next review</p>
+                <p className="font-bold">
+                  {new Date(item.flashcard.nextReview) <= new Date() ? (
+                    <span className="ui-tone-amber-text flex items-center gap-1">
+                      <Clock className="h-3.5 w-3.5" /> Due now
+                    </span>
+                  ) : (
+                    <span className="text-foreground">
+                      {new Date(item.flashcard.nextReview).toLocaleDateString()}
+                    </span>
+                  )}
+                </p>
+              </div>
             </div>
-            <p className="mt-1 text-sm text-muted-foreground">{reading.focusPhraseEn}</p>
-            <Link
-              href={phraseJournalHref}
-              className="ui-tone-orange-text mt-3 inline-flex items-center text-xs font-medium hover:underline"
+          ) : !created ? (
+            <button
+              data-testid="study-guide-create-flashcard"
+              onClick={handleCreateFlashcard}
+              disabled={creating}
+              className="inline-flex items-center gap-1.5 rounded-[10px] border border-border bg-card px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-muted disabled:opacity-50"
             >
-              Use this phrase in journal →
-            </Link>
-          </InfoPanel>
-          <InfoPanel title="Quick Check" icon={CircleHelp}>
-            <p className="mt-2 text-sm text-foreground">{reading.comprehensionCheck}</p>
-          </InfoPanel>
+              <Plus className="h-4 w-4" />
+              {creating ? "Creating..." : `Create flashcard`}
+            </button>
+          ) : (
+            <p className="ui-tone-emerald-text flex items-center gap-1.5 text-sm font-medium">
+              <CheckCircle2 className="h-4 w-4" />
+              Flashcard created!
+            </p>
+          )}
         </div>
-        <InfoPanel title="Listening Echo" icon={Languages} className="mt-4">
-          <p className="mt-2 text-sm font-semibold text-foreground">{reading.listeningZh}</p>
-          <p className="mt-1 text-sm text-muted-foreground">{reading.listeningEn}</p>
-          <p className="mt-2 text-sm text-foreground">{reading.listeningPrompt}</p>
-          <Link
-            href={listeningJournalHref}
-            className="ui-tone-orange-text mt-3 inline-flex items-center text-xs font-medium hover:underline"
-          >
-            Respond to listening →
-          </Link>
-        </InfoPanel>
-        <InfoPanel title="Journal Response" icon={PenSquare} className="mt-4">
-          <p className="mt-2 text-sm text-foreground">{reading.responsePrompt}</p>
-          <Link
-            href={journalHref}
-            className="ui-tone-orange-text mt-3 inline-flex items-center text-xs font-medium hover:underline"
-          >
-            Respond in journal →
-          </Link>
-        </InfoPanel>
-      </SectionCard>
 
-      {/* Flashcard status */}
-      {item.flashcard ? (
-        <InfoPanel
-          title="Flashcard"
-          icon={Layers}
-          className="ui-tone-sky-panel mb-6"
-          titleClassName="ui-tone-sky-text"
-        >
-          <div className="flex gap-4 text-sm">
-            <div>
-              <p className="ui-tone-sky-soft-text text-xs">Reviews</p>
-              <p className="ui-tone-sky-text font-bold">{item.flashcard.reviewCount}</p>
-            </div>
-            <div>
-              <p className="ui-tone-sky-soft-text text-xs">Interval</p>
-              <p className="ui-tone-sky-text font-bold">{item.flashcard.intervalDays}d</p>
-            </div>
-            <div>
-              <p className="ui-tone-sky-soft-text text-xs">Next review</p>
-              <p className="ui-tone-sky-text font-bold">
-                {new Date(item.flashcard.nextReview) <= new Date() ? (
-                  <span className="ui-tone-amber-text flex items-center gap-1">
-                    <Clock className="h-3.5 w-3.5" /> Due now
-                  </span>
-                ) : (
-                  new Date(item.flashcard.nextReview).toLocaleDateString()
-                )}
-              </p>
-            </div>
-          </div>
-        </InfoPanel>
-      ) : !created ? (
-        <div className="text-center">
+        <div className="flex items-center gap-2">
           <button
-            data-testid="study-guide-create-flashcard"
-            onClick={handleCreateFlashcard}
-            disabled={creating}
-            className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-opacity hover:opacity-90 disabled:opacity-50"
+            disabled={!prevWord}
+            onClick={() => prevWord && onSelectWord(prevWord.word.id)}
+            className="flex h-[34px] w-[34px] items-center justify-center rounded-[10px] border border-border bg-card text-muted-foreground transition-colors hover:bg-muted disabled:cursor-not-allowed disabled:opacity-40"
+            title="Previous word"
           >
-            <Plus className="h-4 w-4" />
-            {creating ? "Creating..." : "Create Flashcard"}
+            <ChevronLeft className="h-4 w-4" />
           </button>
+          <button
+            disabled={!nextWord}
+            onClick={() => nextWord && onSelectWord(nextWord.word.id)}
+            className="flex h-[34px] w-[34px] items-center justify-center rounded-[10px] border border-border bg-card text-muted-foreground transition-colors hover:bg-muted disabled:cursor-not-allowed disabled:opacity-40"
+            title="Next word"
+          >
+            <ChevronRight className="h-4 w-4" />
+          </button>
+          {nextWord && (
+            <button
+              onClick={() => onSelectWord(nextWord.word.id)}
+              className="inline-flex items-center gap-1.5 rounded-[10px] bg-[var(--cn-orange)] px-4 py-2 text-sm font-semibold text-white transition-opacity hover:opacity-90"
+            >
+              Next: {nextWord.word.simplified}
+              <ArrowRight className="h-4 w-4" />
+            </button>
+          )}
         </div>
-      ) : (
-        <p className="ui-tone-emerald-text text-center text-sm font-medium">
-          Flashcard created!
-        </p>
-      )}
-    </SectionCard>
+      </div>
+    </div>
   );
 }
 
 function RegisterBadge({ register }: { register: string }) {
   if (!register || register === "neutral") return null;
   const configs: Record<string, { label: string; className: string }> = {
-    chengyu:    { label: "Chengyu",    className: "bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300" },
-    formal:     { label: "Formal",     className: "ui-tone-sky-panel ui-tone-sky-text" },
-    written:    { label: "Written",    className: "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300" },
+    chengyu: {
+      label: "Chengyu",
+      className: "bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300",
+    },
+    formal: { label: "Formal", className: "ui-tone-sky-panel ui-tone-sky-text" },
+    written: {
+      label: "Written",
+      className: "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300",
+    },
     colloquial: { label: "Colloquial", className: "ui-tone-amber-panel ui-tone-amber-text" },
-    slang:      { label: "Slang",      className: "bg-pink-100 text-pink-700 dark:bg-pink-900/30 dark:text-pink-300" },
+    slang: {
+      label: "Slang",
+      className: "bg-pink-100 text-pink-700 dark:bg-pink-900/30 dark:text-pink-300",
+    },
   };
   const config = configs[register];
   if (!config) return null;
   return (
-    <span className={`inline-flex items-center rounded-full border px-3 py-1 text-xs font-medium ${config.className}`}>
+    <span
+      className={`inline-flex items-center rounded-full border px-3 py-1 text-xs font-medium ${config.className}`}
+    >
       {config.label}
     </span>
   );
@@ -967,6 +1413,8 @@ function FocusStatusPill({ done, label }: { done: boolean; label: string }) {
   );
 }
 
+// --- Grammar Detail ---
+
 function GrammarDetail({
   point,
   level,
@@ -977,10 +1425,13 @@ function GrammarDetail({
   onStudied: (id: number) => void;
 }) {
   const [isPending, startTransition] = useTransition();
-  const router = useRouter();
 
   const examples: { zh: string; pinyin: string; en: string }[] = (() => {
-    try { return JSON.parse(point.examples); } catch { return []; }
+    try {
+      return JSON.parse(point.examples);
+    } catch {
+      return [];
+    }
   })();
 
   const journalHref = `/notebook?new=1&draftTitleZh=${encodeURIComponent("语法练习")}&draftTitleEn=${encodeURIComponent(`Grammar: ${point.title}`)}&draftUnit=${encodeURIComponent(`HSK ${level} Grammar`)}&draftLevel=${level}&draftPrompt=${encodeURIComponent(point.journal_prompt)}`;
@@ -994,7 +1445,7 @@ function GrammarDetail({
   }
 
   return (
-    <SectionCard className="space-y-6 p-6">
+    <div className="space-y-6">
       {/* Header */}
       <div className="flex items-start justify-between gap-4">
         <div>
@@ -1025,14 +1476,18 @@ function GrammarDetail({
 
       {/* Explanation */}
       <div>
-        <p className="mb-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground/70">Explanation</p>
+        <p className="mb-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground/70">
+          Explanation
+        </p>
         <p className="text-sm leading-relaxed text-foreground/90">{point.explanation}</p>
       </div>
 
       {/* Examples */}
       {examples.length > 0 && (
         <div>
-          <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground/70">Examples</p>
+          <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground/70">
+            Examples
+          </p>
           <div className="space-y-3">
             {examples.map((ex, i) => (
               <div key={i} className="rounded-lg bg-muted/40 px-4 py-3">
@@ -1063,7 +1518,9 @@ function GrammarDetail({
       <div className="rounded-xl ui-tone-orange-panel px-5 py-4">
         <div className="mb-2 flex items-center gap-2">
           <PenLine className="ui-tone-orange-text h-4 w-4" />
-          <p className="text-xs font-semibold uppercase tracking-wider ui-tone-orange-text">Try Writing</p>
+          <p className="text-xs font-semibold uppercase tracking-wider ui-tone-orange-text">
+            Try Writing
+          </p>
         </div>
         <p className="mb-3 text-sm leading-relaxed text-foreground/90">{point.journal_prompt}</p>
         <Link
@@ -1075,6 +1532,6 @@ function GrammarDetail({
           Open journal with this prompt →
         </Link>
       </div>
-    </SectionCard>
+    </div>
   );
 }

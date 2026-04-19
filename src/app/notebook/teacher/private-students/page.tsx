@@ -962,6 +962,21 @@ export default async function TeacherPrivateStudentsPage() {
         ) : null}
 
         {privateStudents.length > 0 ? (
+          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+            <TeachingToneMetricCard label="Blocks intake" value={resetNowCount} tone="rose" />
+            <TeachingToneMetricCard label="Slows intake" value={rebalanceCount} tone="amber" />
+            <TeachingToneMetricCard label="Cautious capacity" value={simplifyNowCount} tone="sky" />
+            <TeachingToneMetricCard label="Ready to expand" value={stableToMaintainCount} tone="emerald" />
+          </div>
+        ) : null}
+
+        {privateStudents.length > 0 ? (
+          <TeachingExplainerBlock>
+            Intake readiness asks whether the current portfolio can safely absorb more active learners. Learners in `Reset now` block intake directly; `Rebalance` learners slow it. The portfolio is ready to expand only when pressure clears enough that new active support would not reduce follow-through quality for existing learners.
+          </TeachingExplainerBlock>
+        ) : null}
+
+        {privateStudents.length > 0 ? (
           <div className="grid gap-4 sm:grid-cols-3">
             <TeachingToneMetricCard label="Repeated pressure" value={repeatedPressureCount} tone="amber" />
             <TeachingToneMetricCard label="No support path" value={noSupportPathPressureCount} tone="rose" />
@@ -1146,6 +1161,15 @@ export default async function TeacherPrivateStudentsPage() {
                           >
                             {operatingReview.label}
                           </span>
+                          {operatingReview.state === "reset_now" ? (
+                            <span className="ui-tone-rose-panel ui-tone-rose-text rounded-full border px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.18em]">
+                              Blocks intake
+                            </span>
+                          ) : operatingReview.state === "rebalance" ? (
+                            <span className="ui-tone-amber-panel ui-tone-amber-text rounded-full border px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.18em]">
+                              Slows intake
+                            </span>
+                          ) : null}
                           {!item.last_playbook_id ? (
                             <span className="ui-tone-amber-panel ui-tone-amber-text rounded-full border px-2.5 py-1 text-[11px] font-medium">
                               No playbook yet

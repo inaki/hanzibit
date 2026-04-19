@@ -1123,6 +1123,12 @@ async function initializeSchema(): Promise<void> {
     }
   }
 
+  // Ensure unique index exists so ON CONFLICT works even on tables created before the constraint was added
+  await pool.query(`
+    CREATE UNIQUE INDEX IF NOT EXISTS idx_cgp_unique_level_order
+    ON curated_grammar_points (hsk_level, display_order)
+  `);
+
   // Seed curated grammar points (idempotent via ON CONFLICT DO NOTHING)
   for (const point of CURATED_GRAMMAR_POINTS) {
     await pool.query(
@@ -1144,6 +1150,12 @@ async function initializeSchema(): Promise<void> {
       ]
     );
   }
+
+  // Ensure unique index exists so ON CONFLICT works even on tables created before the constraint was added
+  await pool.query(`
+    CREATE UNIQUE INDEX IF NOT EXISTS idx_hsk_collocations_unique_word_sentence
+    ON hsk_collocations (word_simplified, sentence_zh)
+  `);
 
   // Seed collocations (idempotent — skip if already exists for this word+sentence pair)
   for (const item of COLLOCATION_SEED) {
