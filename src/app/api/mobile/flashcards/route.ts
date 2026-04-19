@@ -4,6 +4,7 @@ import { getMobileUserId } from "@/lib/mobile-auth";
 import { getFlashcards } from "@/lib/data";
 import { execute, queryOne } from "@/lib/db";
 import { mobileError, mobileOk, requireArray, requireObject, requireString } from "@/lib/mobile-api";
+import { checkRateLimit } from "@/lib/rate-limit";
 
 export async function GET(req: NextRequest) {
   const userId = await getMobileUserId(req);
@@ -16,6 +17,10 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   const userId = await getMobileUserId(req);
   if (!userId) return mobileError("Unauthorized", 401);
+
+  if (!checkRateLimit(`flashcards:${userId}`, 60, 60_000)) {
+    return mobileError("Rate limit exceeded", 429);
+  }
 
   const body = requireObject(await req.json());
   if ("error" in body) return mobileError(body.error, 400);

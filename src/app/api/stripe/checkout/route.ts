@@ -24,6 +24,16 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    const allowedPriceIds = new Set(
+      [
+        process.env.NEXT_PUBLIC_STRIPE_PRO_MONTHLY_PRICE_ID,
+        process.env.NEXT_PUBLIC_STRIPE_PRO_YEARLY_PRICE_ID,
+      ].filter(Boolean)
+    );
+    if (!allowedPriceIds.has(priceId)) {
+      return NextResponse.json({ error: "Invalid price ID" }, { status: 400 });
+    }
+
     const userId = session.user.id;
     const existing = await getSubscription(userId);
     const cookieStore = await cookies();
@@ -74,7 +84,9 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ url: checkoutSession.url });
   } catch (error) {
-    console.error("Checkout error:", error);
+    console.error("Checkout session creation failed", {
+      message: error instanceof Error ? error.message : "unknown",
+    });
     return NextResponse.json(
       { error: "Failed to create checkout session" },
       { status: 500 }

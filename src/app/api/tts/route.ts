@@ -7,8 +7,15 @@ import { getUserPlan } from "@/lib/subscription";
 import { query, execute } from "@/lib/db";
 
 const VOICE = "zh-CN-XiaoxiaoNeural";
+const AZURE_TIMEOUT_MS = 10_000;
 
 type AudioType = "word" | "sentence" | "dynamic";
+
+function escapeXml(str: string): string {
+  return str.replace(/[<>&"']/g, (c) =>
+    ({ "<": "&lt;", ">": "&gt;", "&": "&amp;", '"': "&quot;", "'": "&apos;" }[c]!)
+  );
+}
 
 function cacheKey(text: string): string {
   const hash = createHash("sha256").update(text.trim()).digest("hex").slice(0, 16);
@@ -22,25 +29,32 @@ async function callAzure(text: string): Promise<ArrayBuffer> {
 
   const ssml = `<speak version='1.0' xml:lang='zh-CN'>
     <voice name='${VOICE}'>
-      <prosody rate='0.85'>${text.trim()}</prosody>
+      <prosody rate='0.85'>${escapeXml(text.trim())}</prosody>
     </voice>
   </speak>`;
 
-  const res = await fetch(
-    `https://${region}.tts.speech.microsoft.com/cognitiveservices/v1`,
-    {
-      method: "POST",
-      headers: {
-        "Ocp-Apim-Subscription-Key": apiKey,
-        "Content-Type": "application/ssml+xml",
-        "X-Microsoft-OutputFormat": "audio-24khz-96kbitrate-mono-mp3",
-      },
-      body: ssml,
-    }
-  );
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), AZURE_TIMEOUT_MS);
 
-  if (!res.ok) throw new Error(`Azure TTS error: ${res.status}`);
-  return res.arrayBuffer();
+  try {
+    const res = await fetch(
+      `https://${region}.tts.speech.microsoft.com/cognitiveservices/v1`,
+      {
+        method: "POST",
+        headers: {
+          "Ocp-Apim-Subscription-Key": apiKey,
+          "Content-Type": "application/ssml+xml",
+          "X-Microsoft-OutputFormat": "audio-24khz-96kbitrate-mono-mp3",
+        },
+        body: ssml,
+        signal: controller.signal,
+      }
+    );
+    if (!res.ok) throw new Error(`Azure TTS error: ${res.status}`);
+    return res.arrayBuffer();
+  } finally {
+    clearTimeout(timeoutId);
+  }
 }
 
 async function generateAndCache(text: string, key: string): Promise<string> {

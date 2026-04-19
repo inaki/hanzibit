@@ -8,6 +8,14 @@ function getAppName() {
   return "HanziBit";
 }
 
+function escapeHtml(str: string): string {
+  return str
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}
+
 export async function sendPasswordResetEmail({
   email,
   name,
@@ -25,7 +33,7 @@ export async function sendPasswordResetEmail({
   }
 
   const subject = `Reset your ${getAppName()} password`;
-  const greeting = name ? `Hi ${name},` : "Hi,";
+  const greeting = name ? `Hi ${escapeHtml(name)},` : "Hi,";
   const text = `${greeting}
 
 We received a request to reset your password.
@@ -65,11 +73,8 @@ If you did not request this, you can ignore this email.`;
   });
 
   if (!response.ok) {
-    const body = await response.text();
     console.error("[auth] Failed to send password reset email", {
-      email,
       status: response.status,
-      body,
     });
   }
 }
